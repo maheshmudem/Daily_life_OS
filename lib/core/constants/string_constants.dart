@@ -32,6 +32,8 @@ class StringConstants {
 
   // Module 2: Planner & Focus
   static const String smartReminders = 'Smart Reminders';
+  static const String setReminder = 'Set Reminder';
+  static const String reminderHint = 'What do you need to be reminded of?';
   static const String focusTimer = 'Focus Timer (Pomodoro)';
   static const String workSprint = 'Work Sprint';
   static const String shortBreak = 'Short Break';

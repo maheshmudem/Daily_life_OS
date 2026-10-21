@@ -57,15 +57,31 @@ class _PlannerViewState extends State<_PlannerView> with SingleTickerProviderSta
     },
   ];
 
+  // Set Reminder state
+  final TextEditingController _quickReminderController = TextEditingController();
+  TimeOfDay _selectedTime = const TimeOfDay(hour: 9, minute: 0);
+  String _selectedCategory = 'Personal';
+  static const List<String> _categories = [
+    'Personal',
+    'Work',
+    'Health',
+    'Finance',
+    'Important'
+  ];
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _quickReminderController.dispose();
     _tabController.dispose();
     super.dispose();
   }
@@ -170,32 +186,9 @@ class _PlannerViewState extends State<_PlannerView> with SingleTickerProviderSta
         return ListView(
           padding: const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 90),
           children: [
-            // Natural Language Quick Add Card
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
-                borderRadius: AppRadius.radiusLg,
-                border: Border.all(color: AppColors.moduleTime.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.add_alarm_rounded, color: AppColors.moduleTime),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text(
-                      'Type e.g. "Doctor appointment tomorrow at 4pm"',
-                      style: TextStyle(fontSize: 13, color: AppColors.textCaption),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.mic_rounded, color: AppColors.moduleTime),
-                    onPressed: () {},
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
+            // ── Set Reminder Section (Quick Add Card) ──────────────────────
+            _buildSetReminderSection(context, isDark),
+            AppSpacing.gapH16,
 
             // Items from DB
             if (state is PlannerLoading || state is PlannerInitial)
@@ -516,5 +509,612 @@ class _PlannerViewState extends State<_PlannerView> with SingleTickerProviderSta
   String _monthAbbr(int m) {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return months[m - 1];
+  }
+
+  // ── Set Reminder Section (Quick Add Card) ─────────────────────────────────
+  Widget _buildSetReminderSection(BuildContext context, bool isDark) {
+    final catColor = _getCategoryColor(_selectedCategory);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
+        borderRadius: AppRadius.radiusMd,
+        border: Border.all(
+          color: isDark
+              ? AppColors.darkDivider
+              : AppColors.moduleTime.withValues(alpha: 0.25),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header row with title & more options button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.alarm_add_rounded,
+                    color: AppColors.moduleTime,
+                    size: 16,
+                  ),
+                  AppSpacing.gapW8,
+                  Text(
+                    StringConstants.setReminder.toUpperCase(),
+                    style: AppTextStyles.overline.copyWith(
+                      color: AppColors.moduleTime,
+                      fontSize: 10.5,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                ],
+              ),
+              InkWell(
+                borderRadius: AppRadius.radiusXs,
+                onTap: () => _showSetReminderSheet(context),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Full Options',
+                        style: AppTextStyles.caption.copyWith(
+                          fontSize: 10.5,
+                          color: isDark
+                              ? AppColors.darkTextCaption
+                              : AppColors.textCaption,
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 14,
+                        color: isDark
+                            ? AppColors.darkTextCaption
+                            : AppColors.textCaption,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          AppSpacing.gapH8,
+
+          // Input field
+          TextField(
+            controller: _quickReminderController,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
+              fontWeight: FontWeight.w600,
+            ),
+            decoration: InputDecoration(
+              isDense: true,
+              hintText: StringConstants.reminderHint,
+              hintStyle: AppTextStyles.bodySmall.copyWith(
+                color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
+              ),
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              contentPadding: EdgeInsets.zero,
+            ),
+            onSubmitted: (_) => _submitQuickReminder(context),
+          ),
+          AppSpacing.gapH8,
+
+          // Quick Action Pills Row: Time, Category & Set Reminder button
+          Row(
+            children: [
+              // Time Picker Chip
+              GestureDetector(
+                onTap: () => _pickQuickTime(context),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.moduleTime.withValues(alpha: 0.12),
+                    borderRadius: AppRadius.radiusXs,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.access_time_rounded,
+                          size: 13, color: AppColors.moduleTime),
+                      AppSpacing.gapW4,
+                      Text(
+                        _formatTimeOfDay(_selectedTime),
+                        style: AppTextStyles.captionBold.copyWith(
+                          fontSize: 11,
+                          color: AppColors.moduleTime,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              AppSpacing.gapW8,
+
+              // Category Cycle Chip
+              GestureDetector(
+                onTap: _cycleCategory,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: catColor.withValues(alpha: 0.12),
+                    borderRadius: AppRadius.radiusXs,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(_getCategoryIcon(_selectedCategory),
+                          size: 13, color: catColor),
+                      AppSpacing.gapW4,
+                      Text(
+                        _selectedCategory,
+                        style: AppTextStyles.captionBold.copyWith(
+                          fontSize: 11,
+                          color: catColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const Spacer(),
+
+              // Submit Reminder Button
+              FilledButton.icon(
+                onPressed: () => _submitQuickReminder(context),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.moduleTime,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  minimumSize: Size.zero,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: AppRadius.radiusSm,
+                  ),
+                ),
+                icon: const Icon(Icons.add_rounded, size: 14, color: Colors.white),
+                label: Text(
+                  StringConstants.setReminder,
+                  style: AppTextStyles.captionBold.copyWith(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _submitQuickReminder(BuildContext context) {
+    final title = _quickReminderController.text.trim();
+    if (title.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a reminder title.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    final timeStr = _formatTimeOfDay(_selectedTime);
+
+    context.read<PlannerBloc>().add(
+          AddPlannerItem(
+            title: title,
+            date: today,
+            startTime: timeStr,
+            category: _selectedCategory,
+            colorValue: _getCategoryColor(_selectedCategory).toARGB32(),
+            iconCodePoint: _getCategoryIcon(_selectedCategory).codePoint,
+          ),
+        );
+
+    _quickReminderController.clear();
+    FocusScope.of(context).unfocus();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Reminder "$title" set for $timeStr!'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _cycleCategory() {
+    setState(() {
+      final currentIndex = _categories.indexOf(_selectedCategory);
+      final nextIndex = (currentIndex + 1) % _categories.length;
+      _selectedCategory = _categories[nextIndex];
+    });
+  }
+
+  Future<void> _pickQuickTime(BuildContext context) async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime,
+    );
+    if (picked != null) {
+      setState(() => _selectedTime = picked);
+    }
+  }
+
+  void _showSetReminderSheet(BuildContext context) {
+    final plannerBloc = context.read<PlannerBloc>();
+    final titleCtrl =
+        TextEditingController(text: _quickReminderController.text.trim());
+    TimeOfDay sheetTime = _selectedTime;
+    DateTime sheetDate = DateTime.now();
+    String sheetCategory = _selectedCategory;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            final cardBg =
+                isDark ? AppColors.darkCardBackground : Colors.white;
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                decoration: BoxDecoration(
+                  color: cardBg,
+                  borderRadius: AppRadius.topXxl,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black
+                          .withValues(alpha: isDark ? 0.5 : 0.15),
+                      blurRadius: 30,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 36,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? AppColors.darkDivider
+                                : AppColors.divider,
+                            borderRadius: AppRadius.radiusFull,
+                          ),
+                        ),
+                      ),
+                      AppSpacing.gapH16,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: AppColors.moduleTime
+                                      .withValues(alpha: 0.14),
+                                  borderRadius: AppRadius.radiusSm,
+                                ),
+                                child: const Icon(
+                                  Icons.alarm_add_rounded,
+                                  size: 18,
+                                  color: AppColors.moduleTime,
+                                ),
+                              ),
+                              AppSpacing.gapW12,
+                              Text(
+                                StringConstants.setReminder,
+                                style: AppTextStyles.titleLarge.copyWith(
+                                  color: isDark
+                                      ? AppColors.darkTextHeading
+                                      : AppColors.textHeading,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close_rounded, size: 20),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            color: isDark
+                                ? AppColors.darkTextCaption
+                                : AppColors.textCaption,
+                            onPressed: () => Navigator.of(sheetContext).pop(),
+                          ),
+                        ],
+                      ),
+                      AppSpacing.gapH16,
+                      TextField(
+                        controller: titleCtrl,
+                        autofocus: true,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: isDark
+                              ? AppColors.darkTextHeading
+                              : AppColors.textHeading,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        decoration: InputDecoration(
+                          labelText: 'Reminder Title',
+                          hintText: StringConstants.reminderHint,
+                          prefixIcon: const Icon(Icons.edit_note_rounded),
+                          border: const OutlineInputBorder(
+                            borderRadius: AppRadius.radiusMd,
+                          ),
+                        ),
+                      ),
+                      AppSpacing.gapH16,
+                      Text(
+                        'Schedule:',
+                        style: AppTextStyles.captionBold.copyWith(
+                          color: isDark
+                              ? AppColors.darkTextCaption
+                              : AppColors.textCaption,
+                        ),
+                      ),
+                      AppSpacing.gapH8,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () async {
+                                final picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: sheetDate,
+                                  firstDate: DateTime.now()
+                                      .subtract(const Duration(days: 1)),
+                                  lastDate: DateTime.now()
+                                      .add(const Duration(days: 365)),
+                                );
+                                if (picked != null) {
+                                  setSheetState(() => sheetDate = picked);
+                                }
+                              },
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 10),
+                                shape: const RoundedRectangleBorder(
+                                    borderRadius: AppRadius.radiusMd),
+                                side: BorderSide(
+                                  color: isDark
+                                      ? AppColors.darkDivider
+                                      : AppColors.divider,
+                                ),
+                              ),
+                              icon: const Icon(Icons.calendar_today_rounded,
+                                  size: 16, color: AppColors.moduleTime),
+                              label: Text(
+                                _formatDateShort(sheetDate),
+                                style: AppTextStyles.captionBold.copyWith(
+                                  color: isDark
+                                      ? AppColors.darkTextHeading
+                                      : AppColors.textHeading,
+                                ),
+                              ),
+                            ),
+                          ),
+                          AppSpacing.gapW8,
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () async {
+                                final picked = await showTimePicker(
+                                  context: context,
+                                  initialTime: sheetTime,
+                                );
+                                if (picked != null) {
+                                  setSheetState(() => sheetTime = picked);
+                                }
+                              },
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 10),
+                                shape: const RoundedRectangleBorder(
+                                    borderRadius: AppRadius.radiusMd),
+                                side: BorderSide(
+                                  color: isDark
+                                      ? AppColors.darkDivider
+                                      : AppColors.divider,
+                                ),
+                              ),
+                              icon: const Icon(Icons.access_time_rounded,
+                                  size: 16, color: AppColors.moduleTime),
+                              label: Text(
+                                _formatTimeOfDay(sheetTime),
+                                style: AppTextStyles.captionBold.copyWith(
+                                  color: isDark
+                                      ? AppColors.darkTextHeading
+                                      : AppColors.textHeading,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      AppSpacing.gapH16,
+                      Text(
+                        'Category:',
+                        style: AppTextStyles.captionBold.copyWith(
+                          color: isDark
+                              ? AppColors.darkTextCaption
+                              : AppColors.textCaption,
+                        ),
+                      ),
+                      AppSpacing.gapH8,
+                      Wrap(
+                        spacing: 8,
+                        children: _categories.map((cat) {
+                          final isSelected = sheetCategory == cat;
+                          final catColor = _getCategoryColor(cat);
+                          return ChoiceChip(
+                            label: Text(cat),
+                            selected: isSelected,
+                            selectedColor: catColor.withValues(alpha: 0.2),
+                            labelStyle: TextStyle(
+                              fontSize: 12,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                              color: isSelected
+                                  ? catColor
+                                  : (isDark
+                                      ? AppColors.darkTextCaption
+                                      : AppColors.textCaption),
+                            ),
+                            onSelected: (val) {
+                              if (val) setSheetState(() => sheetCategory = cat);
+                            },
+                          );
+                        }).toList(),
+                      ),
+                      AppSpacing.gapH24,
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: FilledButton.icon(
+                          onPressed: () {
+                            final title = titleCtrl.text.trim();
+                            if (title.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content:
+                                      Text('Please enter a reminder title.'),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                              return;
+                            }
+
+                            final dateStr = sheetDate
+                                .toIso8601String()
+                                .substring(0, 10);
+                            final timeStr = _formatTimeOfDay(sheetTime);
+
+                            plannerBloc.add(
+                              AddPlannerItem(
+                                title: title,
+                                date: dateStr,
+                                startTime: timeStr,
+                                category: sheetCategory,
+                                colorValue: _getCategoryColor(sheetCategory)
+                                    .toARGB32(),
+                                iconCodePoint:
+                                    _getCategoryIcon(sheetCategory).codePoint,
+                              ),
+                            );
+
+                            Navigator.of(sheetContext).pop();
+                            _quickReminderController.clear();
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                    'Reminder "$title" set for $timeStr!'),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          },
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.moduleTime,
+                            foregroundColor: Colors.white,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: AppRadius.radiusMd,
+                            ),
+                          ),
+                          icon: const Icon(Icons.check_rounded,
+                              color: Colors.white),
+                          label: Text(
+                            StringConstants.setReminder,
+                            style: AppTextStyles.buttonText
+                                .copyWith(color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String _formatTimeOfDay(TimeOfDay time) {
+    final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
+    final minute = time.minute.toString().padLeft(2, '0');
+    final period = time.period == DayPeriod.am ? 'AM' : 'PM';
+    return '${hour.toString().padLeft(2, '0')}:$minute $period';
+  }
+
+  String _formatDateShort(DateTime date) {
+    final now = DateTime.now();
+    if (date.year == now.year && date.month == now.month && date.day == now.day) {
+      return 'Today';
+    }
+    final tomorrow = now.add(const Duration(days: 1));
+    if (date.year == tomorrow.year && date.month == tomorrow.month && date.day == tomorrow.day) {
+      return 'Tomorrow';
+    }
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}';
+  }
+
+  Color _getCategoryColor(String category) {
+    switch (category) {
+      case 'Work':
+        return AppColors.primary;
+      case 'Health':
+        return AppColors.success;
+      case 'Finance':
+        return AppColors.moduleMoney;
+      case 'Important':
+        return AppColors.error;
+      case 'Personal':
+      default:
+        return AppColors.moduleTime;
+    }
+  }
+
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case 'Work':
+        return Icons.work_rounded;
+      case 'Health':
+        return Icons.fitness_center_rounded;
+      case 'Finance':
+        return Icons.account_balance_wallet_rounded;
+      case 'Important':
+        return Icons.priority_high_rounded;
+      case 'Personal':
+      default:
+        return Icons.alarm_rounded;
+    }
   }
 }

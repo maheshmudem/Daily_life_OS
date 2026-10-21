@@ -10,17 +10,20 @@ export 'notes_state.dart';
 class NotesBloc extends Bloc<NotesEvent, NotesState> {
   final GetNotesUseCase getNotesUseCase;
   final AddNoteUseCase addNoteUseCase;
+  final UpdateNoteUseCase updateNoteUseCase;
   final DeleteNoteUseCase deleteNoteUseCase;
   final TogglePinNoteUseCase togglePinNoteUseCase;
 
   NotesBloc({
     required this.getNotesUseCase,
     required this.addNoteUseCase,
+    required this.updateNoteUseCase,
     required this.deleteNoteUseCase,
     required this.togglePinNoteUseCase,
   }) : super(NotesInitial()) {
     on<LoadNotes>(_onLoad);
     on<AddNote>(_onAdd);
+    on<UpdateNote>(_onUpdate);
     on<DeleteNote>(_onDelete);
     on<TogglePinNote>(_onTogglePin);
   }
@@ -37,6 +40,18 @@ class NotesBloc extends Bloc<NotesEvent, NotesState> {
 
   Future<void> _onAdd(AddNote event, Emitter<NotesState> emit) async {
     await addNoteUseCase(
+      title: event.title,
+      content: event.content,
+      colorValue: event.colorValue,
+      tags: event.tags,
+    );
+    final notes = await getNotesUseCase();
+    emit(NotesLoaded(notes));
+  }
+
+  Future<void> _onUpdate(UpdateNote event, Emitter<NotesState> emit) async {
+    await updateNoteUseCase(
+      event.id,
       title: event.title,
       content: event.content,
       colorValue: event.colorValue,

@@ -30,5 +30,14 @@ class NoteEntity extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, isPinned, updatedAt];
+  List<Object?> get props => [
+        id,
+        title,
+        content,
+        colorValue,
+        isPinned,
+        tags,
+        createdAt,
+        updatedAt,
+      ];
 }

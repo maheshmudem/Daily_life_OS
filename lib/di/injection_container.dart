@@ -150,6 +150,7 @@ Future<void> initDependencies({AppDatabase? database}) async {
     () => NotesBloc(
       getNotesUseCase: sl<GetNotesUseCase>(),
       addNoteUseCase: sl<AddNoteUseCase>(),
+      updateNoteUseCase: sl<UpdateNoteUseCase>(),
       deleteNoteUseCase: sl<DeleteNoteUseCase>(),
       togglePinNoteUseCase: sl<TogglePinNoteUseCase>(),
     ),
