@@ -1,19 +1,27 @@
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:daily_life_os/main.dart';
 import 'package:daily_life_os/core/constants/string_constants.dart';
 import 'package:daily_life_os/core/database/app_database.dart';
 import 'package:daily_life_os/core/database/database_seeder.dart';
 import 'package:daily_life_os/core/widgets/app_dropdown_menu.dart';
 import 'package:daily_life_os/di/injection_container.dart';
+import 'core/notifications/fake_notification_service.dart';
 
 void main() {
   late AppDatabase db;
+  late FakeNotificationService notificationService;
 
   setUp(() async {
+    SharedPreferences.setMockInitialValues({});
     db = AppDatabase(NativeDatabase.memory());
-    await initDependencies(database: db);
+    notificationService = FakeNotificationService();
+    await initDependencies(
+      database: db,
+      notificationService: notificationService,
+    );
     await DatabaseSeeder.seedIfEmpty(db);
   });
 
@@ -193,5 +201,101 @@ void main() {
 
     // Note is cleanly deleted
     expect(find.text('Delete Note?'), findsNothing);
+  });
+
+  testWidgets(
+      'Planner Pomodoro Focus & Countdowns rich interactive features test',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 1920);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(const DailyLifeOSApp());
+    await tester.pumpAndSettle();
+
+    // 1. Switch to Planner tab
+    await tester.tap(find.descendant(
+        of: find.byType(BottomNavigationBar), matching: find.text('Planner')));
+    await tester.pumpAndSettle();
+
+    // 2. Tap 'Pomodoro Focus' tab
+    await tester.tap(find.text('Pomodoro Focus'));
+    await tester.pumpAndSettle();
+
+    // Verify Pomodoro Elements
+    expect(find.text('Start Focus'), findsOneWidget);
+    expect(find.text('25:00'), findsOneWidget);
+    expect(find.textContaining('Focusing on:'), findsOneWidget);
+    expect(find.text('Focus Presets & Custom Time'), findsOneWidget);
+    expect(find.text('Focus Ambience & Sounds'), findsOneWidget);
+    expect(find.text('Daily Focus Activity'), findsOneWidget);
+
+    // Test preset chip '45m Deep Work'
+    await tester.tap(find.text('45m Deep Work'));
+    await tester.pumpAndSettle();
+    expect(find.text('45:00'), findsOneWidget);
+
+    // Test Start Focus / Pause
+    await tester.tap(find.text('Start Focus'));
+    await tester.pump(const Duration(seconds: 2));
+    expect(find.text('Pause'), findsOneWidget);
+
+    // Test Pause Focus
+    await tester.tap(find.text('Pause'));
+    await tester.pumpAndSettle();
+    expect(find.text('Start Focus'), findsOneWidget);
+
+    // Test Mode Switch to 'Break'
+    await tester.tap(find.textContaining('Break (5m)'));
+    await tester.pumpAndSettle();
+    expect(find.text('05:00'), findsOneWidget);
+
+    // 3. Tap 'Countdowns' tab
+    await tester.tap(find.text('Countdowns'));
+    await tester.pumpAndSettle();
+
+    // Verify Countdowns Elements
+    expect(find.text('Important Countdowns'), findsOneWidget);
+    expect(find.text('Add Event'), findsOneWidget);
+    expect(find.text("Sarah's 28th Birthday"), findsOneWidget);
+    expect(find.text('Car Insurance Renewal'), findsOneWidget);
+
+    // Test Filter Chip 'Renewal'
+    await tester.tap(find.widgetWithText(FilterChip, 'Renewal'));
+    await tester.pumpAndSettle();
+    expect(find.text('Car Insurance Renewal'), findsOneWidget);
+    expect(find.text("Sarah's 28th Birthday"), findsNothing);
+
+    // Reset Filter to 'All'
+    await tester.tap(find.widgetWithText(FilterChip, 'All'));
+    await tester.pumpAndSettle();
+    expect(find.text("Sarah's 28th Birthday"), findsOneWidget);
+
+    // Test 'Add Event' modal sheet
+    await tester.tap(find.text('Add Event'));
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(FilledButton, 'Create Countdown'), findsOneWidget);
+    expect(find.text('Target Event Date:'), findsOneWidget);
+
+    // Enter title & notes
+    final titleFinder = find.widgetWithText(
+        TextField, 'e.g., Mom\'s 50th Birthday, Trip to Paris');
+    await tester.enterText(titleFinder, 'Graduation Ceremony');
+
+    // Tap 'Create Countdown'
+    await tester.tap(find.widgetWithText(FilledButton, 'Create Countdown'));
+    await tester.pumpAndSettle();
+
+    // Verify newly added countdown appears in list
+    expect(find.text('Graduation Ceremony'), findsOneWidget);
+
+    // Verify local notification was scheduled for the newly added countdown
+    expect(
+      notificationService.scheduledNotifications
+          .any((n) => n.title.contains('Graduation Ceremony')),
+      isTrue,
+    );
   });
 }

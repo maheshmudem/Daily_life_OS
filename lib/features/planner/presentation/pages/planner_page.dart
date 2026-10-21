@@ -1,16 +1,33 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../../../config/theme/app_colors.dart';
-import '../../../../config/theme/app_decorations.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/app_text_styles.dart';
 import '../../../../core/constants/string_constants.dart';
+import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/widgets/app_shimmer_loader.dart';
+import '../../../../core/widgets/confirmation_dialog.dart';
 import '../../../../di/injection_container.dart';
+import '../../domain/entities/countdown_item_entity.dart';
 import '../../domain/entities/planner_item_entity.dart';
+import '../../data/models/countdown_item_model.dart';
 import '../bloc/planner_bloc.dart';
+
+// Custom Planner Widgets
+import '../widgets/countdown_card.dart';
+import '../widgets/countdown_sheet.dart';
+import '../widgets/planner_item_card.dart';
+import '../widgets/pomodoro_custom_duration_sheet.dart';
+import '../widgets/pomodoro_focus_card.dart';
+import '../widgets/pomodoro_linked_task_sheet.dart';
+import '../widgets/pomodoro_mode_selector.dart';
+import '../widgets/set_reminder_card.dart';
+import '../widgets/set_reminder_sheet.dart';
 
 class PlannerPage extends StatelessWidget {
   const PlannerPage({super.key});
@@ -32,33 +49,87 @@ class _PlannerView extends StatefulWidget {
   State<_PlannerView> createState() => _PlannerViewState();
 }
 
-class _PlannerViewState extends State<_PlannerView> with SingleTickerProviderStateMixin {
+class _PlannerViewState extends State<_PlannerView>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  // Pomodoro Focus Timer — stays local (pure UI state, not stored)
-  int _secondsRemaining = 25 * 60;
+  // ── Pomodoro Focus Timer State ───────────────────────────────────────────
+  int _focusModeIndex = 0; // 0 = Work, 1 = Short Break, 2 = Long Break
+  int _workMinutes = 25;
+  int _shortBreakMinutes = 5;
+  int _longBreakMinutes = 15;
+  late int _secondsRemaining;
   bool _isTimerRunning = false;
   Timer? _timer;
-  bool _isWorkSprint = true;
+  int _currentRound = 1;
+  static const int _totalRounds = 4;
+  int _completedSessionsToday = 3;
+  String _linkedTask = 'Finalize Daily Life OS PRD';
+  String _selectedAmbience = 'Mute';
 
-  // Countdowns (static for now — will be DB in next iteration)
-  final List<Map<String, dynamic>> _countdowns = [
-    {
-      'title': "Sarah's 28th Birthday",
-      'date': DateTime.now().add(const Duration(days: 5)),
-      'icon': Icons.cake_rounded,
-      'color': AppColors.moduleNotes,
-    },
-    {
-      'title': 'Car Insurance Renewal',
-      'date': DateTime.now().add(const Duration(days: 24)),
-      'icon': Icons.directions_car_rounded,
-      'color': AppColors.moduleTime,
-    },
+  static const List<Map<String, dynamic>> _ambienceOptions = [
+    {'name': 'Mute', 'icon': Icons.volume_off_rounded},
+    {'name': 'Rain', 'icon': Icons.water_drop_rounded},
+    {'name': 'Cafe', 'icon': Icons.local_cafe_rounded},
+    {'name': 'Waves', 'icon': Icons.waves_rounded},
+    {'name': 'Forest', 'icon': Icons.forest_rounded},
+    {'name': 'White Noise', 'icon': Icons.air_rounded},
   ];
 
-  // Set Reminder state
-  final TextEditingController _quickReminderController = TextEditingController();
+  // ── Countdowns State (Persisted in SharedPreferences) ─────────────────────
+  static const _countdownsPrefKey = 'planner_saved_countdowns';
+  late List<CountdownItemEntity> _countdowns = _defaultCountdowns;
+  String _selectedCountdownCategory = 'All';
+
+  static List<CountdownItemEntity> get _defaultCountdowns {
+    final now = DateTime.now();
+    return [
+      CountdownItemModel(
+        id: 'cd_1',
+        title: "Sarah's 28th Birthday",
+        date: now.add(const Duration(days: 5)),
+        category: 'Birthday',
+        colorValue: AppColors.moduleNotes.toARGB32(),
+        iconCodePoint: Icons.cake_rounded.codePoint,
+        notes: 'Noise-cancelling headphones or gift voucher',
+        remindAdvance: true,
+      ),
+      CountdownItemModel(
+        id: 'cd_2',
+        title: 'Car Insurance Renewal',
+        date: now.add(const Duration(days: 24)),
+        category: 'Renewal',
+        colorValue: AppColors.moduleTime.toARGB32(),
+        iconCodePoint: Icons.directions_car_rounded.codePoint,
+        notes: 'Check policy documents in Vault',
+        remindAdvance: true,
+      ),
+      CountdownItemModel(
+        id: 'cd_3',
+        title: 'Trip to Tokyo',
+        date: now.add(const Duration(days: 45)),
+        category: 'Travel',
+        colorValue: const Color(0xFF06B6D4).toARGB32(),
+        iconCodePoint: Icons.flight_takeoff_rounded.codePoint,
+        notes: 'Book JR Rail Pass and pack universal adapter',
+        remindAdvance: true,
+      ),
+    ];
+  }
+
+  static const List<String> _countdownCategories = [
+    'All',
+    'Birthday',
+    'Renewal',
+    'Travel',
+    'Milestone',
+    'Anniversary',
+    'Event',
+  ];
+
+  // ── Set Reminder State ────────────────────────────────────────────────────
+  final TextEditingController _quickReminderController =
+      TextEditingController();
   TimeOfDay _selectedTime = const TimeOfDay(hour: 9, minute: 0);
   String _selectedCategory = 'Personal';
   static const List<String> _categories = [
@@ -72,10 +143,12 @@ class _PlannerViewState extends State<_PlannerView> with SingleTickerProviderSta
   @override
   void initState() {
     super.initState();
+    _secondsRemaining = _workMinutes * 60;
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
       if (mounted) setState(() {});
     });
+    _loadCountdowns();
   }
 
   @override
@@ -84,6 +157,62 @@ class _PlannerViewState extends State<_PlannerView> with SingleTickerProviderSta
     _quickReminderController.dispose();
     _tabController.dispose();
     super.dispose();
+  }
+
+  // ── Countdowns Persistence ───────────────────────────────────────────────
+  Future<void> _loadCountdowns() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_countdownsPrefKey);
+      if (raw != null && raw.isNotEmpty) {
+        final List<dynamic> decoded = jsonDecode(raw);
+        if (mounted) {
+          setState(() {
+            _countdowns = decoded
+                .map((item) => CountdownItemModel.fromJson(item))
+                .toList();
+          });
+        }
+        return;
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveCountdowns() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final models = _countdowns.map((c) => CountdownItemModel.fromEntity(c).toJson()).toList();
+      await prefs.setString(_countdownsPrefKey, jsonEncode(models));
+    } catch (_) {}
+  }
+
+  // ── Pomodoro Timer Logic ──────────────────────────────────────────────────
+  int get _currentTotalSeconds {
+    switch (_focusModeIndex) {
+      case 1:
+        return _shortBreakMinutes * 60;
+      case 2:
+        return _longBreakMinutes * 60;
+      case 0:
+      default:
+        return _workMinutes * 60;
+    }
+  }
+
+  double get _timerProgress {
+    final total = _currentTotalSeconds;
+    if (total <= 0) return 0.0;
+    return (total - _secondsRemaining) / total;
+  }
+
+  void _switchFocusMode(int modeIndex) {
+    if (_focusModeIndex == modeIndex) return;
+    _timer?.cancel();
+    setState(() {
+      _focusModeIndex = modeIndex;
+      _isTimerRunning = false;
+      _secondsRemaining = _currentTotalSeconds;
+    });
   }
 
   void _toggleTimer() {
@@ -97,13 +226,58 @@ class _PlannerViewState extends State<_PlannerView> with SingleTickerProviderSta
           setState(() => _secondsRemaining--);
         } else {
           _timer?.cancel();
-          setState(() {
-            _isTimerRunning = false;
-            _isWorkSprint = !_isWorkSprint;
-            _secondsRemaining = _isWorkSprint ? (25 * 60) : (5 * 60);
-          });
+          _onTimerCompleted();
         }
       });
+    }
+  }
+
+  void _onTimerCompleted() {
+    setState(() {
+      _isTimerRunning = false;
+      if (_focusModeIndex == 0) {
+        _completedSessionsToday++;
+        if (_currentRound >= _totalRounds) {
+          _currentRound = 1;
+          _focusModeIndex = 2; // Long Break
+          _secondsRemaining = _longBreakMinutes * 60;
+        } else {
+          _currentRound++;
+          _focusModeIndex = 1; // Short Break
+          _secondsRemaining = _shortBreakMinutes * 60;
+        }
+      } else {
+        _focusModeIndex = 0; // Back to Work
+        _secondsRemaining = _workMinutes * 60;
+      }
+    });
+
+    // Trigger local mobile notification for focus transition
+    try {
+      sl<NotificationService>().showInstantNotification(
+        id: 9901,
+        title: _focusModeIndex == 0
+            ? 'Break Over! ⚡'
+            : 'Focus Sprint Complete! 🎯',
+        body: _focusModeIndex == 0
+            ? 'Ready to dive back into your next focus sprint?'
+            : 'Well done! Time for your scheduled recharge break.',
+        channelId: NotificationChannels.focus,
+      );
+    } catch (_) {}
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _focusModeIndex == 0
+                ? 'Break complete! Ready to start next sprint?'
+                : 'Focus sprint finished! Take a well-earned break.',
+          ),
+          backgroundColor: AppColors.moduleTime,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 
@@ -111,7 +285,21 @@ class _PlannerViewState extends State<_PlannerView> with SingleTickerProviderSta
     _timer?.cancel();
     setState(() {
       _isTimerRunning = false;
-      _secondsRemaining = _isWorkSprint ? (25 * 60) : (5 * 60);
+      _secondsRemaining = _currentTotalSeconds;
+    });
+  }
+
+  void _skipSession() {
+    _timer?.cancel();
+    setState(() {
+      _isTimerRunning = false;
+      if (_focusModeIndex == 0) {
+        _focusModeIndex = (_currentRound >= _totalRounds) ? 2 : 1;
+      } else {
+        if (_focusModeIndex == 2) _currentRound = 1;
+        _focusModeIndex = 0;
+      }
+      _secondsRemaining = _currentTotalSeconds;
     });
   }
 
@@ -121,12 +309,15 @@ class _PlannerViewState extends State<_PlannerView> with SingleTickerProviderSta
     return '$minutes:$seconds';
   }
 
+  // ── Main Build ────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkScaffoldBackground : AppColors.scaffoldBackground,
+      backgroundColor: isDark
+          ? AppColors.darkScaffoldBackground
+          : AppColors.scaffoldBackground,
       appBar: AppBar(
         title: const Text(
           StringConstants.navPlanner,
@@ -157,10 +348,12 @@ class _PlannerViewState extends State<_PlannerView> with SingleTickerProviderSta
         bottom: TabBar(
           controller: _tabController,
           labelColor: AppColors.moduleTime,
-          unselectedLabelColor: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
+          unselectedLabelColor:
+              isDark ? AppColors.darkTextCaption : AppColors.textCaption,
           indicatorColor: AppColors.moduleTime,
           indicatorWeight: 3,
-          labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+          labelStyle:
+              const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
           tabs: const [
             Tab(text: 'Reminders'),
             Tab(text: 'Pomodoro Focus'),
@@ -172,30 +365,46 @@ class _PlannerViewState extends State<_PlannerView> with SingleTickerProviderSta
         controller: _tabController,
         children: [
           _buildRemindersTab(context, isDark),
-          _buildFocusTimerTab(isDark),
-          _buildCountdownsTab(isDark),
+          _buildFocusTimerTab(context, isDark),
+          _buildCountdownsTab(context, isDark),
         ],
       ),
     );
   }
 
-  // ── Tab 1: Reminders (DB-backed via PlannerBloc) ─────────────────────────
+  // =========================================================================
+  // TAB 1: REMINDERS TAB
+  // =========================================================================
   Widget _buildRemindersTab(BuildContext context, bool isDark) {
     return BlocBuilder<PlannerBloc, PlannerState>(
       builder: (context, state) {
         return ListView(
-          padding: const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 90),
+          padding:
+              const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 90),
           children: [
-            // ── Set Reminder Section (Quick Add Card) ──────────────────────
-            _buildSetReminderSection(context, isDark),
+            // Custom Set Reminder Card
+            SetReminderCard(
+              controller: _quickReminderController,
+              selectedTime: _selectedTime,
+              selectedCategory: _selectedCategory,
+              categoryColor: _getCategoryColor(_selectedCategory),
+              categoryIcon: _getCategoryIcon(_selectedCategory),
+              isDark: isDark,
+              onPickTime: () => _pickQuickTime(context),
+              onCycleCategory: _cycleCategory,
+              onSubmit: () => _submitQuickReminder(context),
+              onOpenFullOptions: () => _openFullReminderSheet(context, isDark),
+            ),
             AppSpacing.gapH16,
 
             // Items from DB
             if (state is PlannerLoading || state is PlannerInitial)
-              ...[1, 2, 3].map((_) => const Padding(
-                    padding: EdgeInsets.only(bottom: 12),
-                    child: AppShimmerLoader.card(height: 100),
-                  ))
+              ...[1, 2, 3].map(
+                (_) => const Padding(
+                  padding: EdgeInsets.only(bottom: 12),
+                  child: AppShimmerLoader.card(height: 100),
+                ),
+              )
             else if (state is PlannerLoaded) ...[
               if (state.items.isEmpty)
                 Center(
@@ -203,498 +412,63 @@ class _PlannerViewState extends State<_PlannerView> with SingleTickerProviderSta
                     padding: const EdgeInsets.symmetric(vertical: 30),
                     child: Text(
                       'No tasks today. Tap the mic or type above!',
-                      style: TextStyle(color: isDark ? AppColors.darkTextCaption : AppColors.textCaption),
-                    ),
-                  ),
-                )
-              else
-                ...state.items.map((item) => _buildPlannerItemCard(context, item, isDark)),
-            ],
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildPlannerItemCard(BuildContext context, PlannerItemEntity item, bool isDark) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
-        borderRadius: AppRadius.radiusLg,
-        border: Border.all(
-          color: item.isDone
-              ? AppColors.success.withValues(alpha: 0.3)
-              : (isDark ? AppColors.darkDivider : AppColors.divider),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Checkbox(
-                value: item.isDone,
-                activeColor: AppColors.moduleTime,
-                shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusSm),
-                onChanged: (_) => context.read<PlannerBloc>().add(TogglePlannerItem(item.id)),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.title,
                       style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
-                        decoration: item.isDone ? TextDecoration.lineThrough : null,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        if (item.timeRange.isNotEmpty)
-                          Text(
-                            item.timeRange,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
-                            ),
-                          ),
-                        if (item.category.isNotEmpty) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                            decoration: BoxDecoration(
-                              color: item.color.withValues(alpha: 0.14),
-                              borderRadius: AppRadius.radiusSm,
-                            ),
-                            child: Text(
-                              item.category,
-                              style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w700,
-                                color: item.color,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                icon: Icon(Icons.delete_outline_rounded, color: AppColors.error.withValues(alpha: 0.6), size: 18),
-                onPressed: () => context.read<PlannerBloc>().add(DeletePlannerItem(item.id)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              OutlinedButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Snoozed for 15 minutes.'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
-                style: OutlinedButton.styleFrom(
-                  minimumSize: Size.zero,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  side: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.border),
-                ),
-                child: const Text('Snooze +15m', style: TextStyle(fontSize: 11)),
-              ),
-              AppSpacing.gapW8,
-              FilledButton.tonal(
-                onPressed: () => context.read<PlannerBloc>().add(TogglePlannerItem(item.id)),
-                style: FilledButton.styleFrom(
-                  minimumSize: Size.zero,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  backgroundColor: AppColors.moduleTime.withValues(alpha: 0.15),
-                  foregroundColor: AppColors.moduleTime,
-                ),
-                child: Text(
-                  item.isDone ? 'Undo' : 'Mark Done',
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Tab 2: Pomodoro Focus Timer (local UI state — no DB needed) ───────────
-  Widget _buildFocusTimerTab(bool isDark) {
-    return ListView(
-      padding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 90),
-      children: [
-        Container(
-          padding: const EdgeInsets.all(24),
-          decoration: AppDecorations.heroTimeGradient,
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.25),
-                  borderRadius: AppRadius.radiusFull,
-                ),
-                child: Text(
-                  _isWorkSprint ? '⚡ DEEP WORK SPRINT' : '☕ SHORT BREAK',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                _formatTimer(_secondsRemaining),
-                style: AppTextStyles.timerHero.copyWith(color: Colors.white),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Linked Task: "Finalize Daily Life OS PRD"',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: _toggleTimer,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: AppColors.moduleTimeDark,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusLg),
-                    ),
-                    icon: Icon(_isTimerRunning ? Icons.pause_rounded : Icons.play_arrow_rounded),
-                    label: Text(
-                      _isTimerRunning ? 'Pause' : 'Start Focus',
-                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  IconButton.filledTonal(
-                    onPressed: _resetTimer,
-                    style: IconButton.styleFrom(
-                      backgroundColor: Colors.white.withValues(alpha: 0.2),
-                      foregroundColor: Colors.white,
-                    ),
-                    icon: const Icon(Icons.refresh_rounded),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 20),
-        const Text('Focus Settings & Presets', style: AppTextStyles.titleMedium),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            _buildPresetChip('25m Work / 5m Break', true, isDark),
-            AppSpacing.gapW8,
-            _buildPresetChip('50m Deep / 10m Break', false, isDark),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPresetChip(String label, bool isSelected, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: isSelected
-            ? AppColors.moduleTime.withValues(alpha: 0.15)
-            : (isDark ? AppColors.darkCardBackground : AppColors.cardBackground),
-        borderRadius: AppRadius.radiusMd,
-        border: Border.all(
-          color: isSelected ? AppColors.moduleTime : (isDark ? AppColors.darkDivider : AppColors.divider),
-        ),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-          color: isSelected ? AppColors.moduleTime : (isDark ? AppColors.darkTextBody : AppColors.textBody),
-        ),
-      ),
-    );
-  }
-
-  // ── Tab 3: Countdowns ─────────────────────────────────────────────────────
-  Widget _buildCountdownsTab(bool isDark) {
-    return ListView(
-      padding: const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 90),
-      children: [
-        ..._countdowns.map((cd) {
-          final color = cd['color'] as Color;
-          final targetDate = cd['date'] as DateTime;
-          final daysLeft = targetDate.difference(DateTime.now()).inDays;
-          final monthAbbr = _monthAbbr(targetDate.month);
-
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
-              borderRadius: AppRadius.radiusLg,
-              border: Border.all(color: isDark ? AppColors.darkDivider : AppColors.divider),
-            ),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor: color.withValues(alpha: 0.14),
-                  child: Icon(cd['icon'] as IconData, color: color, size: 22),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        cd['title'] as String,
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-                      ),
-                      Text(
-                        '$monthAbbr ${targetDate.day} (In $daysLeft days)',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.15),
-                    borderRadius: AppRadius.radiusMd,
-                  ),
-                  child: Text(
-                    '${daysLeft}d left',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 12,
-                      color: color,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }),
-      ],
-    );
-  }
-
-  String _monthAbbr(int m) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return months[m - 1];
-  }
-
-  // ── Set Reminder Section (Quick Add Card) ─────────────────────────────────
-  Widget _buildSetReminderSection(BuildContext context, bool isDark) {
-    final catColor = _getCategoryColor(_selectedCategory);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 12),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
-        borderRadius: AppRadius.radiusMd,
-        border: Border.all(
-          color: isDark
-              ? AppColors.darkDivider
-              : AppColors.moduleTime.withValues(alpha: 0.25),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header row with title & more options button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  const Icon(
-                    Icons.alarm_add_rounded,
-                    color: AppColors.moduleTime,
-                    size: 16,
-                  ),
-                  AppSpacing.gapW8,
-                  Text(
-                    StringConstants.setReminder.toUpperCase(),
-                    style: AppTextStyles.overline.copyWith(
-                      color: AppColors.moduleTime,
-                      fontSize: 10.5,
-                      letterSpacing: 0.6,
-                    ),
-                  ),
-                ],
-              ),
-              InkWell(
-                borderRadius: AppRadius.radiusXs,
-                onTap: () => _showSetReminderSheet(context),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  child: Row(
-                    children: [
-                      Text(
-                        'Full Options',
-                        style: AppTextStyles.caption.copyWith(
-                          fontSize: 10.5,
-                          color: isDark
-                              ? AppColors.darkTextCaption
-                              : AppColors.textCaption,
-                        ),
-                      ),
-                      const SizedBox(width: 2),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        size: 14,
                         color: isDark
                             ? AppColors.darkTextCaption
                             : AppColors.textCaption,
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-            ],
-          ),
-          AppSpacing.gapH8,
-
-          // Input field
-          TextField(
-            controller: _quickReminderController,
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
-              fontWeight: FontWeight.w600,
-            ),
-            decoration: InputDecoration(
-              isDense: true,
-              hintText: StringConstants.reminderHint,
-              hintStyle: AppTextStyles.bodySmall.copyWith(
-                color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
-              ),
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              contentPadding: EdgeInsets.zero,
-            ),
-            onSubmitted: (_) => _submitQuickReminder(context),
-          ),
-          AppSpacing.gapH8,
-
-          // Quick Action Pills Row: Time, Category & Set Reminder button
-          Row(
-            children: [
-              // Time Picker Chip
-              GestureDetector(
-                onTap: () => _pickQuickTime(context),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.moduleTime.withValues(alpha: 0.12),
-                    borderRadius: AppRadius.radiusXs,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.access_time_rounded,
-                          size: 13, color: AppColors.moduleTime),
-                      AppSpacing.gapW4,
-                      Text(
-                        _formatTimeOfDay(_selectedTime),
-                        style: AppTextStyles.captionBold.copyWith(
-                          fontSize: 11,
-                          color: AppColors.moduleTime,
+                )
+              else
+                ...state.items.map(
+                  (item) => PlannerItemCard(
+                    item: item,
+                    isDark: isDark,
+                    onToggle: (_) => context
+                        .read<PlannerBloc>()
+                        .add(TogglePlannerItem(item.id)),
+                    onDelete: () {
+                      final notifId =
+                          ('${item.title}${item.date}${item.startTime}')
+                                  .hashCode &
+                              0x7FFFFFFF;
+                      try {
+                        sl<NotificationService>().cancelNotification(notifId);
+                      } catch (_) {}
+                      context
+                          .read<PlannerBloc>()
+                          .add(DeletePlannerItem(item.id));
+                    },
+                    onSnooze: () {
+                      final snoozeTime =
+                          DateTime.now().add(const Duration(minutes: 15));
+                      final snoozeId =
+                          (item.id.hashCode + 999) & 0x7FFFFFFF;
+                      try {
+                        sl<NotificationService>().scheduleNotification(
+                          id: snoozeId,
+                          title: 'Snoozed: ${item.title}',
+                          body: 'Reminder snoozed for 15 minutes',
+                          scheduledDate: snoozeTime,
+                          channelId: NotificationChannels.reminders,
+                          payload: 'planner_snooze_${item.id}',
+                        );
+                      } catch (_) {}
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                              'Snoozed for 15 minutes. Notification scheduled!'),
+                          behavior: SnackBarBehavior.floating,
                         ),
-                      ),
-                    ],
+                      );
+                    },
                   ),
                 ),
-              ),
-              AppSpacing.gapW8,
-
-              // Category Cycle Chip
-              GestureDetector(
-                onTap: _cycleCategory,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: catColor.withValues(alpha: 0.12),
-                    borderRadius: AppRadius.radiusXs,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(_getCategoryIcon(_selectedCategory),
-                          size: 13, color: catColor),
-                      AppSpacing.gapW4,
-                      Text(
-                        _selectedCategory,
-                        style: AppTextStyles.captionBold.copyWith(
-                          fontSize: 11,
-                          color: catColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const Spacer(),
-
-              // Submit Reminder Button
-              FilledButton.icon(
-                onPressed: () => _submitQuickReminder(context),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.moduleTime,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  minimumSize: Size.zero,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: AppRadius.radiusSm,
-                  ),
-                ),
-                icon: const Icon(Icons.add_rounded, size: 14, color: Colors.white),
-                label: Text(
-                  StringConstants.setReminder,
-                  style: AppTextStyles.captionBold.copyWith(color: Colors.white),
-                ),
-              ),
             ],
-          ),
-        ],
-      ),
+          ],
+        );
+      },
     );
   }
 
@@ -723,6 +497,27 @@ class _PlannerViewState extends State<_PlannerView> with SingleTickerProviderSta
             iconCodePoint: _getCategoryIcon(_selectedCategory).codePoint,
           ),
         );
+
+    // Schedule local mobile notification
+    final now = DateTime.now();
+    final scheduledDate = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      _selectedTime.hour,
+      _selectedTime.minute,
+    );
+    final notifId = ('$title$today$timeStr').hashCode & 0x7FFFFFFF;
+    try {
+      sl<NotificationService>().scheduleNotification(
+        id: notifId,
+        title: 'Reminder: $title',
+        body: 'Scheduled for $timeStr • Category: $_selectedCategory',
+        scheduledDate: scheduledDate,
+        channelId: NotificationChannels.reminders,
+        payload: 'planner_reminder_$notifId',
+      );
+    } catch (_) {}
 
     _quickReminderController.clear();
     FocusScope.of(context).unfocus();
@@ -753,318 +548,699 @@ class _PlannerViewState extends State<_PlannerView> with SingleTickerProviderSta
     }
   }
 
-  void _showSetReminderSheet(BuildContext context) {
+  void _openFullReminderSheet(BuildContext context, bool isDark) {
     final plannerBloc = context.read<PlannerBloc>();
-    final titleCtrl =
-        TextEditingController(text: _quickReminderController.text.trim());
-    TimeOfDay sheetTime = _selectedTime;
-    DateTime sheetDate = DateTime.now();
-    String sheetCategory = _selectedCategory;
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            final isDark = Theme.of(context).brightness == Brightness.dark;
-            final cardBg =
-                isDark ? AppColors.darkCardBackground : Colors.white;
+    SetReminderSheet.show(
+      context,
+      initialTitle: _quickReminderController.text.trim(),
+      initialTime: _selectedTime,
+      initialCategory: _selectedCategory,
+      isDark: isDark,
+      onSubmit: (title, date, time, category) {
+        final dateStr = date.toIso8601String().substring(0, 10);
+        final timeStr = _formatTimeOfDay(time);
 
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
+        plannerBloc.add(
+          AddPlannerItem(
+            title: title,
+            date: dateStr,
+            startTime: timeStr,
+            category: category,
+            colorValue: _getCategoryColor(category).toARGB32(),
+            iconCodePoint: _getCategoryIcon(category).codePoint,
+          ),
+        );
+
+        // Schedule local mobile notification
+        final scheduledDate = DateTime(
+          date.year,
+          date.month,
+          date.day,
+          time.hour,
+          time.minute,
+        );
+        final notifId = ('$title$dateStr$timeStr').hashCode & 0x7FFFFFFF;
+        try {
+          sl<NotificationService>().scheduleNotification(
+            id: notifId,
+            title: 'Reminder: $title',
+            body: 'Scheduled for $timeStr • Category: $category',
+            scheduledDate: scheduledDate,
+            channelId: NotificationChannels.reminders,
+            payload: 'planner_reminder_$notifId',
+          );
+        } catch (_) {}
+
+        _quickReminderController.clear();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Reminder "$title" set for $timeStr!'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
+    );
+  }
+
+  // =========================================================================
+  // TAB 2: POMODORO FOCUS TAB
+  // =========================================================================
+  Widget _buildFocusTimerTab(BuildContext context, bool isDark) {
+    return ListView(
+      padding: const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 90),
+      children: [
+        // Mode Selector Pills
+        PomodoroModeSelector(
+          selectedIndex: _focusModeIndex,
+          workMinutes: _workMinutes,
+          shortBreakMinutes: _shortBreakMinutes,
+          longBreakMinutes: _longBreakMinutes,
+          onModeSelected: _switchFocusMode,
+          isDark: isDark,
+        ),
+        AppSpacing.gapH16,
+
+        // Hero Pomodoro Focus Card
+        PomodoroFocusCard(
+          focusModeIndex: _focusModeIndex,
+          currentRound: _currentRound,
+          totalRounds: _totalRounds,
+          timerProgress: _timerProgress,
+          formattedTime: _formatTimer(_secondsRemaining),
+          isTimerRunning: _isTimerRunning,
+          linkedTask: _linkedTask,
+          onToggleTimer: _toggleTimer,
+          onResetTimer: _resetTimer,
+          onSkipSession: _skipSession,
+          onChangeTask: () => _openLinkedTaskSheet(context, isDark),
+        ),
+        AppSpacing.gapH20,
+
+        // Presets & Custom
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Focus Presets & Custom Time',
+              style: AppTextStyles.titleSmall.copyWith(
+                fontWeight: FontWeight.w800,
+                color:
+                    isDark ? AppColors.darkTextHeading : AppColors.textHeading,
               ),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                decoration: BoxDecoration(
-                  color: cardBg,
-                  borderRadius: AppRadius.topXxl,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black
-                          .withValues(alpha: isDark ? 0.5 : 0.15),
-                      blurRadius: 30,
-                      offset: const Offset(0, -4),
+            ),
+            InkWell(
+              borderRadius: AppRadius.radiusSm,
+              onTap: () => _openCustomDurationSheet(context, isDark),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                child: Row(
+                  children: [
+                    const Icon(Icons.tune_rounded,
+                        size: 14, color: AppColors.moduleTime),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Custom...',
+                      style: AppTextStyles.captionBold.copyWith(
+                        color: AppColors.moduleTime,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Center(
-                        child: Container(
-                          width: 36,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? AppColors.darkDivider
-                                : AppColors.divider,
-                            borderRadius: AppRadius.radiusFull,
-                          ),
+              ),
+            ),
+          ],
+        ),
+        AppSpacing.gapH12,
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Row(
+            children: [
+              _buildPresetChip('15m Sprint', 15, isDark),
+              AppSpacing.gapW8,
+              _buildPresetChip('25m Classic', 25, isDark),
+              AppSpacing.gapW8,
+              _buildPresetChip('45m Deep Work', 45, isDark),
+              AppSpacing.gapW8,
+              _buildPresetChip('60m Ultra Focus', 60, isDark),
+            ],
+          ),
+        ),
+        AppSpacing.gapH20,
+
+        // Ambient Sound Bar
+        Text(
+          'Focus Ambience & Sounds',
+          style: AppTextStyles.titleSmall.copyWith(
+            fontWeight: FontWeight.w800,
+            color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
+          ),
+        ),
+        AppSpacing.gapH12,
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Row(
+            children: _ambienceOptions.map((opt) {
+              final name = opt['name'] as String;
+              final icon = opt['icon'] as IconData;
+              final isSelected = _selectedAmbience == name;
+
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(
+                  avatar: Icon(
+                    icon,
+                    size: 15,
+                    color: isSelected
+                        ? Colors.white
+                        : (isDark
+                            ? AppColors.darkTextCaption
+                            : AppColors.textCaption),
+                  ),
+                  label: Text(name),
+                  selected: isSelected,
+                  selectedColor: AppColors.moduleTime,
+                  labelStyle: TextStyle(
+                    fontSize: 12,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    color: isSelected
+                        ? Colors.white
+                        : (isDark
+                            ? AppColors.darkTextHeading
+                            : AppColors.textHeading),
+                  ),
+                  onSelected: (val) {
+                    if (val) {
+                      setState(() => _selectedAmbience = name);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(name == 'Mute'
+                              ? 'Ambience sound muted'
+                              : 'Ambience set to $name'),
+                          duration: const Duration(seconds: 1),
+                          behavior: SnackBarBehavior.floating,
                         ),
-                      ),
-                      AppSpacing.gapH16,
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  color: AppColors.moduleTime
-                                      .withValues(alpha: 0.14),
-                                  borderRadius: AppRadius.radiusSm,
-                                ),
-                                child: const Icon(
-                                  Icons.alarm_add_rounded,
-                                  size: 18,
-                                  color: AppColors.moduleTime,
-                                ),
-                              ),
-                              AppSpacing.gapW12,
-                              Text(
-                                StringConstants.setReminder,
-                                style: AppTextStyles.titleLarge.copyWith(
-                                  color: isDark
-                                      ? AppColors.darkTextHeading
-                                      : AppColors.textHeading,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ],
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.close_rounded, size: 20),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            color: isDark
-                                ? AppColors.darkTextCaption
-                                : AppColors.textCaption,
-                            onPressed: () => Navigator.of(sheetContext).pop(),
-                          ),
-                        ],
-                      ),
-                      AppSpacing.gapH16,
-                      TextField(
-                        controller: titleCtrl,
-                        autofocus: true,
-                        style: AppTextStyles.bodyMedium.copyWith(
+                      );
+                    }
+                  },
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        AppSpacing.gapH20,
+
+        // Daily Activity Summary
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark
+                ? AppColors.darkCardBackground
+                : AppColors.cardBackground,
+            borderRadius: AppRadius.radiusLg,
+            border: Border.all(
+                color: isDark ? AppColors.darkDivider : AppColors.divider),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.local_fire_department_rounded,
+                          color: AppColors.focusPomodoro, size: 18),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Daily Focus Activity',
+                        style: AppTextStyles.captionBold.copyWith(
+                          fontSize: 12,
                           color: isDark
                               ? AppColors.darkTextHeading
                               : AppColors.textHeading,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        decoration: InputDecoration(
-                          labelText: 'Reminder Title',
-                          hintText: StringConstants.reminderHint,
-                          prefixIcon: const Icon(Icons.edit_note_rounded),
-                          border: const OutlineInputBorder(
-                            borderRadius: AppRadius.radiusMd,
-                          ),
-                        ),
-                      ),
-                      AppSpacing.gapH16,
-                      Text(
-                        'Schedule:',
-                        style: AppTextStyles.captionBold.copyWith(
-                          color: isDark
-                              ? AppColors.darkTextCaption
-                              : AppColors.textCaption,
-                        ),
-                      ),
-                      AppSpacing.gapH8,
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () async {
-                                final picked = await showDatePicker(
-                                  context: context,
-                                  initialDate: sheetDate,
-                                  firstDate: DateTime.now()
-                                      .subtract(const Duration(days: 1)),
-                                  lastDate: DateTime.now()
-                                      .add(const Duration(days: 365)),
-                                );
-                                if (picked != null) {
-                                  setSheetState(() => sheetDate = picked);
-                                }
-                              },
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 10),
-                                shape: const RoundedRectangleBorder(
-                                    borderRadius: AppRadius.radiusMd),
-                                side: BorderSide(
-                                  color: isDark
-                                      ? AppColors.darkDivider
-                                      : AppColors.divider,
-                                ),
-                              ),
-                              icon: const Icon(Icons.calendar_today_rounded,
-                                  size: 16, color: AppColors.moduleTime),
-                              label: Text(
-                                _formatDateShort(sheetDate),
-                                style: AppTextStyles.captionBold.copyWith(
-                                  color: isDark
-                                      ? AppColors.darkTextHeading
-                                      : AppColors.textHeading,
-                                ),
-                              ),
-                            ),
-                          ),
-                          AppSpacing.gapW8,
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () async {
-                                final picked = await showTimePicker(
-                                  context: context,
-                                  initialTime: sheetTime,
-                                );
-                                if (picked != null) {
-                                  setSheetState(() => sheetTime = picked);
-                                }
-                              },
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 10),
-                                shape: const RoundedRectangleBorder(
-                                    borderRadius: AppRadius.radiusMd),
-                                side: BorderSide(
-                                  color: isDark
-                                      ? AppColors.darkDivider
-                                      : AppColors.divider,
-                                ),
-                              ),
-                              icon: const Icon(Icons.access_time_rounded,
-                                  size: 16, color: AppColors.moduleTime),
-                              label: Text(
-                                _formatTimeOfDay(sheetTime),
-                                style: AppTextStyles.captionBold.copyWith(
-                                  color: isDark
-                                      ? AppColors.darkTextHeading
-                                      : AppColors.textHeading,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      AppSpacing.gapH16,
-                      Text(
-                        'Category:',
-                        style: AppTextStyles.captionBold.copyWith(
-                          color: isDark
-                              ? AppColors.darkTextCaption
-                              : AppColors.textCaption,
-                        ),
-                      ),
-                      AppSpacing.gapH8,
-                      Wrap(
-                        spacing: 8,
-                        children: _categories.map((cat) {
-                          final isSelected = sheetCategory == cat;
-                          final catColor = _getCategoryColor(cat);
-                          return ChoiceChip(
-                            label: Text(cat),
-                            selected: isSelected,
-                            selectedColor: catColor.withValues(alpha: 0.2),
-                            labelStyle: TextStyle(
-                              fontSize: 12,
-                              fontWeight: isSelected
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                              color: isSelected
-                                  ? catColor
-                                  : (isDark
-                                      ? AppColors.darkTextCaption
-                                      : AppColors.textCaption),
-                            ),
-                            onSelected: (val) {
-                              if (val) setSheetState(() => sheetCategory = cat);
-                            },
-                          );
-                        }).toList(),
-                      ),
-                      AppSpacing.gapH24,
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: FilledButton.icon(
-                          onPressed: () {
-                            final title = titleCtrl.text.trim();
-                            if (title.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content:
-                                      Text('Please enter a reminder title.'),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                              return;
-                            }
-
-                            final dateStr = sheetDate
-                                .toIso8601String()
-                                .substring(0, 10);
-                            final timeStr = _formatTimeOfDay(sheetTime);
-
-                            plannerBloc.add(
-                              AddPlannerItem(
-                                title: title,
-                                date: dateStr,
-                                startTime: timeStr,
-                                category: sheetCategory,
-                                colorValue: _getCategoryColor(sheetCategory)
-                                    .toARGB32(),
-                                iconCodePoint:
-                                    _getCategoryIcon(sheetCategory).codePoint,
-                              ),
-                            );
-
-                            Navigator.of(sheetContext).pop();
-                            _quickReminderController.clear();
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                    'Reminder "$title" set for $timeStr!'),
-                                behavior: SnackBarBehavior.floating,
-                              ),
-                            );
-                          },
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.moduleTime,
-                            foregroundColor: Colors.white,
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: AppRadius.radiusMd,
-                            ),
-                          ),
-                          icon: const Icon(Icons.check_rounded,
-                              color: Colors.white),
-                          label: Text(
-                            StringConstants.setReminder,
-                            style: AppTextStyles.buttonText
-                                .copyWith(color: Colors.white),
-                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
+                  Text(
+                    '🎯 4 Sessions Goal',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: isDark
+                          ? AppColors.darkTextCaption
+                          : AppColors.textCaption,
+                    ),
+                  ),
+                ],
               ),
-            );
-          },
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildStatColumn('$_completedSessionsToday', 'Sessions Done',
+                      AppColors.moduleTime),
+                  Container(
+                      width: 1,
+                      height: 32,
+                      color:
+                          isDark ? AppColors.darkDivider : AppColors.divider),
+                  _buildStatColumn('${_completedSessionsToday * _workMinutes}m',
+                      'Time Focused', AppColors.success),
+                  Container(
+                      width: 1,
+                      height: 32,
+                      color:
+                          isDark ? AppColors.darkDivider : AppColors.divider),
+                  _buildStatColumn(
+                      '4 Days', 'Focus Streak', AppColors.focusPomodoro),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _openCustomDurationSheet(BuildContext context, bool isDark) {
+    PomodoroCustomDurationSheet.show(
+      context,
+      workMinutes: _workMinutes,
+      shortBreakMinutes: _shortBreakMinutes,
+      longBreakMinutes: _longBreakMinutes,
+      isDark: isDark,
+      onSave: (w, s, l) {
+        _timer?.cancel();
+        setState(() {
+          _workMinutes = w;
+          _shortBreakMinutes = s;
+          _longBreakMinutes = l;
+          _isTimerRunning = false;
+          _secondsRemaining = _currentTotalSeconds;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pomodoro durations updated!'),
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       },
     );
+  }
+
+  void _openLinkedTaskSheet(BuildContext context, bool isDark) {
+    final state = context.read<PlannerBloc>().state;
+    final items = state is PlannerLoaded ? state.items : <PlannerItemEntity>[];
+
+    PomodoroLinkedTaskSheet.show(
+      context,
+      currentTask: _linkedTask,
+      todayTasks: items,
+      isDark: isDark,
+      onTaskSelected: (task) => setState(() => _linkedTask = task),
+    );
+  }
+
+  Widget _buildPresetChip(String label, int minutes, bool isDark) {
+    final isSelected = _focusModeIndex == 0 && _workMinutes == minutes;
+
+    return GestureDetector(
+      onTap: () {
+        _timer?.cancel();
+        setState(() {
+          _workMinutes = minutes;
+          _focusModeIndex = 0;
+          _secondsRemaining = minutes * 60;
+          _isTimerRunning = false;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.moduleTime.withValues(alpha: 0.15)
+              : (isDark
+                  ? AppColors.darkCardBackground
+                  : AppColors.cardBackground),
+          borderRadius: AppRadius.radiusMd,
+          border: Border.all(
+            color: isSelected
+                ? AppColors.moduleTime
+                : (isDark ? AppColors.darkDivider : AppColors.divider),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            color: isSelected
+                ? AppColors.moduleTime
+                : (isDark ? AppColors.darkTextBody : AppColors.textBody),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatColumn(String value, String label, Color color) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            color: color,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textCaption,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // =========================================================================
+  // TAB 3: COUNTDOWNS TAB
+  // =========================================================================
+  Widget _buildCountdownsTab(BuildContext context, bool isDark) {
+    final filtered = _selectedCountdownCategory == 'All'
+        ? _countdowns
+        : _countdowns
+            .where((c) => c.category == _selectedCountdownCategory)
+            .toList();
+
+    return ListView(
+      padding: const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 90),
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Important Countdowns',
+                  style: AppTextStyles.titleMedium.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: isDark
+                        ? AppColors.darkTextHeading
+                        : AppColors.textHeading,
+                  ),
+                ),
+                Text(
+                  '${_countdowns.length} upcoming events & milestones',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark
+                        ? AppColors.darkTextCaption
+                        : AppColors.textCaption,
+                  ),
+                ),
+              ],
+            ),
+            FilledButton.icon(
+              onPressed: () => _openCountdownSheet(context, isDark),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.moduleTime,
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusMd),
+              ),
+              icon: const Icon(Icons.add_rounded, size: 16),
+              label: const Text(
+                'Add Event',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+              ),
+            ),
+          ],
+        ),
+        AppSpacing.gapH12,
+
+        // Filter Strip
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Row(
+            children: _countdownCategories.map((cat) {
+              final isSelected = _selectedCountdownCategory == cat;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: FilterChip(
+                  label: Text(cat),
+                  selected: isSelected,
+                  selectedColor: AppColors.moduleTime.withValues(alpha: 0.15),
+                  checkmarkColor: AppColors.moduleTime,
+                  labelStyle: TextStyle(
+                    fontSize: 12,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    color: isSelected
+                        ? AppColors.moduleTime
+                        : (isDark
+                            ? AppColors.darkTextCaption
+                            : AppColors.textCaption),
+                  ),
+                  onSelected: (val) {
+                    setState(() => _selectedCountdownCategory = cat);
+                  },
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        AppSpacing.gapH16,
+
+        if (filtered.isEmpty)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              child: Column(
+                children: [
+                  Icon(Icons.celebration_rounded,
+                      size: 48,
+                      color: isDark
+                          ? AppColors.darkDivider
+                          : AppColors.divider),
+                  const SizedBox(height: 12),
+                  Text(
+                    'No countdowns in $_selectedCountdownCategory',
+                    style: TextStyle(
+                      color: isDark
+                          ? AppColors.darkTextCaption
+                          : AppColors.textCaption,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () => _openCountdownSheet(context, isDark),
+                    icon: const Icon(Icons.add_rounded, size: 16),
+                    label: const Text('Create a Countdown'),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          ...filtered.map(
+            (cd) => CountdownCard(
+              item: cd,
+              isDark: isDark,
+              onAddToPlanner: () => _addCountdownToPlanner(context, cd),
+              onEdit: () =>
+                  _openCountdownSheet(context, isDark, editItem: cd),
+              onDelete: () => _deleteCountdown(context, cd),
+            ),
+          ),
+      ],
+    );
+  }
+
+  void _openCountdownSheet(BuildContext context, bool isDark,
+      {CountdownItemEntity? editItem}) {
+    CountdownSheet.show(
+      context,
+      editItem: editItem,
+      isDark: isDark,
+      onSave: (savedItem) async {
+        if (editItem != null) {
+          final index =
+              _countdowns.indexWhere((item) => item.id == editItem.id);
+          if (index != -1) {
+            setState(() => _countdowns[index] = savedItem);
+          }
+        } else {
+          setState(() => _countdowns.add(savedItem));
+        }
+
+        await _saveCountdowns();
+        await _syncCountdownNotifications(savedItem);
+
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Countdown "${savedItem.title}" saved!'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
+    );
+  }
+
+  void _addCountdownToPlanner(BuildContext context, CountdownItemEntity cd) {
+    final dateStr = cd.date.toIso8601String().substring(0, 10);
+    context.read<PlannerBloc>().add(
+          AddPlannerItem(
+            title: '${_getCategoryEmoji(cd.category)} ${cd.title}',
+            date: dateStr,
+            startTime: '09:00 AM',
+            category: 'Important',
+            colorValue: cd.colorValue,
+            iconCodePoint: cd.iconCodePoint,
+          ),
+        );
+
+    final eventDate = cd.date;
+    final scheduledDate =
+        DateTime(eventDate.year, eventDate.month, eventDate.day, 9, 0);
+    final notifId = ('${cd.title}$dateStr').hashCode & 0x7FFFFFFF;
+    try {
+      sl<NotificationService>().scheduleNotification(
+        id: notifId,
+        title: '${_getCategoryEmoji(cd.category)} Milestone: ${cd.title}',
+        body: 'Scheduled on your Planner for today at 09:00 AM',
+        scheduledDate: scheduledDate,
+        channelId: NotificationChannels.countdowns,
+      );
+    } catch (_) {}
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Added "${cd.title}" to Planner on $dateStr!'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  Future<void> _deleteCountdown(
+      BuildContext context, CountdownItemEntity cd) async {
+    final confirmed = await ConfirmationDialog.show(
+      context,
+      title: 'Delete Countdown?',
+      message: 'Are you sure you want to delete "${cd.title}"?',
+      confirmLabel: 'Delete',
+      isDestructive: true,
+    );
+
+    if (confirmed == true) {
+      setState(() {
+        _countdowns.removeWhere((item) => item.id == cd.id);
+      });
+      await _saveCountdowns();
+      await _cancelCountdownNotifications(cd.id);
+
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Countdown "${cd.title}" deleted.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _syncCountdownNotifications(CountdownItemEntity item) async {
+    final baseId = item.id.hashCode & 0x7FFFFFFF;
+    try {
+      if (item.remindAdvance) {
+        final now = DateTime.now();
+        // Day of event (at 9:00 AM)
+        final dayOf =
+            DateTime(item.date.year, item.date.month, item.date.day, 9, 0);
+        await sl<NotificationService>().scheduleNotification(
+          id: baseId,
+          title: 'Today: ${item.title}',
+          body: 'Milestone event "${item.title}" (${item.category}) is today!',
+          scheduledDate: dayOf,
+          channelId: NotificationChannels.countdowns,
+          payload: 'countdown_${item.id}_day',
+        );
+
+        // 1 day before (at 9:00 AM)
+        final oneDayBefore = dayOf.subtract(const Duration(days: 1));
+        if (oneDayBefore.isAfter(now)) {
+          await sl<NotificationService>().scheduleNotification(
+            id: (baseId + 1) & 0x7FFFFFFF,
+            title: 'Tomorrow: ${item.title}',
+            body:
+                '1 day remaining until "${item.title}" (${item.category})!',
+            scheduledDate: oneDayBefore,
+            channelId: NotificationChannels.countdowns,
+            payload: 'countdown_${item.id}_1d',
+          );
+        }
+
+        // 7 days before (at 9:00 AM)
+        final sevenDaysBefore = dayOf.subtract(const Duration(days: 7));
+        if (sevenDaysBefore.isAfter(now)) {
+          await sl<NotificationService>().scheduleNotification(
+            id: (baseId + 7) & 0x7FFFFFFF,
+            title: 'Upcoming in 7 Days: ${item.title}',
+            body:
+                '7 days remaining until "${item.title}" (${item.category})!',
+            scheduledDate: sevenDaysBefore,
+            channelId: NotificationChannels.countdowns,
+            payload: 'countdown_${item.id}_7d',
+          );
+        }
+      } else {
+        await _cancelCountdownNotifications(item.id);
+      }
+    } catch (e) {
+      debugPrint('Error syncing countdown notifications: $e');
+    }
+  }
+
+  Future<void> _cancelCountdownNotifications(String countdownId) async {
+    final baseId = countdownId.hashCode & 0x7FFFFFFF;
+    try {
+      await sl<NotificationService>().cancelNotification(baseId);
+      await sl<NotificationService>().cancelNotification((baseId + 1) & 0x7FFFFFFF);
+      await sl<NotificationService>().cancelNotification((baseId + 7) & 0x7FFFFFFF);
+    } catch (e) {
+      debugPrint('Error canceling countdown notifications: $e');
+    }
+  }
+
+  String _getCategoryEmoji(String category) {
+    switch (category) {
+      case 'Birthday':
+        return '🎂';
+      case 'Anniversary':
+        return '💍';
+      case 'Renewal':
+        return '🚗';
+      case 'Travel':
+        return '✈️';
+      case 'Milestone':
+        return '🎯';
+      case 'Event':
+      default:
+        return '⭐';
+    }
   }
 
   String _formatTimeOfDay(TimeOfDay time) {
@@ -1072,18 +1248,6 @@ class _PlannerViewState extends State<_PlannerView> with SingleTickerProviderSta
     final minute = time.minute.toString().padLeft(2, '0');
     final period = time.period == DayPeriod.am ? 'AM' : 'PM';
     return '${hour.toString().padLeft(2, '0')}:$minute $period';
-  }
-
-  String _formatDateShort(DateTime date) {
-    final now = DateTime.now();
-    if (date.year == now.year && date.month == now.month && date.day == now.day) {
-      return 'Today';
-    }
-    final tomorrow = now.add(const Duration(days: 1));
-    if (date.year == tomorrow.year && date.month == tomorrow.month && date.day == tomorrow.day) {
-      return 'Tomorrow';
-    }
-    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}';
   }
 
   Color _getCategoryColor(String category) {

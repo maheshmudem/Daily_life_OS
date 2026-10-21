@@ -6,6 +6,7 @@ import 'config/theme/app_theme.dart';
 import 'core/constants/string_constants.dart';
 import 'core/database/app_database.dart';
 import 'core/database/database_seeder.dart';
+import 'core/notifications/notification_service.dart';
 import 'di/injection_container.dart';
 
 void main() async {
@@ -20,6 +21,15 @@ void main() async {
 
   // Initialize Dependency Injection
   await initDependencies();
+
+  // Initialize Notification Service
+  try {
+    final notificationService = sl<NotificationService>();
+    await notificationService.initialize();
+    await notificationService.requestPermissions();
+  } catch (e, stack) {
+    debugPrint('Notification service initialization notice/error: $e\n$stack');
+  }
 
   // Seed database with demo data on first launch
   try {

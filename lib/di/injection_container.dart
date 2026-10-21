@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import '../core/database/app_database.dart';
+import '../core/notifications/notification_service.dart';
 
 // Today Hub
 import '../features/today_hub/data/datasources/today_hub_local_datasource.dart';
@@ -45,10 +46,18 @@ import '../features/vault/presentation/bloc/vault_bloc.dart';
 
 final sl = GetIt.instance;
 
-Future<void> initDependencies({AppDatabase? database}) async {
+Future<void> initDependencies({
+  AppDatabase? database,
+  NotificationService? notificationService,
+}) async {
   if (sl.isRegistered<AppDatabase>()) {
     await sl.reset();
   }
+
+  // ── Core Services ─────────────────────────────────────────────────────────
+  sl.registerLazySingleton<NotificationService>(
+    () => notificationService ?? NotificationServiceImpl(),
+  );
 
   // ── Database ─────────────────────────────────────────────────────────────
   sl.registerLazySingleton<AppDatabase>(() => database ?? AppDatabase());

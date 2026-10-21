@@ -18,11 +18,12 @@
    - [4.5 Notes & Daily Scratchpad](#45-notes--daily-scratchpad)
    - [4.6 Secure Vault](#46-secure-vault)
 5. [Drift SQLite Database Schema & Persistence](#5-drift-sqlite-database-schema--persistence)
-6. [Dependency Injection (`get_it`) Wiring](#6-dependency-injection-get_it-wiring)
-7. [Design System & Theme Tokens](#7-design-system--theme-tokens)
-8. [Shared Core Widgets Library](#8-shared-core-widgets-library)
-9. [Testing Strategy & Test Suites](#9-testing-strategy--test-suites)
-10. [Developer Extension Playbook](#10-developer-extension-playbook)
+6. [Local Notifications Engine](#6-local-notifications-engine)
+7. [Dependency Injection (`get_it`) Wiring](#7-dependency-injection-get_it-wiring)
+8. [Design System & Theme Tokens](#8-design-system--theme-tokens)
+9. [Shared Core Widgets Library](#9-shared-core-widgets-library)
+10. [Testing Strategy & Test Suites](#10-testing-strategy--test-suites)
+11. [Developer Extension Playbook](#11-developer-extension-playbook)
 
 ---
 
@@ -191,6 +192,7 @@ Every state transition and database query follows a predictable, unidirectional 
 - **BLoC:** `PlannerBloc` (`planner_event.dart`, `planner_state.dart`)
 - **Domain:** `PlannerItemEntity`
 - **Database Table:** `PlannerItems`
+- **Persistence:** SQLite via Drift (`PlannerItems`) + `SharedPreferences` for `CountdownItem` models
 
 #### Business Logic & Functions:
 1. **`LoadPlanner` Event**:
@@ -201,13 +203,30 @@ Every state transition and database query follows a predictable, unidirectional 
    - Toggles task completion state (`isDone`).
 4. **`DeletePlannerItem` Event**:
    - Permanently deletes the reminder from SQLite.
-5. **Interactive Reminder Sheet (`_showSetReminderSheet()` in `PlannerPage`)**:
+5. **Interactive Reminder Engine & Local Notifications (`SetReminderSheet` & `SetReminderCard`)**:
    - Lets users specify reminder title, pick a custom date (`showDatePicker`), pick a time (`showTimePicker`), and choose from 5 categories: *Personal*, *Work*, *Health*, *Finance*, and *Important*.
-6. **Pomodoro Focus Timer State Machine (`_PlannerViewState`)**:
-   - Local state: `_secondsRemaining` (defaults to 1500s / 25 mins), `_isTimerRunning`, `_isWorkSprint`.
-   - `_toggleTimer()`: Starts or pauses the `Timer.periodic(1 second)`.
-   - `_resetTimer()`: Resets counter to 25m (Work Sprint) or 5m (Short Break).
-   - Automatically cycles to Short Break when sprint reaches 0.
+   - **Local Notification Scheduling:** On submit (quick add or modal sheet), the app automatically computes the exact `DateTime` and schedules a system alert via `NotificationChannels.reminders`.
+   - **Snooze Support:** Tapping "Snooze" on any reminder card dynamically schedules a 15-minute follow-up notification.
+   - **Cancellation on Delete:** Deleting a task automatically cancels its associated notification from the system queue.
+6. **Advanced Pomodoro Focus Engine (`_PlannerViewState`)**:
+   - **Mode Switcher:** ⚡ *Deep Work*, ☕ *Short Break*, and 🌴 *Long Break* with dynamic color themes (Amber for work, Emerald for short break, Ocean Blue for long break).
+   - **Circular Progress Visualizer:** Dynamic `CircularProgressIndicator` displaying real-time session progress, countdown in `MM:SS`, and 4-round dot progression.
+   - **Focus Presets & Custom Stepper:** Quick presets (`15m Sprint`, `25m Classic`, `45m Deep Work`, `60m Ultra Focus`) and a custom stepper sheet to configure custom Work, Short Break, and Long Break durations.
+   - **Linked Task Integration:** Allows users to focus on a specific task either typed manually or selected directly from today's scheduled planner items.
+   - **Ambient Sounds Bar:** Built-in ambient options (*Mute*, *Rain*, *Cafe*, *Waves*, *Forest*, *White Noise*) with active indicators.
+   - **Daily Focus Activity Card:** Tracks completed sessions today, minutes focused, and multi-day focus streaks.
+   - **Sprint Transition Notifications:** Triggers instant system alerts on `NotificationChannels.focus` when work sprints or break sessions elapse, even if the device is locked.
+7. **Important Countdowns & Milestones (`CountdownItem`)**:
+   - **Data Model:** `CountdownItem` storing `id`, `title`, `date`, `category`, `colorValue`, `iconCodePoint`, `notes`, and `remindAdvance`.
+   - **Persistence:** Automatically serialized and saved to `SharedPreferences` (`planner_saved_countdowns`).
+   - **Category Filters:** Filter by *All*, *Birthday*, *Renewal*, *Travel*, *Milestone*, *Anniversary*, and *Event*.
+   - **Creation & Editing Modal:** Bottom sheet to customize title, target date via `showDatePicker`, category choice chips, optional gift ideas/notes, and advance alert toggles.
+   - **Production Advance Notifications:** When `remindAdvance` is true, schedules:
+     - **Day-of-Event Alert:** Scheduled for 9:00 AM on the milestone date.
+     - **1-Day-Before Alert:** Advance warning scheduled for 9:00 AM the day before.
+     - **7-Days-Before Alert:** 1-week advance preparation warning scheduled for 9:00 AM.
+   - **Cross-Module Link ("Add to Planner"):** 1-tap action that automatically creates a scheduled task in the user's Planner on the target date and schedules an event notification.
+   - **Destructive Deletion:** Safe deletion flow guarded by `ConfirmationDialog`, which cleanly purges all pending scheduled notifications for that milestone.
 
 ---
 
@@ -305,12 +324,51 @@ All persistence is managed by **Drift** in `lib/core/database/app_database.dart`
 
 ---
 
-## 6. Dependency Injection (`get_it`) Wiring
+## 6. Local Notifications Engine
+
+Daily Life OS provides an industry-standard, production-grade notification infrastructure located at `lib/core/notifications/notification_service.dart`.
+
+### 6.1 Architectural Design & Interfaces
+- **`NotificationService` Contract:**
+  ```dart
+  abstract class NotificationService {
+    Future<void> initialize();
+    Future<bool> requestPermissions();
+    Future<void> showInstantNotification({required int id, required String title, required String body, String? payload, String channelId});
+    Future<void> scheduleNotification({required int id, required String title, required String body, required DateTime scheduledDate, String? payload, String channelId});
+    Future<void> cancelNotification(int id);
+    Future<void> cancelAllNotifications();
+  }
+  ```
+- **`NotificationServiceImpl`:** Implements `NotificationService` utilizing `flutter_local_notifications` (v22+) and `timezone`.
+- **Dependency Injection Integration:** Registered as a lazy singleton in `initDependencies(notificationService: ...)` allowing clean substitution with test doubles (`FakeNotificationService`) in headless unit and widget tests.
+
+### 6.2 Notification Channels Architecture
+Three dedicated Android notification channels guarantee fine-grained user control:
+
+| Channel ID | Name | Importance | Priority | Purpose |
+| :--- | :--- | :--- | :--- | :--- |
+| **`daily_life_reminders`** | Daily Life Reminders | `Importance.max` | `Priority.high` | Planner tasks, scheduled alarms, snoozed reminders (Amber LED, vibration, sound) |
+| **`daily_life_countdowns`** | Important Countdowns | `Importance.high` | `Priority.high` | Milestone alerts: Day of event (9 AM), 1 day before (9 AM), 7 days before (9 AM) |
+| **`daily_life_focus`** | Pomodoro Focus Alerts | `Importance.high` | `Priority.high` | Focus sprint completion and break timer transitions |
+
+### 6.3 Android 13+ & Modern Platform Features
+- **Android Manifest Configuration (`android/app/src/main/AndroidManifest.xml`):**
+  - `POST_NOTIFICATIONS` (Android 13+ runtime permissions)
+  - `SCHEDULE_EXACT_ALARM` & `USE_EXACT_ALARM` (Exact alarm triggers for timely reminders)
+  - `RECEIVE_BOOT_COMPLETED` (Persists pending alarms across device restarts)
+  - `ScheduledNotificationReceiver` & `ScheduledNotificationBootReceiver`
+- **Timezone Scheduling:** Uses `tz.TZDateTime.from(scheduledDate, tz.local)` with `AndroidScheduleMode.exactAllowWhileIdle` to guarantee alarms fire even when the device enters deep Doze mode.
+- **Fail-Safe Fallback:** If exact alarm permission is restricted by user battery-saver policies, gracefully falls back to instant notifications rather than crashing.
+
+---
+
+## 7. Dependency Injection (`get_it`) Wiring
 
 All application singletons, data sources, repositories, use cases, and BLoC factories are registered in `lib/di/injection_container.dart` via `initDependencies()`.
 
 ### Registration Hierarchy (Bottom-Up):
-1. **Core Database:** `sl.registerLazySingleton<AppDatabase>(() => ...)`
+1. **Core Database & Notifications:** `sl.registerLazySingleton<AppDatabase>(() => ...)` and `sl.registerLazySingleton<NotificationService>(() => ...)`
 2. **DataSources:** Local data sources receiving `sl<AppDatabase>()`
 3. **Repositories:** Repository implementations receiving their respective data sources
 4. **UseCases:** Atomic business actions receiving their repository interface
@@ -318,7 +376,7 @@ All application singletons, data sources, repositories, use cases, and BLoC fact
 
 ---
 
-## 7. Design System & Theme Tokens
+## 8. Design System & Theme Tokens
 
 The design system enforces a sleek, modern, high-contrast dark and light theme.
 
@@ -338,7 +396,7 @@ The design system enforces a sleek, modern, high-contrast dark and light theme.
 
 ---
 
-## 8. Shared Core Widgets Library
+## 9. Shared Core Widgets Library
 
 Located in `lib/core/widgets/`:
 
@@ -358,23 +416,53 @@ Located in `lib/core/widgets/`:
 7. **`AudioBriefingSheet`**:
    - Daily overview sheet reading out time, tasks, and budgets via voice synthesis.
 
+### Feature-Specific Custom Widgets (`lib/features/planner/presentation/widgets/`)
+1. **`PomodoroFocusCard`**:
+   - Hero card with mode badges, round dot counters, circular progress indicator, timer typography, linked task capsule, and full playback controls.
+2. **`PomodoroModeSelector`**:
+   - Animated capsule selector for Deep Work, Short Break, and Long Break modes.
+3. **`PomodoroCustomDurationSheet`**:
+   - Modal sheet with steppers for adjusting Work, Short Break, and Long Break durations.
+4. **`PomodoroLinkedTaskSheet`**:
+   - Modal sheet for configuring linked focus goals or selecting directly from today's planner items.
+5. **`CountdownCard`**:
+   - Category-colored card displaying upcoming event details, days left badges, notes preview, and 1-tap "Add to Planner".
+6. **`CountdownSheet`**:
+   - Modal bottom sheet for creating and updating countdown events with date picker, category chips, and notes.
+7. **`PlannerItemCard`**:
+   - Modular scheduled task card with checkbox, category tag, snooze, done toggle, and delete options.
+8. **`SetReminderCard`**:
+   - Quick add reminder widget with time selector, category cycle, and "Full Options" trigger.
+9. **`SetReminderSheet`**:
+   - Comprehensive modal sheet for scheduling reminders with date and time pickers.
+
 ---
 
-## 9. Testing Strategy & Test Suites
+## 10. Testing Strategy & Test Suites
 
-The test suite in `test/` ensures complete stability across business logic and user flows:
+The test suite mirrors the `lib/` directory structure feature-by-feature, ensuring complete isolation and unit/widget test coverage:
 
-1. **`database_test.dart`**:
-   - Unit tests running on an in-memory SQLite database (`NativeDatabase.memory()`).
-   - Verifies CRUD operations across `habits`, `notes`, `planner_items`, and `transactions`.
-2. **`app_dropdown_menu_test.dart`**:
-   - Widget tests verifying popup menu rendering, callback invocation, and tap-outside dismissal.
-3. **`widget_test.dart`**:
-   - Complete end-to-end smoke test validating:
-     - 5-tab navigation switching (`Today`, `Planner`, `Money`, `Notes`, `Vault`).
-     - Habit toggling and streak incrementation in Today Hub.
-     - Note creation, daily scratchpad auto-syncing, pinning, and deletion.
-     - Reminder scheduling in Planner.
+### Feature-Wise Tests:
+1. **Core & Notifications:**
+   - `test/core/notifications/notification_service_test.dart`: Verifies notification channels contract, initialization, instant alert dispatch, timezone scheduling, and ID-targeted cancellations.
+   - `test/core/notifications/fake_notification_service.dart`: High-fidelity in-memory test double recording all dispatched and scheduled notifications for deterministic headless testing.
+2. **Planner Feature:**
+   - `test/features/planner/data/datasources/planner_local_datasource_test.dart`: In-memory SQLite CRUD, querying by ISO date, toggling, and deleting items.
+   - `test/features/planner/presentation/widgets/pomodoro_focus_card_test.dart`: Tests `PomodoroFocusCard` rendering, circular progress indicator, and control callbacks.
+   - `test/features/planner/presentation/widgets/countdown_card_test.dart`: Tests `CountdownCard` rendering, days-left calculations, and user actions.
+   - `test/features/planner/presentation/widgets/countdown_sheet_test.dart`: Tests `CountdownSheet` form interactions, category switching, and advance alert toggles.
+   - `test/features/planner/presentation/widgets/set_reminder_sheet_test.dart`: Tests `SetReminderSheet` modal input capture, schedule picker, category selection, and submission callback.
+3. **Today Hub Feature:**
+   - `test/features/today_hub/data/datasources/today_hub_local_datasource_test.dart`: Tests habit streaks, daily completion toggles, and chronological timeline queries.
+4. **Notes Feature:**
+   - `test/features/notes/data/datasources/notes_local_datasource_test.dart`: Tests full note CRUD, pinning, updating, and tag handling.
+5. **Money Feature:**
+   - `test/features/money/data/datasources/money_local_datasource_test.dart`: Tests transaction logging, dynamic budget recalculations, and IOU debt settlements.
+
+### Core & Integration Tests:
+1. **`test/database_test.dart`**: Multi-table schema integration tests.
+2. **`test/app_dropdown_menu_test.dart`**: Dropdown menu widget tests.
+3. **`test/widget_test.dart`**: End-to-end integration smoke test across all 5 navigation tabs, interactive Pomodoro focus timer, Countdowns, and notifications scheduling assertions.
 
 To execute tests at any time:
 ```bash
@@ -383,7 +471,7 @@ flutter test
 
 ---
 
-## 10. Developer Extension Playbook
+## 11. Developer Extension Playbook
 
 ### How to Add a New Table & Feature to Daily Life OS
 
