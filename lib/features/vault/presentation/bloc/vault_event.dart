@@ -14,3 +14,16 @@ class LoadVault extends VaultEvent {
 class ToggleDecoyMode extends VaultEvent {
   const ToggleDecoyMode();
 }
+
+class UnlockVault extends VaultEvent {
+  final bool isDecoy;
+
+  const UnlockVault({required this.isDecoy});
+
+  @override
+  List<Object?> get props => [isDecoy];
+}
+
+class LockVault extends VaultEvent {
+  const LockVault();
+}

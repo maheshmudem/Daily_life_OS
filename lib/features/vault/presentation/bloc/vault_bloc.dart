@@ -16,14 +16,23 @@ class VaultBloc extends Bloc<VaultEvent, VaultState> {
   }) : super(VaultInitial()) {
     on<LoadVault>(_onLoad);
     on<ToggleDecoyMode>(_onToggleDecoy);
+    on<UnlockVault>(_onUnlock);
+    on<LockVault>(_onLock);
   }
 
   Future<void> _onLoad(LoadVault event, Emitter<VaultState> emit) async {
+    final prevUnlocked = state is VaultLoaded ? (state as VaultLoaded).isUnlocked : false;
+    final prevDecoy = state is VaultLoaded ? (state as VaultLoaded).isDecoyMode : false;
     emit(VaultLoading());
     try {
       final passwords = await getVaultPasswordsUseCase();
       final documents = await getVaultDocumentsUseCase();
-      emit(VaultLoaded(passwords: passwords, documents: documents));
+      emit(VaultLoaded(
+        passwords: passwords,
+        documents: documents,
+        isUnlocked: prevUnlocked,
+        isDecoyMode: prevDecoy,
+      ));
     } catch (e) {
       emit(VaultError(e.toString()));
     }
@@ -32,11 +41,24 @@ class VaultBloc extends Bloc<VaultEvent, VaultState> {
   void _onToggleDecoy(ToggleDecoyMode event, Emitter<VaultState> emit) {
     final current = state;
     if (current is VaultLoaded) {
-      emit(VaultLoaded(
-        passwords: current.passwords,
-        documents: current.documents,
-        isDecoyMode: !current.isDecoyMode,
+      emit(current.copyWith(isDecoyMode: !current.isDecoyMode));
+    }
+  }
+
+  void _onUnlock(UnlockVault event, Emitter<VaultState> emit) {
+    final current = state;
+    if (current is VaultLoaded) {
+      emit(current.copyWith(
+        isUnlocked: true,
+        isDecoyMode: event.isDecoy,
       ));
+    }
+  }
+
+  void _onLock(LockVault event, Emitter<VaultState> emit) {
+    final current = state;
+    if (current is VaultLoaded) {
+      emit(current.copyWith(isUnlocked: false));
     }
   }
 }

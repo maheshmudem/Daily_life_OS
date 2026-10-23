@@ -9,6 +9,10 @@ import '../../../../core/widgets/app_shimmer_loader.dart';
 import '../../../../di/injection_container.dart';
 import '../../domain/entities/vault_item_entity.dart';
 import '../bloc/vault_bloc.dart';
+import 'package:daily_life_os/features/security/domain/repositories/security_repository.dart';
+import 'package:daily_life_os/features/security/presentation/widgets/security_settings_sheet.dart';
+import 'package:daily_life_os/features/security/presentation/widgets/security_setup_wizard.dart';
+import 'package:daily_life_os/features/security/presentation/widgets/vault_lock_screen.dart';
 
 class VaultPage extends StatelessWidget {
   const VaultPage({super.key});
@@ -29,20 +33,68 @@ class _VaultView extends StatefulWidget {
   State<_VaultView> createState() => _VaultViewState();
 }
 
-class _VaultViewState extends State<_VaultView> with SingleTickerProviderStateMixin {
+class _VaultViewState extends State<_VaultView>
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late TabController _tabController;
-  bool _isUnlocked = true;
+  bool _isUnlocked = false;
+  bool _isSecurityEnabled = false;
+  bool _isLoadingSecurity = true;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _tabController = TabController(length: 2, vsync: this);
+    _checkSecurity();
+  }
+
+  Future<void> _checkSecurity() async {
+    final config = await sl<SecurityRepository>().getConfig();
+    if (mounted) {
+      setState(() {
+        _isSecurityEnabled = config.isSecurityEnabled;
+        _isLoadingSecurity = false;
+        // If security is enabled, lock by default until user enters PIN/Pattern
+        // If security is disabled, unlock directly (opt-in security)
+        _isUnlocked = !config.isSecurityEnabled;
+      });
+      if (config.isSecurityEnabled) {
+        context.read<VaultBloc>().add(const LockVault());
+      }
+    }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _tabController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      if (mounted && _isUnlocked && _isSecurityEnabled) {
+        setState(() => _isUnlocked = false);
+        context.read<VaultBloc>().add(const LockVault());
+      }
+    }
+  }
+
+  void _openSecuritySetup(BuildContext context) {
+    SecuritySetupWizard.show(
+      context,
+      securityRepository: sl<SecurityRepository>(),
+      onCompleted: () {
+        _checkSecurity();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Vault security enabled successfully!'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -117,13 +169,50 @@ class _VaultViewState extends State<_VaultView> with SingleTickerProviderStateMi
                   ),
                 ],
               ),
+              // Security Settings Sheet
               IconButton(
+                tooltip: 'Security Settings',
+                icon: const Icon(Icons.shield_outlined, color: AppColors.moduleVault),
+                onPressed: () {
+                  SecuritySettingsSheet.show(
+                    context,
+                    securityRepository: sl<SecurityRepository>(),
+                    onLockNow: () {
+                      setState(() => _isUnlocked = false);
+                      context.read<VaultBloc>().add(const LockVault());
+                    },
+                  ).then((_) {
+                    _checkSecurity();
+                  });
+                },
+              ),
+              IconButton(
+                tooltip: !_isSecurityEnabled
+                    ? 'Set Up Security'
+                    : (_isUnlocked ? 'Lock Vault' : 'Vault Locked'),
                 icon: Icon(
-                  _isUnlocked ? Icons.lock_open_rounded : Icons.lock_rounded,
-                  color: AppColors.moduleVault,
+                  !_isSecurityEnabled
+                      ? Icons.lock_open_rounded
+                      : (_isUnlocked ? Icons.lock_open_rounded : Icons.lock_rounded),
+                  color: !_isSecurityEnabled ? AppColors.warning : AppColors.moduleVault,
                 ),
                 onPressed: () {
-                  setState(() => _isUnlocked = !_isUnlocked);
+                  if (!_isSecurityEnabled) {
+                    _openSecuritySetup(context);
+                    return;
+                  }
+                  if (_isUnlocked) {
+                    setState(() => _isUnlocked = false);
+                    context.read<VaultBloc>().add(const LockVault());
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Enter PIN or draw Pattern below to unlock.'),
+                        behavior: SnackBarBehavior.floating,
+                        duration: Duration(seconds: 1),
+                      ),
+                    );
+                  }
                 },
               ),
               const SizedBox(width: 8),
@@ -141,67 +230,109 @@ class _VaultViewState extends State<_VaultView> with SingleTickerProviderStateMi
               ],
             ),
           ),
-          body: !_isUnlocked
-              ? _buildLockedScreen(isDark)
-              : (state is VaultLoading || state is VaultInitial)
-                  ? const _VaultLoadingView()
-                  : state is VaultLoaded
-                      ? TabBarView(
-                          controller: _tabController,
-                          children: [
-                            _buildPasswordsTab(context, state.passwords, isDark),
-                            _buildDocumentsTab(context, state.documents, isDark),
-                          ],
-                        )
-                      : const SizedBox.shrink(),
+          body: _isLoadingSecurity
+              ? const _VaultLoadingView()
+              : !_isUnlocked
+                  ? _buildLockedScreen(isDark)
+                  : (state is VaultLoading || state is VaultInitial)
+                      ? const _VaultLoadingView()
+                      : state is VaultLoaded
+                          ? TabBarView(
+                              controller: _tabController,
+                              children: [
+                                _buildPasswordsTab(context, state.passwords, isDark),
+                                _buildDocumentsTab(context, state.documents, isDark),
+                              ],
+                            )
+                          : const SizedBox.shrink(),
         );
       },
     );
   }
 
   Widget _buildLockedScreen(bool isDark) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: AppColors.moduleVault.withValues(alpha: 0.14),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.fingerprint_rounded, size: 64, color: AppColors.moduleVault),
+    return VaultLockScreen(
+      securityRepository: sl<SecurityRepository>(),
+      onUnlock: ({required bool isDecoy}) {
+        context.read<VaultBloc>().add(UnlockVault(isDecoy: isDecoy));
+        setState(() => _isUnlocked = true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isDecoy
+                  ? 'Vault unlocked in Decoy Mode (Safe dummy data)'
+                  : 'Secure Vault unlocked successfully!',
             ),
-            const SizedBox(height: 24),
-            const Text(
-              StringConstants.vaultLocked,
-              style: AppTextStyles.headingMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Protected by hardware-backed AES-256 biometric authentication',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13,
-                color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
-              ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () => setState(() => _isUnlocked = true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.moduleVault,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusMd),
-              ),
-              icon: const Icon(Icons.lock_open_rounded),
-              label: const Text('Unlock with Biometrics / FaceID', style: TextStyle(fontWeight: FontWeight.w700)),
-            ),
-          ],
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildUnsecuredVaultBanner(BuildContext context, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withValues(alpha: isDark ? 0.18 : 0.09),
+        borderRadius: AppRadius.radiusLg,
+        border: Border.all(
+          color: AppColors.warning.withValues(alpha: 0.4),
+          width: 1.5,
         ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.shield_outlined, color: AppColors.warning, size: 20),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Vault Security is Disabled',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Your vault has no master lock configured. Anyone with device access can view passwords and sensitive documents.',
+            style: TextStyle(
+              fontSize: 12,
+              color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () => _openSecuritySetup(context),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.moduleVault,
+                shape: const RoundedRectangleBorder(borderRadius: AppRadius.radiusMd),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+              icon: const Icon(Icons.shield_rounded, size: 16),
+              label: const Text('Set Up Security Lock',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -210,6 +341,8 @@ class _VaultViewState extends State<_VaultView> with SingleTickerProviderStateMi
     return ListView(
       padding: const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 90),
       children: [
+        if (!_isSecurityEnabled)
+          _buildUnsecuredVaultBanner(context, isDark),
         // Security Banner
         Container(
           padding: const EdgeInsets.all(16),
@@ -317,6 +450,8 @@ class _VaultViewState extends State<_VaultView> with SingleTickerProviderStateMi
     return ListView(
       padding: const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 90),
       children: [
+        if (!_isSecurityEnabled)
+          _buildUnsecuredVaultBanner(context, isDark),
         // Automated Expiry Notice (PRD Feature)
         Container(
           padding: const EdgeInsets.all(14),

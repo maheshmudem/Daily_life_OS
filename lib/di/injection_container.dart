@@ -44,11 +44,20 @@ import '../features/vault/domain/repositories/vault_repository.dart';
 import '../features/vault/domain/usecases/get_vault_items_usecase.dart';
 import '../features/vault/presentation/bloc/vault_bloc.dart';
 
+// Security
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:local_auth/local_auth.dart';
+import '../features/security/data/datasources/security_local_datasource.dart';
+import '../features/security/data/repositories/security_repository_impl.dart';
+import '../features/security/domain/repositories/security_repository.dart';
+
 final sl = GetIt.instance;
 
 Future<void> initDependencies({
   AppDatabase? database,
   NotificationService? notificationService,
+  FlutterSecureStorage? secureStorage,
+  LocalAuthentication? localAuth,
 }) async {
   if (sl.isRegistered<AppDatabase>()) {
     await sl.reset();
@@ -78,6 +87,12 @@ Future<void> initDependencies({
   sl.registerLazySingleton<VaultLocalDataSource>(
     () => VaultLocalDataSourceImpl(),
   );
+  sl.registerLazySingleton<SecurityLocalDataSource>(
+    () => SecurityLocalDataSourceImpl(
+      storage: secureStorage,
+      localAuth: localAuth,
+    ),
+  );
 
   // ── Repositories ─────────────────────────────────────────────────────────
   sl.registerLazySingleton<TodayHubRepository>(
@@ -94,6 +109,9 @@ Future<void> initDependencies({
   );
   sl.registerLazySingleton<VaultRepository>(
     () => VaultRepositoryImpl(sl<VaultLocalDataSource>()),
+  );
+  sl.registerLazySingleton<SecurityRepository>(
+    () => SecurityRepositoryImpl(sl<SecurityLocalDataSource>()),
   );
 
   // ── Use Cases ────────────────────────────────────────────────────────────
