@@ -179,10 +179,12 @@ void main() {
   });
 
   group('Planner Clean Architecture (DataSource -> Repository -> UseCases)', () {
-    test('Planner use cases add and toggle planner tasks', () async {
+    test('Planner use cases add, update, toggle, and delete planner tasks', () async {
       final getPlanner = GetPlannerItemsUseCase(plannerRepo);
       final addPlanner = AddPlannerItemUseCase(plannerRepo);
+      final updatePlanner = UpdatePlannerItemUseCase(plannerRepo);
       final togglePlanner = TogglePlannerItemUseCase(plannerRepo);
+      final deletePlanner = DeletePlannerItemUseCase(plannerRepo);
 
       final today = DateTime.now().toIso8601String().substring(0, 10);
       final initialItems = await getPlanner(today);
@@ -203,9 +205,31 @@ void main() {
       final added = updatedItems.firstWhere((i) => i.title == 'Review Architecture Diagram');
       expect(added.isDone, isFalse);
 
+      // Test UpdatePlannerItemUseCase
+      await updatePlanner(
+        id: added.id,
+        title: 'Updated Architecture Diagram Review',
+        date: today,
+        category: 'Important',
+        colorValue: 0xFFEF4444,
+        iconCodePoint: 0xe532,
+        startTime: '02:00 PM',
+        endTime: '03:00 PM',
+      );
+
+      final afterUpdate = await getPlanner(today);
+      final updatedItem = afterUpdate.firstWhere((i) => i.id == added.id);
+      expect(updatedItem.title, 'Updated Architecture Diagram Review');
+      expect(updatedItem.category, 'Important');
+      expect(updatedItem.startTime, '02:00 PM');
+
       await togglePlanner(added.id);
       final toggledItems = await getPlanner(today);
       expect(toggledItems.firstWhere((i) => i.id == added.id).isDone, isTrue);
+
+      await deletePlanner(added.id);
+      final afterDelete = await getPlanner(today);
+      expect(afterDelete.any((i) => i.id == added.id), isFalse);
     });
   });
 

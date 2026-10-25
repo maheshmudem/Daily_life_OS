@@ -3285,6 +3285,88 @@ class $PlannerItemsTable extends PlannerItems
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
+  static const VerificationMeta _repeatTypeMeta = const VerificationMeta(
+    'repeatType',
+  );
+  @override
+  late final GeneratedColumn<String> repeatType = GeneratedColumn<String>(
+    'repeat_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('none'),
+  );
+  static const VerificationMeta _repeatDaysMeta = const VerificationMeta(
+    'repeatDays',
+  );
+  @override
+  late final GeneratedColumn<String> repeatDays = GeneratedColumn<String>(
+    'repeat_days',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _endDateMeta = const VerificationMeta(
+    'endDate',
+  );
+  @override
+  late final GeneratedColumn<String> endDate = GeneratedColumn<String>(
+    'end_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _priorityMeta = const VerificationMeta(
+    'priority',
+  );
+  @override
+  late final GeneratedColumn<String> priority = GeneratedColumn<String>(
+    'priority',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('medium'),
+  );
+  static const VerificationMeta _reminderOffsetMinutesMeta =
+      const VerificationMeta('reminderOffsetMinutes');
+  @override
+  late final GeneratedColumn<int> reminderOffsetMinutes = GeneratedColumn<int>(
+    'reminder_offset_minutes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _checklistJsonMeta = const VerificationMeta(
+    'checklistJson',
+  );
+  @override
+  late final GeneratedColumn<String> checklistJson = GeneratedColumn<String>(
+    'checklist_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _completedDatesMeta = const VerificationMeta(
+    'completedDates',
+  );
+  @override
+  late final GeneratedColumn<String> completedDates = GeneratedColumn<String>(
+    'completed_dates',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3297,6 +3379,13 @@ class $PlannerItemsTable extends PlannerItems
     iconCodePoint,
     isDone,
     notes,
+    repeatType,
+    repeatDays,
+    endDate,
+    priority,
+    reminderOffsetMinutes,
+    checklistJson,
+    completedDates,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3380,6 +3469,57 @@ class $PlannerItemsTable extends PlannerItems
         notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
       );
     }
+    if (data.containsKey('repeat_type')) {
+      context.handle(
+        _repeatTypeMeta,
+        repeatType.isAcceptableOrUnknown(data['repeat_type']!, _repeatTypeMeta),
+      );
+    }
+    if (data.containsKey('repeat_days')) {
+      context.handle(
+        _repeatDaysMeta,
+        repeatDays.isAcceptableOrUnknown(data['repeat_days']!, _repeatDaysMeta),
+      );
+    }
+    if (data.containsKey('end_date')) {
+      context.handle(
+        _endDateMeta,
+        endDate.isAcceptableOrUnknown(data['end_date']!, _endDateMeta),
+      );
+    }
+    if (data.containsKey('priority')) {
+      context.handle(
+        _priorityMeta,
+        priority.isAcceptableOrUnknown(data['priority']!, _priorityMeta),
+      );
+    }
+    if (data.containsKey('reminder_offset_minutes')) {
+      context.handle(
+        _reminderOffsetMinutesMeta,
+        reminderOffsetMinutes.isAcceptableOrUnknown(
+          data['reminder_offset_minutes']!,
+          _reminderOffsetMinutesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('checklist_json')) {
+      context.handle(
+        _checklistJsonMeta,
+        checklistJson.isAcceptableOrUnknown(
+          data['checklist_json']!,
+          _checklistJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('completed_dates')) {
+      context.handle(
+        _completedDatesMeta,
+        completedDates.isAcceptableOrUnknown(
+          data['completed_dates']!,
+          _completedDatesMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -3429,6 +3569,34 @@ class $PlannerItemsTable extends PlannerItems
         DriftSqlType.string,
         data['${effectivePrefix}notes'],
       )!,
+      repeatType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}repeat_type'],
+      )!,
+      repeatDays: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}repeat_days'],
+      )!,
+      endDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}end_date'],
+      ),
+      priority: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}priority'],
+      )!,
+      reminderOffsetMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}reminder_offset_minutes'],
+      )!,
+      checklistJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}checklist_json'],
+      )!,
+      completedDates: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}completed_dates'],
+      )!,
     );
   }
 
@@ -3449,6 +3617,13 @@ class PlannerItem extends DataClass implements Insertable<PlannerItem> {
   final int iconCodePoint;
   final bool isDone;
   final String notes;
+  final String repeatType;
+  final String repeatDays;
+  final String? endDate;
+  final String priority;
+  final int reminderOffsetMinutes;
+  final String checklistJson;
+  final String completedDates;
   const PlannerItem({
     required this.id,
     required this.title,
@@ -3460,6 +3635,13 @@ class PlannerItem extends DataClass implements Insertable<PlannerItem> {
     required this.iconCodePoint,
     required this.isDone,
     required this.notes,
+    required this.repeatType,
+    required this.repeatDays,
+    this.endDate,
+    required this.priority,
+    required this.reminderOffsetMinutes,
+    required this.checklistJson,
+    required this.completedDates,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3478,6 +3660,15 @@ class PlannerItem extends DataClass implements Insertable<PlannerItem> {
     map['icon_code_point'] = Variable<int>(iconCodePoint);
     map['is_done'] = Variable<bool>(isDone);
     map['notes'] = Variable<String>(notes);
+    map['repeat_type'] = Variable<String>(repeatType);
+    map['repeat_days'] = Variable<String>(repeatDays);
+    if (!nullToAbsent || endDate != null) {
+      map['end_date'] = Variable<String>(endDate);
+    }
+    map['priority'] = Variable<String>(priority);
+    map['reminder_offset_minutes'] = Variable<int>(reminderOffsetMinutes);
+    map['checklist_json'] = Variable<String>(checklistJson);
+    map['completed_dates'] = Variable<String>(completedDates);
     return map;
   }
 
@@ -3497,6 +3688,15 @@ class PlannerItem extends DataClass implements Insertable<PlannerItem> {
       iconCodePoint: Value(iconCodePoint),
       isDone: Value(isDone),
       notes: Value(notes),
+      repeatType: Value(repeatType),
+      repeatDays: Value(repeatDays),
+      endDate: endDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endDate),
+      priority: Value(priority),
+      reminderOffsetMinutes: Value(reminderOffsetMinutes),
+      checklistJson: Value(checklistJson),
+      completedDates: Value(completedDates),
     );
   }
 
@@ -3516,6 +3716,15 @@ class PlannerItem extends DataClass implements Insertable<PlannerItem> {
       iconCodePoint: serializer.fromJson<int>(json['iconCodePoint']),
       isDone: serializer.fromJson<bool>(json['isDone']),
       notes: serializer.fromJson<String>(json['notes']),
+      repeatType: serializer.fromJson<String>(json['repeatType']),
+      repeatDays: serializer.fromJson<String>(json['repeatDays']),
+      endDate: serializer.fromJson<String?>(json['endDate']),
+      priority: serializer.fromJson<String>(json['priority']),
+      reminderOffsetMinutes: serializer.fromJson<int>(
+        json['reminderOffsetMinutes'],
+      ),
+      checklistJson: serializer.fromJson<String>(json['checklistJson']),
+      completedDates: serializer.fromJson<String>(json['completedDates']),
     );
   }
   @override
@@ -3532,6 +3741,13 @@ class PlannerItem extends DataClass implements Insertable<PlannerItem> {
       'iconCodePoint': serializer.toJson<int>(iconCodePoint),
       'isDone': serializer.toJson<bool>(isDone),
       'notes': serializer.toJson<String>(notes),
+      'repeatType': serializer.toJson<String>(repeatType),
+      'repeatDays': serializer.toJson<String>(repeatDays),
+      'endDate': serializer.toJson<String?>(endDate),
+      'priority': serializer.toJson<String>(priority),
+      'reminderOffsetMinutes': serializer.toJson<int>(reminderOffsetMinutes),
+      'checklistJson': serializer.toJson<String>(checklistJson),
+      'completedDates': serializer.toJson<String>(completedDates),
     };
   }
 
@@ -3546,6 +3762,13 @@ class PlannerItem extends DataClass implements Insertable<PlannerItem> {
     int? iconCodePoint,
     bool? isDone,
     String? notes,
+    String? repeatType,
+    String? repeatDays,
+    Value<String?> endDate = const Value.absent(),
+    String? priority,
+    int? reminderOffsetMinutes,
+    String? checklistJson,
+    String? completedDates,
   }) => PlannerItem(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -3557,6 +3780,13 @@ class PlannerItem extends DataClass implements Insertable<PlannerItem> {
     iconCodePoint: iconCodePoint ?? this.iconCodePoint,
     isDone: isDone ?? this.isDone,
     notes: notes ?? this.notes,
+    repeatType: repeatType ?? this.repeatType,
+    repeatDays: repeatDays ?? this.repeatDays,
+    endDate: endDate.present ? endDate.value : this.endDate,
+    priority: priority ?? this.priority,
+    reminderOffsetMinutes: reminderOffsetMinutes ?? this.reminderOffsetMinutes,
+    checklistJson: checklistJson ?? this.checklistJson,
+    completedDates: completedDates ?? this.completedDates,
   );
   PlannerItem copyWithCompanion(PlannerItemsCompanion data) {
     return PlannerItem(
@@ -3574,6 +3804,23 @@ class PlannerItem extends DataClass implements Insertable<PlannerItem> {
           : this.iconCodePoint,
       isDone: data.isDone.present ? data.isDone.value : this.isDone,
       notes: data.notes.present ? data.notes.value : this.notes,
+      repeatType: data.repeatType.present
+          ? data.repeatType.value
+          : this.repeatType,
+      repeatDays: data.repeatDays.present
+          ? data.repeatDays.value
+          : this.repeatDays,
+      endDate: data.endDate.present ? data.endDate.value : this.endDate,
+      priority: data.priority.present ? data.priority.value : this.priority,
+      reminderOffsetMinutes: data.reminderOffsetMinutes.present
+          ? data.reminderOffsetMinutes.value
+          : this.reminderOffsetMinutes,
+      checklistJson: data.checklistJson.present
+          ? data.checklistJson.value
+          : this.checklistJson,
+      completedDates: data.completedDates.present
+          ? data.completedDates.value
+          : this.completedDates,
     );
   }
 
@@ -3589,7 +3836,14 @@ class PlannerItem extends DataClass implements Insertable<PlannerItem> {
           ..write('colorValue: $colorValue, ')
           ..write('iconCodePoint: $iconCodePoint, ')
           ..write('isDone: $isDone, ')
-          ..write('notes: $notes')
+          ..write('notes: $notes, ')
+          ..write('repeatType: $repeatType, ')
+          ..write('repeatDays: $repeatDays, ')
+          ..write('endDate: $endDate, ')
+          ..write('priority: $priority, ')
+          ..write('reminderOffsetMinutes: $reminderOffsetMinutes, ')
+          ..write('checklistJson: $checklistJson, ')
+          ..write('completedDates: $completedDates')
           ..write(')'))
         .toString();
   }
@@ -3606,6 +3860,13 @@ class PlannerItem extends DataClass implements Insertable<PlannerItem> {
     iconCodePoint,
     isDone,
     notes,
+    repeatType,
+    repeatDays,
+    endDate,
+    priority,
+    reminderOffsetMinutes,
+    checklistJson,
+    completedDates,
   );
   @override
   bool operator ==(Object other) =>
@@ -3620,7 +3881,14 @@ class PlannerItem extends DataClass implements Insertable<PlannerItem> {
           other.colorValue == this.colorValue &&
           other.iconCodePoint == this.iconCodePoint &&
           other.isDone == this.isDone &&
-          other.notes == this.notes);
+          other.notes == this.notes &&
+          other.repeatType == this.repeatType &&
+          other.repeatDays == this.repeatDays &&
+          other.endDate == this.endDate &&
+          other.priority == this.priority &&
+          other.reminderOffsetMinutes == this.reminderOffsetMinutes &&
+          other.checklistJson == this.checklistJson &&
+          other.completedDates == this.completedDates);
 }
 
 class PlannerItemsCompanion extends UpdateCompanion<PlannerItem> {
@@ -3634,6 +3902,13 @@ class PlannerItemsCompanion extends UpdateCompanion<PlannerItem> {
   final Value<int> iconCodePoint;
   final Value<bool> isDone;
   final Value<String> notes;
+  final Value<String> repeatType;
+  final Value<String> repeatDays;
+  final Value<String?> endDate;
+  final Value<String> priority;
+  final Value<int> reminderOffsetMinutes;
+  final Value<String> checklistJson;
+  final Value<String> completedDates;
   const PlannerItemsCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
@@ -3645,6 +3920,13 @@ class PlannerItemsCompanion extends UpdateCompanion<PlannerItem> {
     this.iconCodePoint = const Value.absent(),
     this.isDone = const Value.absent(),
     this.notes = const Value.absent(),
+    this.repeatType = const Value.absent(),
+    this.repeatDays = const Value.absent(),
+    this.endDate = const Value.absent(),
+    this.priority = const Value.absent(),
+    this.reminderOffsetMinutes = const Value.absent(),
+    this.checklistJson = const Value.absent(),
+    this.completedDates = const Value.absent(),
   });
   PlannerItemsCompanion.insert({
     this.id = const Value.absent(),
@@ -3657,6 +3939,13 @@ class PlannerItemsCompanion extends UpdateCompanion<PlannerItem> {
     required int iconCodePoint,
     this.isDone = const Value.absent(),
     this.notes = const Value.absent(),
+    this.repeatType = const Value.absent(),
+    this.repeatDays = const Value.absent(),
+    this.endDate = const Value.absent(),
+    this.priority = const Value.absent(),
+    this.reminderOffsetMinutes = const Value.absent(),
+    this.checklistJson = const Value.absent(),
+    this.completedDates = const Value.absent(),
   }) : title = Value(title),
        date = Value(date),
        category = Value(category),
@@ -3673,6 +3962,13 @@ class PlannerItemsCompanion extends UpdateCompanion<PlannerItem> {
     Expression<int>? iconCodePoint,
     Expression<bool>? isDone,
     Expression<String>? notes,
+    Expression<String>? repeatType,
+    Expression<String>? repeatDays,
+    Expression<String>? endDate,
+    Expression<String>? priority,
+    Expression<int>? reminderOffsetMinutes,
+    Expression<String>? checklistJson,
+    Expression<String>? completedDates,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -3685,6 +3981,14 @@ class PlannerItemsCompanion extends UpdateCompanion<PlannerItem> {
       if (iconCodePoint != null) 'icon_code_point': iconCodePoint,
       if (isDone != null) 'is_done': isDone,
       if (notes != null) 'notes': notes,
+      if (repeatType != null) 'repeat_type': repeatType,
+      if (repeatDays != null) 'repeat_days': repeatDays,
+      if (endDate != null) 'end_date': endDate,
+      if (priority != null) 'priority': priority,
+      if (reminderOffsetMinutes != null)
+        'reminder_offset_minutes': reminderOffsetMinutes,
+      if (checklistJson != null) 'checklist_json': checklistJson,
+      if (completedDates != null) 'completed_dates': completedDates,
     });
   }
 
@@ -3699,6 +4003,13 @@ class PlannerItemsCompanion extends UpdateCompanion<PlannerItem> {
     Value<int>? iconCodePoint,
     Value<bool>? isDone,
     Value<String>? notes,
+    Value<String>? repeatType,
+    Value<String>? repeatDays,
+    Value<String?>? endDate,
+    Value<String>? priority,
+    Value<int>? reminderOffsetMinutes,
+    Value<String>? checklistJson,
+    Value<String>? completedDates,
   }) {
     return PlannerItemsCompanion(
       id: id ?? this.id,
@@ -3711,6 +4022,14 @@ class PlannerItemsCompanion extends UpdateCompanion<PlannerItem> {
       iconCodePoint: iconCodePoint ?? this.iconCodePoint,
       isDone: isDone ?? this.isDone,
       notes: notes ?? this.notes,
+      repeatType: repeatType ?? this.repeatType,
+      repeatDays: repeatDays ?? this.repeatDays,
+      endDate: endDate ?? this.endDate,
+      priority: priority ?? this.priority,
+      reminderOffsetMinutes:
+          reminderOffsetMinutes ?? this.reminderOffsetMinutes,
+      checklistJson: checklistJson ?? this.checklistJson,
+      completedDates: completedDates ?? this.completedDates,
     );
   }
 
@@ -3747,6 +4066,29 @@ class PlannerItemsCompanion extends UpdateCompanion<PlannerItem> {
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
     }
+    if (repeatType.present) {
+      map['repeat_type'] = Variable<String>(repeatType.value);
+    }
+    if (repeatDays.present) {
+      map['repeat_days'] = Variable<String>(repeatDays.value);
+    }
+    if (endDate.present) {
+      map['end_date'] = Variable<String>(endDate.value);
+    }
+    if (priority.present) {
+      map['priority'] = Variable<String>(priority.value);
+    }
+    if (reminderOffsetMinutes.present) {
+      map['reminder_offset_minutes'] = Variable<int>(
+        reminderOffsetMinutes.value,
+      );
+    }
+    if (checklistJson.present) {
+      map['checklist_json'] = Variable<String>(checklistJson.value);
+    }
+    if (completedDates.present) {
+      map['completed_dates'] = Variable<String>(completedDates.value);
+    }
     return map;
   }
 
@@ -3762,7 +4104,14 @@ class PlannerItemsCompanion extends UpdateCompanion<PlannerItem> {
           ..write('colorValue: $colorValue, ')
           ..write('iconCodePoint: $iconCodePoint, ')
           ..write('isDone: $isDone, ')
-          ..write('notes: $notes')
+          ..write('notes: $notes, ')
+          ..write('repeatType: $repeatType, ')
+          ..write('repeatDays: $repeatDays, ')
+          ..write('endDate: $endDate, ')
+          ..write('priority: $priority, ')
+          ..write('reminderOffsetMinutes: $reminderOffsetMinutes, ')
+          ..write('checklistJson: $checklistJson, ')
+          ..write('completedDates: $completedDates')
           ..write(')'))
         .toString();
   }
@@ -5442,6 +5791,13 @@ typedef $$PlannerItemsTableCreateCompanionBuilder =
       required int iconCodePoint,
       Value<bool> isDone,
       Value<String> notes,
+      Value<String> repeatType,
+      Value<String> repeatDays,
+      Value<String?> endDate,
+      Value<String> priority,
+      Value<int> reminderOffsetMinutes,
+      Value<String> checklistJson,
+      Value<String> completedDates,
     });
 typedef $$PlannerItemsTableUpdateCompanionBuilder =
     PlannerItemsCompanion Function({
@@ -5455,6 +5811,13 @@ typedef $$PlannerItemsTableUpdateCompanionBuilder =
       Value<int> iconCodePoint,
       Value<bool> isDone,
       Value<String> notes,
+      Value<String> repeatType,
+      Value<String> repeatDays,
+      Value<String?> endDate,
+      Value<String> priority,
+      Value<int> reminderOffsetMinutes,
+      Value<String> checklistJson,
+      Value<String> completedDates,
     });
 
 class $$PlannerItemsTableFilterComposer
@@ -5513,6 +5876,41 @@ class $$PlannerItemsTableFilterComposer
 
   ColumnFilters<String> get notes => $composableBuilder(
     column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get repeatType => $composableBuilder(
+    column: $table.repeatType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get repeatDays => $composableBuilder(
+    column: $table.repeatDays,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get endDate => $composableBuilder(
+    column: $table.endDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get priority => $composableBuilder(
+    column: $table.priority,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get reminderOffsetMinutes => $composableBuilder(
+    column: $table.reminderOffsetMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get checklistJson => $composableBuilder(
+    column: $table.checklistJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get completedDates => $composableBuilder(
+    column: $table.completedDates,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -5575,6 +5973,41 @@ class $$PlannerItemsTableOrderingComposer
     column: $table.notes,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get repeatType => $composableBuilder(
+    column: $table.repeatType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get repeatDays => $composableBuilder(
+    column: $table.repeatDays,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get endDate => $composableBuilder(
+    column: $table.endDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get priority => $composableBuilder(
+    column: $table.priority,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get reminderOffsetMinutes => $composableBuilder(
+    column: $table.reminderOffsetMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get checklistJson => $composableBuilder(
+    column: $table.checklistJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get completedDates => $composableBuilder(
+    column: $table.completedDates,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$PlannerItemsTableAnnotationComposer
@@ -5619,6 +6052,37 @@ class $$PlannerItemsTableAnnotationComposer
 
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<String> get repeatType => $composableBuilder(
+    column: $table.repeatType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get repeatDays => $composableBuilder(
+    column: $table.repeatDays,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get endDate =>
+      $composableBuilder(column: $table.endDate, builder: (column) => column);
+
+  GeneratedColumn<String> get priority =>
+      $composableBuilder(column: $table.priority, builder: (column) => column);
+
+  GeneratedColumn<int> get reminderOffsetMinutes => $composableBuilder(
+    column: $table.reminderOffsetMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get checklistJson => $composableBuilder(
+    column: $table.checklistJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get completedDates => $composableBuilder(
+    column: $table.completedDates,
+    builder: (column) => column,
+  );
 }
 
 class $$PlannerItemsTableTableManager
@@ -5662,6 +6126,13 @@ class $$PlannerItemsTableTableManager
                 Value<int> iconCodePoint = const Value.absent(),
                 Value<bool> isDone = const Value.absent(),
                 Value<String> notes = const Value.absent(),
+                Value<String> repeatType = const Value.absent(),
+                Value<String> repeatDays = const Value.absent(),
+                Value<String?> endDate = const Value.absent(),
+                Value<String> priority = const Value.absent(),
+                Value<int> reminderOffsetMinutes = const Value.absent(),
+                Value<String> checklistJson = const Value.absent(),
+                Value<String> completedDates = const Value.absent(),
               }) => PlannerItemsCompanion(
                 id: id,
                 title: title,
@@ -5673,6 +6144,13 @@ class $$PlannerItemsTableTableManager
                 iconCodePoint: iconCodePoint,
                 isDone: isDone,
                 notes: notes,
+                repeatType: repeatType,
+                repeatDays: repeatDays,
+                endDate: endDate,
+                priority: priority,
+                reminderOffsetMinutes: reminderOffsetMinutes,
+                checklistJson: checklistJson,
+                completedDates: completedDates,
               ),
           createCompanionCallback:
               ({
@@ -5686,6 +6164,13 @@ class $$PlannerItemsTableTableManager
                 required int iconCodePoint,
                 Value<bool> isDone = const Value.absent(),
                 Value<String> notes = const Value.absent(),
+                Value<String> repeatType = const Value.absent(),
+                Value<String> repeatDays = const Value.absent(),
+                Value<String?> endDate = const Value.absent(),
+                Value<String> priority = const Value.absent(),
+                Value<int> reminderOffsetMinutes = const Value.absent(),
+                Value<String> checklistJson = const Value.absent(),
+                Value<String> completedDates = const Value.absent(),
               }) => PlannerItemsCompanion.insert(
                 id: id,
                 title: title,
@@ -5697,6 +6182,13 @@ class $$PlannerItemsTableTableManager
                 iconCodePoint: iconCodePoint,
                 isDone: isDone,
                 notes: notes,
+                repeatType: repeatType,
+                repeatDays: repeatDays,
+                endDate: endDate,
+                priority: priority,
+                reminderOffsetMinutes: reminderOffsetMinutes,
+                checklistJson: checklistJson,
+                completedDates: completedDates,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

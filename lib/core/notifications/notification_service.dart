@@ -6,6 +6,9 @@ import 'package:timezone/timezone.dart' as tz;
 
 import '../../config/theme/app_colors.dart';
 
+export 'package:flutter_local_notifications/flutter_local_notifications.dart'
+    show DateTimeComponents;
+
 abstract class NotificationService {
   Future<void> initialize();
   Future<bool> requestPermissions();
@@ -23,6 +26,7 @@ abstract class NotificationService {
     required DateTime scheduledDate,
     String? payload,
     String channelId = NotificationChannels.reminders,
+    DateTimeComponents? matchDateTimeComponents,
   });
   Future<void> cancelNotification(int id);
   Future<void> cancelAllNotifications();
@@ -184,11 +188,12 @@ class NotificationServiceImpl implements NotificationService {
     required DateTime scheduledDate,
     String? payload,
     String channelId = NotificationChannels.reminders,
+    DateTimeComponents? matchDateTimeComponents,
   }) async {
     try {
-      // If the scheduled time is in the past, trigger instantly or ignore
+      // If the scheduled time is in the past and non-repeating, trigger instantly or ignore
       final now = DateTime.now();
-      if (scheduledDate.isBefore(now)) {
+      if (scheduledDate.isBefore(now) && matchDateTimeComponents == null) {
         await showInstantNotification(
           id: id,
           title: title,
@@ -210,6 +215,7 @@ class NotificationServiceImpl implements NotificationService {
         notificationDetails: details,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         payload: payload,
+        matchDateTimeComponents: matchDateTimeComponents,
       );
     } catch (e) {
       debugPrint('Error scheduling notification: $e');

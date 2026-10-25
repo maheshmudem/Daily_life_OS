@@ -13,6 +13,13 @@ class PlannerItemModel extends PlannerItemEntity {
     required super.iconCodePoint,
     required super.isDone,
     required super.notes,
+    super.repeatType,
+    super.repeatDays,
+    super.endDate,
+    super.priority,
+    super.reminderOffsetMinutes,
+    super.checklist,
+    super.completedDates,
   });
 
   factory PlannerItemModel.fromDrift(PlannerItem row) {
@@ -27,6 +34,13 @@ class PlannerItemModel extends PlannerItemEntity {
       iconCodePoint: row.iconCodePoint,
       isDone: row.isDone,
       notes: row.notes,
+      repeatType: row.repeatType,
+      repeatDays: row.repeatDays,
+      endDate: row.endDate,
+      priority: row.priority,
+      reminderOffsetMinutes: row.reminderOffsetMinutes,
+      checklist: PlannerItemEntity.parseChecklistJson(row.checklistJson),
+      completedDates: row.completedDates,
     );
   }
 
@@ -42,6 +56,13 @@ class PlannerItemModel extends PlannerItemEntity {
       iconCodePoint: entity.iconCodePoint,
       isDone: entity.isDone,
       notes: entity.notes,
+      repeatType: entity.repeatType,
+      repeatDays: entity.repeatDays,
+      endDate: entity.endDate,
+      priority: entity.priority,
+      reminderOffsetMinutes: entity.reminderOffsetMinutes,
+      checklist: entity.checklist,
+      completedDates: entity.completedDates,
     );
   }
 }

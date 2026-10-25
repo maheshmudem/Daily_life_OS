@@ -1,3 +1,4 @@
+import '../entities/planner_item_entity.dart';
 import '../repositories/planner_repository.dart';
 
 class AddPlannerItemUseCase {
@@ -13,6 +14,13 @@ class AddPlannerItemUseCase {
     required String category,
     required int colorValue,
     required int iconCodePoint,
+    String repeatType = 'none',
+    String repeatDays = '',
+    String? endDate,
+    String priority = 'medium',
+    int reminderOffsetMinutes = 0,
+    List<ChecklistItem> checklist = const [],
+    String notes = '',
   }) =>
       _repository.addItem(
         title: title,
@@ -22,6 +30,13 @@ class AddPlannerItemUseCase {
         category: category,
         colorValue: colorValue,
         iconCodePoint: iconCodePoint,
+        repeatType: repeatType,
+        repeatDays: repeatDays,
+        endDate: endDate,
+        priority: priority,
+        reminderOffsetMinutes: reminderOffsetMinutes,
+        checklist: checklist,
+        notes: notes,
       );
 }
 
@@ -30,7 +45,8 @@ class TogglePlannerItemUseCase {
 
   const TogglePlannerItemUseCase(this._repository);
 
-  Future<void> call(int id) => _repository.toggleItem(id);
+  Future<void> call(int id, {String? targetDate}) =>
+      _repository.toggleItem(id, targetDate: targetDate);
 }
 
 class DeletePlannerItemUseCase {
@@ -39,4 +55,53 @@ class DeletePlannerItemUseCase {
   const DeletePlannerItemUseCase(this._repository);
 
   Future<void> call(int id) => _repository.deleteItem(id);
+}
+
+class UpdatePlannerItemUseCase {
+  final PlannerRepository _repository;
+
+  const UpdatePlannerItemUseCase(this._repository);
+
+  Future<void> call({
+    required int id,
+    required String title,
+    required String date,
+    String? startTime,
+    String? endTime,
+    required String category,
+    required int colorValue,
+    required int iconCodePoint,
+    String repeatType = 'none',
+    String repeatDays = '',
+    String? endDate,
+    String priority = 'medium',
+    int reminderOffsetMinutes = 0,
+    List<ChecklistItem> checklist = const [],
+    String notes = '',
+  }) =>
+      _repository.updateItem(
+        id: id,
+        title: title,
+        date: date,
+        startTime: startTime,
+        endTime: endTime,
+        category: category,
+        colorValue: colorValue,
+        iconCodePoint: iconCodePoint,
+        repeatType: repeatType,
+        repeatDays: repeatDays,
+        endDate: endDate,
+        priority: priority,
+        reminderOffsetMinutes: reminderOffsetMinutes,
+        checklist: checklist,
+        notes: notes,
+      );
+}
+
+class ClearCompletedPlannerItemsUseCase {
+  final PlannerRepository _repository;
+
+  ClearCompletedPlannerItemsUseCase(this._repository);
+
+  Future<void> call() => _repository.clearCompletedItems();
 }

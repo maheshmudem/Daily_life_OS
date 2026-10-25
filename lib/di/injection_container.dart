@@ -142,8 +142,10 @@ Future<void> initDependencies({
   // Planner
   sl.registerLazySingleton(() => GetPlannerItemsUseCase(sl<PlannerRepository>()));
   sl.registerLazySingleton(() => AddPlannerItemUseCase(sl<PlannerRepository>()));
+  sl.registerLazySingleton(() => UpdatePlannerItemUseCase(sl<PlannerRepository>()));
   sl.registerLazySingleton(() => TogglePlannerItemUseCase(sl<PlannerRepository>()));
   sl.registerLazySingleton(() => DeletePlannerItemUseCase(sl<PlannerRepository>()));
+  sl.registerLazySingleton(() => ClearCompletedPlannerItemsUseCase(sl<PlannerRepository>()));
 
   // Vault
   sl.registerLazySingleton(() => GetVaultPasswordsUseCase(sl<VaultRepository>()));
@@ -189,6 +191,8 @@ Future<void> initDependencies({
       togglePlannerItemUseCase: sl<TogglePlannerItemUseCase>(),
       deletePlannerItemUseCase: sl<DeletePlannerItemUseCase>(),
       addPlannerItemUseCase: sl<AddPlannerItemUseCase>(),
+      updatePlannerItemUseCase: sl<UpdatePlannerItemUseCase>(),
+      clearCompletedPlannerItemsUseCase: sl<ClearCompletedPlannerItemsUseCase>(),
     ),
   );
 

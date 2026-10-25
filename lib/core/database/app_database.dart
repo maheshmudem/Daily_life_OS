@@ -96,6 +96,19 @@ class PlannerItems extends Table {
   IntColumn get iconCodePoint => integer()();
   BoolColumn get isDone => boolean().withDefault(const Constant(false))();
   TextColumn get notes => text().withDefault(const Constant(''))();
+  TextColumn get repeatType =>
+      text().withDefault(const Constant('none'))(); // 'none', 'daily', 'weekdays', 'weekly', 'monthly'
+  TextColumn get repeatDays =>
+      text().withDefault(const Constant(''))(); // e.g. '1,3,5' for Mon, Wed, Fri
+  TextColumn get endDate => text().nullable()(); // ISO8601 date or null (forever)
+  TextColumn get priority =>
+      text().withDefault(const Constant('medium'))(); // 'low', 'medium', 'high', 'urgent'
+  IntColumn get reminderOffsetMinutes =>
+      integer().withDefault(const Constant(0))(); // 0, 5, 15, 30, 60, 1440
+  TextColumn get checklistJson =>
+      text().withDefault(const Constant('[]'))(); // JSON array of subtasks
+  TextColumn get completedDates =>
+      text().withDefault(const Constant(''))(); // Comma-separated ISO dates
 }
 
 // ─── DATABASE ────────────────────────────────────────────────────────────────
@@ -113,14 +126,24 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? e]) : super(e ?? _openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) async {
           await m.createAll();
         },
-        onUpgrade: (m, from, to) async {},
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.addColumn(plannerItems, plannerItems.repeatType);
+            await m.addColumn(plannerItems, plannerItems.repeatDays);
+            await m.addColumn(plannerItems, plannerItems.endDate);
+            await m.addColumn(plannerItems, plannerItems.priority);
+            await m.addColumn(plannerItems, plannerItems.reminderOffsetMinutes);
+            await m.addColumn(plannerItems, plannerItems.checklistJson);
+            await m.addColumn(plannerItems, plannerItems.completedDates);
+          }
+        },
       );
 
   static QueryExecutor _openConnection() {

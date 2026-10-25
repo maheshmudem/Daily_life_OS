@@ -396,7 +396,7 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                       onVerified: () async {
                         await widget.securityRepository.clearAllSecurity();
                         _loadConfig();
-                        if (mounted) {
+                        if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('All security locks removed. Vault is now unlocked.'),

@@ -53,7 +53,6 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
   String _enteredPin = '';
   String _confirmedPin = '';
   List<int>? _enteredPattern;
-  List<int>? _confirmedPattern;
 
   String? _decoyPin;
   List<int>? _decoyPattern;
@@ -369,7 +368,6 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
                   setState(() {
                     _enteredPattern = pattern;
                     _step = _SetupStep.confirmCredential;
-                    _confirmedPattern = null;
                     _errorMessage = null;
                   });
                 },
@@ -436,7 +434,6 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
             errorMessage: _errorMessage,
             onPatternComplete: (pattern) {
               if (_listEquals(pattern, _enteredPattern)) {
-                _confirmedPattern = pattern;
                 _proceedAfterConfirm();
               } else {
                 HapticFeedback.heavyImpact();

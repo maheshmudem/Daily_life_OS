@@ -79,6 +79,7 @@ class FakeNotificationService implements NotificationService {
     required DateTime scheduledDate,
     String? payload,
     String channelId = NotificationChannels.reminders,
+    DateTimeComponents? matchDateTimeComponents,
   }) async {
     scheduledNotifications.add(
       ScheduledNotificationRecord(
