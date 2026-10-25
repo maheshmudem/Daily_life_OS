@@ -1,0 +1,71 @@
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Daily Life OS — Continuous Integration Pipeline
+# ─────────────────────────────────────────────────────────────────────────────
+# Triggers:  push to main/dev, pull requests targeting main/dev
+# Strategy:  Fail-fast (format → analyze → test) on Ubuntu for speed & cost
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+# Cancel in-progress runs for the same branch/PR to save runner minutes
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ───────────────────────────────────────────────────────────────────────────
+  # Quality Gate — Lint, Analyze, Test
+  # ───────────────────────────────────────────────────────────────────────────
+  quality:
+    name: "🔍 Quality Gate"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # ── 1. Checkout ──────────────────────────────────────────────────────
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Setup Flutter ─────────────────────────────────────────────────
+      - name: 🔧 Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.44.6"
+          channel: stable
+          cache: true
+
+      # ── 3. Verify Flutter installation ───────────────────────────────────
+      - name: 🩺 Flutter Doctor
+        run: flutter doctor -v
+
+      # ── 4. Install dependencies ──────────────────────────────────────────
+      - name: 📦 Install dependencies
+        run: flutter pub get
+
+      # ── 5. Check formatting ──────────────────────────────────────────────
+      - name: 📐 Check code formatting
+        run: dart format --set-exit-if-changed .
+
+      # ── 6. Static analysis ──────────────────────────────────────────────
+      - name: 🔍 Run static analysis
+        run: flutter analyze --fatal-infos
+
+      # ── 7. Run tests with coverage ──────────────────────────────────────
+      - name: 🧪 Run tests
+        run: flutter test --coverage
+
+      # ── 8. Upload coverage report as artifact ───────────────────────────
+      - name: 📊 Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/lcov.info
+          retention-days: 14
