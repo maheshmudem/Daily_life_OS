@@ -15,29 +15,31 @@ class CountdownItemModel extends CountdownItemEntity {
   });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'date': date.toIso8601String(),
-        'category': category,
-        'colorValue': colorValue,
-        'iconCodePoint': iconCodePoint,
-        'notes': notes,
-        'remindAdvance': remindAdvance,
-      };
+    'id': id,
+    'title': title,
+    'date': date.toIso8601String(),
+    'category': category,
+    'colorValue': colorValue,
+    'iconCodePoint': iconCodePoint,
+    'notes': notes,
+    'remindAdvance': remindAdvance,
+  };
 
-  factory CountdownItemModel.fromJson(Map<String, dynamic> json) =>
-      CountdownItemModel(
-        id: json['id'] as String? ??
-            DateTime.now().millisecondsSinceEpoch.toString(),
-        title: json['title'] as String? ?? '',
-        date: DateTime.tryParse(json['date'] as String? ?? '') ?? DateTime.now(),
-        category: json['category'] as String? ?? 'Birthday',
-        colorValue: json['colorValue'] as int? ?? AppColors.moduleNotes.toARGB32(),
-        iconCodePoint:
-            json['iconCodePoint'] as int? ?? Icons.cake_rounded.codePoint,
-        notes: json['notes'] as String? ?? '',
-        remindAdvance: json['remindAdvance'] as bool? ?? true,
-      );
+  factory CountdownItemModel.fromJson(
+    Map<String, dynamic> json,
+  ) => CountdownItemModel(
+    id:
+        json['id'] as String? ??
+        DateTime.now().millisecondsSinceEpoch.toString(),
+    title: json['title'] as String? ?? '',
+    date: DateTime.tryParse(json['date'] as String? ?? '') ?? DateTime.now(),
+    category: json['category'] as String? ?? 'Birthday',
+    colorValue: json['colorValue'] as int? ?? AppColors.moduleNotes.toARGB32(),
+    iconCodePoint:
+        json['iconCodePoint'] as int? ?? Icons.cake_rounded.codePoint,
+    notes: json['notes'] as String? ?? '',
+    remindAdvance: json['remindAdvance'] as bool? ?? true,
+  );
 
   factory CountdownItemModel.fromEntity(CountdownItemEntity entity) =>
       CountdownItemModel(

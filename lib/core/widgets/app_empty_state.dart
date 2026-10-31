@@ -45,7 +45,9 @@ class AppEmptyState extends StatelessWidget {
               title,
               textAlign: TextAlign.center,
               style: AppTextStyles.headingSmall.copyWith(
-                color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
+                color: isDark
+                    ? AppColors.darkTextHeading
+                    : AppColors.textHeading,
               ),
             ),
             const SizedBox(height: 8),
@@ -53,7 +55,9 @@ class AppEmptyState extends StatelessWidget {
               description,
               textAlign: TextAlign.center,
               style: AppTextStyles.bodyMedium.copyWith(
-                color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
+                color: isDark
+                    ? AppColors.darkTextCaption
+                    : AppColors.textCaption,
               ),
             ),
             if (actionLabel != null && onAction != null) ...[
@@ -63,12 +67,20 @@ class AppEmptyState extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: tint,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusMd),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: AppRadius.radiusMd,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   elevation: 0,
                 ),
                 icon: const Icon(Icons.add_rounded, size: 18),
-                label: Text(actionLabel!, style: const TextStyle(fontWeight: FontWeight.w600)),
+                label: Text(
+                  actionLabel!,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
             ],
           ],

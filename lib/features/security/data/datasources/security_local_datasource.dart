@@ -15,7 +15,10 @@ abstract class SecurityLocalDataSource {
   Future<bool> isDecoyPattern(List<int> pattern);
   Future<void> setPin({required String pin, String? decoyPin});
   Future<void> setDecoyPin(String decoyPin);
-  Future<void> setPattern({required List<int> pattern, List<int>? decoyPattern});
+  Future<void> setPattern({
+    required List<int> pattern,
+    List<int>? decoyPattern,
+  });
   Future<void> setDecoyPattern(List<int> decoyPattern);
   Future<void> setBiometricsEnabled(bool enabled);
   Future<void> setSecurityEnabled(bool enabled);
@@ -32,8 +35,8 @@ class SecurityLocalDataSourceImpl implements SecurityLocalDataSource {
   SecurityLocalDataSourceImpl({
     FlutterSecureStorage? storage,
     LocalAuthentication? localAuth,
-  })  : _storage = storage ?? const FlutterSecureStorage(),
-        _localAuth = localAuth ?? LocalAuthentication();
+  }) : _storage = storage ?? const FlutterSecureStorage(),
+       _localAuth = localAuth ?? LocalAuthentication();
 
   static const String _keySalt = 'vault_sec_salt';
   static const String _keyPinHash = 'vault_sec_pin_hash';
@@ -85,8 +88,11 @@ class SecurityLocalDataSourceImpl implements SecurityLocalDataSource {
       hasPin: hasPin,
       hasPattern: hasPattern,
       hasDecoyPin: storedDecoyPin != null && storedDecoyPin.isNotEmpty,
-      hasDecoyPattern: storedDecoyPattern != null && storedDecoyPattern.isNotEmpty,
-      activeMode: modeStr == 'pattern' ? SecurityLockMode.pattern : SecurityLockMode.pin,
+      hasDecoyPattern:
+          storedDecoyPattern != null && storedDecoyPattern.isNotEmpty,
+      activeMode: modeStr == 'pattern'
+          ? SecurityLockMode.pattern
+          : SecurityLockMode.pin,
     );
   }
 
@@ -132,8 +138,12 @@ class SecurityLocalDataSourceImpl implements SecurityLocalDataSource {
   @override
   Future<bool> isBiometricsAvailable() async {
     try {
-      final canCheck = await _localAuth.canCheckBiometrics.timeout(const Duration(milliseconds: 500));
-      final isSupported = await _localAuth.isDeviceSupported().timeout(const Duration(milliseconds: 500));
+      final canCheck = await _localAuth.canCheckBiometrics.timeout(
+        const Duration(milliseconds: 500),
+      );
+      final isSupported = await _localAuth.isDeviceSupported().timeout(
+        const Duration(milliseconds: 500),
+      );
       return canCheck || isSupported;
     } catch (_) {
       return false;
@@ -141,14 +151,14 @@ class SecurityLocalDataSourceImpl implements SecurityLocalDataSource {
   }
 
   @override
-  Future<bool> authenticateBiometrics({String reason = 'Authenticate to access Secure Vault'}) async {
+  Future<bool> authenticateBiometrics({
+    String reason = 'Authenticate to access Secure Vault',
+  }) async {
     try {
       final isAvailable = await isBiometricsAvailable();
       if (!isAvailable) return false;
 
-      final success = await _localAuth.authenticate(
-        localizedReason: reason,
-      );
+      final success = await _localAuth.authenticate(localizedReason: reason);
       if (success) {
         await _resetFailedAttempts();
       }
@@ -246,20 +256,32 @@ class SecurityLocalDataSourceImpl implements SecurityLocalDataSource {
   }
 
   @override
-  Future<void> setPattern({required List<int> pattern, List<int>? decoyPattern}) async {
+  Future<void> setPattern({
+    required List<int> pattern,
+    List<int>? decoyPattern,
+  }) async {
     final salt = await _getOrCreateSalt();
-    await _storage.write(key: _keyPatternHash, value: _hash(salt, pattern.join('-')));
+    await _storage.write(
+      key: _keyPatternHash,
+      value: _hash(salt, pattern.join('-')),
+    );
     await _storage.write(key: _keySecurityEnabled, value: 'true');
     await _storage.write(key: _keyLockMode, value: 'pattern');
     if (decoyPattern != null && decoyPattern.isNotEmpty) {
-      await _storage.write(key: _keyDecoyPatternHash, value: _hash(salt, decoyPattern.join('-')));
+      await _storage.write(
+        key: _keyDecoyPatternHash,
+        value: _hash(salt, decoyPattern.join('-')),
+      );
     }
   }
 
   @override
   Future<void> setDecoyPattern(List<int> decoyPattern) async {
     final salt = await _getOrCreateSalt();
-    await _storage.write(key: _keyDecoyPatternHash, value: _hash(salt, decoyPattern.join('-')));
+    await _storage.write(
+      key: _keyDecoyPatternHash,
+      value: _hash(salt, decoyPattern.join('-')),
+    );
   }
 
   @override

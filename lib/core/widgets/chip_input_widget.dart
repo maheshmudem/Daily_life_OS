@@ -103,11 +103,14 @@ class _ChipInputWidgetState extends State<ChipInputWidget> {
                   widget.values[index],
                   style: const TextStyle(fontSize: 13),
                 ),
-                deleteIcon:
-                    widget.enabled ? const Icon(Icons.close, size: 16) : null,
+                deleteIcon: widget.enabled
+                    ? const Icon(Icons.close, size: 16)
+                    : null,
                 onDeleted: widget.enabled ? () => _removeItem(index) : null,
                 backgroundColor: AppColors.primary.withValues(alpha: 0.08),
-                side: BorderSide(color: AppColors.primary.withValues(alpha: 0.2)),
+                side: BorderSide(
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
@@ -125,16 +128,20 @@ class _ChipInputWidgetState extends State<ChipInputWidget> {
               hintText: widget.hintText,
               counterText: '',
               isDense: true,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(color: AppColors.border, width: 1),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide:
-                    const BorderSide(color: AppColors.primary, width: 1.5),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 1.5,
+                ),
               ),
               suffixIcon: GestureDetector(
                 onTap: _addItem,
@@ -147,11 +154,14 @@ class _ChipInputWidgetState extends State<ChipInputWidget> {
                   ),
                   child: const Center(
                     widthFactor: 1,
-                    child: Text('Add',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600)),
+                    child: Text(
+                      'Add',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
               ),

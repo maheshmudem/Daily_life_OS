@@ -7,7 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
-import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/app_text_styles.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/database/app_database.dart';
@@ -86,7 +85,6 @@ class _NotesViewState extends State<_NotesView> {
       if (saved != null && !saved.contains('Locksmith phone')) {
         _scratchpadController.text = saved;
       } else if (saved != null && saved.contains('Locksmith phone')) {
-        // Clear any old hardcoded locksmith text that was auto-saved to preferences
         await prefs.remove(_scratchpadPrefKey);
         _scratchpadController.text = '';
       } else {
@@ -124,13 +122,13 @@ class _NotesViewState extends State<_NotesView> {
     final content = lines.length > 1 ? lines.sublist(1).join('\n') : text;
 
     context.read<NotesBloc>().add(
-          AddNote(
-            title: title.isEmpty ? 'Scratchpad Note' : title,
-            content: content,
-            colorValue: _notePalette.first,
-            tags: '@Scratchpad',
-          ),
-        );
+      AddNote(
+        title: title.isEmpty ? 'Scratchpad Note' : title,
+        content: content,
+        colorValue: _notePalette.first,
+        tags: '@Scratchpad',
+      ),
+    );
 
     _scratchpadController.clear();
     _saveScratchpad('');
@@ -147,7 +145,8 @@ class _NotesViewState extends State<_NotesView> {
     final confirmed = await ConfirmationDialog.show(
       context,
       title: 'Clear Scratchpad?',
-      message: 'Are you sure you want to erase the scratchpad? This cannot be undone.',
+      message:
+          'Are you sure you want to erase the scratchpad? This cannot be undone.',
       confirmLabel: 'Clear',
       isDestructive: true,
     );
@@ -164,59 +163,138 @@ class _NotesViewState extends State<_NotesView> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? AppColors.darkScaffoldBackground : AppColors.scaffoldBackground,
+      backgroundColor: isDark
+          ? AppColors.darkScaffoldBackground
+          : AppColors.scaffoldBackground,
       appBar: AppBar(
+        toolbarHeight: 48,
+        titleSpacing: 16,
         title: const Text(
           StringConstants.navNotes,
-          style: TextStyle(fontWeight: FontWeight.w800),
+          style: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.3,
+          ),
         ),
         actions: [
           IconButton(
-            tooltip: 'New Note',
-            icon: const Icon(Icons.note_add_rounded, color: AppColors.moduleNotes),
-            onPressed: () => _showNoteEditor(context),
-          ),
-          IconButton(
             tooltip: 'Camera OCR Scan',
-            icon: const Icon(Icons.document_scanner_rounded, color: AppColors.moduleNotes),
-            onPressed: () => QuickCaptureSheet.show(context, mode: QuickCaptureMode.scan),
+            visualDensity: VisualDensity.compact,
+            icon: Icon(
+              Icons.document_scanner_rounded,
+              size: 18,
+              color: isDark ? AppColors.darkTextBody : AppColors.textBody,
+            ),
+            onPressed: () async {
+              await QuickCaptureSheet.show(
+                context,
+                mode: QuickCaptureMode.scan,
+              );
+              if (context.mounted) {
+                context.read<NotesBloc>().add(const LoadNotes());
+              }
+            },
           ),
           IconButton(
             tooltip: 'Voice Note',
-            icon: const Icon(Icons.mic_rounded, color: AppColors.voiceWaveform),
-            onPressed: () => QuickCaptureSheet.show(context, mode: QuickCaptureMode.voice),
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(
+              Icons.mic_rounded,
+              size: 18,
+              color: AppColors.voiceWaveform,
+            ),
+            onPressed: () async {
+              await QuickCaptureSheet.show(
+                context,
+                mode: QuickCaptureMode.voice,
+              );
+              if (context.mounted) {
+                context.read<NotesBloc>().add(const LoadNotes());
+              }
+            },
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 14, left: 4),
+            child: Center(
+              child: InkWell(
+                onTap: () => _showNoteEditor(context),
+                borderRadius: AppRadius.radiusSm,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.moduleNotes,
+                    borderRadius: AppRadius.radiusSm,
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.add_rounded, size: 15, color: Colors.white),
+                      SizedBox(width: 4),
+                      Text(
+                        'New Note',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
-      ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 85),
-        child: FloatingActionButton.extended(
-          onPressed: () => _showNoteEditor(context),
-          backgroundColor: AppColors.moduleNotes,
-          foregroundColor: Colors.white,
-          icon: const Icon(Icons.add_rounded),
-          label: const Text('New Note', style: TextStyle(fontWeight: FontWeight.w700)),
-        ),
       ),
       body: BlocBuilder<NotesBloc, NotesState>(
         builder: (context, state) {
           if (state is NotesLoading || state is NotesInitial) {
             return ListView(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               children: const [
-                AppShimmerLoader.card(height: 120),
-                SizedBox(height: 16),
-                AppShimmerLoader.card(height: 50),
-                SizedBox(height: 16),
-                AppShimmerLoader.card(height: 140),
+                AppShimmerLoader.card(height: 68),
+                SizedBox(height: 10),
+                AppShimmerLoader.card(height: 38),
                 SizedBox(height: 12),
-                AppShimmerLoader.card(height: 140),
+                AppShimmerLoader.card(height: 88),
+                SizedBox(height: 8),
+                AppShimmerLoader.card(height: 88),
               ],
             );
           }
           if (state is NotesError) {
-            return Center(child: Text('Error: ${state.message}'));
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.error_outline_rounded,
+                      color: AppColors.error,
+                      size: 36,
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Error: ${state.message}',
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.bodySmall,
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      onPressed: () =>
+                          context.read<NotesBloc>().add(const LoadNotes()),
+                      icon: const Icon(Icons.refresh_rounded, size: 16),
+                      label: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            );
           }
           if (state is NotesLoaded) {
             return _buildContent(context, state, isDark);
@@ -233,12 +311,12 @@ class _NotesViewState extends State<_NotesView> {
       ...state.notes.expand((n) => n.tags),
     }.where((t) => t.isNotEmpty).toList();
 
-    // Filter notes by search query and selected tag
     final query = _searchQuery.trim().toLowerCase();
     final filteredNotes = state.notes.where((note) {
       final matchesTag =
           _selectedTag == 'All' || note.tags.contains(_selectedTag);
-      final matchesSearch = query.isEmpty ||
+      final matchesSearch =
+          query.isEmpty ||
           note.title.toLowerCase().contains(query) ||
           note.content.toLowerCase().contains(query) ||
           note.tags.any((t) => t.toLowerCase().contains(query));
@@ -249,103 +327,97 @@ class _NotesViewState extends State<_NotesView> {
     final unpinnedNotes = filteredNotes.where((n) => !n.isPinned).toList();
 
     return ListView(
-      padding: const EdgeInsets.only(left: 20, right: 20, top: 12, bottom: 100),
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 84),
       children: [
-        // ── 1. Daily Scratchpad (Auto-saving & Actionable) ───────────────
-        _buildScratchpadCard(context, isDark),
-        const SizedBox(height: 16),
-
-        // ── 2. Live Search Bar ──────────────────────────────────────────
+        // ── 1. Compact Search & Filter Bar ───────────────────────────────
         _buildSearchBar(isDark),
-        const SizedBox(height: 14),
+        const SizedBox(height: 8),
 
-        // ── 3. Tag Filter Strip ─────────────────────────────────────────
+        // ── 2. Compact Daily Scratchpad ──────────────────────────────────
+        _buildScratchpadCard(context, isDark),
+        const SizedBox(height: 10),
+
+        // ── 3. Tag Filter Strip ──────────────────────────────────────────
         if (allTags.length > 1) ...[
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: allTags
-                  .map((tag) => Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: _buildTagChip(context, tag, isDark),
-                      ))
-                  .toList(),
+          SizedBox(
+            height: 28,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: allTags.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 6),
+              itemBuilder: (context, index) =>
+                  _buildTagChip(context, allTags[index], isDark),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
         ],
 
-        // ── 4. Empty State or Results ───────────────────────────────────
+        // ── 4. Empty State or Compact Note List ──────────────────────────
         if (filteredNotes.isEmpty)
           _buildEmptyNotesState(isDark)
         else ...[
-          // Pinned Notes Section
           if (pinnedNotes.isNotEmpty) ...[
-            Row(
-              children: [
-                const Icon(Icons.push_pin_rounded,
-                    size: 14, color: AppColors.moduleNotes),
-                AppSpacing.gapW8,
-                Text(
-                  'PINNED NOTES (${pinnedNotes.length})',
-                  style: AppTextStyles.caption.copyWith(
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ],
+            _buildSectionHeader(
+              icon: Icons.push_pin_rounded,
+              iconColor: AppColors.moduleNotes,
+              label: 'PINNED (${pinnedNotes.length})',
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             ...pinnedNotes.map((note) => _buildNoteCard(context, note, isDark)),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
           ],
-
-          // Other / Unpinned Notes Section
           if (unpinnedNotes.isNotEmpty) ...[
             if (pinnedNotes.isNotEmpty) ...[
-              Row(
-                children: [
-                  const Icon(Icons.notes_rounded,
-                      size: 14, color: AppColors.textCaption),
-                  AppSpacing.gapW8,
-                  Text(
-                    'OTHER NOTES (${unpinnedNotes.length})',
-                    style: AppTextStyles.caption.copyWith(
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ],
+              _buildSectionHeader(
+                icon: Icons.notes_rounded,
+                iconColor: AppColors.textCaption,
+                label: 'ALL NOTES (${unpinnedNotes.length})',
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
             ],
-            ...unpinnedNotes.map((note) => _buildNoteCard(context, note, isDark)),
+            ...unpinnedNotes.map(
+              (note) => _buildNoteCard(context, note, isDark),
+            ),
           ],
         ],
       ],
     );
   }
 
-  // ── Daily Scratchpad Widget ──────────────────────────────────────────────
+  Widget _buildSectionHeader({
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, size: 12, color: iconColor),
+        const SizedBox(width: 5),
+        Text(
+          label,
+          style: AppTextStyles.caption.copyWith(
+            fontSize: 10.5,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Compact Daily Scratchpad Widget ────────────────────────────────────────
   Widget _buildScratchpadCard(BuildContext context, bool isDark) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
         borderRadius: AppRadius.radiusMd,
         border: Border.all(
           color: isDark
               ? AppColors.darkDivider
-              : AppColors.moduleNotes.withValues(alpha: 0.2),
-          width: 1,
+              : AppColors.moduleNotes.withValues(alpha: 0.22),
+          width: 0.8,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -355,15 +427,19 @@ class _NotesViewState extends State<_NotesView> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.edit_note_rounded,
-                      color: AppColors.moduleNotes, size: 16),
-                  AppSpacing.gapW8,
+                  const Icon(
+                    Icons.bolt_rounded,
+                    color: AppColors.moduleNotes,
+                    size: 14,
+                  ),
+                  const SizedBox(width: 5),
                   Text(
                     StringConstants.dailyScratchpad.toUpperCase(),
                     style: AppTextStyles.overline.copyWith(
                       color: AppColors.moduleNotes,
-                      fontSize: 10.5,
-                      letterSpacing: 0.6,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ],
@@ -380,21 +456,28 @@ class _NotesViewState extends State<_NotesView> {
                         onTap: () => _saveScratchpadAsNote(context),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.xs, vertical: 3),
+                            horizontal: 7,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
-                            color: AppColors.moduleNotes.withValues(alpha: 0.12),
+                            color: AppColors.moduleNotes.withValues(
+                              alpha: 0.12,
+                            ),
                             borderRadius: AppRadius.radiusXs,
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.save_rounded,
-                                  size: 12, color: AppColors.moduleNotes),
-                              AppSpacing.gapW4,
+                              const Icon(
+                                Icons.save_rounded,
+                                size: 11,
+                                color: AppColors.moduleNotes,
+                              ),
+                              const SizedBox(width: 3),
                               Text(
                                 StringConstants.save,
                                 style: AppTextStyles.captionBold.copyWith(
-                                  fontSize: 10.5,
+                                  fontSize: 10,
                                   color: AppColors.moduleNotes,
                                 ),
                               ),
@@ -402,21 +485,15 @@ class _NotesViewState extends State<_NotesView> {
                           ),
                         ),
                       ),
-                      AppSpacing.gapW8,
+                      const SizedBox(width: 6),
                       GestureDetector(
                         onTap: () => _clearScratchpad(context),
-                        child: Container(
-                          padding: const EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                            color: (isDark ? Colors.white : Colors.black)
-                                .withValues(alpha: 0.06),
-                            borderRadius: AppRadius.radiusXs,
-                          ),
-                          child: Icon(Icons.close_rounded,
-                              size: 13,
-                              color: isDark
-                                  ? AppColors.darkTextCaption
-                                  : AppColors.textCaption),
+                        child: Icon(
+                          Icons.close_rounded,
+                          size: 14,
+                          color: isDark
+                              ? AppColors.darkTextCaption
+                              : AppColors.textCaption,
                         ),
                       ),
                     ],
@@ -425,20 +502,22 @@ class _NotesViewState extends State<_NotesView> {
               ),
             ],
           ),
-          AppSpacing.gapH8,
+          const SizedBox(height: 4),
           TextField(
             controller: _scratchpadController,
             onChanged: _saveScratchpad,
             minLines: 1,
-            maxLines: 4,
-            style: AppTextStyles.bodyMedium.copyWith(
+            maxLines: 3,
+            style: TextStyle(
+              fontSize: 12.5,
               color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
-              height: 1.35,
+              height: 1.3,
             ),
             decoration: InputDecoration(
               isDense: true,
               hintText: StringConstants.scratchpadHint,
-              hintStyle: AppTextStyles.bodySmall.copyWith(
+              hintStyle: TextStyle(
+                fontSize: 12,
                 color: isDark
                     ? AppColors.darkTextCaption
                     : AppColors.textCaption,
@@ -454,74 +533,98 @@ class _NotesViewState extends State<_NotesView> {
     );
   }
 
-  // ── Search Bar Widget ────────────────────────────────────────────────────
+  // ── Compact Search Bar Widget ──────────────────────────────────────────────
   Widget _buildSearchBar(bool isDark) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCardBackground : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDark ? AppColors.darkDivider : AppColors.border,
-        ),
-      ),
-      child: TextField(
-        controller: _searchController,
-        onChanged: (val) => setState(() => _searchQuery = val),
-        style: TextStyle(
-          fontSize: 14,
-          color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
-        ),
-        decoration: InputDecoration(
-          hintText: 'Search notes, tags, or content...',
-          hintStyle: TextStyle(
-            color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
-            fontSize: 13,
+    return SizedBox(
+      height: 36,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkCardBackground : Colors.white,
+          borderRadius: AppRadius.radiusSm,
+          border: Border.all(
+            color: isDark ? AppColors.darkDivider : AppColors.border,
+            width: 0.8,
           ),
-          prefixIcon: Icon(
-            Icons.search_rounded,
-            color: isDark ? AppColors.darkTextCaption : AppColors.iconColor,
-            size: 20,
+        ),
+        child: TextField(
+          controller: _searchController,
+          onChanged: (val) => setState(() => _searchQuery = val),
+          style: TextStyle(
+            fontSize: 12.5,
+            color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
           ),
-          suffixIcon: _searchQuery.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.close_rounded, size: 18),
-                  onPressed: () {
-                    _searchController.clear();
-                    setState(() => _searchQuery = '');
-                  },
-                )
-              : null,
-          border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: InputDecoration(
+            isDense: true,
+            hintText: 'Search notes, tags, or content...',
+            hintStyle: TextStyle(
+              color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
+              fontSize: 12,
+            ),
+            prefixIcon: Icon(
+              Icons.search_rounded,
+              color: isDark ? AppColors.darkTextCaption : AppColors.iconColor,
+              size: 16,
+            ),
+            prefixIconConstraints: const BoxConstraints(
+              minWidth: 34,
+              minHeight: 34,
+            ),
+            suffixIcon: _searchQuery.isNotEmpty
+                ? GestureDetector(
+                    onTap: () {
+                      _searchController.clear();
+                      setState(() => _searchQuery = '');
+                    },
+                    child: Icon(
+                      Icons.close_rounded,
+                      size: 15,
+                      color: isDark
+                          ? AppColors.darkTextCaption
+                          : AppColors.textCaption,
+                    ),
+                  )
+                : null,
+            suffixIconConstraints: const BoxConstraints(
+              minWidth: 32,
+              minHeight: 32,
+            ),
+            border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(vertical: 8),
+          ),
         ),
       ),
     );
   }
 
-  // ── Tag Filter Chip ──────────────────────────────────────────────────────
+  // ── Compact Tag Filter Chip ────────────────────────────────────────────────
   Widget _buildTagChip(BuildContext context, String tag, bool isDark) {
     final isSelected = _selectedTag == tag;
     return GestureDetector(
       onTap: () => setState(() => _selectedTag = tag),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        alignment: Alignment.center,
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.moduleNotes
-              : (isDark ? AppColors.darkCardBackground : AppColors.cardBackground),
+              : (isDark
+                    ? AppColors.darkCardBackground
+                    : AppColors.cardBackground),
           borderRadius: AppRadius.radiusFull,
           border: Border.all(
             color: isSelected
                 ? AppColors.moduleNotes
                 : (isDark ? AppColors.darkDivider : AppColors.divider),
+            width: 0.8,
           ),
         ),
         child: Text(
           tag,
           style: TextStyle(
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+            fontSize: 11,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
             color: isSelected
                 ? Colors.white
                 : (isDark ? AppColors.darkTextBody : AppColors.textBody),
@@ -531,44 +634,50 @@ class _NotesViewState extends State<_NotesView> {
     );
   }
 
-  // ── Empty Notes State ────────────────────────────────────────────────────
+  // ── Empty Notes State ──────────────────────────────────────────────────────
   Widget _buildEmptyNotesState(bool isDark) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
       alignment: Alignment.center,
       child: Column(
         children: [
           Icon(
-            _searchQuery.isNotEmpty ? Icons.search_off_rounded : Icons.note_alt_outlined,
-            size: 48,
+            _searchQuery.isNotEmpty
+                ? Icons.search_off_rounded
+                : Icons.note_alt_outlined,
+            size: 36,
             color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Text(
             _searchQuery.isNotEmpty
                 ? 'No notes match "$_searchQuery"'
-                : 'No notes found in this category',
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                : 'No notes in this view',
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
             _searchQuery.isNotEmpty
-                ? 'Try searching with a different term or clear the filter.'
-                : 'Tap "New Note" or use Voice to jot down your first idea.',
+                ? 'Try a different keyword or clear the filter.'
+                : 'Tap "New Note" above or jot in the scratchpad.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 11.5,
               color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
             ),
           ),
           if (_searchQuery.isNotEmpty) ...[
-            const SizedBox(height: 14),
+            const SizedBox(height: 10),
             OutlinedButton(
               onPressed: () {
                 _searchController.clear();
                 setState(() => _searchQuery = '');
               },
-              child: const Text('Clear Search Filter'),
+              style: OutlinedButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                textStyle: const TextStyle(fontSize: 11.5),
+              ),
+              child: const Text('Clear Filter'),
             ),
           ],
         ],
@@ -576,157 +685,162 @@ class _NotesViewState extends State<_NotesView> {
     );
   }
 
-  // ── Note Card (Tappable, Editable, Deletable, Actionable) ─────────────────
+  // ── Compact Note Card ──────────────────────────────────────────────────────
   Widget _buildNoteCard(BuildContext context, NoteEntity note, bool isDark) {
     final noteColor = note.color;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
-        borderRadius: AppRadius.radiusLg,
+        borderRadius: AppRadius.radiusMd,
         border: Border.all(
           color: note.isPinned
-              ? noteColor.withValues(alpha: 0.5)
+              ? noteColor.withValues(alpha: 0.45)
               : (isDark ? AppColors.darkDivider : AppColors.divider),
-          width: note.isPinned ? 1.5 : 1.0,
+          width: note.isPinned ? 1.1 : 0.8,
         ),
       ),
       child: ClipRRect(
-        borderRadius: AppRadius.radiusLg,
+        borderRadius: AppRadius.radiusMd,
         child: IntrinsicHeight(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Colored Accent Strip on Left
-              Container(
-                width: 5,
-                color: noteColor,
-              ),
+              // Subtle Left Accent Strip
+              Container(width: 3.5, color: noteColor),
 
-              // Main Note Body
+              // Main Compact Body
               Expanded(
                 child: InkWell(
                   onTap: () => _showNoteEditor(context, note: note),
                   child: Padding(
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 9,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Card Header: Title, Pin Indicator & 3-Dots Menu
+                        // Header Row: Title + Pin + More Menu
                         Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            if (note.isPinned) ...[
-                              Icon(Icons.push_pin_rounded,
-                                  size: 15, color: noteColor),
-                              const SizedBox(width: 6),
-                            ],
                             Expanded(
                               child: Text(
                                 note.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w700,
-                                  fontSize: 15,
+                                  fontSize: 13.5,
                                   color: isDark
                                       ? AppColors.darkTextHeading
                                       : AppColors.textHeading,
                                 ),
                               ),
                             ),
-                            // Quick Pin Toggle
-                            IconButton(
-                              icon: Icon(
-                                note.isPinned
-                                    ? Icons.push_pin_rounded
-                                    : Icons.push_pin_outlined,
-                                size: 18,
-                                color: note.isPinned
-                                    ? AppColors.moduleNotes
-                                    : (isDark
-                                        ? AppColors.darkTextCaption
-                                        : AppColors.textCaption),
+                            const SizedBox(width: 6),
+                            Tooltip(
+                              message: note.isPinned ? 'Unpin' : 'Pin note',
+                              child: InkWell(
+                                borderRadius: AppRadius.radiusXs,
+                                onTap: () => context.read<NotesBloc>().add(
+                                  TogglePinNote(note.id),
+                                ),
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: Icon(
+                                    note.isPinned
+                                        ? Icons.push_pin_rounded
+                                        : Icons.push_pin_outlined,
+                                    size: 15,
+                                    color: note.isPinned
+                                        ? noteColor
+                                        : (isDark
+                                              ? AppColors.darkTextCaption
+                                              : AppColors.textCaption),
+                                  ),
+                                ),
                               ),
-                              tooltip: note.isPinned ? 'Unpin' : 'Pin note',
-                              onPressed: () => context
-                                  .read<NotesBloc>()
-                                  .add(TogglePinNote(note.id)),
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
                             ),
-                            const SizedBox(width: 4),
-                            // Professional Dropdown Popup Menu
+                            const SizedBox(width: 2),
                             _buildCardDropdownMenu(context, note, isDark),
                           ],
                         ),
-                        const SizedBox(height: 8),
 
-                        // Preview Content
-                        Text(
-                          note.previewContent,
-                          maxLines: 4,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: isDark
-                                ? AppColors.darkTextBody
-                                : AppColors.textBody,
-                            height: 1.45,
+                        if (note.previewContent.trim().isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            note.previewContent,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark
+                                  ? AppColors.darkTextBody
+                                  : AppColors.textBody,
+                              height: 1.35,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
+                        ],
 
-                        // Card Footer: Tags, Date & Cross-Module Quick Actions
+                        const SizedBox(height: 7),
+
+                        // Compact Footer: Tags + Convert to Task Pill
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            // Tags
                             Expanded(
-                              child: Wrap(
-                                spacing: 4,
-                                runSpacing: 4,
-                                children: note.tags
-                                    .take(3)
-                                    .map((tag) => Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 7, vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color: noteColor.withValues(alpha: 0.12),
-                                            borderRadius: AppRadius.radiusSm,
-                                          ),
-                                          child: Text(
-                                            tag,
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w700,
-                                              color: noteColor,
+                              child: note.tags.isNotEmpty
+                                  ? Wrap(
+                                      spacing: 4,
+                                      runSpacing: 3,
+                                      children: note.tags
+                                          .take(3)
+                                          .map(
+                                            (tag) => Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 6,
+                                                    vertical: 1.5,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: noteColor.withValues(
+                                                  alpha: 0.11,
+                                                ),
+                                                borderRadius:
+                                                    AppRadius.radiusXs,
+                                              ),
+                                              child: Text(
+                                                tag,
+                                                style: TextStyle(
+                                                  fontSize: 9.5,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: noteColor,
+                                                ),
+                                              ),
                                             ),
-                                          ),
-                                        ))
-                                    .toList(),
-                              ),
+                                          )
+                                          .toList(),
+                                    )
+                                  : Text(
+                                      _formatShortDate(note.updatedAt),
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: isDark
+                                            ? AppColors.darkTextCaption
+                                            : AppColors.textCaption,
+                                      ),
+                                    ),
                             ),
-
-                            // Cross-Module Converters & Edit Trigger
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                _buildConverterButton(
-                                  context: context,
-                                  label: '-> Task',
-                                  icon: Icons.add_task_rounded,
-                                  color: AppColors.moduleTime,
-                                  onTap: () => _convertToPlannerTask(context, note),
-                                ),
-                                const SizedBox(width: 6),
-                                _buildConverterButton(
-                                  context: context,
-                                  label: 'Edit',
-                                  icon: Icons.edit_rounded,
-                                  color: AppColors.moduleNotes,
-                                  onTap: () => _showNoteEditor(context, note: note),
-                                ),
-                              ],
+                            _buildConverterButton(
+                              context: context,
+                              label: '-> Task',
+                              icon: Icons.add_task_rounded,
+                              color: AppColors.moduleTime,
+                              onTap: () => _convertToPlannerTask(context, note),
                             ),
                           ],
                         ),
@@ -742,14 +856,23 @@ class _NotesViewState extends State<_NotesView> {
     );
   }
 
+  String _formatShortDate(String iso) {
+    final dt = DateTime.tryParse(iso);
+    if (dt == null) return '';
+    return DateFormat('d MMM').format(dt);
+  }
+
   // ── Card Dropdown Popup Menu ───────────────────────────────────────────────
   Widget _buildCardDropdownMenu(
-      BuildContext context, NoteEntity note, bool isDark) {
+    BuildContext context,
+    NoteEntity note,
+    bool isDark,
+  ) {
     return AppDropdownMenu<String>(
       tooltip: 'Note actions',
       icon: Icon(
         Icons.more_horiz_rounded,
-        size: 18,
+        size: 16,
         color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
       ),
       onSelected: (action) {
@@ -811,7 +934,7 @@ class _NotesViewState extends State<_NotesView> {
     );
   }
 
-  // ── Converter Button Pill ────────────────────────────────────────────────
+  // ── Converter Button Pill ──────────────────────────────────────────────────
   Widget _buildConverterButton({
     required BuildContext context,
     required String label,
@@ -822,20 +945,20 @@ class _NotesViewState extends State<_NotesView> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          borderRadius: AppRadius.radiusSm,
+          color: color.withValues(alpha: 0.1),
+          borderRadius: AppRadius.radiusXs,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 12, color: color),
-            const SizedBox(width: 4),
+            Icon(icon, size: 11, color: color),
+            const SizedBox(width: 3),
             Text(
               label,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 10,
                 fontWeight: FontWeight.w700,
                 color: color,
               ),
@@ -846,7 +969,7 @@ class _NotesViewState extends State<_NotesView> {
     );
   }
 
-  // ── Actions: Copy to Clipboard ───────────────────────────────────────────
+  // ── Actions: Copy to Clipboard ─────────────────────────────────────────────
   void _copyToClipboard(BuildContext context, NoteEntity note) {
     final text = '${note.title}\n\n${note.content}';
     Clipboard.setData(ClipboardData(text: text));
@@ -859,16 +982,21 @@ class _NotesViewState extends State<_NotesView> {
     );
   }
 
-  // ── Actions: Convert Note to Task in Planner (Actual SQLite Insert) ───────
+  // ── Actions: Convert Note to Task in Planner (Actual SQLite Insert) ────────
   Future<void> _convertToPlannerTask(
-      BuildContext context, NoteEntity note) async {
+    BuildContext context,
+    NoteEntity note,
+  ) async {
     try {
       final db = sl<AppDatabase>();
       final today = DateTime.now().toIso8601String().substring(0, 10);
-      final taskTitle =
-          note.title.isNotEmpty ? note.title : 'Reminder from note';
+      final taskTitle = note.title.isNotEmpty
+          ? note.title
+          : 'Reminder from note';
 
-      await db.into(db.plannerItems).insert(
+      await db
+          .into(db.plannerItems)
+          .insert(
             PlannerItemsCompanion.insert(
               title: taskTitle,
               date: today,
@@ -885,11 +1013,6 @@ class _NotesViewState extends State<_NotesView> {
           SnackBar(
             content: Text('Converted "$taskTitle" to Planner Reminder!'),
             behavior: SnackBarBehavior.floating,
-            action: SnackBarAction(
-              label: 'View',
-              textColor: Colors.white,
-              onPressed: () {},
-            ),
           ),
         );
       }
@@ -905,9 +1028,11 @@ class _NotesViewState extends State<_NotesView> {
     }
   }
 
-  // ── Actions: Delete Note with Confirmation ────────────────────────────────
+  // ── Actions: Delete Note with Confirmation ─────────────────────────────────
   Future<void> _deleteNoteWithConfirmation(
-      BuildContext context, NoteEntity note) async {
+    BuildContext context,
+    NoteEntity note,
+  ) async {
     final confirmed = await ConfirmationDialog.show(
       context,
       title: 'Delete Note?',
@@ -928,7 +1053,7 @@ class _NotesViewState extends State<_NotesView> {
     }
   }
 
-  // ── Full Note Editor Modal Sheet (Create & Edit) ──────────────────────────
+  // ── Compact Note Editor Modal Sheet (Create & Edit) ────────────────────────
   void _showNoteEditor(BuildContext context, {NoteEntity? note}) {
     final notesBloc = context.read<NotesBloc>();
     final isEditing = note != null;
@@ -937,8 +1062,9 @@ class _NotesViewState extends State<_NotesView> {
     final customTagCtrl = TextEditingController();
 
     int selectedColor = note?.colorValue ?? _notePalette.first;
-    final List<String> activeTags =
-        note != null ? List<String>.from(note.tags) : [];
+    final List<String> activeTags = note != null
+        ? List<String>.from(note.tags)
+        : [];
 
     showModalBottomSheet(
       context: context,
@@ -952,430 +1078,473 @@ class _NotesViewState extends State<_NotesView> {
           child: StatefulBuilder(
             builder: (sheetStateContext, setSheetState) {
               return Container(
-              width: double.infinity,
-              padding: EdgeInsets.only(
-                left: 20,
-                right: 20,
-                top: 16,
-                bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 20,
-              ),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.darkCardBackground
-                    : Colors.white,
-                borderRadius: AppRadius.topXxl,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 25,
-                    offset: const Offset(0, -5),
-                  ),
-                ],
-              ),
-              child: SingleChildScrollView(
-                child: SizedBox(
-                  width: double.infinity,
+                width: double.infinity,
+                padding: EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  top: 12,
+                  bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 16,
+                ),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkCardBackground : Colors.white,
+                  borderRadius: AppRadius.topXl,
+                ),
+                child: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                    // Sheet Drag Handle
-                    Center(
-                      child: Container(
-                        width: 38,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? AppColors.darkDivider
-                              : AppColors.divider,
-                          borderRadius: AppRadius.radiusFull,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Sheet Header with Action Buttons
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          isEditing ? 'Edit Note' : 'Create New Note',
-                          style: AppTextStyles.titleLarge.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            // Delete button if editing
-                            if (isEditing)
-                              IconButton(
-                                icon: const Icon(Icons.delete_outline_rounded,
-                                    color: AppColors.error),
-                                tooltip: 'Delete Note',
-                                onPressed: () async {
-                                  final confirmed =
-                                      await ConfirmationDialog.show(
-                                    sheetContext,
-                                    title: 'Delete Note?',
-                                    message:
-                                        'Are you sure you want to delete "${note.title}"?',
-                                    confirmLabel: 'Delete',
-                                    isDestructive: true,
-                                  );
-                                  if (confirmed == true &&
-                                      sheetContext.mounted) {
-                                    Navigator.of(sheetContext).pop();
-                                    notesBloc.add(DeleteNote(note.id));
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Note deleted.'),
-                                        behavior: SnackBarBehavior.floating,
-                                      ),
-                                    );
-                                  }
-                                },
-                              ),
-                            IconButton(
-                              icon: const Icon(Icons.close_rounded),
-                              onPressed: () => Navigator.of(sheetContext).pop(),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Title Input
-                    TextField(
-                      controller: titleCtrl,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'Note Title...',
-                        hintStyle: TextStyle(
-                          color: isDark
-                              ? AppColors.darkTextCaption
-                              : AppColors.textCaption,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        border: UnderlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Color(selectedColor),
-                            width: 2,
-                          ),
-                        ),
-                        focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Color(selectedColor),
-                            width: 2.5,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Color Palette Selector
-                    Row(
-                      children: [
-                        Text(
-                          'Color Accent: ',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                      Center(
+                        child: Container(
+                          width: 32,
+                          height: 3.5,
+                          decoration: BoxDecoration(
                             color: isDark
-                                ? AppColors.darkTextCaption
-                                : AppColors.textCaption,
+                                ? AppColors.darkDivider
+                                : AppColors.divider,
+                            borderRadius: AppRadius.radiusFull,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        ..._notePalette.map((colorVal) {
-                          final isSelected = selectedColor == colorVal;
-                          return GestureDetector(
-                            onTap: () {
-                              setSheetState(() => selectedColor = colorVal);
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.only(right: 8),
-                              width: 24,
-                              height: 24,
-                              decoration: BoxDecoration(
-                                color: Color(colorVal),
-                                shape: BoxShape.circle,
-                                border: isSelected
-                                    ? Border.all(color: Colors.white, width: 2)
-                                    : null,
-                                boxShadow: isSelected
-                                    ? [
-                                        BoxShadow(
-                                          color: Color(colorVal)
-                                              .withValues(alpha: 0.6),
-                                          blurRadius: 6,
-                                        ),
-                                      ]
-                                    : null,
-                              ),
-                              child: isSelected
-                                  ? const Icon(Icons.check,
-                                      size: 14, color: Colors.white)
-                                  : null,
-                            ),
-                          );
-                        }),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
+                      ),
+                      const SizedBox(height: 10),
 
-                    // Formatting Shortcut Tools
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
+                      // Header
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _buildEditorHelperChip(
-                            icon: Icons.format_list_bulleted_rounded,
-                            label: 'Bullet',
-                            onTap: () {
-                              final text = contentCtrl.text;
-                              final selection = contentCtrl.selection;
-                              const bullet = '\n• ';
-                              final newText = text.isEmpty
-                                  ? '• '
-                                  : text.replaceRange(
-                                      selection.start >= 0 ? selection.start : text.length,
-                                      selection.end >= 0 ? selection.end : text.length,
-                                      bullet,
-                                    );
-                              contentCtrl.text = newText;
-                            },
+                          Text(
+                            isEditing ? 'Edit Note' : 'Create New Note',
+                            style: const TextStyle(
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                          const SizedBox(width: 6),
-                          _buildEditorHelperChip(
-                            icon: Icons.check_box_outline_blank_rounded,
-                            label: 'Checklist',
-                            onTap: () {
-                              final text = contentCtrl.text;
-                              final selection = contentCtrl.selection;
-                              const todo = '\n[ ] ';
-                              final newText = text.isEmpty
-                                  ? '[ ] '
-                                  : text.replaceRange(
-                                      selection.start >= 0 ? selection.start : text.length,
-                                      selection.end >= 0 ? selection.end : text.length,
-                                      todo,
+                          Row(
+                            children: [
+                              if (isEditing)
+                                IconButton(
+                                  visualDensity: VisualDensity.compact,
+                                  icon: const Icon(
+                                    Icons.delete_outline_rounded,
+                                    size: 19,
+                                    color: AppColors.error,
+                                  ),
+                                  tooltip: 'Delete Note',
+                                  onPressed: () async {
+                                    final confirmed = await ConfirmationDialog.show(
+                                      sheetContext,
+                                      title: 'Delete Note?',
+                                      message:
+                                          'Are you sure you want to delete "${note.title}"?',
+                                      confirmLabel: 'Delete',
+                                      isDestructive: true,
                                     );
-                              contentCtrl.text = newText;
-                            },
-                          ),
-                          const SizedBox(width: 6),
-                          _buildEditorHelperChip(
-                            icon: Icons.calendar_today_rounded,
-                            label: 'Date',
-                            onTap: () {
-                              final nowStr = DateFormat('dd MMM, h:mm a').format(DateTime.now());
-                              final text = contentCtrl.text;
-                              final selection = contentCtrl.selection;
-                              final toInsert = '\n[$nowStr] ';
-                              final newText = text.isEmpty
-                                  ? '[$nowStr] '
-                                  : text.replaceRange(
-                                      selection.start >= 0 ? selection.start : text.length,
-                                      selection.end >= 0 ? selection.end : text.length,
-                                      toInsert,
-                                    );
-                              contentCtrl.text = newText;
-                            },
+                                    if (confirmed == true &&
+                                        sheetContext.mounted) {
+                                      Navigator.of(sheetContext).pop();
+                                      notesBloc.add(DeleteNote(note.id));
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Note deleted.'),
+                                          behavior: SnackBarBehavior.floating,
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
+                              IconButton(
+                                visualDensity: VisualDensity.compact,
+                                icon: const Icon(Icons.close_rounded, size: 19),
+                                onPressed: () =>
+                                    Navigator.of(sheetContext).pop(),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 12),
+                      const SizedBox(height: 8),
 
-                    // Content Input Field
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? AppColors.darkSurfaceSecondary
-                            : AppColors.surfaceSecondary,
-                        borderRadius: AppRadius.radiusLg,
-                        border: Border.all(
-                          color: isDark
-                              ? AppColors.darkBorder
-                              : AppColors.border,
+                      // Title Input
+                      TextField(
+                        controller: titleCtrl,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
                         ),
-                      ),
-                      child: TextField(
-                        controller: contentCtrl,
-                        maxLines: 7,
-                        style: TextStyle(
-                          fontSize: 14,
-                          height: 1.45,
-                          color: isDark
-                              ? AppColors.darkTextHeading
-                              : AppColors.textHeading,
-                        ),
-                        decoration: const InputDecoration(
-                          hintText: 'Write your thoughts, checklists, or plans...',
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Quick Tag Chips (Selectable)
-                    Text(
-                      'Tags:',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: isDark
-                            ? AppColors.darkTextCaption
-                            : AppColors.textCaption,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: [
-                        ..._suggestedTags.map((tag) {
-                          final isTagActive = activeTags.contains(tag);
-                          return FilterChip(
-                            selected: isTagActive,
-                            label: Text(tag, style: const TextStyle(fontSize: 11)),
-                            selectedColor: Color(selectedColor).withValues(alpha: 0.2),
-                            checkmarkColor: Color(selectedColor),
-                            onSelected: (selected) {
-                              setSheetState(() {
-                                if (selected) {
-                                  activeTags.add(tag);
-                                } else {
-                                  activeTags.remove(tag);
-                                }
-                              });
-                            },
-                          );
-                        }),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Custom Tag Input Row
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: customTagCtrl,
-                            decoration: const InputDecoration(
-                              hintText: 'Add custom tag (e.g. @Meeting)',
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 8),
+                        decoration: InputDecoration(
+                          isDense: true,
+                          hintText: 'Note Title...',
+                          hintStyle: TextStyle(
+                            fontSize: 14.5,
+                            color: isDark
+                                ? AppColors.darkTextCaption
+                                : AppColors.textCaption,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                          ),
+                          border: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Color(selectedColor),
+                              width: 1.5,
+                            ),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Color(selectedColor),
+                              width: 2,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        OutlinedButton(
-                          onPressed: () {
-                            final custom = customTagCtrl.text.trim();
-                            if (custom.isNotEmpty) {
-                              final formatted = custom.startsWith('@')
-                                  ? custom
-                                  : '@$custom';
-                              if (!activeTags.contains(formatted)) {
-                                setSheetState(() => activeTags.add(formatted));
-                              }
-                              customTagCtrl.clear();
-                            }
-                          },
-                          child: const Text('Add Tag'),
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Color Palette Selector
+                      Row(
+                        children: [
+                          Text(
+                            'Color Accent: ',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: isDark
+                                  ? AppColors.darkTextCaption
+                                  : AppColors.textCaption,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          ..._notePalette.map((colorVal) {
+                            final isSelected = selectedColor == colorVal;
+                            return GestureDetector(
+                              onTap: () {
+                                setSheetState(() => selectedColor = colorVal);
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(right: 7),
+                                width: 20,
+                                height: 20,
+                                decoration: BoxDecoration(
+                                  color: Color(colorVal),
+                                  shape: BoxShape.circle,
+                                  border: isSelected
+                                      ? Border.all(
+                                          color: Colors.white,
+                                          width: 1.8,
+                                        )
+                                      : null,
+                                ),
+                                child: isSelected
+                                    ? const Icon(
+                                        Icons.check,
+                                        size: 12,
+                                        color: Colors.white,
+                                      )
+                                    : null,
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Formatting Shortcut Tools
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            _buildEditorHelperChip(
+                              icon: Icons.format_list_bulleted_rounded,
+                              label: 'Bullet',
+                              onTap: () {
+                                final text = contentCtrl.text;
+                                final selection = contentCtrl.selection;
+                                const bullet = '\n• ';
+                                final newText = text.isEmpty
+                                    ? '• '
+                                    : text.replaceRange(
+                                        selection.start >= 0
+                                            ? selection.start
+                                            : text.length,
+                                        selection.end >= 0
+                                            ? selection.end
+                                            : text.length,
+                                        bullet,
+                                      );
+                                contentCtrl.text = newText;
+                              },
+                            ),
+                            const SizedBox(width: 6),
+                            _buildEditorHelperChip(
+                              icon: Icons.check_box_outline_blank_rounded,
+                              label: 'Checklist',
+                              onTap: () {
+                                final text = contentCtrl.text;
+                                final selection = contentCtrl.selection;
+                                const todo = '\n[ ] ';
+                                final newText = text.isEmpty
+                                    ? '[ ] '
+                                    : text.replaceRange(
+                                        selection.start >= 0
+                                            ? selection.start
+                                            : text.length,
+                                        selection.end >= 0
+                                            ? selection.end
+                                            : text.length,
+                                        todo,
+                                      );
+                                contentCtrl.text = newText;
+                              },
+                            ),
+                            const SizedBox(width: 6),
+                            _buildEditorHelperChip(
+                              icon: Icons.calendar_today_rounded,
+                              label: 'Date',
+                              onTap: () {
+                                final nowStr = DateFormat(
+                                  'dd MMM, h:mm a',
+                                ).format(DateTime.now());
+                                final text = contentCtrl.text;
+                                final selection = contentCtrl.selection;
+                                final toInsert = '\n[$nowStr] ';
+                                final newText = text.isEmpty
+                                    ? '[$nowStr] '
+                                    : text.replaceRange(
+                                        selection.start >= 0
+                                            ? selection.start
+                                            : text.length,
+                                        selection.end >= 0
+                                            ? selection.end
+                                            : text.length,
+                                        toInsert,
+                                      );
+                                contentCtrl.text = newText;
+                              },
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
+                      ),
+                      const SizedBox(height: 8),
 
-                    // Save / Submit Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: FilledButton.icon(
-                        onPressed: () {
-                          final title = titleCtrl.text.trim();
-                          final content = contentCtrl.text.trim();
-
-                          if (title.isEmpty && content.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Please enter a title or content.'),
-                                behavior: SnackBarBehavior.floating,
-                              ),
-                            );
-                            return;
-                          }
-
-                          final effectiveTitle =
-                              title.isNotEmpty ? title : 'Untitled Note';
-                          final tagsString = activeTags.join(',');
-
-                          if (isEditing) {
-                            notesBloc.add(
-                                  UpdateNote(
-                                    id: note.id,
-                                    title: effectiveTitle,
-                                    content: content,
-                                    colorValue: selectedColor,
-                                    tags: tagsString,
-                                  ),
-                                );
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Note updated successfully!'),
-                                behavior: SnackBarBehavior.floating,
-                              ),
-                            );
-                          } else {
-                            notesBloc.add(
-                                  AddNote(
-                                    title: effectiveTitle,
-                                    content: content,
-                                    colorValue: selectedColor,
-                                    tags: tagsString,
-                                  ),
-                                );
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Note created successfully!'),
-                                behavior: SnackBarBehavior.floating,
-                              ),
-                            );
-                          }
-
-                          Navigator.of(sheetContext).pop();
-                        },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: Color(selectedColor),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: AppRadius.radiusMd,
+                      // Content Input Field
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppColors.darkSurfaceSecondary
+                              : AppColors.surfaceSecondary,
+                          borderRadius: AppRadius.radiusMd,
+                          border: Border.all(
+                            color: isDark
+                                ? AppColors.darkBorder
+                                : AppColors.border,
+                            width: 0.8,
                           ),
                         ),
-                        icon: const Icon(Icons.check_rounded),
-                        label: Text(
-                          isEditing ? 'Save Changes' : 'Create Note',
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
+                        child: TextField(
+                          controller: contentCtrl,
+                          maxLines: 5,
+                          style: TextStyle(
+                            fontSize: 13,
+                            height: 1.4,
+                            color: isDark
+                                ? AppColors.darkTextHeading
+                                : AppColors.textHeading,
+                          ),
+                          decoration: const InputDecoration(
+                            isDense: true,
+                            hintText:
+                                'Write your thoughts, checklists, or plans...',
+                            hintStyle: TextStyle(fontSize: 12.5),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.zero,
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 10),
+
+                      // Quick Tag Chips
+                      Text(
+                        'Tags:',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: isDark
+                              ? AppColors.darkTextCaption
+                              : AppColors.textCaption,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Wrap(
+                        spacing: 5,
+                        runSpacing: 4,
+                        children: [
+                          ..._suggestedTags.map((tag) {
+                            final isTagActive = activeTags.contains(tag);
+                            return FilterChip(
+                              visualDensity: VisualDensity.compact,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                              selected: isTagActive,
+                              label: Text(
+                                tag,
+                                style: const TextStyle(fontSize: 10.5),
+                              ),
+                              selectedColor: Color(
+                                selectedColor,
+                              ).withValues(alpha: 0.2),
+                              checkmarkColor: Color(selectedColor),
+                              onSelected: (selected) {
+                                setSheetState(() {
+                                  if (selected) {
+                                    activeTags.add(tag);
+                                  } else {
+                                    activeTags.remove(tag);
+                                  }
+                                });
+                              },
+                            );
+                          }),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Custom Tag Input Row
+                      Row(
+                        children: [
+                          Expanded(
+                            child: SizedBox(
+                              height: 34,
+                              child: TextField(
+                                controller: customTagCtrl,
+                                style: const TextStyle(fontSize: 12),
+                                decoration: const InputDecoration(
+                                  hintText: 'Add custom tag (e.g. @Meeting)',
+                                  hintStyle: TextStyle(fontSize: 11.5),
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 7,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          SizedBox(
+                            height: 34,
+                            child: OutlinedButton(
+                              onPressed: () {
+                                final custom = customTagCtrl.text.trim();
+                                if (custom.isNotEmpty) {
+                                  final formatted = custom.startsWith('@')
+                                      ? custom
+                                      : '@$custom';
+                                  if (!activeTags.contains(formatted)) {
+                                    setSheetState(
+                                      () => activeTags.add(formatted),
+                                    );
+                                  }
+                                  customTagCtrl.clear();
+                                }
+                              },
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                ),
+                                textStyle: const TextStyle(fontSize: 11.5),
+                              ),
+                              child: const Text('Add Tag'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+
+                      // Save / Submit Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 42,
+                        child: FilledButton.icon(
+                          onPressed: () {
+                            final title = titleCtrl.text.trim();
+                            final content = contentCtrl.text.trim();
+
+                            if (title.isEmpty && content.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Please enter a title or content.',
+                                  ),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                              return;
+                            }
+
+                            final effectiveTitle = title.isNotEmpty
+                                ? title
+                                : 'Untitled Note';
+                            final tagsString = activeTags.join(',');
+
+                            if (isEditing) {
+                              notesBloc.add(
+                                UpdateNote(
+                                  id: note.id,
+                                  title: effectiveTitle,
+                                  content: content,
+                                  colorValue: selectedColor,
+                                  tags: tagsString,
+                                ),
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Note updated successfully!'),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            } else {
+                              notesBloc.add(
+                                AddNote(
+                                  title: effectiveTitle,
+                                  content: content,
+                                  colorValue: selectedColor,
+                                  tags: tagsString,
+                                ),
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Note created successfully!'),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            }
+
+                            Navigator.of(sheetContext).pop();
+                          },
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Color(selectedColor),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: AppRadius.radiusSm,
+                            ),
+                          ),
+                          icon: const Icon(Icons.check_rounded, size: 17),
+                          label: Text(
+                            isEditing ? 'Save Changes' : 'Create Note',
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ),
-          );
+              );
             },
           ),
         );
@@ -1389,8 +1558,10 @@ class _NotesViewState extends State<_NotesView> {
     required VoidCallback onTap,
   }) {
     return ActionChip(
-      avatar: Icon(icon, size: 14),
-      label: Text(label, style: const TextStyle(fontSize: 11)),
+      visualDensity: VisualDensity.compact,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      avatar: Icon(icon, size: 13),
+      label: Text(label, style: const TextStyle(fontSize: 10.5)),
       onPressed: onTap,
     );
   }

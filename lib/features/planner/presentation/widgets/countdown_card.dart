@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
+import '../../../../config/theme/app_spacing.dart';
+import '../../../../config/theme/app_text_styles.dart';
 import '../../domain/entities/countdown_item_entity.dart';
 
+/// Countdown card. Mirrors [PlannerItemCard]'s grid: leading visual, content
+/// column, then a divider and an action row aligned to the content column.
 class CountdownCard extends StatelessWidget {
+  static const double _avatarSize = 44;
+  static const double _contentInset = _avatarSize + AppSpacing.sm;
+
   final CountdownItemEntity item;
   final bool isDark;
   final VoidCallback onAddToPlanner;
@@ -23,34 +30,45 @@ class CountdownCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = Color(item.colorValue);
     final now = DateTime.now();
-    final difference =
-        item.date.difference(DateTime(now.year, now.month, now.day));
-    final daysLeft = difference.inDays;
+    final daysLeft = item.date
+        .difference(DateTime(now.year, now.month, now.day))
+        .inDays;
 
-    String daysBadgeText;
+    final String badgeText;
     Color badgeColor = color;
     if (daysLeft > 1) {
-      daysBadgeText = '${daysLeft}d left';
+      badgeText = '${daysLeft}d left';
     } else if (daysLeft == 1) {
-      daysBadgeText = 'Tomorrow!';
+      badgeText = 'Tomorrow';
       badgeColor = AppColors.focusPomodoro;
     } else if (daysLeft == 0) {
-      daysBadgeText = 'Today! 🎉';
+      badgeText = 'Today';
       badgeColor = AppColors.success;
     } else {
-      daysBadgeText = '${daysLeft.abs()}d ago';
+      badgeText = '${daysLeft.abs()}d ago';
       badgeColor = AppColors.textCaption;
     }
 
+    final headingColor = isDark
+        ? AppColors.darkTextHeading
+        : AppColors.textHeading;
+    final captionColor = isDark
+        ? AppColors.darkTextCaption
+        : AppColors.textCaption;
+    final dividerColor = isDark ? AppColors.darkDivider : AppColors.divider;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.sm,
+      ),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
         borderRadius: AppRadius.radiusLg,
-        border: Border.all(
-          color: isDark ? AppColors.darkDivider : AppColors.divider,
-        ),
+        border: Border.all(color: dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,9 +76,13 @@ class CountdownCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CircleAvatar(
-                radius: 22,
-                backgroundColor: color.withValues(alpha: 0.14),
+              Container(
+                width: _avatarSize,
+                height: _avatarSize,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: AppRadius.radiusMd,
+                ),
                 child: Icon(
                   // ignore: non_const_argument_for_const_parameter
                   IconData(item.iconCodePoint, fontFamily: 'MaterialIcons'),
@@ -68,67 +90,69 @@ class CountdownCard extends StatelessWidget {
                   size: 22,
                 ),
               ),
-              const SizedBox(width: 14),
+              AppSpacing.gapW12,
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       item.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14.5,
-                        color: isDark
-                            ? AppColors.darkTextHeading
-                            : AppColors.textHeading,
+                        fontSize: 15,
+                        height: 1.3,
+                        fontWeight: FontWeight.w600,
+                        color: headingColor,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Row(
+                    AppSpacing.gapH4,
+                    Wrap(
+                      spacing: AppSpacing.xs,
+                      runSpacing: AppSpacing.xxs,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        Text(
-                          _formatDate(item.date),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark
-                                ? AppColors.darkTextCaption
-                                : AppColors.textCaption,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 1),
-                          decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.12),
-                            borderRadius: AppRadius.radiusSm,
-                          ),
-                          child: Text(
-                            item.category,
-                            style: TextStyle(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w700,
-                              color: color,
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.calendar_today_rounded,
+                              size: 14,
+                              color: captionColor,
                             ),
-                          ),
+                            AppSpacing.gapW4,
+                            Text(
+                              _formatDate(item.date),
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: captionColor,
+                              ),
+                            ),
+                          ],
                         ),
+                        _Pill(label: item.category, color: color),
                       ],
                     ),
                   ],
                 ),
               ),
+              AppSpacing.gapW8,
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: badgeColor.withValues(alpha: 0.15),
-                  borderRadius: AppRadius.radiusMd,
+                  color: badgeColor.withValues(alpha: 0.12),
+                  borderRadius: AppRadius.radiusSm,
                 ),
                 child: Text(
-                  daysBadgeText,
+                  badgeText,
                   style: TextStyle(
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w700,
                     fontSize: 12,
+                    fontFeatures: const [FontFeature.tabularFigures()],
                     color: badgeColor,
                   ),
                 ),
@@ -136,79 +160,101 @@ class CountdownCard extends StatelessWidget {
             ],
           ),
 
-          // Optional Notes Preview
-          if (item.notes.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.darkSurfaceSecondary
-                    : AppColors.surfaceSecondary,
-                borderRadius: AppRadius.radiusSm,
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.lightbulb_outline_rounded,
-                      size: 13, color: AppColors.moduleNotes),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      item.notes,
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        color: isDark
-                            ? AppColors.darkTextCaption
-                            : AppColors.textBody,
+          Padding(
+            padding: const EdgeInsets.only(left: _contentInset),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (item.notes.isNotEmpty) ...[
+                  AppSpacing.gapH12,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.only(top: 1),
+                        child: Icon(
+                          Icons.lightbulb_outline_rounded,
+                          size: 16,
+                          color: AppColors.moduleNotes,
+                        ),
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                      AppSpacing.gapW8,
+                      Expanded(
+                        child: Text(
+                          item.notes,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
+                            height: 1.4,
+                            color: isDark
+                                ? AppColors.darkTextBody
+                                : AppColors.textBody,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
-              ),
+                AppSpacing.gapH12,
+                Divider(height: 1, thickness: 1, color: dividerColor),
+                AppSpacing.gapH12,
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: onAddToPlanner,
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(0, 34),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.sm,
+                          ),
+                          elevation: 0,
+                          backgroundColor: AppColors.moduleTime.withValues(
+                            alpha: 0.14,
+                          ),
+                          foregroundColor: isDark
+                              ? AppColors.moduleTimeLight
+                              : AppColors.moduleTime,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: AppRadius.radiusSm,
+                          ),
+                          textStyle: const TextStyle(
+                            fontFamily: AppTextStyles.fontFamily,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        icon: const Icon(
+                          Icons.event_available_rounded,
+                          size: 16,
+                        ),
+                        label: const Text('Add to Planner'),
+                      ),
+                    ),
+                    AppSpacing.gapW8,
+                    _SquareIconButton(
+                      icon: Icons.edit_outlined,
+                      tooltip: 'Edit countdown',
+                      color: isDark
+                          ? AppColors.darkTextBody
+                          : AppColors.textBody,
+                      isDark: isDark,
+                      onPressed: onEdit,
+                    ),
+                    AppSpacing.gapW8,
+                    _SquareIconButton(
+                      icon: Icons.delete_outline_rounded,
+                      tooltip: 'Delete countdown',
+                      color: AppColors.error,
+                      isDark: isDark,
+                      onPressed: onDelete,
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
-
-          const SizedBox(height: 12),
-          // Action Buttons: Add to Planner, Edit, Delete
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton.icon(
-                onPressed: onAddToPlanner,
-                style: TextButton.styleFrom(
-                  minimumSize: Size.zero,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  foregroundColor: AppColors.moduleTime,
-                ),
-                icon: const Icon(Icons.calendar_month_rounded, size: 14),
-                label: const Text(
-                  'Add to Planner',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
-                ),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(Icons.edit_outlined, size: 16),
-                color: isDark
-                    ? AppColors.darkTextCaption
-                    : AppColors.textCaption,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                onPressed: onEdit,
-              ),
-              const SizedBox(width: 12),
-              IconButton(
-                icon: const Icon(Icons.delete_outline_rounded, size: 16),
-                color: AppColors.error.withValues(alpha: 0.7),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                onPressed: onDelete,
-              ),
-            ],
           ),
         ],
       ),
@@ -229,10 +275,73 @@ class CountdownCard extends StatelessWidget {
       'Sep',
       'Oct',
       'Nov',
-      'Dec'
+      'Dec',
     ];
-    final dayName = days[date.weekday - 1];
-    final month = months[date.month - 1];
-    return '$dayName, $month ${date.day}, ${date.year}';
+    return '${days[date.weekday - 1]}, ${months[date.month - 1]} ${date.day}, ${date.year}';
+  }
+}
+
+class _SquareIconButton extends StatelessWidget {
+  final IconData icon;
+  final String tooltip;
+  final Color color;
+  final bool isDark;
+  final VoidCallback onPressed;
+
+  const _SquareIconButton({
+    required this.icon,
+    required this.tooltip,
+    required this.color,
+    required this.isDark,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: tooltip,
+      onPressed: onPressed,
+      icon: Icon(icon, size: 18),
+      color: color,
+      style: IconButton.styleFrom(
+        fixedSize: const Size(40, 34),
+        minimumSize: const Size(40, 34),
+        padding: EdgeInsets.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.radiusSm),
+        side: BorderSide(
+          color: isDark ? AppColors.darkBorder : AppColors.border,
+        ),
+      ),
+    );
+  }
+}
+
+class _Pill extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _Pill({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: AppSpacing.xxxs,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: AppRadius.radiusXs,
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: color,
+        ),
+      ),
+    );
   }
 }

@@ -647,6 +647,16 @@ Failures: `ServerFailure`, `CacheFailure`, `NetworkFailure`, `ValidationFailure`
   (e.g. `floatingBar`), `app_theme.dart` (`lightTheme`, `darkTheme`).
 - Font: **DMSans**. Theme follows the system (light/dark).
 - Pages commonly check `Theme.of(context).brightness == Brightness.dark` and pass an `isDark` flag into widgets.
+- **Layout conventions:**
+  - Every page (Money included) uses a **20px horizontal gutter** (`AppSpacing.pageGutter`). AppBar
+    `titleSpacing` = 20 and `actionsPadding` = 8 in both themes, so titles and the last action icon
+    land on the gutter. A non-IconButton last action (e.g. `MonthSelectorChip`) needs `right: 12` padding.
+  - Compact buttons that set `minimumSize: Size.zero` must also set
+    `tapTargetSize: MaterialTapTargetSize.shrinkWrap`, or Material adds invisible 48px padding.
+  - Borderless inline `TextField`s inside a styled container set `filled: false` (the dark theme fill
+    otherwise draws a mismatched box).
+  - Use `Text.rich`, not `RichText`: `RichText` ignores the theme and falls back to Roboto instead of DMSans.
+  - Segmented pills with long labels use `FittedBox(fit: BoxFit.scaleDown)` instead of ellipsis.
 - Priority colors (in `PlannerItemEntity.priorityColor`): urgent red, high orange, medium indigo, low emerald.
 
 ---

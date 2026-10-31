@@ -26,23 +26,26 @@ void main() {
       expect(granted, isTrue);
     });
 
-    test('shows instant notifications with correct channel and payload', () async {
-      await service.showInstantNotification(
-        id: 101,
-        title: 'Focus Sprint Ended',
-        body: 'Take a 5-minute break',
-        channelId: NotificationChannels.focus,
-        payload: 'focus_sprint_end',
-      );
+    test(
+      'shows instant notifications with correct channel and payload',
+      () async {
+        await service.showInstantNotification(
+          id: 101,
+          title: 'Focus Sprint Ended',
+          body: 'Take a 5-minute break',
+          channelId: NotificationChannels.focus,
+          payload: 'focus_sprint_end',
+        );
 
-      expect(service.instantNotifications.length, 1);
-      final item = service.instantNotifications.first;
-      expect(item.id, 101);
-      expect(item.title, 'Focus Sprint Ended');
-      expect(item.body, 'Take a 5-minute break');
-      expect(item.channelId, NotificationChannels.focus);
-      expect(item.payload, 'focus_sprint_end');
-    });
+        expect(service.instantNotifications.length, 1);
+        final item = service.instantNotifications.first;
+        expect(item.id, 101);
+        expect(item.title, 'Focus Sprint Ended');
+        expect(item.body, 'Take a 5-minute break');
+        expect(item.channelId, NotificationChannels.focus);
+        expect(item.payload, 'focus_sprint_end');
+      },
+    );
 
     test('schedules notifications for reminders and countdowns', () async {
       final scheduledTime = DateTime.now().add(const Duration(hours: 2));

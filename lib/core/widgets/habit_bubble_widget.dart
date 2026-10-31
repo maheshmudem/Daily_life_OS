@@ -35,7 +35,9 @@ class HabitBubbleWidget extends StatelessWidget {
         decoration: BoxDecoration(
           color: isDone
               ? tintColor.withValues(alpha: isDark ? 0.22 : 0.12)
-              : (isDark ? AppColors.darkCardBackground : AppColors.cardBackground),
+              : (isDark
+                    ? AppColors.darkCardBackground
+                    : AppColors.cardBackground),
           borderRadius: AppRadius.radiusLg,
           border: Border.all(
             color: isDone
@@ -99,7 +101,9 @@ class HabitBubbleWidget extends StatelessWidget {
                 fontSize: 11,
                 fontWeight: isDone ? FontWeight.w700 : FontWeight.w600,
                 color: isDone
-                    ? (isDark ? AppColors.darkTextHeading : AppColors.textHeading)
+                    ? (isDark
+                          ? AppColors.darkTextHeading
+                          : AppColors.textHeading)
                     : (isDark ? AppColors.darkTextBody : AppColors.textBody),
                 decoration: isDone ? TextDecoration.lineThrough : null,
               ),
@@ -110,7 +114,9 @@ class HabitBubbleWidget extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.darkSurfaceSecondary : AppColors.surfaceSecondary,
+                color: isDark
+                    ? AppColors.darkSurfaceSecondary
+                    : AppColors.surfaceSecondary,
                 borderRadius: AppRadius.radiusSm,
               ),
               child: Row(
@@ -123,7 +129,9 @@ class HabitBubbleWidget extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
-                      color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
+                      color: isDark
+                          ? AppColors.darkTextCaption
+                          : AppColors.textCaption,
                     ),
                   ),
                 ],

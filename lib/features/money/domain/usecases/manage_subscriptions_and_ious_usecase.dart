@@ -43,11 +43,46 @@ class AddIouUseCase {
     required double amount,
     required String type,
     required String note,
-  }) =>
-      _repository.addIou(
-        person: person,
-        amount: amount,
-        type: type,
-        note: note,
-      );
+  }) => _repository.addIou(
+    person: person,
+    amount: amount,
+    type: type,
+    note: note,
+  );
+}
+
+class AddSubscriptionUseCase {
+  final MoneyRepository _repository;
+
+  const AddSubscriptionUseCase(this._repository);
+
+  Future<void> call({
+    required String name,
+    required double amount,
+    required DateTime renewalDate,
+    required int iconCodePoint,
+    bool autoKillEnabled = false,
+  }) => _repository.addSubscription(
+    name: name,
+    amount: amount,
+    renewalDate: renewalDate,
+    iconCodePoint: iconCodePoint,
+    autoKillEnabled: autoKillEnabled,
+  );
+}
+
+class DeleteSubscriptionUseCase {
+  final MoneyRepository _repository;
+
+  const DeleteSubscriptionUseCase(this._repository);
+
+  Future<void> call(int id) => _repository.deleteSubscription(id);
+}
+
+class DeleteIouUseCase {
+  final MoneyRepository _repository;
+
+  const DeleteIouUseCase(this._repository);
+
+  Future<void> call(int id) => _repository.deleteIou(id);
 }

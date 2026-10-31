@@ -27,11 +27,8 @@ class CountdownSheet extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => CountdownSheet(
-        editItem: editItem,
-        isDark: isDark,
-        onSave: onSave,
-      ),
+      builder: (ctx) =>
+          CountdownSheet(editItem: editItem, isDark: isDark, onSave: onSave),
     );
   }
 
@@ -58,12 +55,14 @@ class _CountdownSheetState extends State<CountdownSheet> {
   @override
   void initState() {
     super.initState();
-    _titleController =
-        TextEditingController(text: widget.editItem?.title ?? '');
-    _notesController =
-        TextEditingController(text: widget.editItem?.notes ?? '');
-    _selectedDate = widget.editItem?.date ??
-        DateTime.now().add(const Duration(days: 7));
+    _titleController = TextEditingController(
+      text: widget.editItem?.title ?? '',
+    );
+    _notesController = TextEditingController(
+      text: widget.editItem?.notes ?? '',
+    );
+    _selectedDate =
+        widget.editItem?.date ?? DateTime.now().add(const Duration(days: 7));
     _selectedCategory = widget.editItem?.category ?? 'Birthday';
     _remindAdvance = widget.editItem?.remindAdvance ?? true;
   }
@@ -124,15 +123,14 @@ class _CountdownSheetState extends State<CountdownSheet> {
       'Sep',
       'Oct',
       'Nov',
-      'Dec'
+      'Dec',
     ];
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
 
   @override
   Widget build(BuildContext context) {
-    final cardBg =
-        widget.isDark ? AppColors.darkCardBackground : Colors.white;
+    final cardBg = widget.isDark ? AppColors.darkCardBackground : Colors.white;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -212,26 +210,36 @@ class _CountdownSheetState extends State<CountdownSheet> {
                   final picked = await showDatePicker(
                     context: context,
                     initialDate: _selectedDate,
-                    firstDate:
-                        DateTime.now().subtract(const Duration(days: 30)),
-                    lastDate: DateTime.now().add(const Duration(days: 365 * 10)),
+                    firstDate: DateTime.now().subtract(
+                      const Duration(days: 30),
+                    ),
+                    lastDate: DateTime.now().add(
+                      const Duration(days: 365 * 10),
+                    ),
                   );
                   if (picked != null) {
                     setState(() => _selectedDate = picked);
                   }
                 },
                 style: OutlinedButton.styleFrom(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                   shape: const RoundedRectangleBorder(
-                      borderRadius: AppRadius.radiusMd),
+                    borderRadius: AppRadius.radiusMd,
+                  ),
                   side: BorderSide(
-                      color: widget.isDark
-                          ? AppColors.darkDivider
-                          : AppColors.divider),
+                    color: widget.isDark
+                        ? AppColors.darkDivider
+                        : AppColors.divider,
+                  ),
                 ),
-                icon: const Icon(Icons.calendar_today_rounded,
-                    size: 16, color: AppColors.moduleTime),
+                icon: const Icon(
+                  Icons.calendar_today_rounded,
+                  size: 16,
+                  color: AppColors.moduleTime,
+                ),
                 label: Text(
                   _formatDate(_selectedDate),
                   style: AppTextStyles.bodyMedium.copyWith(
@@ -266,13 +274,14 @@ class _CountdownSheetState extends State<CountdownSheet> {
                     selectedColor: color.withValues(alpha: 0.2),
                     labelStyle: TextStyle(
                       fontSize: 12,
-                      fontWeight:
-                          isSelected ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w500,
                       color: isSelected
                           ? color
                           : (widget.isDark
-                              ? AppColors.darkTextCaption
-                              : AppColors.textCaption),
+                                ? AppColors.darkTextCaption
+                                : AppColors.textCaption),
                     ),
                     onSelected: (val) {
                       if (val) setState(() => _selectedCategory = cat);
@@ -299,12 +308,17 @@ class _CountdownSheetState extends State<CountdownSheet> {
                 color: Colors.transparent,
                 child: SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Advance Alert Reminders',
-                      style: TextStyle(
-                          fontSize: 13, fontWeight: FontWeight.w600)),
-                  subtitle: const Text('Notify 7 days & 1 day before event',
-                      style: TextStyle(
-                          fontSize: 11, color: AppColors.textCaption)),
+                  title: const Text(
+                    'Advance Alert Reminders',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: const Text(
+                    'Notify 7 days & 1 day before event',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textCaption,
+                    ),
+                  ),
                   value: _remindAdvance,
                   activeThumbColor: AppColors.moduleTime,
                   onChanged: (val) => setState(() => _remindAdvance = val),
@@ -320,7 +334,8 @@ class _CountdownSheetState extends State<CountdownSheet> {
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.moduleTime,
                     shape: const RoundedRectangleBorder(
-                        borderRadius: AppRadius.radiusMd),
+                      borderRadius: AppRadius.radiusMd,
+                    ),
                   ),
                   onPressed: () {
                     final title = _titleController.text.trim();
@@ -338,7 +353,8 @@ class _CountdownSheetState extends State<CountdownSheet> {
                     final icon = _getCategoryIcon(_selectedCategory);
 
                     final item = CountdownItemEntity(
-                      id: widget.editItem?.id ??
+                      id:
+                          widget.editItem?.id ??
                           DateTime.now().millisecondsSinceEpoch.toString(),
                       title: title,
                       date: _selectedDate,

@@ -10,13 +10,12 @@ class AddNoteUseCase {
     required String content,
     required int colorValue,
     String tags = '',
-  }) =>
-      _repository.addNote(
-        title: title,
-        content: content,
-        colorValue: colorValue,
-        tags: tags,
-      );
+  }) => _repository.addNote(
+    title: title,
+    content: content,
+    colorValue: colorValue,
+    tags: tags,
+  );
 }
 
 class UpdateNoteUseCase {
@@ -30,14 +29,13 @@ class UpdateNoteUseCase {
     String? content,
     int? colorValue,
     String? tags,
-  }) =>
-      _repository.updateNote(
-        id,
-        title: title,
-        content: content,
-        colorValue: colorValue,
-        tags: tags,
-      );
+  }) => _repository.updateNote(
+    id,
+    title: title,
+    content: content,
+    colorValue: colorValue,
+    tags: tags,
+  );
 }
 
 class DeleteNoteUseCase {

@@ -43,7 +43,7 @@ class NotificationServiceImpl implements NotificationService {
   bool _isInitialized = false;
 
   NotificationServiceImpl({FlutterLocalNotificationsPlugin? plugin})
-      : _plugin = plugin ?? FlutterLocalNotificationsPlugin();
+    : _plugin = plugin ?? FlutterLocalNotificationsPlugin();
 
   @override
   Future<void> initialize() async {
@@ -54,8 +54,9 @@ class NotificationServiceImpl implements NotificationService {
       tz.initializeTimeZones();
 
       // 2. Android Initialization Settings
-      const androidSettings =
-          AndroidInitializationSettings('@mipmap/ic_launcher');
+      const androidSettings = AndroidInitializationSettings(
+        '@mipmap/ic_launcher',
+      );
 
       // 3. Darwin / iOS Initialization Settings
       const darwinSettings = DarwinInitializationSettings(
@@ -81,14 +82,16 @@ class NotificationServiceImpl implements NotificationService {
       if (!kIsWeb && Platform.isAndroid) {
         final androidImplementation = _plugin
             .resolvePlatformSpecificImplementation<
-                AndroidFlutterLocalNotificationsPlugin>();
+              AndroidFlutterLocalNotificationsPlugin
+            >();
 
         if (androidImplementation != null) {
           await androidImplementation.createNotificationChannel(
             const AndroidNotificationChannel(
               NotificationChannels.reminders,
               'Daily Life Reminders',
-              description: 'Notifications for smart reminders and planner tasks',
+              description:
+                  'Notifications for smart reminders and planner tasks',
               importance: Importance.max,
               enableVibration: true,
               playSound: true,
@@ -99,7 +102,8 @@ class NotificationServiceImpl implements NotificationService {
             const AndroidNotificationChannel(
               NotificationChannels.countdowns,
               'Important Countdowns',
-              description: 'Advance alerts and countdown milestone notifications',
+              description:
+                  'Advance alerts and countdown milestone notifications',
               importance: Importance.high,
               enableVibration: true,
               playSound: true,
@@ -133,16 +137,17 @@ class NotificationServiceImpl implements NotificationService {
       if (Platform.isAndroid) {
         final androidImpl = _plugin
             .resolvePlatformSpecificImplementation<
-                AndroidFlutterLocalNotificationsPlugin>();
+              AndroidFlutterLocalNotificationsPlugin
+            >();
         if (androidImpl != null) {
-          final granted =
-              await androidImpl.requestNotificationsPermission();
+          final granted = await androidImpl.requestNotificationsPermission();
           return granted ?? false;
         }
       } else if (Platform.isIOS || Platform.isMacOS) {
         final darwinImpl = _plugin
             .resolvePlatformSpecificImplementation<
-                IOSFlutterLocalNotificationsPlugin>();
+              IOSFlutterLocalNotificationsPlugin
+            >();
         if (darwinImpl != null) {
           final granted = await darwinImpl.requestPermissions(
             alert: true,
@@ -248,9 +253,7 @@ class NotificationServiceImpl implements NotificationService {
     }
   }
 
-  NotificationDetails _getNotificationDetails({
-    required String channelId,
-  }) {
+  NotificationDetails _getNotificationDetails({required String channelId}) {
     String channelName;
     String channelDesc;
 

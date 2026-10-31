@@ -63,7 +63,8 @@ class _PaginatedListViewState<T> extends State<PaginatedListView<T>> {
     if (widget.isLoading && widget.items.isEmpty) {
       return widget.loadingWidget ??
           const Center(
-              child: CircularProgressIndicator(color: AppColors.primary));
+            child: CircularProgressIndicator(color: AppColors.primary),
+          );
     }
 
     if (widget.errorWidget != null && widget.items.isEmpty) {
@@ -73,8 +74,10 @@ class _PaginatedListViewState<T> extends State<PaginatedListView<T>> {
     if (widget.items.isEmpty) {
       return widget.emptyWidget ??
           const Center(
-            child: Text('No items found',
-                style: TextStyle(color: AppColors.textCaption)),
+            child: Text(
+              'No items found',
+              style: TextStyle(color: AppColors.textCaption),
+            ),
           );
     }
 

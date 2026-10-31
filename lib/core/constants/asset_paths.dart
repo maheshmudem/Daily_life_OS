@@ -7,5 +7,6 @@ class AssetPaths {
 
   // Placeholders / Illustrations
   static const String emptyState = 'assets/images/empty_state.svg';
-  static const String avatarPlaceholder = 'assets/images/avatar_placeholder.png';
+  static const String avatarPlaceholder =
+      'assets/images/avatar_placeholder.png';
 }

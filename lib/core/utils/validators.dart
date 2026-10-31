@@ -101,6 +101,30 @@ class Validators {
     return null;
   }
 
+  /// Money amount: required, numeric, greater than zero.
+  static String? validateAmount(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Enter an amount';
+    }
+    final parsed = double.tryParse(value.trim());
+    if (parsed == null || parsed <= 0) {
+      return 'Enter a valid amount';
+    }
+    return null;
+  }
+
+  /// Money amount that may be zero (e.g. budget limit, account balance).
+  static String? validateNonNegativeAmount(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Enter an amount';
+    }
+    final parsed = double.tryParse(value.trim());
+    if (parsed == null || parsed < 0) {
+      return 'Enter a valid positive amount';
+    }
+    return null;
+  }
+
   static int getPasswordStrength(String password) {
     int strength = 0;
     if (password.length >= 8) strength++;

@@ -11,6 +11,7 @@ class TransactionModel extends TransactionEntity {
     required super.iconCodePoint,
     required super.date,
     required super.type,
+    super.note,
   });
 
   factory TransactionModel.fromDrift(Transaction row) {
@@ -23,6 +24,7 @@ class TransactionModel extends TransactionEntity {
       iconCodePoint: row.iconCodePoint,
       date: row.date,
       type: row.type,
+      note: row.note,
     );
   }
 
@@ -36,6 +38,7 @@ class TransactionModel extends TransactionEntity {
       iconCodePoint: entity.iconCodePoint,
       date: entity.date,
       type: entity.type,
+      note: entity.note,
     );
   }
 }

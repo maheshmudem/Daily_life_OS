@@ -50,7 +50,9 @@ class PlannerBloc extends Bloc<PlannerEvent, PlannerState> {
   }
 
   Future<void> _onToggle(
-      TogglePlannerItem event, Emitter<PlannerState> emit) async {
+    TogglePlannerItem event,
+    Emitter<PlannerState> emit,
+  ) async {
     await togglePlannerItemUseCase(
       event.id,
       targetDate: event.targetDate ?? _currentDate,
@@ -59,13 +61,17 @@ class PlannerBloc extends Bloc<PlannerEvent, PlannerState> {
   }
 
   Future<void> _onDelete(
-      DeletePlannerItem event, Emitter<PlannerState> emit) async {
+    DeletePlannerItem event,
+    Emitter<PlannerState> emit,
+  ) async {
     await deletePlannerItemUseCase(event.id);
     await _reload(emit);
   }
 
   Future<void> _onClearCompleted(
-      ClearCompletedPlannerItems event, Emitter<PlannerState> emit) async {
+    ClearCompletedPlannerItems event,
+    Emitter<PlannerState> emit,
+  ) async {
     if (clearCompletedPlannerItemsUseCase != null) {
       await clearCompletedPlannerItemsUseCase!();
     }
@@ -93,7 +99,9 @@ class PlannerBloc extends Bloc<PlannerEvent, PlannerState> {
   }
 
   Future<void> _onUpdate(
-      UpdatePlannerItem event, Emitter<PlannerState> emit) async {
+    UpdatePlannerItem event,
+    Emitter<PlannerState> emit,
+  ) async {
     await updatePlannerItemUseCase(
       id: event.id,
       title: event.title,

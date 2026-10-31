@@ -100,7 +100,10 @@ class AppActionSheet extends StatelessWidget {
             // Header Section
             if (title != null || subtitle != null) ...[
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 10,
+                ),
                 child: Row(
                   children: [
                     if (headerLeading != null) ...[
@@ -161,14 +164,20 @@ class AppActionSheet extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               child: Column(
                 children: [
-                  ...normalActions.map((action) => _buildActionTile(context, action, isDark)),
+                  ...normalActions.map(
+                    (action) => _buildActionTile(context, action, isDark),
+                  ),
                   if (destructiveActions.isNotEmpty) ...[
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 6,
+                        horizontal: 8,
+                      ),
                       child: Divider(color: dividerColor, height: 1),
                     ),
-                    ...destructiveActions
-                        .map((action) => _buildActionTile(context, action, isDark)),
+                    ...destructiveActions.map(
+                      (action) => _buildActionTile(context, action, isDark),
+                    ),
                   ],
                 ],
               ),
@@ -180,19 +189,22 @@ class AppActionSheet extends StatelessWidget {
   }
 
   Widget _buildActionTile(
-      BuildContext context, AppActionItem action, bool isDark) {
+    BuildContext context,
+    AppActionItem action,
+    bool isDark,
+  ) {
     final effectiveColor = action.isDestructive
         ? AppColors.error
         : (action.tintColor ??
-            (isDark ? AppColors.darkTextHeading : AppColors.textHeading));
+              (isDark ? AppColors.darkTextHeading : AppColors.textHeading));
 
     final iconBgColor = action.isDestructive
         ? AppColors.error.withValues(alpha: 0.12)
         : (action.tintColor != null
-            ? action.tintColor!.withValues(alpha: 0.12)
-            : (isDark
-                ? AppColors.darkSurfaceSecondary
-                : AppColors.surfaceSecondary));
+              ? action.tintColor!.withValues(alpha: 0.12)
+              : (isDark
+                    ? AppColors.darkSurfaceSecondary
+                    : AppColors.surfaceSecondary));
 
     return Material(
       color: Colors.transparent,
@@ -215,11 +227,7 @@ class AppActionSheet extends StatelessWidget {
                   color: iconBgColor,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(
-                  action.icon,
-                  size: 19,
-                  color: effectiveColor,
-                ),
+                child: Icon(action.icon, size: 19, color: effectiveColor),
               ),
               const SizedBox(width: 14),
 

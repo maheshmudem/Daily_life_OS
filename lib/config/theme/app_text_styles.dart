@@ -166,6 +166,8 @@ class AppTextStyles {
     letterSpacing: 0.4,
   );
 
+  static const TextStyle labelSmall = label;
+
   static const TextStyle buttonText = TextStyle(
     fontFamily: fontFamily,
     fontSize: 15,

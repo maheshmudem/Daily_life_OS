@@ -27,23 +27,22 @@ class PlannerRepositoryImpl implements PlannerRepository {
     int reminderOffsetMinutes = 0,
     List<ChecklistItem> checklist = const [],
     String notes = '',
-  }) =>
-      _localDataSource.addItem(
-        title: title,
-        date: date,
-        startTime: startTime,
-        endTime: endTime,
-        category: category,
-        colorValue: colorValue,
-        iconCodePoint: iconCodePoint,
-        repeatType: repeatType,
-        repeatDays: repeatDays,
-        endDate: endDate,
-        priority: priority,
-        reminderOffsetMinutes: reminderOffsetMinutes,
-        checklist: checklist,
-        notes: notes,
-      );
+  }) => _localDataSource.addItem(
+    title: title,
+    date: date,
+    startTime: startTime,
+    endTime: endTime,
+    category: category,
+    colorValue: colorValue,
+    iconCodePoint: iconCodePoint,
+    repeatType: repeatType,
+    repeatDays: repeatDays,
+    endDate: endDate,
+    priority: priority,
+    reminderOffsetMinutes: reminderOffsetMinutes,
+    checklist: checklist,
+    notes: notes,
+  );
 
   @override
   Future<void> updateItem({
@@ -62,24 +61,23 @@ class PlannerRepositoryImpl implements PlannerRepository {
     int reminderOffsetMinutes = 0,
     List<ChecklistItem> checklist = const [],
     String notes = '',
-  }) =>
-      _localDataSource.updateItem(
-        id: id,
-        title: title,
-        date: date,
-        startTime: startTime,
-        endTime: endTime,
-        category: category,
-        colorValue: colorValue,
-        iconCodePoint: iconCodePoint,
-        repeatType: repeatType,
-        repeatDays: repeatDays,
-        endDate: endDate,
-        priority: priority,
-        reminderOffsetMinutes: reminderOffsetMinutes,
-        checklist: checklist,
-        notes: notes,
-      );
+  }) => _localDataSource.updateItem(
+    id: id,
+    title: title,
+    date: date,
+    startTime: startTime,
+    endTime: endTime,
+    category: category,
+    colorValue: colorValue,
+    iconCodePoint: iconCodePoint,
+    repeatType: repeatType,
+    repeatDays: repeatDays,
+    endDate: endDate,
+    priority: priority,
+    reminderOffsetMinutes: reminderOffsetMinutes,
+    checklist: checklist,
+    notes: notes,
+  );
 
   @override
   Future<void> toggleItem(int id, {String? targetDate}) =>

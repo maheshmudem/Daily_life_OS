@@ -24,15 +24,17 @@ class SafeSpendMeterWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final ratio = dailySafeLimit > 0 ? (spentToday / dailySafeLimit).clamp(0.0, 1.0) : 1.0;
+    final ratio = dailySafeLimit > 0
+        ? (spentToday / dailySafeLimit).clamp(0.0, 1.0)
+        : 1.0;
     final isOverLimit = spentToday > dailySafeLimit;
     final isNearLimit = ratio >= 0.8 && !isOverLimit;
 
     final progressColor = isOverLimit
         ? AppColors.moneyLimit100
         : isNearLimit
-            ? AppColors.moneyWarning80
-            : AppColors.moduleMoney;
+        ? AppColors.moneyWarning80
+        : AppColors.moduleMoney;
 
     return Container(
       width: double.infinity,
@@ -83,7 +85,9 @@ class SafeSpendMeterWidget extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
+                          color: isDark
+                              ? AppColors.darkTextCaption
+                              : AppColors.textCaption,
                         ),
                       ),
                       Text(
@@ -139,14 +143,18 @@ class SafeSpendMeterWidget extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurfaceSecondary : AppColors.surfaceSecondary,
+                  color: isDark
+                      ? AppColors.darkSurfaceSecondary
+                      : AppColors.surfaceSecondary,
                   borderRadius: AppRadius.radiusSm,
                 ),
                 child: Text(
                   '$daysRemaining days remaining in month',
                   style: AppTextStyles.caption.copyWith(
                     fontSize: 11,
-                    color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
+                    color: isDark
+                        ? AppColors.darkTextCaption
+                        : AppColors.textCaption,
                   ),
                 ),
               ),

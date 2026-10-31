@@ -63,15 +63,11 @@ class _PomodoroCustomDurationSheetState
 
   @override
   Widget build(BuildContext context) {
-    final cardBg =
-        widget.isDark ? AppColors.darkCardBackground : Colors.white;
+    final cardBg = widget.isDark ? AppColors.darkCardBackground : Colors.white;
 
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: AppRadius.topXxl,
-      ),
+      decoration: BoxDecoration(color: cardBg, borderRadius: AppRadius.topXxl),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,

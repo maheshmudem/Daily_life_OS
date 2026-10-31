@@ -45,13 +45,13 @@ class CountdownItemEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        title,
-        date,
-        category,
-        colorValue,
-        iconCodePoint,
-        notes,
-        remindAdvance,
-      ];
+    id,
+    title,
+    date,
+    category,
+    colorValue,
+    iconCodePoint,
+    notes,
+    remindAdvance,
+  ];
 }

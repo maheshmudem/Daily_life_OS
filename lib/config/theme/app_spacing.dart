@@ -15,6 +15,10 @@ class AppSpacing {
   static const double xxxl = 40.0;
   static const double huge = 48.0;
 
+  /// Horizontal page gutter shared by every tab so headers, cards and
+  /// horizontally-scrolling rows all start on the same vertical line.
+  static const double pageGutter = lg;
+
   // Convenient EdgeInsets
   static const EdgeInsets edgeInsetsZero = EdgeInsets.zero;
   static const EdgeInsets edgeInsetsAllXs = EdgeInsets.all(xs);
@@ -26,7 +30,10 @@ class AppSpacing {
   static const EdgeInsets edgeInsetsHSm = EdgeInsets.symmetric(horizontal: sm);
   static const EdgeInsets edgeInsetsHMd = EdgeInsets.symmetric(horizontal: md);
   static const EdgeInsets edgeInsetsHLg = EdgeInsets.symmetric(horizontal: lg);
-  static const EdgeInsets edgeInsetsScreen = EdgeInsets.symmetric(horizontal: 20, vertical: 16);
+  static const EdgeInsets edgeInsetsScreen = EdgeInsets.symmetric(
+    horizontal: 20,
+    vertical: 16,
+  );
 
   static const EdgeInsets edgeInsetsVSm = EdgeInsets.symmetric(vertical: sm);
   static const EdgeInsets edgeInsetsVMd = EdgeInsets.symmetric(vertical: md);

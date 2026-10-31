@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
@@ -22,11 +21,7 @@ class ChecklistItem extends Equatable {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'isDone': isDone,
-      };
+  Map<String, dynamic> toJson() => {'id': id, 'title': title, 'isDone': isDone};
 
   factory ChecklistItem.fromJson(Map<String, dynamic> json) {
     return ChecklistItem(
@@ -57,7 +52,8 @@ class PlannerItemEntity extends Equatable {
   final String priority; // 'low', 'medium', 'high', 'urgent'
   final int reminderOffsetMinutes; // 0, 5, 15, 30, 60, 1440
   final List<ChecklistItem> checklist;
-  final String completedDates; // Comma-separated ISO dates: '2026-10-24,2026-10-25'
+  final String
+  completedDates; // Comma-separated ISO dates: '2026-10-24,2026-10-25'
 
   const PlannerItemEntity({
     required this.id,
@@ -152,31 +148,32 @@ class PlannerItemEntity extends Equatable {
             : 'Every weekday (Mon–Fri)';
       case 'weekly':
         final days = parsedRepeatDays;
-        final names = days.map((d) {
-          switch (d) {
-            case 1:
-              return 'Mon';
-            case 2:
-              return 'Tue';
-            case 3:
-              return 'Wed';
-            case 4:
-              return 'Thu';
-            case 5:
-              return 'Fri';
-            case 6:
-              return 'Sat';
-            case 7:
-              return 'Sun';
-            default:
-              return '';
-          }
-        }).where((n) => n.isNotEmpty).join(', ');
+        final names = days
+            .map((d) {
+              switch (d) {
+                case 1:
+                  return 'Mon';
+                case 2:
+                  return 'Tue';
+                case 3:
+                  return 'Wed';
+                case 4:
+                  return 'Thu';
+                case 5:
+                  return 'Fri';
+                case 6:
+                  return 'Sat';
+                case 7:
+                  return 'Sun';
+                default:
+                  return '';
+              }
+            })
+            .where((n) => n.isNotEmpty)
+            .join(', ');
         return names.isNotEmpty ? 'Weekly ($names)' : 'Weekly';
       case 'monthly':
-        return endDate != null
-            ? 'Monthly until $endDate'
-            : 'Repeats monthly';
+        return endDate != null ? 'Monthly until $endDate' : 'Repeats monthly';
       case 'none':
       default:
         return '';
@@ -205,8 +202,7 @@ class PlannerItemEntity extends Equatable {
       final decoded = jsonDecode(raw);
       if (decoded is List) {
         return decoded
-            .map((item) =>
-                ChecklistItem.fromJson(item as Map<String, dynamic>))
+            .map((item) => ChecklistItem.fromJson(item as Map<String, dynamic>))
             .toList();
       }
     } catch (_) {}
@@ -219,22 +215,22 @@ class PlannerItemEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        title,
-        date,
-        startTime,
-        endTime,
-        category,
-        colorValue,
-        iconCodePoint,
-        isDone,
-        notes,
-        repeatType,
-        repeatDays,
-        endDate,
-        priority,
-        reminderOffsetMinutes,
-        checklist,
-        completedDates,
-      ];
+    id,
+    title,
+    date,
+    startTime,
+    endTime,
+    category,
+    colorValue,
+    iconCodePoint,
+    isDone,
+    notes,
+    repeatType,
+    repeatDays,
+    endDate,
+    priority,
+    reminderOffsetMinutes,
+    checklist,
+    completedDates,
+  ];
 }

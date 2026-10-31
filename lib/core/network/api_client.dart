@@ -10,8 +10,10 @@ class ApiClient {
   late final Dio _dio;
   static ApiClient? _instance;
 
-  ApiClient._internal(FlutterSecureStorage secureStorage,
-      {VoidCallback? onUnauthorized}) {
+  ApiClient._internal(
+    FlutterSecureStorage secureStorage, {
+    VoidCallback? onUnauthorized,
+  }) {
     String baseUrl;
     try {
       baseUrl = dotenv.env['API_BASE_URL'] ?? 'https://api.dailylifeos.com/v1';
@@ -21,10 +23,12 @@ class ApiClient {
     _dio = Dio(
       BaseOptions(
         baseUrl: baseUrl,
-        connectTimeout:
-            const Duration(milliseconds: AppConstants.connectTimeout),
-        receiveTimeout:
-            const Duration(milliseconds: AppConstants.receiveTimeout),
+        connectTimeout: const Duration(
+          milliseconds: AppConstants.connectTimeout,
+        ),
+        receiveTimeout: const Duration(
+          milliseconds: AppConstants.receiveTimeout,
+        ),
         sendTimeout: const Duration(milliseconds: AppConstants.sendTimeout),
         headers: {
           'Content-Type': 'application/json',
@@ -40,10 +44,14 @@ class ApiClient {
     ]);
   }
 
-  factory ApiClient(FlutterSecureStorage secureStorage,
-      {VoidCallback? onUnauthorized}) {
-    _instance ??=
-        ApiClient._internal(secureStorage, onUnauthorized: onUnauthorized);
+  factory ApiClient(
+    FlutterSecureStorage secureStorage, {
+    VoidCallback? onUnauthorized,
+  }) {
+    _instance ??= ApiClient._internal(
+      secureStorage,
+      onUnauthorized: onUnauthorized,
+    );
     return _instance!;
   }
 
@@ -54,8 +62,11 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    return _dio.get<T>(path,
-        queryParameters: queryParameters, options: options);
+    return _dio.get<T>(
+      path,
+      queryParameters: queryParameters,
+      options: options,
+    );
   }
 
   Future<Response<T>> post<T>(
@@ -64,8 +75,12 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    return _dio.post<T>(path,
-        data: data, queryParameters: queryParameters, options: options);
+    return _dio.post<T>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
+    );
   }
 
   Future<Response<T>> put<T>(
@@ -74,8 +89,12 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    return _dio.put<T>(path,
-        data: data, queryParameters: queryParameters, options: options);
+    return _dio.put<T>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
+    );
   }
 
   Future<Response<T>> delete<T>(
@@ -84,7 +103,11 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    return _dio.delete<T>(path,
-        data: data, queryParameters: queryParameters, options: options);
+    return _dio.delete<T>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
+    );
   }
 }

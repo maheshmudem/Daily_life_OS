@@ -20,12 +20,12 @@ class VaultPasswordModel extends VaultPasswordEntity {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'username': username,
-        'category': category,
-        'iconCodePoint': iconCodePoint,
-      };
+    'id': id,
+    'title': title,
+    'username': username,
+    'category': category,
+    'iconCodePoint': iconCodePoint,
+  };
 }
 
 class VaultDocumentModel extends VaultDocumentEntity {
@@ -52,12 +52,12 @@ class VaultDocumentModel extends VaultDocumentEntity {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'category': category,
-        'expiry': expiry,
-        'isExpiringSoon': isExpiringSoon,
-        'hasReminder': hasReminder,
-        'iconCodePoint': iconCodePoint,
-      };
+    'id': id,
+    'title': title,
+    'category': category,
+    'expiry': expiry,
+    'isExpiringSoon': isExpiringSoon,
+    'hasReminder': hasReminder,
+    'iconCodePoint': iconCodePoint,
+  };
 }

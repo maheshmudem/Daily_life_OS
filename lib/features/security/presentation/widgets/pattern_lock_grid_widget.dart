@@ -103,8 +103,20 @@ class _PatternLockGridWidgetState extends State<PatternLockGridWidget> {
             width: widget.size,
             height: widget.size,
             child: GestureDetector(
-              onPanStart: (d) => _handlePanStart(d, BoxConstraints.tightFor(width: widget.size, height: widget.size)),
-              onPanUpdate: (d) => _handlePanUpdate(d, BoxConstraints.tightFor(width: widget.size, height: widget.size)),
+              onPanStart: (d) => _handlePanStart(
+                d,
+                BoxConstraints.tightFor(
+                  width: widget.size,
+                  height: widget.size,
+                ),
+              ),
+              onPanUpdate: (d) => _handlePanUpdate(
+                d,
+                BoxConstraints.tightFor(
+                  width: widget.size,
+                  height: widget.size,
+                ),
+              ),
               onPanEnd: _handlePanEnd,
               child: CustomPaint(
                 size: Size(widget.size, widget.size),
@@ -210,7 +222,9 @@ class _PatternPainter extends CustomPainter {
           canvas.drawCircle(center, 7.0, dotPaint);
         } else {
           // Unselected dot
-          dotPaint.color = isDark ? AppColors.darkDivider : AppColors.surfaceMuted;
+          dotPaint.color = isDark
+              ? AppColors.darkDivider
+              : AppColors.surfaceMuted;
           canvas.drawCircle(center, 6.0, dotPaint);
 
           // Inner subtle point

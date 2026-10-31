@@ -1,9 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-enum SecurityLockMode {
-  pin,
-  pattern,
-}
+enum SecurityLockMode { pin, pattern }
 
 class SecurityConfigEntity extends Equatable {
   final bool isSecurityEnabled;
@@ -48,12 +45,12 @@ class SecurityConfigEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        isSecurityEnabled,
-        isBiometricEnabled,
-        hasPin,
-        hasPattern,
-        hasDecoyPin,
-        hasDecoyPattern,
-        activeMode,
-      ];
+    isSecurityEnabled,
+    isBiometricEnabled,
+    hasPin,
+    hasPattern,
+    hasDecoyPin,
+    hasDecoyPattern,
+    activeMode,
+  ];
 }

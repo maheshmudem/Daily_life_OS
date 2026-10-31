@@ -60,10 +60,7 @@ class _AppTextFieldState extends State<AppTextField> {
       textInputAction: widget.textInputAction,
       onFieldSubmitted: widget.onFieldSubmitted,
       focusNode: widget.focusNode,
-      style: const TextStyle(
-        fontSize: 15,
-        color: AppColors.textHeading,
-      ),
+      style: const TextStyle(fontSize: 15, color: AppColors.textHeading),
       decoration: InputDecoration(
         labelText: widget.label,
         hintText: widget.hint,
@@ -72,7 +69,9 @@ class _AppTextFieldState extends State<AppTextField> {
         suffixIcon: widget.isPassword
             ? IconButton(
                 icon: Icon(
-                  _obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                  _obscureText
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
                   color: AppColors.textCaption,
                 ),
                 onPressed: () => setState(() => _obscureText = !_obscureText),
@@ -80,7 +79,10 @@ class _AppTextFieldState extends State<AppTextField> {
             : widget.suffixIcon,
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         labelStyle: const TextStyle(color: AppColors.textBody, fontSize: 14),
         hintStyle: const TextStyle(color: AppColors.textCaption, fontSize: 14),
         border: OutlineInputBorder(

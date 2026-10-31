@@ -5,7 +5,11 @@ import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/app_text_styles.dart';
 import '../../../../core/constants/string_constants.dart';
 
+/// Inline "quick add" card at the top of the Reminders tab.
 class SetReminderCard extends StatelessWidget {
+  /// Shared height for the time/category chips and the submit button.
+  static const double _controlHeight = 36;
+
   final TextEditingController controller;
   final TimeOfDay selectedTime;
   final String selectedCategory;
@@ -35,79 +39,62 @@ class SetReminderCard extends StatelessWidget {
     final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
     final minute = time.minute.toString().padLeft(2, '0');
     final period = time.period == DayPeriod.am ? 'AM' : 'PM';
-    return '${hour.toString().padLeft(2, '0')}:$minute $period';
+    return '$hour:$minute $period';
   }
 
   @override
   Widget build(BuildContext context) {
+    final captionColor = isDark
+        ? AppColors.darkTextCaption
+        : AppColors.textCaption;
+
     return Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 12),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
-        borderRadius: AppRadius.radiusMd,
+        borderRadius: AppRadius.radiusLg,
         border: Border.all(
-          color: isDark
-              ? AppColors.darkDivider
-              : AppColors.moduleTime.withValues(alpha: 0.25),
-          width: 1,
+          color: isDark ? AppColors.darkDivider : AppColors.divider,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Header
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  const Icon(
-                    Icons.alarm_add_rounded,
-                    color: AppColors.moduleTime,
-                    size: 16,
-                  ),
-                  AppSpacing.gapW8,
-                  Text(
-                    StringConstants.setReminder.toUpperCase(),
-                    style: AppTextStyles.overline.copyWith(
-                      color: AppColors.moduleTime,
-                      fontSize: 10.5,
-                      letterSpacing: 0.6,
-                    ),
-                  ),
-                ],
+              const Icon(
+                Icons.alarm_add_rounded,
+                color: AppColors.moduleTime,
+                size: 18,
               ),
+              AppSpacing.gapW8,
+              Text(
+                StringConstants.setReminder.toUpperCase(),
+                style: AppTextStyles.overline.copyWith(
+                  color: AppColors.moduleTime,
+                ),
+              ),
+              const Spacer(),
               InkWell(
                 borderRadius: AppRadius.radiusXs,
                 onTap: onOpenFullOptions,
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
                   child: Row(
                     children: [
                       Text(
                         'Full Options',
-                        style: AppTextStyles.caption.copyWith(
-                          fontSize: 10.5,
-                          color: isDark
-                              ? AppColors.darkTextCaption
-                              : AppColors.textCaption,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: captionColor,
                         ),
                       ),
-                      const SizedBox(width: 2),
                       Icon(
                         Icons.chevron_right_rounded,
-                        size: 14,
-                        color: isDark
-                            ? AppColors.darkTextCaption
-                            : AppColors.textCaption,
+                        size: 18,
+                        color: captionColor,
                       ),
                     ],
                   ),
@@ -115,109 +102,144 @@ class SetReminderCard extends StatelessWidget {
               ),
             ],
           ),
-          AppSpacing.gapH8,
+          AppSpacing.gapH12,
 
-          // Input field
+          // Input
           TextField(
             controller: controller,
-            style: AppTextStyles.bodyMedium.copyWith(
+            textInputAction: TextInputAction.done,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
               color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
-              fontWeight: FontWeight.w600,
             ),
             decoration: InputDecoration(
-              isDense: true,
+              filled: true,
+              fillColor: isDark
+                  ? AppColors.darkSurfaceSecondary
+                  : AppColors.surfaceSecondary,
               hintText: StringConstants.reminderHint,
-              hintStyle: AppTextStyles.bodySmall.copyWith(
-                color:
-                    isDark ? AppColors.darkTextCaption : AppColors.textCaption,
+              hintStyle: TextStyle(fontSize: 15, color: captionColor),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 14,
               ),
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              contentPadding: EdgeInsets.zero,
+              border: const OutlineInputBorder(
+                borderRadius: AppRadius.radiusMd,
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: const OutlineInputBorder(
+                borderRadius: AppRadius.radiusMd,
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: const OutlineInputBorder(
+                borderRadius: AppRadius.radiusMd,
+                borderSide: BorderSide(color: AppColors.moduleTime, width: 1.5),
+              ),
             ),
             onSubmitted: (_) => onSubmit(),
           ),
-          AppSpacing.gapH8,
+          AppSpacing.gapH12,
 
-          // Quick Action Pills Row
+          // Time · Category · Submit
           Row(
             children: [
-              GestureDetector(
-                onTap: onPickTime,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.moduleTime.withValues(alpha: 0.12),
-                    borderRadius: AppRadius.radiusXs,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.access_time_rounded,
-                          size: 13, color: AppColors.moduleTime),
-                      AppSpacing.gapW4,
-                      Text(
-                        _formatTimeOfDay(selectedTime),
-                        style: AppTextStyles.captionBold.copyWith(
-                          fontSize: 11,
-                          color: AppColors.moduleTime,
-                        ),
+              Expanded(
+                child: Row(
+                  children: [
+                    _OptionChip(
+                      icon: Icons.schedule_rounded,
+                      label: _formatTimeOfDay(selectedTime),
+                      color: AppColors.moduleTime,
+                      onTap: onPickTime,
+                    ),
+                    AppSpacing.gapW8,
+                    Flexible(
+                      child: _OptionChip(
+                        icon: categoryIcon,
+                        label: selectedCategory,
+                        color: categoryColor,
+                        onTap: onCycleCategory,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
               AppSpacing.gapW8,
-              GestureDetector(
-                onTap: onCycleCategory,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: categoryColor.withValues(alpha: 0.12),
-                    borderRadius: AppRadius.radiusXs,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(categoryIcon, size: 13, color: categoryColor),
-                      AppSpacing.gapW4,
-                      Text(
-                        selectedCategory,
-                        style: AppTextStyles.captionBold.copyWith(
-                          fontSize: 11,
-                          color: categoryColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const Spacer(),
-              FilledButton.icon(
+              FilledButton(
                 onPressed: onSubmit,
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.moduleTime,
                   foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  minimumSize: Size.zero,
+                  elevation: 0,
+                  minimumSize: const Size(0, _controlHeight),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                  ),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   shape: const RoundedRectangleBorder(
                     borderRadius: AppRadius.radiusSm,
                   ),
+                  textStyle: const TextStyle(
+                    fontFamily: AppTextStyles.fontFamily,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-                icon:
-                    const Icon(Icons.add_rounded, size: 14, color: Colors.white),
-                label: Text(
-                  StringConstants.setReminder,
-                  style: AppTextStyles.captionBold.copyWith(color: Colors.white),
-                ),
+                child: const Text(StringConstants.setReminder),
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _OptionChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _OptionChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: color.withValues(alpha: 0.12),
+      borderRadius: AppRadius.radiusSm,
+      child: InkWell(
+        borderRadius: AppRadius.radiusSm,
+        onTap: onTap,
+        child: Container(
+          height: SetReminderCard._controlHeight,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: color),
+              AppSpacing.gapW4,
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: color,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

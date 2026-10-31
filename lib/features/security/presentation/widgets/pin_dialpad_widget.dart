@@ -65,14 +65,14 @@ class PinDialpadWidget extends StatelessWidget {
                 color: hasError
                     ? AppColors.error
                     : isFilled
-                        ? AppColors.moduleVault
-                        : (isDark ? AppColors.darkDivider : AppColors.surfaceMuted),
+                    ? AppColors.moduleVault
+                    : (isDark ? AppColors.darkDivider : AppColors.surfaceMuted),
                 border: Border.all(
                   color: hasError
                       ? AppColors.error
                       : isFilled
-                          ? AppColors.moduleVault
-                          : (isDark ? AppColors.darkBorder : AppColors.border),
+                      ? AppColors.moduleVault
+                      : (isDark ? AppColors.darkBorder : AppColors.border),
                   width: 2,
                 ),
                 boxShadow: isFilled && !hasError
@@ -131,7 +131,9 @@ class PinDialpadWidget extends StatelessWidget {
 
                   _buildIconButton(
                     icon: Icons.backspace_outlined,
-                    color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
+                    color: isDark
+                        ? AppColors.darkTextCaption
+                        : AppColors.textCaption,
                     onTap: _onBackspace,
                     isDark: isDark,
                     tooltip: 'Backspace',

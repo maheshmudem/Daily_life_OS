@@ -62,10 +62,7 @@ class ConfirmationDialog extends StatelessWidget {
       ),
       content: Text(
         message,
-        style: const TextStyle(
-          fontSize: 14,
-          color: AppColors.textBody,
-        ),
+        style: const TextStyle(fontSize: 14, color: AppColors.textBody),
       ),
       actions: [
         TextButton(

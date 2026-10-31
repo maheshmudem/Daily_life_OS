@@ -26,17 +26,20 @@ class AppDropdownItem<T> extends PopupMenuItem<T> {
     this.isDestructive = false,
     this.trailing,
   }) : super(
-          height: subtitle != null ? 44 : 34,
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 0),
-          child: _AppDropdownItemContent(
-            icon: icon,
-            label: label,
-            subtitle: subtitle,
-            tintColor: tintColor,
-            isDestructive: isDestructive,
-            trailing: trailing,
-          ),
-        );
+         height: subtitle != null ? 44 : 34,
+         padding: const EdgeInsets.symmetric(
+           horizontal: AppSpacing.sm,
+           vertical: 0,
+         ),
+         child: _AppDropdownItemContent(
+           icon: icon,
+           label: label,
+           subtitle: subtitle,
+           tintColor: tintColor,
+           isDestructive: isDestructive,
+           trailing: trailing,
+         ),
+       );
 }
 
 class _AppDropdownItemContent extends StatelessWidget {
@@ -62,15 +65,11 @@ class _AppDropdownItemContent extends StatelessWidget {
     final effectiveColor = isDestructive
         ? AppColors.error
         : (tintColor ??
-            (isDark ? AppColors.darkTextHeading : AppColors.textHeading));
+              (isDark ? AppColors.darkTextHeading : AppColors.textHeading));
 
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 16,
-          color: effectiveColor,
-        ),
+        Icon(icon, size: 16, color: effectiveColor),
         AppSpacing.gapW8,
 
         Expanded(
@@ -103,10 +102,7 @@ class _AppDropdownItemContent extends StatelessWidget {
           ),
         ),
 
-        if (trailing != null) ...[
-          AppSpacing.gapW8,
-          trailing!,
-        ],
+        if (trailing != null) ...[AppSpacing.gapW8, trailing!],
       ],
     );
   }
@@ -183,10 +179,7 @@ class _AppDropdownHeaderState extends State<AppDropdownHeader> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       child: Row(
         children: [
-          if (widget.leading != null) ...[
-            widget.leading!,
-            AppSpacing.gapW8,
-          ],
+          if (widget.leading != null) ...[widget.leading!, AppSpacing.gapW8],
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -269,15 +262,15 @@ class AppDropdownMenu<T> extends StatelessWidget {
       shadowColor: Colors.black.withValues(alpha: isDark ? 0.5 : 0.15),
       surfaceTintColor: Colors.transparent,
       color: bgColor,
-      constraints: constraints ??
-          const BoxConstraints(minWidth: 155, maxWidth: 195),
-      menuPadding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs, horizontal: 2),
+      constraints:
+          constraints ?? const BoxConstraints(minWidth: 155, maxWidth: 195),
+      menuPadding: const EdgeInsets.symmetric(
+        vertical: AppSpacing.xxs,
+        horizontal: 2,
+      ),
       shape: RoundedRectangleBorder(
         borderRadius: AppRadius.radiusMd,
-        side: BorderSide(
-          color: borderColor,
-          width: 0.8,
-        ),
+        side: BorderSide(color: borderColor, width: 0.8),
       ),
     );
   }
@@ -288,15 +281,15 @@ class AppDropdownMenu<T> extends StatelessWidget {
     final bgColor = isDark ? AppColors.darkCardBackground : Colors.white;
     final borderColor = isDark ? AppColors.darkDivider : AppColors.divider;
 
-    final effectiveChild = child ??
+    final effectiveChild =
+        child ??
         Container(
           width: 28,
           height: 28,
           alignment: Alignment.center,
-          decoration: const BoxDecoration(
-            borderRadius: AppRadius.radiusXs,
-          ),
-          child: icon ??
+          decoration: const BoxDecoration(borderRadius: AppRadius.radiusXs),
+          child:
+              icon ??
               Icon(
                 Icons.more_horiz_rounded,
                 size: 18,
@@ -323,15 +316,16 @@ class AppDropdownMenu<T> extends StatelessWidget {
         shadowColor: Colors.black.withValues(alpha: isDark ? 0.5 : 0.15),
         surfaceTintColor: Colors.transparent,
         color: bgColor,
-        constraints: menuConstraints ??
+        constraints:
+            menuConstraints ??
             const BoxConstraints(minWidth: 155, maxWidth: 195),
-        menuPadding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs, horizontal: 2),
+        menuPadding: const EdgeInsets.symmetric(
+          vertical: AppSpacing.xxs,
+          horizontal: 2,
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: AppRadius.radiusMd,
-          side: BorderSide(
-            color: borderColor,
-            width: 0.8,
-          ),
+          side: BorderSide(color: borderColor, width: 0.8),
         ),
         onSelected: (val) {
           HapticFeedback.selectionClick();

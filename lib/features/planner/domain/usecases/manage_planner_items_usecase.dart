@@ -21,23 +21,22 @@ class AddPlannerItemUseCase {
     int reminderOffsetMinutes = 0,
     List<ChecklistItem> checklist = const [],
     String notes = '',
-  }) =>
-      _repository.addItem(
-        title: title,
-        date: date,
-        startTime: startTime,
-        endTime: endTime,
-        category: category,
-        colorValue: colorValue,
-        iconCodePoint: iconCodePoint,
-        repeatType: repeatType,
-        repeatDays: repeatDays,
-        endDate: endDate,
-        priority: priority,
-        reminderOffsetMinutes: reminderOffsetMinutes,
-        checklist: checklist,
-        notes: notes,
-      );
+  }) => _repository.addItem(
+    title: title,
+    date: date,
+    startTime: startTime,
+    endTime: endTime,
+    category: category,
+    colorValue: colorValue,
+    iconCodePoint: iconCodePoint,
+    repeatType: repeatType,
+    repeatDays: repeatDays,
+    endDate: endDate,
+    priority: priority,
+    reminderOffsetMinutes: reminderOffsetMinutes,
+    checklist: checklist,
+    notes: notes,
+  );
 }
 
 class TogglePlannerItemUseCase {
@@ -78,24 +77,23 @@ class UpdatePlannerItemUseCase {
     int reminderOffsetMinutes = 0,
     List<ChecklistItem> checklist = const [],
     String notes = '',
-  }) =>
-      _repository.updateItem(
-        id: id,
-        title: title,
-        date: date,
-        startTime: startTime,
-        endTime: endTime,
-        category: category,
-        colorValue: colorValue,
-        iconCodePoint: iconCodePoint,
-        repeatType: repeatType,
-        repeatDays: repeatDays,
-        endDate: endDate,
-        priority: priority,
-        reminderOffsetMinutes: reminderOffsetMinutes,
-        checklist: checklist,
-        notes: notes,
-      );
+  }) => _repository.updateItem(
+    id: id,
+    title: title,
+    date: date,
+    startTime: startTime,
+    endTime: endTime,
+    category: category,
+    colorValue: colorValue,
+    iconCodePoint: iconCodePoint,
+    repeatType: repeatType,
+    repeatDays: repeatDays,
+    endDate: endDate,
+    priority: priority,
+    reminderOffsetMinutes: reminderOffsetMinutes,
+    checklist: checklist,
+    notes: notes,
+  );
 }
 
 class ClearCompletedPlannerItemsUseCase {

@@ -17,86 +17,121 @@ class MainNavigationShell extends StatefulWidget {
 }
 
 class _MainNavigationShellState extends State<MainNavigationShell> {
-  int _currentIndex = 0;
+  static const int _moneyTabIndex = 2;
 
-  final List<Widget> _pages = const [
-    TodayHubPage(),
-    PlannerPage(),
-    MoneyManagerPage(),
-    NotesPage(),
-    VaultPage(),
-  ];
+  int _currentIndex = 0;
+  int _previousNonMoneyIndex = 0;
+
+  bool get _isInMoneyMode => _currentIndex == _moneyTabIndex;
+
+  void _selectMainTab(int index) {
+    setState(() {
+      if (index != _moneyTabIndex) {
+        _previousNonMoneyIndex = index;
+      }
+      _currentIndex = index;
+    });
+  }
+
+  void _exitMoneyMode() {
+    setState(() {
+      _currentIndex = _previousNonMoneyIndex;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final pages = <Widget>[
+      const TodayHubPage(),
+      const PlannerPage(),
+      MoneyManagerPage(onExitMoney: _exitMoneyMode),
+      const NotesPage(),
+      const VaultPage(),
+    ];
+
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkScaffoldBackground : AppColors.scaffoldBackground,
+      backgroundColor: isDark
+          ? AppColors.darkScaffoldBackground
+          : AppColors.scaffoldBackground,
       body: Stack(
         children: [
-          // Active Tab Page
-          IndexedStack(
-            index: _currentIndex,
-            children: _pages,
-          ),
+          IndexedStack(index: _currentIndex, children: pages),
 
-          // Persistent Floating Quick-Capture Bar (Fixed above bottom nav)
-          Positioned(
-            left: 20,
-            right: 20,
-            bottom: 74,
-            child: _buildFloatingQuickCaptureBar(context, isDark),
-          ),
+          // Persistent Floating Quick-Capture Bar (hidden while inside Money
+          // so only Money's dedicated navigation bar is shown)
+          if (!_isInMoneyMode)
+            Positioned(
+              left: 20,
+              right: 20,
+              bottom: 12,
+              child: _buildFloatingQuickCaptureBar(context, isDark),
+            ),
         ],
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(
-              color: isDark ? AppColors.darkDivider : AppColors.divider,
-              width: 1,
+      // Main 5-tab bar closes/hides when entering Money; Money renders its own
+      // bottom bar and pressing Back restores the main bar.
+      bottomNavigationBar: _isInMoneyMode
+          ? null
+          : Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: isDark ? AppColors.darkDivider : AppColors.divider,
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: BottomNavigationBar(
+                key: const ValueKey('main_bottom_nav_bar'),
+                currentIndex: _currentIndex,
+                onTap: _selectMainTab,
+                type: BottomNavigationBarType.fixed,
+                backgroundColor: isDark
+                    ? AppColors.darkCardBackground
+                    : Colors.white,
+                selectedItemColor: _getActiveTabColor(_currentIndex),
+                unselectedItemColor: isDark
+                    ? AppColors.darkTextCaption
+                    : AppColors.textCaption,
+                selectedLabelStyle: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 11,
+                ),
+                items: const [
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.dashboard_rounded),
+                    activeIcon: Icon(Icons.dashboard_rounded),
+                    label: 'Today',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.schedule_rounded),
+                    activeIcon: Icon(Icons.schedule_rounded),
+                    label: 'Planner',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.account_balance_wallet_rounded),
+                    activeIcon: Icon(Icons.account_balance_wallet_rounded),
+                    label: 'Money',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.lightbulb_outline_rounded),
+                    activeIcon: Icon(Icons.lightbulb_rounded),
+                    label: 'Notes',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.lock_outline_rounded),
+                    activeIcon: Icon(Icons.lock_rounded),
+                    label: 'Vault',
+                  ),
+                ],
+              ),
             ),
-          ),
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) => setState(() => _currentIndex = index),
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: isDark ? AppColors.darkCardBackground : Colors.white,
-          selectedItemColor: _getActiveTabColor(_currentIndex),
-          unselectedItemColor: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
-          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11),
-          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 11),
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard_rounded),
-              activeIcon: Icon(Icons.dashboard_rounded),
-              label: 'Today',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.schedule_rounded),
-              activeIcon: Icon(Icons.schedule_rounded),
-              label: 'Planner',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.account_balance_wallet_rounded),
-              activeIcon: Icon(Icons.account_balance_wallet_rounded),
-              label: 'Money',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.lightbulb_outline_rounded),
-              activeIcon: Icon(Icons.lightbulb_rounded),
-              label: 'Notes',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.lock_outline_rounded),
-              activeIcon: Icon(Icons.lock_rounded),
-              label: 'Vault',
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -110,7 +145,8 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         children: [
           // Hold to Speak (Voice)
           GestureDetector(
-            onTap: () => QuickCaptureSheet.show(context, mode: QuickCaptureMode.voice),
+            onTap: () =>
+                QuickCaptureSheet.show(context, mode: QuickCaptureMode.voice),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -148,15 +184,12 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
           // Quick Type Button
           GestureDetector(
-            onTap: () => QuickCaptureSheet.show(context, mode: QuickCaptureMode.text),
+            onTap: () =>
+                QuickCaptureSheet.show(context, mode: QuickCaptureMode.text),
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.keyboard_rounded,
-                  color: Colors.white70,
-                  size: 18,
-                ),
+                Icon(Icons.keyboard_rounded, color: Colors.white70, size: 18),
                 SizedBox(width: 6),
                 Text(
                   StringConstants.quickType,
@@ -185,7 +218,8 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
               color: AppColors.moduleMoneyLight,
               size: 20,
             ),
-            onPressed: () => QuickCaptureSheet.show(context, mode: QuickCaptureMode.scan),
+            onPressed: () =>
+                QuickCaptureSheet.show(context, mode: QuickCaptureMode.scan),
           ),
         ],
       ),

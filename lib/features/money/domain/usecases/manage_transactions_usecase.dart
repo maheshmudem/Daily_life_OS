@@ -1,3 +1,4 @@
+import '../entities/transaction_entity.dart';
 import '../repositories/money_repository.dart';
 
 class AddTransactionUseCase {
@@ -12,15 +13,18 @@ class AddTransactionUseCase {
     required String mode,
     required int iconCodePoint,
     String type = 'expense',
-  }) =>
-      _repository.addTransaction(
-        title: title,
-        category: category,
-        amount: amount,
-        mode: mode,
-        iconCodePoint: iconCodePoint,
-        type: type,
-      );
+    DateTime? date,
+    String? note,
+  }) => _repository.addTransaction(
+    title: title,
+    category: category,
+    amount: amount,
+    mode: mode,
+    iconCodePoint: iconCodePoint,
+    type: type,
+    date: date,
+    note: note,
+  );
 }
 
 class UpdateBudgetUseCase {
@@ -30,4 +34,21 @@ class UpdateBudgetUseCase {
 
   Future<void> call(double monthlyBudget, double fixedBills) =>
       _repository.updateBudget(monthlyBudget, fixedBills);
+}
+
+class UpdateTransactionUseCase {
+  final MoneyRepository _repository;
+
+  const UpdateTransactionUseCase(this._repository);
+
+  Future<void> call(TransactionEntity transaction) =>
+      _repository.updateTransaction(transaction);
+}
+
+class DeleteTransactionUseCase {
+  final MoneyRepository _repository;
+
+  const DeleteTransactionUseCase(this._repository);
+
+  Future<void> call(int id) => _repository.deleteTransaction(id);
 }

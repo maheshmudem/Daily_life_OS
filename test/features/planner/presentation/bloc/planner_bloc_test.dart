@@ -58,14 +58,16 @@ void main() {
     expect((bloc.state as PlannerLoaded).items, isEmpty);
 
     // 3. Add item
-    bloc.add(const AddPlannerItem(
-      title: 'Original Reminder',
-      date: testDate,
-      startTime: '09:00 AM',
-      category: 'Work',
-      colorValue: 0xFF3B82F6,
-      iconCodePoint: 100,
-    ));
+    bloc.add(
+      const AddPlannerItem(
+        title: 'Original Reminder',
+        date: testDate,
+        startTime: '09:00 AM',
+        category: 'Work',
+        colorValue: 0xFF3B82F6,
+        iconCodePoint: 100,
+      ),
+    );
     await pumpEventQueue();
 
     expect(bloc.state, isA<PlannerLoaded>());
@@ -75,15 +77,17 @@ void main() {
     expect(loadedState.items.first.title, 'Original Reminder');
 
     // 4. Update item
-    bloc.add(UpdatePlannerItem(
-      id: createdId,
-      title: 'Edited Reminder Title',
-      date: testDate,
-      startTime: '11:30 AM',
-      category: 'Important',
-      colorValue: 0xFFEF4444,
-      iconCodePoint: 200,
-    ));
+    bloc.add(
+      UpdatePlannerItem(
+        id: createdId,
+        title: 'Edited Reminder Title',
+        date: testDate,
+        startTime: '11:30 AM',
+        category: 'Important',
+        colorValue: 0xFFEF4444,
+        iconCodePoint: 200,
+      ),
+    );
     await pumpEventQueue();
 
     expect(bloc.state, isA<PlannerLoaded>());
@@ -108,47 +112,54 @@ void main() {
     expect((bloc.state as PlannerLoaded).items, isEmpty);
   });
 
-  test('PlannerBloc ClearCompletedPlannerItems removes completed one-off items',
-      () async {
-    const testDate = 'all';
+  test(
+    'PlannerBloc ClearCompletedPlannerItems removes completed one-off items',
+    () async {
+      const testDate = 'all';
 
-    bloc.add(const LoadPlanner(testDate));
-    await pumpEventQueue();
+      bloc.add(const LoadPlanner(testDate));
+      await pumpEventQueue();
 
-    // Add first item (to be completed)
-    bloc.add(const AddPlannerItem(
-      title: 'Task to finish',
-      date: '2026-10-25',
-      category: 'Work',
-      colorValue: 0xFF3B82F6,
-      iconCodePoint: 100,
-    ));
-    await pumpEventQueue();
+      // Add first item (to be completed)
+      bloc.add(
+        const AddPlannerItem(
+          title: 'Task to finish',
+          date: '2026-10-25',
+          category: 'Work',
+          colorValue: 0xFF3B82F6,
+          iconCodePoint: 100,
+        ),
+      );
+      await pumpEventQueue();
 
-    // Add second item (remains pending)
-    bloc.add(const AddPlannerItem(
-      title: 'Task to keep',
-      date: '2026-10-25',
-      category: 'Work',
-      colorValue: 0xFF10B981,
-      iconCodePoint: 101,
-    ));
-    await pumpEventQueue();
+      // Add second item (remains pending)
+      bloc.add(
+        const AddPlannerItem(
+          title: 'Task to keep',
+          date: '2026-10-25',
+          category: 'Work',
+          colorValue: 0xFF10B981,
+          iconCodePoint: 101,
+        ),
+      );
+      await pumpEventQueue();
 
-    final state = bloc.state as PlannerLoaded;
-    final itemToDone = state.items.firstWhere((i) => i.title == 'Task to finish');
+      final state = bloc.state as PlannerLoaded;
+      final itemToDone = state.items.firstWhere(
+        (i) => i.title == 'Task to finish',
+      );
 
-    // Toggle to done
-    bloc.add(TogglePlannerItem(itemToDone.id));
-    await pumpEventQueue();
+      // Toggle to done
+      bloc.add(TogglePlannerItem(itemToDone.id));
+      await pumpEventQueue();
 
-    // Clear completed items
-    bloc.add(const ClearCompletedPlannerItems());
-    await pumpEventQueue();
+      // Clear completed items
+      bloc.add(const ClearCompletedPlannerItems());
+      await pumpEventQueue();
 
-    final finalState = bloc.state as PlannerLoaded;
-    expect(finalState.items.any((i) => i.title == 'Task to finish'), isFalse);
-    expect(finalState.items.any((i) => i.title == 'Task to keep'), isTrue);
-  });
+      final finalState = bloc.state as PlannerLoaded;
+      expect(finalState.items.any((i) => i.title == 'Task to finish'), isFalse);
+      expect(finalState.items.any((i) => i.title == 'Task to keep'), isTrue);
+    },
+  );
 }
-

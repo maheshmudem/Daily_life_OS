@@ -11,11 +11,13 @@ class SecurityRepositoryImpl implements SecurityRepository {
   Future<SecurityConfigEntity> getConfig() => localDataSource.getConfig();
 
   @override
-  Future<bool> isBiometricsAvailable() => localDataSource.isBiometricsAvailable();
+  Future<bool> isBiometricsAvailable() =>
+      localDataSource.isBiometricsAvailable();
 
   @override
-  Future<bool> authenticateBiometrics({String reason = 'Authenticate to access Secure Vault'}) =>
-      localDataSource.authenticateBiometrics(reason: reason);
+  Future<bool> authenticateBiometrics({
+    String reason = 'Authenticate to access Secure Vault',
+  }) => localDataSource.authenticateBiometrics(reason: reason);
 
   @override
   Future<bool> verifyPin(String pin) => localDataSource.verifyPin(pin);
@@ -24,20 +26,26 @@ class SecurityRepositoryImpl implements SecurityRepository {
   Future<bool> isDecoyPin(String pin) => localDataSource.isDecoyPin(pin);
 
   @override
-  Future<bool> verifyPattern(List<int> pattern) => localDataSource.verifyPattern(pattern);
+  Future<bool> verifyPattern(List<int> pattern) =>
+      localDataSource.verifyPattern(pattern);
 
   @override
-  Future<bool> isDecoyPattern(List<int> pattern) => localDataSource.isDecoyPattern(pattern);
+  Future<bool> isDecoyPattern(List<int> pattern) =>
+      localDataSource.isDecoyPattern(pattern);
 
   @override
   Future<void> setPin({required String pin, String? decoyPin}) =>
       localDataSource.setPin(pin: pin, decoyPin: decoyPin);
 
   @override
-  Future<void> setDecoyPin(String decoyPin) => localDataSource.setDecoyPin(decoyPin);
+  Future<void> setDecoyPin(String decoyPin) =>
+      localDataSource.setDecoyPin(decoyPin);
 
   @override
-  Future<void> setPattern({required List<int> pattern, List<int>? decoyPattern}) =>
+  Future<void> setPattern({
+    required List<int> pattern,
+    List<int>? decoyPattern,
+  }) =>
       localDataSource.setPattern(pattern: pattern, decoyPattern: decoyPattern);
 
   @override
@@ -45,13 +53,16 @@ class SecurityRepositoryImpl implements SecurityRepository {
       localDataSource.setDecoyPattern(decoyPattern);
 
   @override
-  Future<void> setBiometricsEnabled(bool enabled) => localDataSource.setBiometricsEnabled(enabled);
+  Future<void> setBiometricsEnabled(bool enabled) =>
+      localDataSource.setBiometricsEnabled(enabled);
 
   @override
-  Future<void> setSecurityEnabled(bool enabled) => localDataSource.setSecurityEnabled(enabled);
+  Future<void> setSecurityEnabled(bool enabled) =>
+      localDataSource.setSecurityEnabled(enabled);
 
   @override
-  Future<void> setLockMode(SecurityLockMode mode) => localDataSource.setLockMode(mode);
+  Future<void> setLockMode(SecurityLockMode mode) =>
+      localDataSource.setLockMode(mode);
 
   @override
   Future<int> getFailedAttempts() => localDataSource.getFailedAttempts();

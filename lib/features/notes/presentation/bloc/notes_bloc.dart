@@ -67,7 +67,10 @@ class NotesBloc extends Bloc<NotesEvent, NotesState> {
     emit(NotesLoaded(notes));
   }
 
-  Future<void> _onTogglePin(TogglePinNote event, Emitter<NotesState> emit) async {
+  Future<void> _onTogglePin(
+    TogglePinNote event,
+    Emitter<NotesState> emit,
+  ) async {
     await togglePinNoteUseCase(event.id);
     final notes = await getNotesUseCase();
     emit(NotesLoaded(notes));

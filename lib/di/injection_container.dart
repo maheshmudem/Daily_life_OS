@@ -19,6 +19,7 @@ import '../features/money/domain/repositories/money_repository.dart';
 import '../features/money/domain/usecases/get_transactions_and_budget_usecase.dart';
 import '../features/money/domain/usecases/manage_transactions_usecase.dart';
 import '../features/money/domain/usecases/manage_subscriptions_and_ious_usecase.dart';
+import '../features/money/domain/usecases/manage_budgets_and_accounts_usecase.dart';
 import '../features/money/presentation/bloc/money_bloc.dart';
 
 // Notes
@@ -118,19 +119,66 @@ Future<void> initDependencies({
   // Today Hub
   sl.registerLazySingleton(() => GetHabitsUseCase(sl<TodayHubRepository>()));
   sl.registerLazySingleton(() => ToggleHabitUseCase(sl<TodayHubRepository>()));
-  sl.registerLazySingleton(() => GetTodayTimelineUseCase(sl<TodayHubRepository>()));
-  sl.registerLazySingleton(() => ToggleTimelineItemUseCase(sl<TodayHubRepository>()));
+  sl.registerLazySingleton(
+    () => GetTodayTimelineUseCase(sl<TodayHubRepository>()),
+  );
+  sl.registerLazySingleton(
+    () => ToggleTimelineItemUseCase(sl<TodayHubRepository>()),
+  );
 
   // Money
-  sl.registerLazySingleton(() => GetRecentTransactionsUseCase(sl<MoneyRepository>()));
+  sl.registerLazySingleton(
+    () => GetRecentTransactionsUseCase(sl<MoneyRepository>()),
+  );
   sl.registerLazySingleton(() => GetBudgetUseCase(sl<MoneyRepository>()));
-  sl.registerLazySingleton(() => GetSubscriptionsUseCase(sl<MoneyRepository>()));
+  sl.registerLazySingleton(
+    () => GetSubscriptionsUseCase(sl<MoneyRepository>()),
+  );
   sl.registerLazySingleton(() => GetIousUseCase(sl<MoneyRepository>()));
   sl.registerLazySingleton(() => AddTransactionUseCase(sl<MoneyRepository>()));
   sl.registerLazySingleton(() => ToggleAutoKillUseCase(sl<MoneyRepository>()));
   sl.registerLazySingleton(() => SettleIouUseCase(sl<MoneyRepository>()));
   sl.registerLazySingleton(() => AddIouUseCase(sl<MoneyRepository>()));
   sl.registerLazySingleton(() => UpdateBudgetUseCase(sl<MoneyRepository>()));
+  sl.registerLazySingleton(
+    () => GetAllTransactionsUseCase(sl<MoneyRepository>()),
+  );
+  sl.registerLazySingleton(
+    () => GetTransactionsInRangeUseCase(sl<MoneyRepository>()),
+  );
+  sl.registerLazySingleton(
+    () => GetDailySpendSnapshotUseCase(sl<MoneyRepository>()),
+  );
+  sl.registerLazySingleton(
+    () => UpdateTransactionUseCase(sl<MoneyRepository>()),
+  );
+  sl.registerLazySingleton(
+    () => DeleteTransactionUseCase(sl<MoneyRepository>()),
+  );
+  sl.registerLazySingleton(
+    () => GetCategoryLimitsUseCase(sl<MoneyRepository>()),
+  );
+  sl.registerLazySingleton(
+    () => SetCategoryLimitUseCase(sl<MoneyRepository>()),
+  );
+  sl.registerLazySingleton(() => GetAccountsUseCase(sl<MoneyRepository>()));
+  sl.registerLazySingleton(() => AddAccountUseCase(sl<MoneyRepository>()));
+  sl.registerLazySingleton(() => UpdateAccountUseCase(sl<MoneyRepository>()));
+  sl.registerLazySingleton(() => DeleteAccountUseCase(sl<MoneyRepository>()));
+  sl.registerLazySingleton(() => AddSubscriptionUseCase(sl<MoneyRepository>()));
+  sl.registerLazySingleton(
+    () => DeleteSubscriptionUseCase(sl<MoneyRepository>()),
+  );
+  sl.registerLazySingleton(() => DeleteIouUseCase(sl<MoneyRepository>()));
+  sl.registerLazySingleton(
+    () => GetMoneySettingsUseCase(sl<MoneyRepository>()),
+  );
+  sl.registerLazySingleton(
+    () => UpdateMoneySettingsUseCase(sl<MoneyRepository>()),
+  );
+  sl.registerLazySingleton(
+    () => NotifyBudgetThresholdUseCase(sl<NotificationService>()),
+  );
 
   // Notes
   sl.registerLazySingleton(() => GetNotesUseCase(sl<NotesRepository>()));
@@ -140,16 +188,32 @@ Future<void> initDependencies({
   sl.registerLazySingleton(() => TogglePinNoteUseCase(sl<NotesRepository>()));
 
   // Planner
-  sl.registerLazySingleton(() => GetPlannerItemsUseCase(sl<PlannerRepository>()));
-  sl.registerLazySingleton(() => AddPlannerItemUseCase(sl<PlannerRepository>()));
-  sl.registerLazySingleton(() => UpdatePlannerItemUseCase(sl<PlannerRepository>()));
-  sl.registerLazySingleton(() => TogglePlannerItemUseCase(sl<PlannerRepository>()));
-  sl.registerLazySingleton(() => DeletePlannerItemUseCase(sl<PlannerRepository>()));
-  sl.registerLazySingleton(() => ClearCompletedPlannerItemsUseCase(sl<PlannerRepository>()));
+  sl.registerLazySingleton(
+    () => GetPlannerItemsUseCase(sl<PlannerRepository>()),
+  );
+  sl.registerLazySingleton(
+    () => AddPlannerItemUseCase(sl<PlannerRepository>()),
+  );
+  sl.registerLazySingleton(
+    () => UpdatePlannerItemUseCase(sl<PlannerRepository>()),
+  );
+  sl.registerLazySingleton(
+    () => TogglePlannerItemUseCase(sl<PlannerRepository>()),
+  );
+  sl.registerLazySingleton(
+    () => DeletePlannerItemUseCase(sl<PlannerRepository>()),
+  );
+  sl.registerLazySingleton(
+    () => ClearCompletedPlannerItemsUseCase(sl<PlannerRepository>()),
+  );
 
   // Vault
-  sl.registerLazySingleton(() => GetVaultPasswordsUseCase(sl<VaultRepository>()));
-  sl.registerLazySingleton(() => GetVaultDocumentsUseCase(sl<VaultRepository>()));
+  sl.registerLazySingleton(
+    () => GetVaultPasswordsUseCase(sl<VaultRepository>()),
+  );
+  sl.registerLazySingleton(
+    () => GetVaultDocumentsUseCase(sl<VaultRepository>()),
+  );
 
   // ── BLoCs ─────────────────────────────────────────────────────────────────
   sl.registerFactory<TodayHubBloc>(
@@ -172,6 +236,21 @@ Future<void> initDependencies({
       settleIouUseCase: sl<SettleIouUseCase>(),
       addIouUseCase: sl<AddIouUseCase>(),
       updateBudgetUseCase: sl<UpdateBudgetUseCase>(),
+      getAllTransactionsUseCase: sl<GetAllTransactionsUseCase>(),
+      updateTransactionUseCase: sl<UpdateTransactionUseCase>(),
+      deleteTransactionUseCase: sl<DeleteTransactionUseCase>(),
+      getCategoryLimitsUseCase: sl<GetCategoryLimitsUseCase>(),
+      setCategoryLimitUseCase: sl<SetCategoryLimitUseCase>(),
+      getAccountsUseCase: sl<GetAccountsUseCase>(),
+      addAccountUseCase: sl<AddAccountUseCase>(),
+      updateAccountUseCase: sl<UpdateAccountUseCase>(),
+      deleteAccountUseCase: sl<DeleteAccountUseCase>(),
+      addSubscriptionUseCase: sl<AddSubscriptionUseCase>(),
+      deleteSubscriptionUseCase: sl<DeleteSubscriptionUseCase>(),
+      deleteIouUseCase: sl<DeleteIouUseCase>(),
+      getMoneySettingsUseCase: sl<GetMoneySettingsUseCase>(),
+      updateMoneySettingsUseCase: sl<UpdateMoneySettingsUseCase>(),
+      notifyBudgetThresholdUseCase: sl<NotifyBudgetThresholdUseCase>(),
     ),
   );
 
@@ -192,7 +271,8 @@ Future<void> initDependencies({
       deletePlannerItemUseCase: sl<DeletePlannerItemUseCase>(),
       addPlannerItemUseCase: sl<AddPlannerItemUseCase>(),
       updatePlannerItemUseCase: sl<UpdatePlannerItemUseCase>(),
-      clearCompletedPlannerItemsUseCase: sl<ClearCompletedPlannerItemsUseCase>(),
+      clearCompletedPlannerItemsUseCase:
+          sl<ClearCompletedPlannerItemsUseCase>(),
     ),
   );
 

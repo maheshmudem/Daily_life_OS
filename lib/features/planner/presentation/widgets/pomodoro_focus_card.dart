@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
+import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/app_text_styles.dart';
 
 class PomodoroFocusCard extends StatelessWidget {
@@ -40,16 +41,24 @@ class PomodoroFocusCard extends StatelessWidget {
             colors: [Color(0xFFD97706), Color(0xFFF59E0B), Color(0xFFB45309)],
           )
         : (focusModeIndex == 1
-            ? const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF047857), Color(0xFF10B981), Color(0xFF065F46)],
-              )
-            : const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF0369A1), Color(0xFF0EA5E9), Color(0xFF0284C7)],
-              ));
+              ? const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF047857),
+                    Color(0xFF10B981),
+                    Color(0xFF065F46),
+                  ],
+                )
+              : const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF0369A1),
+                    Color(0xFF0EA5E9),
+                    Color(0xFF0284C7),
+                  ],
+                ));
 
     final String modeLabel = focusModeIndex == 0
         ? '⚡ DEEP WORK SPRINT'
@@ -62,8 +71,8 @@ class PomodoroFocusCard extends StatelessWidget {
     final Color buttonColor = focusModeIndex == 0
         ? AppColors.moduleTimeDark
         : (focusModeIndex == 1
-            ? const Color(0xFF047857)
-            : const Color(0xFF0284C7));
+              ? const Color(0xFF047857)
+              : const Color(0xFF0284C7));
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -85,8 +94,10 @@ class PomodoroFocusCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.22),
                   borderRadius: AppRadius.radiusFull,
@@ -163,8 +174,8 @@ class PomodoroFocusCard extends StatelessWidget {
                       Text(
                         isTimerRunning
                             ? (focusModeIndex == 0
-                                ? 'Stay in the zone...'
-                                : 'Breathe and relax...')
+                                  ? 'Stay in the zone...'
+                                  : 'Breathe and relax...')
                             : 'Ready to start',
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.8),
@@ -188,15 +199,16 @@ class PomodoroFocusCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: 0.18),
                 borderRadius: AppRadius.radiusFull,
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.2),
-                ),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.track_changes_rounded,
-                      size: 14, color: Colors.white70),
+                  const Icon(
+                    Icons.track_changes_rounded,
+                    size: 14,
+                    color: Colors.white70,
+                  ),
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(
@@ -210,8 +222,11 @@ class PomodoroFocusCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  const Icon(Icons.edit_rounded,
-                      size: 13, color: Colors.white70),
+                  const Icon(
+                    Icons.edit_rounded,
+                    size: 13,
+                    color: Colors.white70,
+                  ),
                 ],
               ),
             ),
@@ -229,11 +244,12 @@ class PomodoroFocusCard extends StatelessWidget {
                 style: IconButton.styleFrom(
                   backgroundColor: Colors.white.withValues(alpha: 0.2),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.all(12),
+                  fixedSize: const Size.square(48),
+                  padding: EdgeInsets.zero,
                 ),
                 icon: const Icon(Icons.refresh_rounded, size: 20),
               ),
-              const SizedBox(width: 16),
+              AppSpacing.gapW16,
 
               // Main Start/Pause Button
               ElevatedButton.icon(
@@ -241,11 +257,14 @@ class PomodoroFocusCard extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: buttonColor,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 28,
+                    vertical: 14,
+                  ),
                   shape: RoundedRectangleBorder(
-                      borderRadius: AppRadius.radiusFull),
-                  elevation: 4,
+                    borderRadius: AppRadius.radiusFull,
+                  ),
+                  elevation: 0,
                 ),
                 icon: Icon(
                   isTimerRunning
@@ -255,11 +274,13 @@ class PomodoroFocusCard extends StatelessWidget {
                 ),
                 label: Text(
                   isTimerRunning ? 'Pause' : 'Start Focus',
-                  style:
-                      const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                  ),
                 ),
               ),
-              const SizedBox(width: 16),
+              AppSpacing.gapW16,
 
               // Skip Session Button
               IconButton.filledTonal(
@@ -268,7 +289,8 @@ class PomodoroFocusCard extends StatelessWidget {
                 style: IconButton.styleFrom(
                   backgroundColor: Colors.white.withValues(alpha: 0.2),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.all(12),
+                  fixedSize: const Size.square(48),
+                  padding: EdgeInsets.zero,
                 ),
                 icon: const Icon(Icons.skip_next_rounded, size: 20),
               ),

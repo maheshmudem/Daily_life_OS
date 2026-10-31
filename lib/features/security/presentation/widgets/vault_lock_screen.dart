@@ -75,7 +75,8 @@ class _VaultLockScreenState extends State<VaultLockScreen> {
     setState(() {
       _lockoutSeconds = remaining;
       _hasError = true;
-      _errorMessage = 'Too many failed attempts. Locked for ${_lockoutSeconds}s';
+      _errorMessage =
+          'Too many failed attempts. Locked for ${_lockoutSeconds}s';
     });
 
     _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -93,7 +94,8 @@ class _VaultLockScreenState extends State<VaultLockScreen> {
       } else {
         setState(() {
           _lockoutSeconds--;
-          _errorMessage = 'Too many failed attempts. Locked for ${_lockoutSeconds}s';
+          _errorMessage =
+              'Too many failed attempts. Locked for ${_lockoutSeconds}s';
         });
       }
     });
@@ -102,9 +104,10 @@ class _VaultLockScreenState extends State<VaultLockScreen> {
   Future<void> _handleBiometricUnlock() async {
     if (_lockoutSeconds > 0) return;
     try {
-      final authenticated = await widget.securityRepository.authenticateBiometrics(
-        reason: 'Scan your fingerprint to unlock Secure Vault',
-      );
+      final authenticated = await widget.securityRepository
+          .authenticateBiometrics(
+            reason: 'Scan your fingerprint to unlock Secure Vault',
+          );
       if (authenticated && mounted) {
         HapticFeedback.lightImpact();
         widget.onUnlock(isDecoy: false);
@@ -198,7 +201,8 @@ class _VaultLockScreenState extends State<VaultLockScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final showTabs = (_config?.hasPin ?? false) && (_config?.hasPattern ?? false);
+    final showTabs =
+        (_config?.hasPin ?? false) && (_config?.hasPattern ?? false);
 
     return Center(
       child: SingleChildScrollView(
@@ -222,20 +226,28 @@ class _VaultLockScreenState extends State<VaultLockScreen> {
                 ),
               ),
               child: Icon(
-                _lockoutSeconds > 0 ? Icons.gpp_bad_rounded : Icons.lock_outline_rounded,
+                _lockoutSeconds > 0
+                    ? Icons.gpp_bad_rounded
+                    : Icons.lock_outline_rounded,
                 size: 44,
-                color: _lockoutSeconds > 0 ? AppColors.error : AppColors.moduleVault,
+                color: _lockoutSeconds > 0
+                    ? AppColors.error
+                    : AppColors.moduleVault,
               ),
             ),
             const SizedBox(height: 16),
 
             Text(
-              _lockoutSeconds > 0 ? 'Security Cooldown Active' : 'Secure Vault Locked',
+              _lockoutSeconds > 0
+                  ? 'Security Cooldown Active'
+                  : 'Secure Vault Locked',
               style: AppTextStyles.headingSmall.copyWith(
                 fontWeight: FontWeight.w800,
                 color: _lockoutSeconds > 0
                     ? AppColors.error
-                    : (isDark ? AppColors.darkTextHeading : AppColors.textHeading),
+                    : (isDark
+                          ? AppColors.darkTextHeading
+                          : AppColors.textHeading),
               ),
             ),
             const SizedBox(height: 6),
@@ -245,7 +257,9 @@ class _VaultLockScreenState extends State<VaultLockScreen> {
                   : 'Hardware AES-256 encrypted storage',
               style: TextStyle(
                 fontSize: 12,
-                color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
+                color: isDark
+                    ? AppColors.darkTextCaption
+                    : AppColors.textCaption,
               ),
             ),
             const SizedBox(height: 20),
@@ -255,7 +269,9 @@ class _VaultLockScreenState extends State<VaultLockScreen> {
               Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurfaceSecondary : AppColors.surfaceSecondary,
+                  color: isDark
+                      ? AppColors.darkSurfaceSecondary
+                      : AppColors.surfaceSecondary,
                   borderRadius: AppRadius.radiusFull,
                 ),
                 child: Row(
@@ -298,7 +314,9 @@ class _VaultLockScreenState extends State<VaultLockScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.error.withValues(alpha: 0.1),
                   borderRadius: AppRadius.radiusLg,
-                  border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: AppColors.error.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Column(
                   children: [
@@ -349,8 +367,14 @@ class _VaultLockScreenState extends State<VaultLockScreen> {
                     const SizedBox(height: 12),
                     TextButton.icon(
                       onPressed: _handleBiometricUnlock,
-                      icon: const Icon(Icons.fingerprint_rounded, color: AppColors.moduleVault),
-                      label: const Text('Unlock with Biometrics', style: TextStyle(color: AppColors.moduleVault)),
+                      icon: const Icon(
+                        Icons.fingerprint_rounded,
+                        color: AppColors.moduleVault,
+                      ),
+                      label: const Text(
+                        'Unlock with Biometrics',
+                        style: TextStyle(color: AppColors.moduleVault),
+                      ),
                     ),
                   ],
                 ],
@@ -364,14 +388,18 @@ class _VaultLockScreenState extends State<VaultLockScreen> {
                 Icon(
                   Icons.lock_clock_rounded,
                   size: 13,
-                  color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
+                  color: isDark
+                      ? AppColors.darkTextCaption
+                      : AppColors.textCaption,
                 ),
                 const SizedBox(width: 6),
                 Text(
                   'Auto-locks when app is backgrounded',
                   style: TextStyle(
                     fontSize: 11,
-                    color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
+                    color: isDark
+                        ? AppColors.darkTextCaption
+                        : AppColors.textCaption,
                   ),
                 ),
               ],
@@ -406,7 +434,9 @@ class _VaultLockScreenState extends State<VaultLockScreen> {
               size: 16,
               color: isSelected
                   ? Colors.white
-                  : (isDark ? AppColors.darkTextCaption : AppColors.textCaption),
+                  : (isDark
+                        ? AppColors.darkTextCaption
+                        : AppColors.textCaption),
             ),
             const SizedBox(width: 6),
             Text(
@@ -416,7 +446,9 @@ class _VaultLockScreenState extends State<VaultLockScreen> {
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                 color: isSelected
                     ? Colors.white
-                    : (isDark ? AppColors.darkTextCaption : AppColors.textCaption),
+                    : (isDark
+                          ? AppColors.darkTextCaption
+                          : AppColors.textCaption),
               ),
             ),
           ],

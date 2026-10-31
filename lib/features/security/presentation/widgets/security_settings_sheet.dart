@@ -63,10 +63,7 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
     final cardBg = isDark ? AppColors.darkCardBackground : Colors.white;
 
     return Container(
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: AppRadius.topXxl,
-      ),
+      decoration: BoxDecoration(color: cardBg, borderRadius: AppRadius.topXxl),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: SafeArea(
         child: SingleChildScrollView(
@@ -99,8 +96,11 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                           color: AppColors.moduleVault.withValues(alpha: 0.15),
                           borderRadius: AppRadius.radiusSm,
                         ),
-                        child: const Icon(Icons.security_rounded,
-                            size: 20, color: AppColors.moduleVault),
+                        child: const Icon(
+                          Icons.security_rounded,
+                          size: 20,
+                          color: AppColors.moduleVault,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Text(
@@ -134,7 +134,9 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                 Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: AppColors.warning.withValues(alpha: isDark ? 0.15 : 0.08),
+                    color: AppColors.warning.withValues(
+                      alpha: isDark ? 0.15 : 0.08,
+                    ),
                     borderRadius: AppRadius.radiusLg,
                     border: Border.all(
                       color: AppColors.warning.withValues(alpha: 0.4),
@@ -143,13 +145,19 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                   ),
                   child: Column(
                     children: [
-                      const Icon(Icons.lock_open_rounded, size: 40, color: AppColors.warning),
+                      const Icon(
+                        Icons.lock_open_rounded,
+                        size: 40,
+                        color: AppColors.warning,
+                      ),
                       const SizedBox(height: 10),
                       Text(
                         'Vault Security is Disabled',
                         style: AppTextStyles.titleMedium.copyWith(
                           fontWeight: FontWeight.w700,
-                          color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
+                          color: isDark
+                              ? AppColors.darkTextHeading
+                              : AppColors.textHeading,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -158,7 +166,9 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 12.5,
-                          color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
+                          color: isDark
+                              ? AppColors.darkTextCaption
+                              : AppColors.textCaption,
                         ),
                       ),
                       const SizedBox(height: 18),
@@ -173,7 +183,9 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                               onCompleted: () {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text('Vault security enabled successfully!'),
+                                    content: Text(
+                                      'Vault security enabled successfully!',
+                                    ),
                                     behavior: SnackBarBehavior.floating,
                                   ),
                                 );
@@ -183,11 +195,15 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                           style: FilledButton.styleFrom(
                             backgroundColor: AppColors.moduleVault,
                             padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: const RoundedRectangleBorder(borderRadius: AppRadius.radiusMd),
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: AppRadius.radiusMd,
+                            ),
                           ),
                           icon: const Icon(Icons.shield_rounded, size: 18),
-                          label: const Text('Set Up Security Now',
-                              style: TextStyle(fontWeight: FontWeight.w700)),
+                          label: const Text(
+                            'Set Up Security Now',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
                         ),
                       ),
                     ],
@@ -207,12 +223,15 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                       backgroundColor: AppColors.moduleVault,
                       foregroundColor: Colors.white,
                       shape: const RoundedRectangleBorder(
-                          borderRadius: AppRadius.radiusMd),
+                        borderRadius: AppRadius.radiusMd,
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     icon: const Icon(Icons.lock_rounded, size: 18),
-                    label: const Text('Lock Vault Immediately',
-                        style: TextStyle(fontWeight: FontWeight.w700)),
+                    label: const Text(
+                      'Lock Vault Immediately',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -228,9 +247,12 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                     if (!val) {
                       _confirmCurrentCredential(
                         title: 'Disable Vault Security?',
-                        subtitle: 'Confirm your current PIN/Pattern to turn off security protection.',
+                        subtitle:
+                            'Confirm your current PIN/Pattern to turn off security protection.',
                         onVerified: () async {
-                          await widget.securityRepository.setSecurityEnabled(false);
+                          await widget.securityRepository.setSecurityEnabled(
+                            false,
+                          );
                           _loadConfig();
                         },
                       );
@@ -256,12 +278,17 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                 // Preferred Lock Mode (PIN vs Pattern)
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.tune_rounded, color: AppColors.moduleVault),
+                  leading: const Icon(
+                    Icons.tune_rounded,
+                    color: AppColors.moduleVault,
+                  ),
                   title: Text(
                     'Default Unlock Method',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
-                      color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
+                      color: isDark
+                          ? AppColors.darkTextHeading
+                          : AppColors.textHeading,
                     ),
                   ),
                   subtitle: Text(
@@ -270,12 +297,16 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                         : '3x3 Pattern Lock',
                     style: TextStyle(
                       fontSize: 12,
-                      color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
+                      color: isDark
+                          ? AppColors.darkTextCaption
+                          : AppColors.textCaption,
                     ),
                   ),
                   trailing: DropdownButton<SecurityLockMode>(
                     value: _config!.activeMode,
-                    dropdownColor: isDark ? AppColors.darkCardBackground : Colors.white,
+                    dropdownColor: isDark
+                        ? AppColors.darkCardBackground
+                        : Colors.white,
                     underline: const SizedBox.shrink(),
                     items: [
                       if (_config!.hasPin)
@@ -302,14 +333,19 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                 // Change Master PIN
                 _buildActionTile(
                   icon: Icons.pin_rounded,
-                  title: _config!.hasPin ? 'Change Master PIN' : 'Set Up Master PIN',
-                  subtitle: _config!.hasPin ? 'Update your 4-digit numeric passcode' : 'Add a numeric PIN unlock method',
+                  title: _config!.hasPin
+                      ? 'Change Master PIN'
+                      : 'Set Up Master PIN',
+                  subtitle: _config!.hasPin
+                      ? 'Update your 4-digit numeric passcode'
+                      : 'Add a numeric PIN unlock method',
                   isDark: isDark,
                   onTap: () {
                     if (_config!.hasPin) {
                       _confirmCurrentCredential(
                         title: 'Verify Current Access',
-                        subtitle: 'Confirm your current PIN/Pattern before setting a new PIN.',
+                        subtitle:
+                            'Confirm your current PIN/Pattern before setting a new PIN.',
                         onVerified: () => _showChangePinDialog(isDecoy: false),
                       );
                     } else {
@@ -322,13 +358,17 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                 _buildActionTile(
                   icon: Icons.warning_amber_rounded,
                   iconColor: AppColors.error,
-                  title: _config!.hasDecoyPin ? 'Change Decoy PIN' : 'Set Decoy / Panic PIN',
-                  subtitle: 'Emergency PIN that displays a safe decoy screen under duress',
+                  title: _config!.hasDecoyPin
+                      ? 'Change Decoy PIN'
+                      : 'Set Decoy / Panic PIN',
+                  subtitle:
+                      'Emergency PIN that displays a safe decoy screen under duress',
                   isDark: isDark,
                   onTap: () {
                     _confirmCurrentCredential(
                       title: 'Verify Current Access',
-                      subtitle: 'Confirm your credentials to configure the Decoy PIN.',
+                      subtitle:
+                          'Confirm your credentials to configure the Decoy PIN.',
                       onVerified: () => _showChangePinDialog(isDecoy: true),
                     );
                   },
@@ -338,15 +378,21 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                 // Set Master Pattern
                 _buildActionTile(
                   icon: Icons.pattern_rounded,
-                  title: _config!.hasPattern ? 'Change Master Pattern' : 'Set Up Master Pattern',
-                  subtitle: _config!.hasPattern ? 'Draw a new 3x3 gesture unlock pattern' : 'Add a gesture pattern unlock method',
+                  title: _config!.hasPattern
+                      ? 'Change Master Pattern'
+                      : 'Set Up Master Pattern',
+                  subtitle: _config!.hasPattern
+                      ? 'Draw a new 3x3 gesture unlock pattern'
+                      : 'Add a gesture pattern unlock method',
                   isDark: isDark,
                   onTap: () {
                     if (_config!.hasPattern || _config!.hasPin) {
                       _confirmCurrentCredential(
                         title: 'Verify Current Access',
-                        subtitle: 'Confirm your current credentials before setting a new pattern.',
-                        onVerified: () => _showChangePatternDialog(isDecoy: false),
+                        subtitle:
+                            'Confirm your current credentials before setting a new pattern.',
+                        onVerified: () =>
+                            _showChangePatternDialog(isDecoy: false),
                       );
                     } else {
                       _showChangePatternDialog(isDecoy: false);
@@ -358,13 +404,17 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                 _buildActionTile(
                   icon: Icons.shield_moon_rounded,
                   iconColor: AppColors.error,
-                  title: _config!.hasDecoyPattern ? 'Change Decoy Pattern' : 'Set Decoy Pattern',
-                  subtitle: 'Emergency gesture pattern that opens a decoy vault',
+                  title: _config!.hasDecoyPattern
+                      ? 'Change Decoy Pattern'
+                      : 'Set Decoy Pattern',
+                  subtitle:
+                      'Emergency gesture pattern that opens a decoy vault',
                   isDark: isDark,
                   onTap: () {
                     _confirmCurrentCredential(
                       title: 'Verify Current Access',
-                      subtitle: 'Confirm your credentials before setting the Decoy Pattern.',
+                      subtitle:
+                          'Confirm your credentials before setting the Decoy Pattern.',
                       onVerified: () => _showChangePatternDialog(isDecoy: true),
                     );
                   },
@@ -374,7 +424,10 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                 // Reset / Clear Security
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.delete_outline_rounded, color: AppColors.error),
+                  leading: const Icon(
+                    Icons.delete_outline_rounded,
+                    color: AppColors.error,
+                  ),
                   title: const Text(
                     'Remove All Security',
                     style: TextStyle(
@@ -386,20 +439,25 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                     'Delete all stored PINs and patterns from hardware storage',
                     style: TextStyle(
                       fontSize: 12,
-                      color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
+                      color: isDark
+                          ? AppColors.darkTextCaption
+                          : AppColors.textCaption,
                     ),
                   ),
                   onTap: () {
                     _confirmCurrentCredential(
                       title: 'Confirm Security Removal',
-                      subtitle: 'Enter your credentials to wipe all security locks from the vault.',
+                      subtitle:
+                          'Enter your credentials to wipe all security locks from the vault.',
                       onVerified: () async {
                         await widget.securityRepository.clearAllSecurity();
                         _loadConfig();
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('All security locks removed. Vault is now unlocked.'),
+                              content: Text(
+                                'All security locks removed. Vault is now unlocked.',
+                              ),
                               behavior: SnackBarBehavior.floating,
                             ),
                           );
@@ -508,7 +566,9 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                   hintText: 'Enter 4-digit PIN',
                   counterText: '',
                   errorText: error,
-                  border: const OutlineInputBorder(borderRadius: AppRadius.radiusMd),
+                  border: const OutlineInputBorder(
+                    borderRadius: AppRadius.radiusMd,
+                  ),
                 ),
               ),
             ],
@@ -526,7 +586,9 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                   if (dlgContext.mounted) Navigator.pop(dlgContext);
                   onVerified();
                 } else {
-                  setDialogState(() => error = 'Incorrect PIN. Verification failed.');
+                  setDialogState(
+                    () => error = 'Incorrect PIN. Verification failed.',
+                  );
                 }
               },
               child: const Text('Verify'),
@@ -567,7 +629,9 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                 decoration: InputDecoration(
                   labelText: isDecoy ? 'Decoy PIN' : 'New PIN',
                   hintText: '4 digits',
-                  border: const OutlineInputBorder(borderRadius: AppRadius.radiusMd),
+                  border: const OutlineInputBorder(
+                    borderRadius: AppRadius.radiusMd,
+                  ),
                   counterText: '',
                 ),
               ),
@@ -581,7 +645,9 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                   labelText: 'Confirm PIN',
                   hintText: 'Re-enter 4 digits',
                   errorText: error,
-                  border: const OutlineInputBorder(borderRadius: AppRadius.radiusMd),
+                  border: const OutlineInputBorder(
+                    borderRadius: AppRadius.radiusMd,
+                  ),
                   counterText: '',
                 ),
               ),
@@ -616,7 +682,9 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                 _loadConfig();
                 messenger.showSnackBar(
                   SnackBar(
-                    content: Text(isDecoy ? 'Decoy PIN updated!' : 'Master PIN saved!'),
+                    content: Text(
+                      isDecoy ? 'Decoy PIN updated!' : 'Master PIN saved!',
+                    ),
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
@@ -674,19 +742,28 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
               child: const Text('Cancel'),
             ),
             FilledButton(
-              onPressed: (recordedPattern != null && recordedPattern!.length >= 4)
+              onPressed:
+                  (recordedPattern != null && recordedPattern!.length >= 4)
                   ? () async {
                       final messenger = ScaffoldMessenger.of(context);
                       if (isDecoy) {
-                        await widget.securityRepository.setDecoyPattern(recordedPattern!);
+                        await widget.securityRepository.setDecoyPattern(
+                          recordedPattern!,
+                        );
                       } else {
-                        await widget.securityRepository.setPattern(pattern: recordedPattern!);
+                        await widget.securityRepository.setPattern(
+                          pattern: recordedPattern!,
+                        );
                       }
                       if (dlgContext.mounted) Navigator.pop(dlgContext);
                       _loadConfig();
                       messenger.showSnackBar(
                         SnackBar(
-                          content: Text(isDecoy ? 'Decoy Pattern saved!' : 'Master Pattern saved!'),
+                          content: Text(
+                            isDecoy
+                                ? 'Decoy Pattern saved!'
+                                : 'Master Pattern saved!',
+                          ),
                           behavior: SnackBarBehavior.floating,
                         ),
                       );

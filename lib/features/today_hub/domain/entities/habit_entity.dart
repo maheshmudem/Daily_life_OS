@@ -26,7 +26,11 @@ class HabitEntity extends Equatable {
   IconData get icon => IconData(iconCodePoint, fontFamily: 'MaterialIcons');
   Color get color => Color(colorValue);
 
-  HabitEntity copyWith({bool? isDoneToday, int? streakDays, String? lastCompletedDate}) {
+  HabitEntity copyWith({
+    bool? isDoneToday,
+    int? streakDays,
+    String? lastCompletedDate,
+  }) {
     return HabitEntity(
       id: id,
       title: title,

@@ -4,8 +4,9 @@ import 'package:daily_life_os/features/planner/domain/entities/countdown_item_en
 import 'package:daily_life_os/features/planner/presentation/widgets/countdown_card.dart';
 
 void main() {
-  testWidgets('CountdownCard renders countdown info and responds to actions',
-      (WidgetTester tester) async {
+  testWidgets('CountdownCard renders countdown info and responds to actions', (
+    WidgetTester tester,
+  ) async {
     bool addedToPlanner = false;
     bool edited = false;
     bool deleted = false;
@@ -40,7 +41,10 @@ void main() {
     // Verify UI components
     expect(find.text('Summer Vacation'), findsOneWidget);
     expect(find.text('Travel'), findsOneWidget);
-    expect(find.textContaining('Book flights and pack swimsuit'), findsOneWidget);
+    expect(
+      find.textContaining('Book flights and pack swimsuit'),
+      findsOneWidget,
+    );
     expect(find.text('10d left'), findsOneWidget);
     expect(find.text('Add to Planner'), findsOneWidget);
 

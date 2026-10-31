@@ -33,7 +33,8 @@ class SetReminderSheet extends StatefulWidget {
     required int reminderOffsetMinutes,
     required List<ChecklistItem> checklist,
     required String notes,
-  }) onSubmit;
+  })
+  onSubmit;
 
   const SetReminderSheet({
     super.key,
@@ -82,7 +83,8 @@ class SetReminderSheet extends StatefulWidget {
       required int reminderOffsetMinutes,
       required List<ChecklistItem> checklist,
       required String notes,
-    }) onSubmit,
+    })
+    onSubmit,
   }) {
     return showModalBottomSheet(
       context: context,
@@ -174,10 +176,10 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
 
     _selectedWeekdays = widget.initialRepeatDays.isNotEmpty
         ? widget.initialRepeatDays
-            .split(',')
-            .map((s) => int.tryParse(s.trim()))
-            .whereType<int>()
-            .toSet()
+              .split(',')
+              .map((s) => int.tryParse(s.trim()))
+              .whereType<int>()
+              .toSet()
         : {_startDate.weekday};
 
     _hasEndDate = widget.initialEndDate != null;
@@ -238,18 +240,19 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
     final text = _newChecklistController.text.trim();
     if (text.isEmpty) return;
     setState(() {
-      _checklist.add(ChecklistItem(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        title: text,
-      ));
+      _checklist.add(
+        ChecklistItem(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          title: text,
+        ),
+      );
       _newChecklistController.clear();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final cardBg =
-        widget.isDark ? AppColors.darkCardBackground : Colors.white;
+    final cardBg = widget.isDark ? AppColors.darkCardBackground : Colors.white;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -373,15 +376,18 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                         final picked = await showDatePicker(
                           context: context,
                           initialDate: _startDate,
-                          firstDate:
-                              DateTime.now().subtract(const Duration(days: 365)),
-                          lastDate:
-                              DateTime.now().add(const Duration(days: 365 * 5)),
+                          firstDate: DateTime.now().subtract(
+                            const Duration(days: 365),
+                          ),
+                          lastDate: DateTime.now().add(
+                            const Duration(days: 365 * 5),
+                          ),
                         );
                         if (picked != null) {
                           setState(() {
                             _startDate = picked;
-                            if (_repeatType == 'weekly' && _selectedWeekdays.isEmpty) {
+                            if (_repeatType == 'weekly' &&
+                                _selectedWeekdays.isEmpty) {
                               _selectedWeekdays = {picked.weekday};
                             }
                           });
@@ -389,17 +395,23 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                       },
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 10),
+                          horizontal: 10,
+                          vertical: 10,
+                        ),
                         shape: const RoundedRectangleBorder(
-                            borderRadius: AppRadius.radiusMd),
+                          borderRadius: AppRadius.radiusMd,
+                        ),
                         side: BorderSide(
                           color: widget.isDark
                               ? AppColors.darkDivider
                               : AppColors.divider,
                         ),
                       ),
-                      icon: const Icon(Icons.calendar_today_rounded,
-                          size: 16, color: AppColors.moduleTime),
+                      icon: const Icon(
+                        Icons.calendar_today_rounded,
+                        size: 16,
+                        color: AppColors.moduleTime,
+                      ),
                       label: Text(
                         _formatDateShort(_startDate),
                         style: AppTextStyles.captionBold.copyWith(
@@ -424,17 +436,23 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                       },
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 10),
+                          horizontal: 10,
+                          vertical: 10,
+                        ),
                         shape: const RoundedRectangleBorder(
-                            borderRadius: AppRadius.radiusMd),
+                          borderRadius: AppRadius.radiusMd,
+                        ),
                         side: BorderSide(
                           color: widget.isDark
                               ? AppColors.darkDivider
                               : AppColors.divider,
                         ),
                       ),
-                      icon: const Icon(Icons.access_time_rounded,
-                          size: 16, color: AppColors.moduleTime),
+                      icon: const Icon(
+                        Icons.access_time_rounded,
+                        size: 16,
+                        color: AppColors.moduleTime,
+                      ),
                       label: Text(
                         _formatTimeOfDay(_time),
                         style: AppTextStyles.captionBold.copyWith(
@@ -485,16 +503,19 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                       child: ChoiceChip(
                         label: Text(label),
                         selected: isSelected,
-                        selectedColor: AppColors.moduleTime.withValues(alpha: 0.2),
+                        selectedColor: AppColors.moduleTime.withValues(
+                          alpha: 0.2,
+                        ),
                         labelStyle: TextStyle(
                           fontSize: 12,
-                          fontWeight:
-                              isSelected ? FontWeight.w700 : FontWeight.w500,
+                          fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
                           color: isSelected
                               ? AppColors.moduleTime
                               : (widget.isDark
-                                  ? AppColors.darkTextCaption
-                                  : AppColors.textCaption),
+                                    ? AppColors.darkTextCaption
+                                    : AppColors.textCaption),
                         ),
                         onSelected: (val) {
                           if (val) setState(() => _repeatType = type);
@@ -521,65 +542,66 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                 AppSpacing.gapH8,
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    {'d': 1, 'name': 'M'},
-                    {'d': 2, 'name': 'T'},
-                    {'d': 3, 'name': 'W'},
-                    {'d': 4, 'name': 'T'},
-                    {'d': 5, 'name': 'F'},
-                    {'d': 6, 'name': 'S'},
-                    {'d': 7, 'name': 'S'},
-                  ].map((entry) {
-                    final dayNum = entry['d'] as int;
-                    final dayLabel = entry['name'] as String;
-                    final isPicked = _selectedWeekdays.contains(dayNum);
-                    return InkWell(
-                      onTap: () {
-                        setState(() {
-                          if (isPicked) {
-                            if (_selectedWeekdays.length > 1) {
-                              _selectedWeekdays.remove(dayNum);
-                            }
-                          } else {
-                            _selectedWeekdays.add(dayNum);
-                          }
-                        });
-                      },
-                      borderRadius: AppRadius.radiusFull,
-                      child: Container(
-                        width: 38,
-                        height: 38,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isPicked
-                              ? AppColors.moduleTime
-                              : (widget.isDark
-                                  ? AppColors.darkSurfaceSecondary
-                                  : AppColors.surfaceSecondary),
-                          border: Border.all(
-                            color: isPicked
-                                ? AppColors.moduleTime
-                                : (widget.isDark
-                                    ? AppColors.darkDivider
-                                    : AppColors.divider),
+                  children:
+                      [
+                        {'d': 1, 'name': 'M'},
+                        {'d': 2, 'name': 'T'},
+                        {'d': 3, 'name': 'W'},
+                        {'d': 4, 'name': 'T'},
+                        {'d': 5, 'name': 'F'},
+                        {'d': 6, 'name': 'S'},
+                        {'d': 7, 'name': 'S'},
+                      ].map((entry) {
+                        final dayNum = entry['d'] as int;
+                        final dayLabel = entry['name'] as String;
+                        final isPicked = _selectedWeekdays.contains(dayNum);
+                        return InkWell(
+                          onTap: () {
+                            setState(() {
+                              if (isPicked) {
+                                if (_selectedWeekdays.length > 1) {
+                                  _selectedWeekdays.remove(dayNum);
+                                }
+                              } else {
+                                _selectedWeekdays.add(dayNum);
+                              }
+                            });
+                          },
+                          borderRadius: AppRadius.radiusFull,
+                          child: Container(
+                            width: 38,
+                            height: 38,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isPicked
+                                  ? AppColors.moduleTime
+                                  : (widget.isDark
+                                        ? AppColors.darkSurfaceSecondary
+                                        : AppColors.surfaceSecondary),
+                              border: Border.all(
+                                color: isPicked
+                                    ? AppColors.moduleTime
+                                    : (widget.isDark
+                                          ? AppColors.darkDivider
+                                          : AppColors.divider),
+                              ),
+                            ),
+                            child: Text(
+                              dayLabel,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: isPicked
+                                    ? Colors.white
+                                    : (widget.isDark
+                                          ? AppColors.darkTextHeading
+                                          : AppColors.textHeading),
+                              ),
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          dayLabel,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: isPicked
-                                ? Colors.white
-                                : (widget.isDark
-                                    ? AppColors.darkTextHeading
-                                    : AppColors.textHeading),
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                        );
+                      }).toList(),
                 ),
               ],
 
@@ -616,7 +638,9 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                             setState(() {
                               _hasEndDate = val;
                               if (val && _endDate == null) {
-                                _endDate = _startDate.add(const Duration(days: 30));
+                                _endDate = _startDate.add(
+                                  const Duration(days: 30),
+                                );
                               }
                             });
                           },
@@ -630,7 +654,9 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                     onPressed: () async {
                       final picked = await showDatePicker(
                         context: context,
-                        initialDate: _endDate ?? _startDate.add(const Duration(days: 30)),
+                        initialDate:
+                            _endDate ??
+                            _startDate.add(const Duration(days: 30)),
                         firstDate: _startDate,
                         lastDate: _startDate.add(const Duration(days: 365 * 5)),
                       );
@@ -640,17 +666,23 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                     },
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 10),
+                        horizontal: 10,
+                        vertical: 10,
+                      ),
                       shape: const RoundedRectangleBorder(
-                          borderRadius: AppRadius.radiusMd),
+                        borderRadius: AppRadius.radiusMd,
+                      ),
                       side: BorderSide(
                         color: widget.isDark
                             ? AppColors.darkDivider
                             : AppColors.divider,
                       ),
                     ),
-                    icon: const Icon(Icons.event_busy_rounded,
-                        size: 16, color: AppColors.moduleTime),
+                    icon: const Icon(
+                      Icons.event_busy_rounded,
+                      size: 16,
+                      color: AppColors.moduleTime,
+                    ),
                     label: Text(
                       _endDate != null
                           ? 'Repeat until: ${_formatDateShort(_endDate!)}'
@@ -686,22 +718,20 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                     return Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: FilterChip(
-                        avatar: CircleAvatar(
-                          radius: 5,
-                          backgroundColor: color,
-                        ),
+                        avatar: CircleAvatar(radius: 5, backgroundColor: color),
                         label: Text(label),
                         selected: isSelected,
                         selectedColor: color.withValues(alpha: 0.18),
                         labelStyle: TextStyle(
                           fontSize: 12,
-                          fontWeight:
-                              isSelected ? FontWeight.w700 : FontWeight.w500,
+                          fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
                           color: isSelected
                               ? color
                               : (widget.isDark
-                                  ? AppColors.darkTextCaption
-                                  : AppColors.textCaption),
+                                    ? AppColors.darkTextCaption
+                                    : AppColors.textCaption),
                         ),
                         onSelected: (val) {
                           if (val) setState(() => _priority = level);
@@ -738,16 +768,19 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                         selectedColor: AppColors.primary.withValues(alpha: 0.2),
                         labelStyle: TextStyle(
                           fontSize: 12,
-                          fontWeight:
-                              isSelected ? FontWeight.w700 : FontWeight.w500,
+                          fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
                           color: isSelected
                               ? AppColors.primary
                               : (widget.isDark
-                                  ? AppColors.darkTextCaption
-                                  : AppColors.textCaption),
+                                    ? AppColors.darkTextCaption
+                                    : AppColors.textCaption),
                         ),
                         onSelected: (val) {
-                          if (val) setState(() => _reminderOffsetMinutes = offset);
+                          if (val) {
+                            setState(() => _reminderOffsetMinutes = offset);
+                          }
                         },
                       ),
                     );
@@ -777,13 +810,14 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                     selectedColor: catColor.withValues(alpha: 0.2),
                     labelStyle: TextStyle(
                       fontSize: 12,
-                      fontWeight:
-                          isSelected ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w500,
                       color: isSelected
                           ? catColor
                           : (widget.isDark
-                              ? AppColors.darkTextCaption
-                              : AppColors.textCaption),
+                                ? AppColors.darkTextCaption
+                                : AppColors.textCaption),
                     ),
                     onSelected: (val) {
                       if (val) setState(() => _category = cat);
@@ -818,9 +852,13 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                         activeColor: AppColors.moduleTime,
                         onChanged: (val) {
                           setState(() {
-                            final idx = _checklist.indexWhere((c) => c.id == item.id);
+                            final idx = _checklist.indexWhere(
+                              (c) => c.id == item.id,
+                            );
                             if (idx != -1) {
-                              _checklist[idx] = item.copyWith(isDone: val ?? false);
+                              _checklist[idx] = item.copyWith(
+                                isDone: val ?? false,
+                              );
                             }
                           });
                         },
@@ -833,8 +871,9 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                             color: widget.isDark
                                 ? AppColors.darkTextHeading
                                 : AppColors.textHeading,
-                            decoration:
-                                item.isDone ? TextDecoration.lineThrough : null,
+                            decoration: item.isDone
+                                ? TextDecoration.lineThrough
+                                : null,
                           ),
                         ),
                       ),
@@ -865,7 +904,9 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                       decoration: InputDecoration(
                         hintText: 'Add a subtask...',
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: AppRadius.radiusMd,
                           borderSide: BorderSide(
@@ -955,8 +996,9 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                   icon: const Icon(Icons.check_rounded, color: Colors.white),
                   label: Text(
                     widget.submitButtonText ?? StringConstants.setReminder,
-                    style:
-                        AppTextStyles.buttonText.copyWith(color: Colors.white),
+                    style: AppTextStyles.buttonText.copyWith(
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),

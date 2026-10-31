@@ -48,28 +48,40 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? AppColors.darkSurfaceSecondary : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.border,
+        ),
       ),
       child: TextField(
         controller: _controller,
         onChanged: _onSearchChanged,
         decoration: InputDecoration(
           hintText: widget.hintText,
-          hintStyle:
-              const TextStyle(color: AppColors.textCaption, fontSize: 14),
-          prefixIcon:
-              const Icon(Icons.search, color: AppColors.iconColor, size: 20),
+          hintStyle: const TextStyle(
+            color: AppColors.textCaption,
+            fontSize: 14,
+          ),
+          prefixIcon: const Icon(
+            Icons.search,
+            color: AppColors.iconColor,
+            size: 20,
+          ),
           suffixIcon: ValueListenableBuilder<TextEditingValue>(
             valueListenable: _controller,
             builder: (context, value, child) {
               if (value.text.isEmpty) return const SizedBox.shrink();
               return IconButton(
-                icon: const Icon(Icons.close,
-                    size: 18, color: AppColors.iconColor),
+                icon: const Icon(
+                  Icons.close,
+                  size: 18,
+                  color: AppColors.iconColor,
+                ),
                 onPressed: () {
                   _controller.clear();
                   widget.onChanged('');
@@ -78,9 +90,12 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
               );
             },
           ),
+          filled: false,
           border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
         ),
       ),
     );

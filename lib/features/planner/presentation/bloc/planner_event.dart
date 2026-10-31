@@ -67,7 +67,14 @@ class AddPlannerItem extends PlannerEvent {
   });
 
   @override
-  List<Object?> get props => [title, date, repeatType, repeatDays, endDate, priority];
+  List<Object?> get props => [
+    title,
+    date,
+    repeatType,
+    repeatDays,
+    endDate,
+    priority,
+  ];
 }
 
 class UpdatePlannerItem extends PlannerEvent {
@@ -106,5 +113,15 @@ class UpdatePlannerItem extends PlannerEvent {
   });
 
   @override
-  List<Object?> get props => [id, title, date, startTime, category, repeatType, repeatDays, endDate, priority];
+  List<Object?> get props => [
+    id,
+    title,
+    date,
+    startTime,
+    category,
+    repeatType,
+    repeatDays,
+    endDate,
+    priority,
+  ];
 }

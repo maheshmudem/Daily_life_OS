@@ -1,9 +1,12 @@
+import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_radius.dart';
 import '../../config/theme/app_spacing.dart';
 import '../../config/theme/app_text_styles.dart';
+import '../../di/injection_container.dart';
 import '../constants/string_constants.dart';
+import '../database/app_database.dart';
 
 enum QuickCaptureMode { text, voice, scan }
 
@@ -17,7 +20,10 @@ class QuickCaptureSheet extends StatefulWidget {
     this.initialMode = QuickCaptureMode.text,
   });
 
-  static Future<void> show(BuildContext context, {QuickCaptureMode mode = QuickCaptureMode.text}) {
+  static Future<void> show(
+    BuildContext context, {
+    QuickCaptureMode mode = QuickCaptureMode.text,
+  }) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -89,6 +95,119 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet>
     }
   }
 
+  Future<void> _submitQuickCapture(BuildContext context) async {
+    final rawText = _textController.text.trim();
+    final effectiveText = rawText.isNotEmpty
+        ? rawText
+        : (_mode == QuickCaptureMode.voice
+              ? 'Voice note captured'
+              : (_mode == QuickCaptureMode.scan
+                    ? 'Scanned bill receipt ₹450'
+                    : 'Quick reminder'));
+
+    if (sl.isRegistered<AppDatabase>()) {
+      try {
+        final db = sl<AppDatabase>();
+        final nowIso = DateTime.now().toIso8601String();
+        final todayIso = nowIso.substring(0, 10);
+
+        switch (_detectedIntent) {
+          case DetectedIntent.expense:
+            final numMatch = RegExp(
+              r'(\d+(?:\.\d+)?)',
+            ).firstMatch(effectiveText);
+            final amount = numMatch != null
+                ? (double.tryParse(numMatch.group(1)!) ?? 250.0)
+                : 250.0;
+            final lower = effectiveText.toLowerCase();
+            final category = lower.contains('bill') || lower.contains('electr')
+                ? 'bills'
+                : (lower.contains('food') ||
+                          lower.contains('coffee') ||
+                          lower.contains('grocery')
+                      ? 'food'
+                      : (lower.contains('cab') ||
+                                lower.contains('uber') ||
+                                lower.contains('metro')
+                            ? 'transport'
+                            : 'other'));
+            await db
+                .into(db.transactions)
+                .insert(
+                  TransactionsCompanion.insert(
+                    title: effectiveText,
+                    category: category,
+                    amount: amount,
+                    mode: 'UPI',
+                    iconCodePoint: Icons.bolt_rounded.codePoint,
+                    date: nowIso,
+                    type: const Value('expense'),
+                  ),
+                );
+            break;
+          case DetectedIntent.reminder:
+            await db
+                .into(db.plannerItems)
+                .insert(
+                  PlannerItemsCompanion.insert(
+                    title: effectiveText,
+                    date: todayIso,
+                    startTime: const Value('05:00 PM'),
+                    category: 'Personal',
+                    colorValue: AppColors.moduleTime.toARGB32(),
+                    iconCodePoint: Icons.notifications_active_rounded.codePoint,
+                  ),
+                );
+            await db
+                .into(db.timelineItems)
+                .insert(
+                  TimelineItemsCompanion.insert(
+                    time: '05:00 PM',
+                    title: effectiveText,
+                    category: 'Time',
+                    colorValue: AppColors.moduleTime.toARGB32(),
+                    iconCodePoint: Icons.notifications_active_rounded.codePoint,
+                    action: 'Done',
+                    date: todayIso,
+                  ),
+                );
+            break;
+          case DetectedIntent.note:
+          case DetectedIntent.vault:
+            await db
+                .into(db.notes)
+                .insert(
+                  NotesCompanion.insert(
+                    title: effectiveText.length > 42
+                        ? '${effectiveText.substring(0, 42)}...'
+                        : effectiveText,
+                    content: effectiveText,
+                    colorValue: AppColors.moduleNotes.toARGB32(),
+                    tags: Value(
+                      _detectedIntent == DetectedIntent.vault
+                          ? '@Vault'
+                          : '@QuickCapture',
+                    ),
+                    createdAt: nowIso,
+                    updatedAt: nowIso,
+                  ),
+                );
+            break;
+        }
+      } catch (_) {}
+    }
+
+    if (context.mounted) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Action logged to ${_intentLabel(_detectedIntent)}!'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -148,7 +267,10 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet>
                   const SizedBox(width: 6),
                   _buildModeTab(Icons.mic_rounded, QuickCaptureMode.voice),
                   const SizedBox(width: 6),
-                  _buildModeTab(Icons.document_scanner_rounded, QuickCaptureMode.scan),
+                  _buildModeTab(
+                    Icons.document_scanner_rounded,
+                    QuickCaptureMode.scan,
+                  ),
                 ],
               ),
             ],
@@ -191,17 +313,7 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet>
             width: double.infinity,
             height: 50,
             child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Action logged to ${_intentLabel(_detectedIntent)}!',
-                    ),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              },
+              onPressed: () => _submitQuickCapture(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _intentColor(_detectedIntent),
                 foregroundColor: Colors.white,
@@ -223,7 +335,9 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet>
   Widget _buildTextInputView(bool isDark) {
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurfaceSecondary : AppColors.surfaceSecondary,
+        color: isDark
+            ? AppColors.darkSurfaceSecondary
+            : AppColors.surfaceSecondary,
         borderRadius: AppRadius.radiusLg,
         border: Border.all(
           color: isDark ? AppColors.darkBorder : AppColors.border,
@@ -244,6 +358,7 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet>
             fontSize: 14,
           ),
           contentPadding: const EdgeInsets.all(14),
+          filled: false,
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
@@ -259,7 +374,9 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet>
       decoration: BoxDecoration(
         color: AppColors.voiceWaveform.withValues(alpha: isDark ? 0.15 : 0.08),
         borderRadius: AppRadius.radiusLg,
-        border: Border.all(color: AppColors.voiceWaveform.withValues(alpha: 0.3)),
+        border: Border.all(
+          color: AppColors.voiceWaveform.withValues(alpha: 0.3),
+        ),
       ),
       child: Column(
         children: [
@@ -269,9 +386,9 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet>
               return AnimatedBuilder(
                 animation: _waveController,
                 builder: (context, child) {
-                  final height = 12.0 +
-                      (24.0 *
-                          ((_waveController.value + (index * 0.15)) % 1.0));
+                  final height =
+                      12.0 +
+                      (24.0 * ((_waveController.value + (index * 0.15)) % 1.0));
                   return Container(
                     margin: const EdgeInsets.symmetric(horizontal: 3),
                     width: 4,
@@ -287,7 +404,9 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet>
           ),
           const SizedBox(height: 14),
           Text(
-            _isRecording ? 'Listening... Speak your thought naturally' : 'Voice capture paused',
+            _isRecording
+                ? 'Listening... Speak your thought naturally'
+                : 'Voice capture paused',
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -319,7 +438,11 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet>
       ),
       child: Column(
         children: [
-          const Icon(Icons.document_scanner_rounded, size: 40, color: AppColors.moduleMoney),
+          const Icon(
+            Icons.document_scanner_rounded,
+            size: 40,
+            color: AppColors.moduleMoney,
+          ),
           const SizedBox(height: 10),
           const Text(
             'Camera OCR Text & Bill Grabber',

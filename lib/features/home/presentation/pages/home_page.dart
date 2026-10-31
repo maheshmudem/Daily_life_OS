@@ -11,16 +11,52 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final List<Map<String, dynamic>> _habits = [
-    {'title': 'Morning Sunlight & Water', 'streak': 12, 'done': true, 'icon': Icons.wb_sunny_rounded, 'color': AppColors.routineMorning},
-    {'title': 'Deep Work Sprint (90m)', 'streak': 5, 'done': true, 'icon': Icons.bolt_rounded, 'color': AppColors.primary},
-    {'title': 'Read 15 Pages', 'streak': 8, 'done': false, 'icon': Icons.menu_book_rounded, 'color': AppColors.secondary},
-    {'title': 'Mindful Evening Walk', 'streak': 3, 'done': false, 'icon': Icons.directions_walk_rounded, 'color': AppColors.accent},
+    {
+      'title': 'Morning Sunlight & Water',
+      'streak': 12,
+      'done': true,
+      'icon': Icons.wb_sunny_rounded,
+      'color': AppColors.routineMorning,
+    },
+    {
+      'title': 'Deep Work Sprint (90m)',
+      'streak': 5,
+      'done': true,
+      'icon': Icons.bolt_rounded,
+      'color': AppColors.primary,
+    },
+    {
+      'title': 'Read 15 Pages',
+      'streak': 8,
+      'done': false,
+      'icon': Icons.menu_book_rounded,
+      'color': AppColors.secondary,
+    },
+    {
+      'title': 'Mindful Evening Walk',
+      'streak': 3,
+      'done': false,
+      'icon': Icons.directions_walk_rounded,
+      'color': AppColors.accent,
+    },
   ];
 
   final List<Map<String, dynamic>> _tasks = [
-    {'title': 'Finalize Daily Life OS PRD Scope', 'priority': 'High', 'done': false},
-    {'title': 'Review weekly life metrics & habits', 'priority': 'Medium', 'done': true},
-    {'title': 'Plan tomorrow focus priorities', 'priority': 'Normal', 'done': false},
+    {
+      'title': 'Finalize Daily Life OS PRD Scope',
+      'priority': 'High',
+      'done': false,
+    },
+    {
+      'title': 'Review weekly life metrics & habits',
+      'priority': 'Medium',
+      'done': true,
+    },
+    {
+      'title': 'Plan tomorrow focus priorities',
+      'priority': 'Normal',
+      'done': false,
+    },
   ];
 
   @override
@@ -60,7 +96,11 @@ class _HomePageState extends State<HomePage> {
             child: CircleAvatar(
               radius: 18,
               backgroundColor: AppColors.primaryLight.withValues(alpha: 0.2),
-              child: const Icon(Icons.person_rounded, color: AppColors.primary, size: 20),
+              child: const Icon(
+                Icons.person_rounded,
+                color: AppColors.primary,
+                size: 20,
+              ),
             ),
           ),
         ],
@@ -111,7 +151,10 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add_rounded),
-        label: const Text('New Action', style: TextStyle(fontWeight: FontWeight.w600)),
+        label: const Text(
+          'New Action',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
       ),
     );
   }
@@ -133,7 +176,11 @@ class _HomePageState extends State<HomePage> {
               color: AppColors.primary,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.check_circle_outline_rounded, color: Colors.white, size: 22),
+            child: const Icon(
+              Icons.check_circle_outline_rounded,
+              color: Colors.white,
+              size: 22,
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -190,7 +237,10 @@ class _HomePageState extends State<HomePage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
@@ -198,7 +248,11 @@ class _HomePageState extends State<HomePage> {
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.calendar_today_rounded, size: 12, color: Colors.white),
+                    Icon(
+                      Icons.calendar_today_rounded,
+                      size: 12,
+                      color: Colors.white,
+                    ),
                     SizedBox(width: 6),
                     Text(
                       'Today’s Plan',
@@ -246,7 +300,9 @@ class _HomePageState extends State<HomePage> {
               value: 0.75,
               minHeight: 8,
               backgroundColor: Colors.white.withValues(alpha: 0.25),
-              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accentLight),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                AppColors.accentLight,
+              ),
             ),
           ),
         ],
@@ -254,7 +310,11 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, {required String title, String? actionText}) {
+  Widget _buildSectionHeader(
+    BuildContext context, {
+    required String title,
+    String? actionText,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -289,10 +349,26 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildQuickActions(BuildContext context) {
     final actions = [
-      {'title': 'Add Task', 'icon': Icons.add_task_rounded, 'color': AppColors.primary},
-      {'title': 'Habit', 'icon': Icons.repeat_rounded, 'color': AppColors.secondary},
-      {'title': 'Routine', 'icon': Icons.schedule_rounded, 'color': AppColors.accent},
-      {'title': 'Focus Mode', 'icon': Icons.timer_outlined, 'color': AppColors.routineMorning},
+      {
+        'title': 'Add Task',
+        'icon': Icons.add_task_rounded,
+        'color': AppColors.primary,
+      },
+      {
+        'title': 'Habit',
+        'icon': Icons.repeat_rounded,
+        'color': AppColors.secondary,
+      },
+      {
+        'title': 'Routine',
+        'icon': Icons.schedule_rounded,
+        'color': AppColors.accent,
+      },
+      {
+        'title': 'Focus Mode',
+        'icon': Icons.timer_outlined,
+        'color': AppColors.routineMorning,
+      },
     ];
 
     return Row(
@@ -346,7 +422,9 @@ class _HomePageState extends State<HomePage> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: isDone ? color.withValues(alpha: 0.3) : AppColors.divider),
+            border: Border.all(
+              color: isDone ? color.withValues(alpha: 0.3) : AppColors.divider,
+            ),
           ),
           child: Row(
             children: [
@@ -382,7 +460,9 @@ class _HomePageState extends State<HomePage> {
               ),
               IconButton(
                 icon: Icon(
-                  isDone ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                  isDone
+                      ? Icons.check_circle_rounded
+                      : Icons.radio_button_unchecked_rounded,
                   color: isDone ? color : AppColors.border,
                   size: 24,
                 ),
@@ -419,7 +499,9 @@ class _HomePageState extends State<HomePage> {
               Checkbox(
                 value: isDone,
                 activeColor: AppColors.primary,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
                 onChanged: (val) {
                   setState(() {
                     _tasks[index]['done'] = val ?? false;
@@ -432,7 +514,9 @@ class _HomePageState extends State<HomePage> {
                   task['title'] as String,
                   style: TextStyle(
                     fontSize: 14,
-                    color: isDone ? AppColors.textCaption : AppColors.textHeading,
+                    color: isDone
+                        ? AppColors.textCaption
+                        : AppColors.textHeading,
                     decoration: isDone ? TextDecoration.lineThrough : null,
                   ),
                 ),
@@ -450,7 +534,9 @@ class _HomePageState extends State<HomePage> {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: task['priority'] == 'High' ? AppColors.error : AppColors.textCaption,
+                    color: task['priority'] == 'High'
+                        ? AppColors.error
+                        : AppColors.textCaption,
                   ),
                 ),
               ),

@@ -22,7 +22,8 @@ class ErrorInterceptor extends Interceptor {
         DioException(
           requestOptions: err.requestOptions,
           error: const ServerException(
-            message: 'Network connection error. Please check your internet connection.',
+            message:
+                'Network connection error. Please check your internet connection.',
             code: 'NETWORK_ERROR',
           ),
           type: err.type,
@@ -34,7 +35,9 @@ class ErrorInterceptor extends Interceptor {
     if (statusCode != null) {
       final errorCode = data is Map ? data['code'] as String? : null;
       final errorMessage = data is Map
-          ? (data['error'] as String? ?? data['message'] as String? ?? 'An error occurred')
+          ? (data['error'] as String? ??
+                data['message'] as String? ??
+                'An error occurred')
           : 'An error occurred';
 
       switch (statusCode) {
@@ -133,7 +136,9 @@ class ErrorInterceptor extends Interceptor {
             DioException(
               requestOptions: err.requestOptions,
               error: ServerException(
-                message: errorMessage.isNotEmpty ? errorMessage : 'Resource not found.',
+                message: errorMessage.isNotEmpty
+                    ? errorMessage
+                    : 'Resource not found.',
                 code: 'NOT_FOUND',
                 statusCode: 404,
               ),

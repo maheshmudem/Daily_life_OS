@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
+import '../../config/theme/app_text_styles.dart';
 
 enum AppButtonType { primary, secondary, outline }
 
@@ -31,7 +32,10 @@ class AppButton extends StatelessWidget {
         ? const SizedBox(
             height: 20,
             width: 20,
-            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Colors.white,
+            ),
           )
         : Row(
             mainAxisSize: MainAxisSize.min,
@@ -56,9 +60,15 @@ class AppButton extends StatelessWidget {
               foregroundColor: Colors.white,
               disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.6),
               disabledForegroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               elevation: 2,
-              textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              textStyle: const TextStyle(
+                fontFamily: AppTextStyles.fontFamily,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             child: child,
           ),
@@ -72,9 +82,15 @@ class AppButton extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.secondary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               elevation: 2,
-              textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              textStyle: const TextStyle(
+                fontFamily: AppTextStyles.fontFamily,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             child: child,
           ),
@@ -88,8 +104,14 @@ class AppButton extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.primary,
               side: const BorderSide(color: AppColors.primary, width: 1.5),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              textStyle: const TextStyle(
+                fontFamily: AppTextStyles.fontFamily,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             child: child,
           ),

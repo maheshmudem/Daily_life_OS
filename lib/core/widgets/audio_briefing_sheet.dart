@@ -88,7 +88,11 @@ class _AudioBriefingSheetState extends State<AudioBriefingSheet>
                   color: AppColors.primary.withValues(alpha: 0.14),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.volume_up_rounded, color: AppColors.primary, size: 22),
+                child: const Icon(
+                  Icons.volume_up_rounded,
+                  color: AppColors.primary,
+                  size: 22,
+                ),
               ),
               const SizedBox(width: 10),
               const Text(
@@ -107,7 +111,9 @@ class _AudioBriefingSheetState extends State<AudioBriefingSheet>
                 animation: _animController,
                 builder: (context, child) {
                   final height = _isPlaying
-                      ? 10.0 + (30.0 * ((_animController.value + (i * 0.12)) % 1.0))
+                      ? 10.0 +
+                            (30.0 *
+                                ((_animController.value + (i * 0.12)) % 1.0))
                       : 6.0;
                   return Container(
                     margin: const EdgeInsets.symmetric(horizontal: 2),
@@ -129,9 +135,13 @@ class _AudioBriefingSheetState extends State<AudioBriefingSheet>
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isDark ? AppColors.darkSurfaceSecondary : AppColors.surfaceSecondary,
+              color: isDark
+                  ? AppColors.darkSurfaceSecondary
+                  : AppColors.surfaceSecondary,
               borderRadius: AppRadius.radiusLg,
-              border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
+              border: Border.all(
+                color: isDark ? AppColors.darkBorder : AppColors.border,
+              ),
             ),
             child: Text(
               _briefingScript,
@@ -162,7 +172,10 @@ class _AudioBriefingSheetState extends State<AudioBriefingSheet>
                 },
                 child: Text(
                   '${_speed}x',
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
                 ),
               ),
               IconButton(
@@ -175,7 +188,9 @@ class _AudioBriefingSheetState extends State<AudioBriefingSheet>
                 backgroundColor: AppColors.primary,
                 child: IconButton(
                   iconSize: 30,
-                  icon: Icon(_isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded),
+                  icon: Icon(
+                    _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                  ),
                   color: Colors.white,
                   onPressed: () {
                     setState(() => _isPlaying = !_isPlaying);

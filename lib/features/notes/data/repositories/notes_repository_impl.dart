@@ -16,17 +16,27 @@ class NotesRepositoryImpl implements NotesRepository {
     required String content,
     required int colorValue,
     String tags = '',
-  }) =>
-      _localDataSource.addNote(
-        title: title,
-        content: content,
-        colorValue: colorValue,
-        tags: tags,
-      );
+  }) => _localDataSource.addNote(
+    title: title,
+    content: content,
+    colorValue: colorValue,
+    tags: tags,
+  );
 
   @override
-  Future<void> updateNote(int id, {String? title, String? content, int? colorValue, String? tags}) =>
-      _localDataSource.updateNote(id, title: title, content: content, colorValue: colorValue, tags: tags);
+  Future<void> updateNote(
+    int id, {
+    String? title,
+    String? content,
+    int? colorValue,
+    String? tags,
+  }) => _localDataSource.updateNote(
+    id,
+    title: title,
+    content: content,
+    colorValue: colorValue,
+    tags: tags,
+  );
 
   @override
   Future<void> deleteNote(int id) => _localDataSource.deleteNote(id);

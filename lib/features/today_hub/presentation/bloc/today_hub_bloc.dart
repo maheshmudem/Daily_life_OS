@@ -37,20 +37,28 @@ class TodayHubBloc extends Bloc<TodayHubEvent, TodayHubState> {
     }
   }
 
-  Future<void> _onToggleHabit(ToggleHabit event, Emitter<TodayHubState> emit) async {
+  Future<void> _onToggleHabit(
+    ToggleHabit event,
+    Emitter<TodayHubState> emit,
+  ) async {
     try {
       await toggleHabitUseCase(event.id);
       final habits = await getHabitsUseCase();
       final current = state;
       if (current is TodayHubLoaded) {
-        emit(TodayHubLoaded(habits: habits, timelineItems: current.timelineItems));
+        emit(
+          TodayHubLoaded(habits: habits, timelineItems: current.timelineItems),
+        );
       }
     } catch (e) {
       emit(TodayHubError(e.toString()));
     }
   }
 
-  Future<void> _onToggleTimeline(ToggleTimelineItem event, Emitter<TodayHubState> emit) async {
+  Future<void> _onToggleTimeline(
+    ToggleTimelineItem event,
+    Emitter<TodayHubState> emit,
+  ) async {
     try {
       await toggleTimelineItemUseCase(event.id);
       final timeline = await getTodayTimelineUseCase();

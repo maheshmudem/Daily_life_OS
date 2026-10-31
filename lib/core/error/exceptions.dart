@@ -3,14 +3,11 @@ class ServerException implements Exception {
   final String? code;
   final int? statusCode;
 
-  const ServerException({
-    required this.message,
-    this.code,
-    this.statusCode,
-  });
+  const ServerException({required this.message, this.code, this.statusCode});
 
   @override
-  String toString() => 'ServerException: $message (code: $code, status: $statusCode)';
+  String toString() =>
+      'ServerException: $message (code: $code, status: $statusCode)';
 }
 
 class CacheException implements Exception {

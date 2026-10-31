@@ -10,7 +10,13 @@ abstract class NotesLocalDataSource {
     required int colorValue,
     String tags = '',
   });
-  Future<void> updateNote(int id, {String? title, String? content, int? colorValue, String? tags});
+  Future<void> updateNote(
+    int id, {
+    String? title,
+    String? content,
+    int? colorValue,
+    String? tags,
+  });
   Future<void> deleteNote(int id);
   Future<void> togglePin(int id);
 }
@@ -22,12 +28,12 @@ class NotesLocalDataSourceImpl implements NotesLocalDataSource {
 
   @override
   Future<List<NoteModel>> getNotes() async {
-    final rows = await (_db.select(_db.notes)
-          ..orderBy([
-            (t) => OrderingTerm.desc(t.isPinned),
-            (t) => OrderingTerm.desc(t.updatedAt),
-          ]))
-        .get();
+    final rows =
+        await (_db.select(_db.notes)..orderBy([
+              (t) => OrderingTerm.desc(t.isPinned),
+              (t) => OrderingTerm.desc(t.updatedAt),
+            ]))
+            .get();
     return rows.map(NoteModel.fromDrift).toList();
   }
 
@@ -39,7 +45,9 @@ class NotesLocalDataSourceImpl implements NotesLocalDataSource {
     String tags = '',
   }) async {
     final now = DateTime.now().toIso8601String();
-    await _db.into(_db.notes).insert(
+    await _db
+        .into(_db.notes)
+        .insert(
           NotesCompanion.insert(
             title: title,
             content: content,
@@ -52,13 +60,21 @@ class NotesLocalDataSourceImpl implements NotesLocalDataSource {
   }
 
   @override
-  Future<void> updateNote(int id, {String? title, String? content, int? colorValue, String? tags}) async {
+  Future<void> updateNote(
+    int id, {
+    String? title,
+    String? content,
+    int? colorValue,
+    String? tags,
+  }) async {
     final now = DateTime.now().toIso8601String();
     await (_db.update(_db.notes)..where((t) => t.id.equals(id))).write(
       NotesCompanion(
         title: title != null ? Value(title) : const Value.absent(),
         content: content != null ? Value(content) : const Value.absent(),
-        colorValue: colorValue != null ? Value(colorValue) : const Value.absent(),
+        colorValue: colorValue != null
+            ? Value(colorValue)
+            : const Value.absent(),
         tags: tags != null ? Value(tags) : const Value.absent(),
         updatedAt: Value(now),
       ),
@@ -72,7 +88,9 @@ class NotesLocalDataSourceImpl implements NotesLocalDataSource {
 
   @override
   Future<void> togglePin(int id) async {
-    final note = await (_db.select(_db.notes)..where((t) => t.id.equals(id))).getSingle();
+    final note = await (_db.select(
+      _db.notes,
+    )..where((t) => t.id.equals(id))).getSingle();
     await (_db.update(_db.notes)..where((t) => t.id.equals(id))).write(
       NotesCompanion(isPinned: Value(!note.isPinned)),
     );

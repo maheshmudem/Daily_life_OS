@@ -10,7 +10,10 @@ abstract class SecurityRepository {
   Future<bool> isDecoyPattern(List<int> pattern);
   Future<void> setPin({required String pin, String? decoyPin});
   Future<void> setDecoyPin(String decoyPin);
-  Future<void> setPattern({required List<int> pattern, List<int>? decoyPattern});
+  Future<void> setPattern({
+    required List<int> pattern,
+    List<int>? decoyPattern,
+  });
   Future<void> setDecoyPattern(List<int> decoyPattern);
   Future<void> setBiometricsEnabled(bool enabled);
   Future<void> setSecurityEnabled(bool enabled);

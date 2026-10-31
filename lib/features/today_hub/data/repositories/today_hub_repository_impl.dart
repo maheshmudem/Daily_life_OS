@@ -15,8 +15,10 @@ class TodayHubRepositoryImpl implements TodayHubRepository {
   Future<void> toggleHabit(int id) => _localDataSource.toggleHabit(id);
 
   @override
-  Future<List<TimelineItemEntity>> getTodayTimeline() => _localDataSource.getTodayTimeline();
+  Future<List<TimelineItemEntity>> getTodayTimeline() =>
+      _localDataSource.getTodayTimeline();
 
   @override
-  Future<void> toggleTimelineItem(int id) => _localDataSource.toggleTimelineItem(id);
+  Future<void> toggleTimelineItem(int id) =>
+      _localDataSource.toggleTimelineItem(id);
 }

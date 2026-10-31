@@ -46,5 +46,12 @@ class VaultDocumentEntity extends Equatable {
   IconData get icon => IconData(iconCodePoint, fontFamily: 'MaterialIcons');
 
   @override
-  List<Object?> get props => [id, title, category, expiry, isExpiringSoon, hasReminder];
+  List<Object?> get props => [
+    id,
+    title,
+    category,
+    expiry,
+    isExpiringSoon,
+    hasReminder,
+  ];
 }

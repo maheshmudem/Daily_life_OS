@@ -12,6 +12,7 @@ import '../../../../core/widgets/habit_bubble_widget.dart';
 import '../../../../core/widgets/quick_capture_sheet.dart';
 import '../../../../core/widgets/safe_spend_meter_widget.dart';
 import '../../../../di/injection_container.dart';
+import '../../../money/domain/usecases/get_transactions_and_budget_usecase.dart';
 import '../../domain/entities/habit_entity.dart';
 import '../../domain/entities/timeline_item_entity.dart';
 import '../bloc/today_hub_bloc.dart';
@@ -36,7 +37,9 @@ class _TodayHubView extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkScaffoldBackground : AppColors.scaffoldBackground,
+      backgroundColor: isDark
+          ? AppColors.darkScaffoldBackground
+          : AppColors.scaffoldBackground,
       body: SafeArea(
         child: BlocBuilder<TodayHubBloc, TodayHubState>(
           builder: (context, state) {
@@ -44,7 +47,35 @@ class _TodayHubView extends StatelessWidget {
               return const _LoadingView();
             }
             if (state is TodayHubError) {
-              return Center(child: Text('Error: ${state.message}'));
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.error_outline_rounded,
+                        color: AppColors.error,
+                        size: 40,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Error: ${state.message}',
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.bodyMedium,
+                      ),
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        onPressed: () => context.read<TodayHubBloc>().add(
+                          const LoadTodayHub(),
+                        ),
+                        icon: const Icon(Icons.refresh_rounded, size: 18),
+                        label: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
             }
             if (state is TodayHubLoaded) {
               return _LoadedView(state: state, isDark: isDark);
@@ -113,7 +144,9 @@ class _LoadedView extends StatelessWidget {
                       'Good ${_greeting()}, Alex',
                       style: AppTextStyles.headingMedium.copyWith(
                         fontWeight: FontWeight.w800,
-                        color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
+                        color: isDark
+                            ? AppColors.darkTextHeading
+                            : AppColors.textHeading,
                       ),
                     ),
                   ],
@@ -122,9 +155,14 @@ class _LoadedView extends StatelessWidget {
                 GestureDetector(
                   onTap: () => AudioBriefingSheet.show(context),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: isDark ? 0.2 : 0.1),
+                      color: AppColors.primary.withValues(
+                        alpha: isDark ? 0.2 : 0.1,
+                      ),
                       borderRadius: AppRadius.radiusFull,
                       border: Border.all(
                         color: AppColors.primary.withValues(alpha: 0.3),
@@ -133,7 +171,11 @@ class _LoadedView extends StatelessWidget {
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.volume_up_rounded, size: 16, color: AppColors.primary),
+                        Icon(
+                          Icons.volume_up_rounded,
+                          size: 16,
+                          color: AppColors.primary,
+                        ),
                         SizedBox(width: 6),
                         Text(
                           StringConstants.playBriefing,
@@ -166,14 +208,21 @@ class _LoadedView extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: AppRadius.radiusFull,
                         ),
                         child: const Row(
                           children: [
-                            Icon(Icons.bolt_rounded, size: 14, color: Colors.white),
+                            Icon(
+                              Icons.bolt_rounded,
+                              size: 14,
+                              color: Colors.white,
+                            ),
                             SizedBox(width: 4),
                             Text(
                               'Daily Life OS Active',
@@ -224,16 +273,7 @@ class _LoadedView extends StatelessWidget {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: SafeSpendMeterWidget(
-              spentToday: 450,
-              dailySafeLimit: 1200,
-              daysRemaining: 12,
-              monthlyBudget: 35000,
-              onLogExpense: () => QuickCaptureSheet.show(
-                context,
-                mode: QuickCaptureMode.text,
-              ),
-            ),
+            child: _buildLiveSafeSpendMeter(context),
           ),
         ),
 
@@ -300,7 +340,9 @@ class _LoadedView extends StatelessWidget {
                     Text(
                       'Sorted by time',
                       style: AppTextStyles.caption.copyWith(
-                        color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
+                        color: isDark
+                            ? AppColors.darkTextCaption
+                            : AppColors.textCaption,
                       ),
                     ),
                   ],
@@ -317,11 +359,18 @@ class _LoadedView extends StatelessWidget {
         // 60-Second Evening Wrap-Up Banner
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.only(left: 20, right: 20, bottom: 90, top: 4),
+            padding: const EdgeInsets.only(
+              left: 20,
+              right: 20,
+              bottom: 84,
+              top: 4,
+            ),
             child: Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.darkSurfaceSecondary : AppColors.surfaceSecondary,
+                color: isDark
+                    ? AppColors.darkSurfaceSecondary
+                    : AppColors.surfaceSecondary,
                 borderRadius: AppRadius.radiusLg,
                 border: Border.all(
                   color: isDark ? AppColors.darkBorder : AppColors.border,
@@ -358,7 +407,9 @@ class _LoadedView extends StatelessWidget {
                           StringConstants.eveningWrapUpSubtitle,
                           style: TextStyle(
                             fontSize: 11,
-                            color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
+                            color: isDark
+                                ? AppColors.darkTextCaption
+                                : AppColors.textCaption,
                           ),
                         ),
                       ],
@@ -369,7 +420,9 @@ class _LoadedView extends StatelessWidget {
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Evening Wrap-Up opens automatically at 9:30 PM.'),
+                          content: Text(
+                            'Evening Wrap-Up opens automatically at 9:30 PM.',
+                          ),
                           behavior: SnackBarBehavior.floating,
                         ),
                       );
@@ -377,10 +430,18 @@ class _LoadedView extends StatelessWidget {
                     style: TextButton.styleFrom(
                       backgroundColor: AppColors.moduleVault,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusSm),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: AppRadius.radiusSm,
+                      ),
                     ),
-                    child: const Text('Review', style: TextStyle(fontWeight: FontWeight.w700)),
+                    child: const Text(
+                      'Review',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
                   ),
                 ],
               ),
@@ -399,7 +460,20 @@ class _LoadedView extends StatelessWidget {
   }
 
   String _monthAbbr(int m) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return months[m - 1];
   }
 }
@@ -435,19 +509,23 @@ class _TimelineTile extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
         borderRadius: AppRadius.radiusLg,
         border: Border.all(
-          color: isDone ? color.withValues(alpha: 0.3) : (isDark ? AppColors.darkDivider : AppColors.divider),
+          color: isDone
+              ? color.withValues(alpha: 0.3)
+              : (isDark ? AppColors.darkDivider : AppColors.divider),
         ),
       ),
       child: Row(
         children: [
-          // Time badge
+          // Time badge (fixed width so every title starts on the same line)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+            width: 72,
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(vertical: 5),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.12),
               borderRadius: AppRadius.radiusSm,
@@ -458,6 +536,7 @@ class _TimelineTile extends StatelessWidget {
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 color: color,
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
           ),
@@ -473,15 +552,20 @@ class _TimelineTile extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
+                    color: isDark
+                        ? AppColors.darkTextHeading
+                        : AppColors.textHeading,
                     decoration: isDone ? TextDecoration.lineThrough : null,
                   ),
                 ),
+                const SizedBox(height: 2),
                 Text(
                   item.category,
                   style: TextStyle(
                     fontSize: 11,
-                    color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
+                    color: isDark
+                        ? AppColors.darkTextCaption
+                        : AppColors.textCaption,
                   ),
                 ),
               ],
@@ -510,4 +594,28 @@ class _TimelineTile extends StatelessWidget {
       ),
     );
   }
+}
+
+Widget _buildLiveSafeSpendMeter(BuildContext context) {
+  final future = sl.isRegistered<GetDailySpendSnapshotUseCase>()
+      ? sl<GetDailySpendSnapshotUseCase>()()
+      : null;
+  return FutureBuilder<DailySpendSnapshot>(
+    future: future,
+    builder: (context, snapshot) {
+      final data = snapshot.data;
+      return SafeSpendMeterWidget(
+        spentToday: data?.spentToday ?? 450,
+        dailySafeLimit: data?.dailySafeLimit ?? 1200,
+        daysRemaining: data?.daysRemaining ?? 12,
+        monthlyBudget: data?.monthlyBudget ?? 35000,
+        onLogExpense: () async {
+          await QuickCaptureSheet.show(context, mode: QuickCaptureMode.text);
+          if (context.mounted) {
+            context.read<TodayHubBloc>().add(const LoadTodayHub());
+          }
+        },
+      );
+    },
+  );
 }

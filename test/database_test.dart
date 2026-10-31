@@ -54,97 +54,115 @@ void main() {
     await db.close();
   });
 
-  group('TodayHub Clean Architecture (DataSource -> Repository -> UseCases)', () {
-    test('GetHabitsUseCase retrieves seeded habits', () async {
-      final useCase = GetHabitsUseCase(todayRepo);
-      final habits = await useCase();
-      expect(habits.length, greaterThanOrEqualTo(4));
-      expect(habits.any((h) => h.title == 'Drink 3L Water'), isTrue);
-    });
+  group(
+    'TodayHub Clean Architecture (DataSource -> Repository -> UseCases)',
+    () {
+      test('GetHabitsUseCase retrieves seeded habits', () async {
+        final useCase = GetHabitsUseCase(todayRepo);
+        final habits = await useCase();
+        expect(habits.length, greaterThanOrEqualTo(4));
+        expect(habits.any((h) => h.title == 'Drink 3L Water'), isTrue);
+      });
 
-    test('ToggleHabitUseCase updates streak & status', () async {
-      final getHabits = GetHabitsUseCase(todayRepo);
-      final toggleHabit = ToggleHabitUseCase(todayRepo);
+      test('ToggleHabitUseCase updates streak & status', () async {
+        final getHabits = GetHabitsUseCase(todayRepo);
+        final toggleHabit = ToggleHabitUseCase(todayRepo);
 
-      final habits = await getHabits();
-      final target = habits.firstWhere((h) => h.title == 'Read 15 mins');
-      expect(target.isDoneToday, isFalse);
-      final initialStreak = target.streakDays;
+        final habits = await getHabits();
+        final target = habits.firstWhere((h) => h.title == 'Read 15 mins');
+        expect(target.isDoneToday, isFalse);
+        final initialStreak = target.streakDays;
 
-      await toggleHabit(target.id);
+        await toggleHabit(target.id);
 
-      final updatedHabits = await getHabits();
-      final updated = updatedHabits.firstWhere((h) => h.id == target.id);
-      expect(updated.isDoneToday, isTrue);
-      expect(updated.streakDays, equals(initialStreak + 1));
-    });
+        final updatedHabits = await getHabits();
+        final updated = updatedHabits.firstWhere((h) => h.id == target.id);
+        expect(updated.isDoneToday, isTrue);
+        expect(updated.streakDays, equals(initialStreak + 1));
+      });
 
-    test('Timeline use cases toggle completion state', () async {
-      final getTimeline = GetTodayTimelineUseCase(todayRepo);
-      final toggleItem = ToggleTimelineItemUseCase(todayRepo);
+      test('Timeline use cases toggle completion state', () async {
+        final getTimeline = GetTodayTimelineUseCase(todayRepo);
+        final toggleItem = ToggleTimelineItemUseCase(todayRepo);
 
-      final timeline = await getTimeline();
-      expect(timeline.isNotEmpty, isTrue);
-      final item = timeline.first;
+        final timeline = await getTimeline();
+        expect(timeline.isNotEmpty, isTrue);
+        final item = timeline.first;
 
-      await toggleItem(item.id);
+        await toggleItem(item.id);
 
-      final updatedTimeline = await getTimeline();
-      final updatedItem = updatedTimeline.firstWhere((t) => t.id == item.id);
-      expect(updatedItem.isDone, equals(!item.isDone));
-    });
-  });
+        final updatedTimeline = await getTimeline();
+        final updatedItem = updatedTimeline.firstWhere((t) => t.id == item.id);
+        expect(updatedItem.isDone, equals(!item.isDone));
+      });
+    },
+  );
 
-  group('Money Manager Clean Architecture (DataSource -> Repository -> UseCases)', () {
-    test('GetBudgetUseCase calculates budget and daily safe spend dynamically', () async {
-      final getBudget = GetBudgetUseCase(moneyRepo);
-      final budget = await getBudget();
-      expect(budget.monthlyBudget, equals(40000.0));
-      expect(budget.fixedBills, equals(8000.0));
-      expect(budget.dailySafeSpend, greaterThan(0));
-    });
-
-    test('AddTransactionUseCase persists and retrieves new transaction', () async {
-      final getTx = GetRecentTransactionsUseCase(moneyRepo);
-      final addTx = AddTransactionUseCase(moneyRepo);
-
-      final initialTx = await getTx();
-
-      await addTx(
-        title: 'Coffee at Blue Tokai',
-        category: 'Food',
-        amount: 280.0,
-        mode: 'UPI',
-        iconCodePoint: 0xe532,
+  group(
+    'Money Manager Clean Architecture (DataSource -> Repository -> UseCases)',
+    () {
+      test(
+        'GetBudgetUseCase calculates budget and daily safe spend dynamically',
+        () async {
+          final getBudget = GetBudgetUseCase(moneyRepo);
+          final budget = await getBudget();
+          expect(budget.monthlyBudget, equals(40000.0));
+          expect(budget.fixedBills, equals(8000.0));
+          expect(budget.dailySafeSpend, greaterThan(0));
+        },
       );
 
-      final updatedTx = await getTx();
-      expect(updatedTx.length, equals(initialTx.length + 1));
-      expect(updatedTx.first.title, equals('Coffee at Blue Tokai'));
-    });
+      test(
+        'AddTransactionUseCase persists and retrieves new transaction',
+        () async {
+          final getTx = GetRecentTransactionsUseCase(moneyRepo);
+          final addTx = AddTransactionUseCase(moneyRepo);
 
-    test('Subscription & IOU Use Cases toggle auto-kill and settle debts', () async {
-      final getSubs = GetSubscriptionsUseCase(moneyRepo);
-      final toggleAutoKill = ToggleAutoKillUseCase(moneyRepo);
-      final getIous = GetIousUseCase(moneyRepo);
-      final settleIou = SettleIouUseCase(moneyRepo);
+          final initialTx = await getTx();
 
-      final subs = await getSubs();
-      final sub = subs.first;
-      final initialAutoKill = sub.autoKillEnabled;
+          await addTx(
+            title: 'Coffee at Blue Tokai',
+            category: 'Food',
+            amount: 280.0,
+            mode: 'UPI',
+            iconCodePoint: 0xe532,
+          );
 
-      await toggleAutoKill(sub.id);
-      final updatedSubs = await getSubs();
-      expect(updatedSubs.firstWhere((s) => s.id == sub.id).autoKillEnabled, equals(!initialAutoKill));
+          final updatedTx = await getTx();
+          expect(updatedTx.length, equals(initialTx.length + 1));
+          expect(updatedTx.first.title, equals('Coffee at Blue Tokai'));
+        },
+      );
 
-      final ious = await getIous();
-      final iou = ious.firstWhere((i) => !i.isSettled);
+      test(
+        'Subscription & IOU Use Cases toggle auto-kill and settle debts',
+        () async {
+          final getSubs = GetSubscriptionsUseCase(moneyRepo);
+          final toggleAutoKill = ToggleAutoKillUseCase(moneyRepo);
+          final getIous = GetIousUseCase(moneyRepo);
+          final settleIou = SettleIouUseCase(moneyRepo);
 
-      await settleIou(iou.id);
-      final activeIous = await getIous();
-      expect(activeIous.any((i) => i.id == iou.id), isFalse);
-    });
-  });
+          final subs = await getSubs();
+          final sub = subs.first;
+          final initialAutoKill = sub.autoKillEnabled;
+
+          await toggleAutoKill(sub.id);
+          final updatedSubs = await getSubs();
+          expect(
+            updatedSubs.firstWhere((s) => s.id == sub.id).autoKillEnabled,
+            equals(!initialAutoKill),
+          );
+
+          final ious = await getIous();
+          final iou = ious.firstWhere((i) => !i.isSettled);
+
+          await settleIou(iou.id);
+          final activeIous = await getIous();
+          expect(activeIous.any((i) => i.id == iou.id), isFalse);
+        },
+      );
+    },
+  );
 
   group('Notes Clean Architecture (DataSource -> Repository -> UseCases)', () {
     test('Notes use cases create, pin, and delete notes', () async {
@@ -165,12 +183,17 @@ void main() {
       final notesAfterAdd = await getNotes();
       expect(notesAfterAdd.length, equals(initialNotes.length + 1));
 
-      final created = notesAfterAdd.firstWhere((n) => n.title == 'Project Ideas 2026');
+      final created = notesAfterAdd.firstWhere(
+        (n) => n.title == 'Project Ideas 2026',
+      );
       expect(created.isPinned, isFalse);
 
       await togglePin(created.id);
       final pinnedNotes = await getNotes();
-      expect(pinnedNotes.firstWhere((n) => n.id == created.id).isPinned, isTrue);
+      expect(
+        pinnedNotes.firstWhere((n) => n.id == created.id).isPinned,
+        isTrue,
+      );
 
       await deleteNote(created.id);
       final notesAfterDelete = await getNotes();
@@ -178,60 +201,71 @@ void main() {
     });
   });
 
-  group('Planner Clean Architecture (DataSource -> Repository -> UseCases)', () {
-    test('Planner use cases add, update, toggle, and delete planner tasks', () async {
-      final getPlanner = GetPlannerItemsUseCase(plannerRepo);
-      final addPlanner = AddPlannerItemUseCase(plannerRepo);
-      final updatePlanner = UpdatePlannerItemUseCase(plannerRepo);
-      final togglePlanner = TogglePlannerItemUseCase(plannerRepo);
-      final deletePlanner = DeletePlannerItemUseCase(plannerRepo);
+  group(
+    'Planner Clean Architecture (DataSource -> Repository -> UseCases)',
+    () {
+      test(
+        'Planner use cases add, update, toggle, and delete planner tasks',
+        () async {
+          final getPlanner = GetPlannerItemsUseCase(plannerRepo);
+          final addPlanner = AddPlannerItemUseCase(plannerRepo);
+          final updatePlanner = UpdatePlannerItemUseCase(plannerRepo);
+          final togglePlanner = TogglePlannerItemUseCase(plannerRepo);
+          final deletePlanner = DeletePlannerItemUseCase(plannerRepo);
 
-      final today = DateTime.now().toIso8601String().substring(0, 10);
-      final initialItems = await getPlanner(today);
+          final today = DateTime.now().toIso8601String().substring(0, 10);
+          final initialItems = await getPlanner(today);
 
-      await addPlanner(
-        title: 'Review Architecture Diagram',
-        date: today,
-        category: 'Architecture',
-        colorValue: 0xFF0D9488,
-        iconCodePoint: 0xe532,
-        startTime: '11:00',
-        endTime: '12:00',
+          await addPlanner(
+            title: 'Review Architecture Diagram',
+            date: today,
+            category: 'Architecture',
+            colorValue: 0xFF0D9488,
+            iconCodePoint: 0xe532,
+            startTime: '11:00',
+            endTime: '12:00',
+          );
+
+          final updatedItems = await getPlanner(today);
+          expect(updatedItems.length, equals(initialItems.length + 1));
+
+          final added = updatedItems.firstWhere(
+            (i) => i.title == 'Review Architecture Diagram',
+          );
+          expect(added.isDone, isFalse);
+
+          // Test UpdatePlannerItemUseCase
+          await updatePlanner(
+            id: added.id,
+            title: 'Updated Architecture Diagram Review',
+            date: today,
+            category: 'Important',
+            colorValue: 0xFFEF4444,
+            iconCodePoint: 0xe532,
+            startTime: '02:00 PM',
+            endTime: '03:00 PM',
+          );
+
+          final afterUpdate = await getPlanner(today);
+          final updatedItem = afterUpdate.firstWhere((i) => i.id == added.id);
+          expect(updatedItem.title, 'Updated Architecture Diagram Review');
+          expect(updatedItem.category, 'Important');
+          expect(updatedItem.startTime, '02:00 PM');
+
+          await togglePlanner(added.id);
+          final toggledItems = await getPlanner(today);
+          expect(
+            toggledItems.firstWhere((i) => i.id == added.id).isDone,
+            isTrue,
+          );
+
+          await deletePlanner(added.id);
+          final afterDelete = await getPlanner(today);
+          expect(afterDelete.any((i) => i.id == added.id), isFalse);
+        },
       );
-
-      final updatedItems = await getPlanner(today);
-      expect(updatedItems.length, equals(initialItems.length + 1));
-
-      final added = updatedItems.firstWhere((i) => i.title == 'Review Architecture Diagram');
-      expect(added.isDone, isFalse);
-
-      // Test UpdatePlannerItemUseCase
-      await updatePlanner(
-        id: added.id,
-        title: 'Updated Architecture Diagram Review',
-        date: today,
-        category: 'Important',
-        colorValue: 0xFFEF4444,
-        iconCodePoint: 0xe532,
-        startTime: '02:00 PM',
-        endTime: '03:00 PM',
-      );
-
-      final afterUpdate = await getPlanner(today);
-      final updatedItem = afterUpdate.firstWhere((i) => i.id == added.id);
-      expect(updatedItem.title, 'Updated Architecture Diagram Review');
-      expect(updatedItem.category, 'Important');
-      expect(updatedItem.startTime, '02:00 PM');
-
-      await togglePlanner(added.id);
-      final toggledItems = await getPlanner(today);
-      expect(toggledItems.firstWhere((i) => i.id == added.id).isDone, isTrue);
-
-      await deletePlanner(added.id);
-      final afterDelete = await getPlanner(today);
-      expect(afterDelete.any((i) => i.id == added.id), isFalse);
-    });
-  });
+    },
+  );
 
   group('Vault Clean Architecture (DataSource -> Repository -> UseCases)', () {
     test('Vault use cases fetch passwords and warranties', () async {
@@ -246,5 +280,84 @@ void main() {
       expect(passwords.any((p) => p.title.contains('NetBanking')), isTrue);
       expect(docs.any((d) => d.title.contains('Warranty')), isTrue);
     });
+  });
+
+  group('Idempotent Schema Migration & Seeder Upgrade Regression', () {
+    test(
+      'Upgrading a v2 database that already has transactions.note and habits rows succeeds without duplicate column error',
+      () async {
+        final executor = NativeDatabase.memory(
+          setup: (rawDb) {
+            // Simulate a v2 database where a previous migration already added
+            // "note" to "transactions" before user_version was bumped.
+            rawDb.execute('''
+              CREATE TABLE habits (
+                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                icon_code_point INTEGER NOT NULL,
+                color_value INTEGER NOT NULL,
+                streak_days INTEGER NOT NULL DEFAULT 0,
+                is_done_today INTEGER NOT NULL DEFAULT 0,
+                last_completed_date TEXT NULL,
+                created_at TEXT NOT NULL
+              );
+            ''');
+            rawDb.execute('''
+              INSERT INTO habits (title, icon_code_point, color_value, streak_days, is_done_today, created_at)
+              VALUES ('Existing Habit', 58732, 4280638443, 5, 0, '2026-10-01T00:00:00.000');
+            ''');
+            rawDb.execute('''
+              CREATE TABLE transactions (
+                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                category TEXT NOT NULL,
+                amount REAL NOT NULL,
+                mode TEXT NOT NULL,
+                icon_code_point INTEGER NOT NULL,
+                date TEXT NOT NULL,
+                type TEXT NOT NULL DEFAULT 'expense',
+                note TEXT NULL
+              );
+            ''');
+            rawDb.execute('''
+              CREATE TABLE budget_settings (
+                id INTEGER NOT NULL DEFAULT 1 PRIMARY KEY,
+                monthly_budget REAL NOT NULL DEFAULT 40000.0,
+                fixed_bills REAL NOT NULL DEFAULT 8000.0
+              );
+            ''');
+            rawDb.execute('PRAGMA user_version = 2;');
+          },
+        );
+
+        final upgradedDb = AppDatabase(executor);
+        addTearDown(upgradedDb.close);
+
+        // Trigger migration + seeder on upgraded database
+        await DatabaseSeeder.seedIfEmpty(upgradedDb);
+
+        // Verify Today, Notes, and Money tables all work without error
+        final habits = await upgradedDb.select(upgradedDb.habits).get();
+        expect(habits.single.title, 'Existing Habit');
+
+        final notes = await upgradedDb.select(upgradedDb.notes).get();
+        expect(notes, isEmpty);
+
+        final catBudgets = await upgradedDb
+            .select(upgradedDb.categoryBudgets)
+            .get();
+        expect(catBudgets.length, 8);
+
+        final accounts = await upgradedDb
+            .select(upgradedDb.moneyAccounts)
+            .get();
+        expect(accounts.length, 3);
+
+        final settings = await upgradedDb
+            .select(upgradedDb.budgetSettings)
+            .getSingle();
+        expect(settings.currencyCode, 'INR');
+      },
+    );
   });
 }

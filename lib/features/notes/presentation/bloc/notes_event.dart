@@ -29,7 +29,12 @@ class AddNote extends NotesEvent {
   final String content;
   final int colorValue;
   final String tags;
-  const AddNote({required this.title, required this.content, required this.colorValue, this.tags = ''});
+  const AddNote({
+    required this.title,
+    required this.content,
+    required this.colorValue,
+    this.tags = '',
+  });
   @override
   List<Object?> get props => [title, content, colorValue, tags];
 }

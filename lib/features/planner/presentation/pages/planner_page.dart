@@ -33,12 +33,7 @@ import '../widgets/pomodoro_mode_selector.dart';
 import '../widgets/set_reminder_card.dart';
 import '../widgets/set_reminder_sheet.dart';
 
-enum PlannerSortOption {
-  timeAsc,
-  timeDesc,
-  priority,
-  title,
-}
+enum PlannerSortOption { timeAsc, timeDesc, priority, title }
 
 class PlannerPage extends StatelessWidget {
   const PlannerPage({super.key});
@@ -188,15 +183,14 @@ class _PlannerViewState extends State<_PlannerView>
     },
   ];
 
-  String _formatDateToIso(DateTime dt) =>
-      dt.toIso8601String().substring(0, 10);
+  String _formatDateToIso(DateTime dt) => dt.toIso8601String().substring(0, 10);
 
   static const List<String> _categories = [
     'Personal',
     'Work',
     'Health',
     'Finance',
-    'Important'
+    'Important',
   ];
 
   @override
@@ -240,7 +234,9 @@ class _PlannerViewState extends State<_PlannerView>
   Future<void> _saveCountdowns() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final models = _countdowns.map((c) => CountdownItemModel.fromEntity(c).toJson()).toList();
+      final models = _countdowns
+          .map((c) => CountdownItemModel.fromEntity(c).toJson())
+          .toList();
       await prefs.setString(_countdownsPrefKey, jsonEncode(models));
     } catch (_) {}
   }
@@ -387,7 +383,7 @@ class _PlannerViewState extends State<_PlannerView>
             builder: (context, state) {
               if (state is PlannerLoaded) {
                 return Padding(
-                  padding: const EdgeInsets.only(right: 16),
+                  padding: const EdgeInsets.only(right: AppSpacing.sm),
                   child: Center(
                     child: Text(
                       '${state.completedCount}/${state.items.length} done',
@@ -407,12 +403,16 @@ class _PlannerViewState extends State<_PlannerView>
         bottom: TabBar(
           controller: _tabController,
           labelColor: AppColors.moduleTime,
-          unselectedLabelColor:
-              isDark ? AppColors.darkTextCaption : AppColors.textCaption,
+          unselectedLabelColor: isDark
+              ? AppColors.darkTextCaption
+              : AppColors.textCaption,
           indicatorColor: AppColors.moduleTime,
           indicatorWeight: 3,
-          labelStyle:
-              const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+          labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+          labelStyle: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+          ),
           tabs: const [
             Tab(text: 'Reminders'),
             Tab(text: 'Pomodoro Focus'),
@@ -437,19 +437,23 @@ class _PlannerViewState extends State<_PlannerView>
   Widget _buildRemindersTab(BuildContext context, bool isDark) {
     return BlocBuilder<PlannerBloc, PlannerState>(
       builder: (context, state) {
-        final allItems =
-            state is PlannerLoaded ? state.items : <PlannerItemEntity>[];
+        final allItems = state is PlannerLoaded
+            ? state.items
+            : <PlannerItemEntity>[];
         final totalCount = allItems.length;
         final pendingCount = allItems.where((i) => !i.isDone).length;
         final completedCount = allItems.where((i) => i.isDone).length;
         final overdueCount = allItems.where((i) => i.isOverdue).length;
-        final todayCount =
-            allItems.where((i) => i.isToday || i.isRecurring).length;
+        final todayCount = allItems
+            .where((i) => i.isToday || i.isRecurring)
+            .length;
 
         // Filter items based on status, category, type filter, and search query
         final filteredItems = allItems.where((item) {
           if (_selectedStatusFilter == 'Pending' && item.isDone) return false;
-          if (_selectedStatusFilter == 'Completed' && !item.isDone) return false;
+          if (_selectedStatusFilter == 'Completed' && !item.isDone) {
+            return false;
+          }
           if (_selectedReminderCategoryFilter != 'All' &&
               item.category != _selectedReminderCategoryFilter) {
             return false;
@@ -462,10 +466,14 @@ class _PlannerViewState extends State<_PlannerView>
             final q = _searchQuery.toLowerCase();
             final titleMatch = item.title.toLowerCase().contains(q);
             final notesMatch = item.notes.toLowerCase().contains(q);
-            final checklistMatch =
-                item.checklist.any((c) => c.title.toLowerCase().contains(q));
+            final checklistMatch = item.checklist.any(
+              (c) => c.title.toLowerCase().contains(q),
+            );
             final categoryMatch = item.category.toLowerCase().contains(q);
-            if (!titleMatch && !notesMatch && !checklistMatch && !categoryMatch) {
+            if (!titleMatch &&
+                !notesMatch &&
+                !checklistMatch &&
+                !categoryMatch) {
               return false;
             }
           }
@@ -490,14 +498,18 @@ class _PlannerViewState extends State<_PlannerView>
         filteredItems.sort((a, b) {
           switch (_sortOption) {
             case PlannerSortOption.timeAsc:
-              final dtA = DateTime.tryParse('${a.date} 00:00:00') ?? DateTime(2099);
-              final dtB = DateTime.tryParse('${b.date} 00:00:00') ?? DateTime(2099);
+              final dtA =
+                  DateTime.tryParse('${a.date} 00:00:00') ?? DateTime(2099);
+              final dtB =
+                  DateTime.tryParse('${b.date} 00:00:00') ?? DateTime(2099);
               final dateComp = dtA.compareTo(dtB);
               if (dateComp != 0) return dateComp;
               return (a.startTime ?? '').compareTo(b.startTime ?? '');
             case PlannerSortOption.timeDesc:
-              final dtA = DateTime.tryParse('${a.date} 00:00:00') ?? DateTime(1970);
-              final dtB = DateTime.tryParse('${b.date} 00:00:00') ?? DateTime(1970);
+              final dtA =
+                  DateTime.tryParse('${a.date} 00:00:00') ?? DateTime(1970);
+              final dtB =
+                  DateTime.tryParse('${b.date} 00:00:00') ?? DateTime(1970);
               final dateComp = dtB.compareTo(dtA);
               if (dateComp != 0) return dateComp;
               return (b.startTime ?? '').compareTo(a.startTime ?? '');
@@ -508,280 +520,305 @@ class _PlannerViewState extends State<_PlannerView>
           }
         });
 
+        const gutter = EdgeInsets.symmetric(horizontal: AppSpacing.pageGutter);
+
         return ListView(
-          padding:
-              const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 90),
+          // Horizontal gutter is applied per section so the templates row can
+          // scroll edge-to-edge while everything else stays on the gutter.
+          padding: const EdgeInsets.only(top: AppSpacing.md, bottom: 96),
           children: [
-            // 1. Hero Productivity Metrics Bar
-            _buildProductivityMetricsBar(
-              totalCount: totalCount,
-              todayCount: todayCount,
-              overdueCount: overdueCount,
-              completedCount: completedCount,
-              isDark: isDark,
-            ),
+            Padding(
+              padding: gutter,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // 1. Overview stats
+                  _buildProductivityMetricsBar(
+                    totalCount: totalCount,
+                    todayCount: todayCount,
+                    overdueCount: overdueCount,
+                    completedCount: completedCount,
+                    isDark: isDark,
+                  ),
+                  AppSpacing.gapH16,
 
-            // 2. Custom Quick Set Reminder Card
-            SetReminderCard(
-              controller: _quickReminderController,
-              selectedTime: _selectedTime,
-              selectedCategory: _selectedCategory,
-              categoryColor: _getCategoryColor(_selectedCategory),
-              categoryIcon: _getCategoryIcon(_selectedCategory),
-              isDark: isDark,
-              onPickTime: () => _pickQuickTime(context),
-              onCycleCategory: _cycleCategory,
-              onSubmit: () => _submitQuickReminder(context),
-              onOpenFullOptions: () => _openFullReminderSheet(context, isDark),
-            ),
-            AppSpacing.gapH12,
-
-            // 3. Quick Shortcut Templates Row
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Row(
-                children: _quickTemplates.map((tmpl) {
-                  final catColor =
-                      _getCategoryColor(tmpl['category'] as String);
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: ActionChip(
-                      avatar: Icon(tmpl['icon'] as IconData,
-                          size: 13, color: catColor),
-                      label: Text(
-                        tmpl['title'] as String,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: isDark
-                              ? AppColors.darkTextHeading
-                              : AppColors.textHeading,
-                        ),
-                      ),
-                      backgroundColor: isDark
-                          ? AppColors.darkSurfaceSecondary
-                          : AppColors.surfaceSecondary,
-                      side: BorderSide(
-                        color: isDark
-                            ? AppColors.darkDivider
-                            : AppColors.divider,
-                        width: 0.8,
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      onPressed: () => _applyQuickTemplate(tmpl),
-                    ),
-                  );
-                }).toList(),
+                  // 2. Quick add
+                  SetReminderCard(
+                    controller: _quickReminderController,
+                    selectedTime: _selectedTime,
+                    selectedCategory: _selectedCategory,
+                    categoryColor: _getCategoryColor(_selectedCategory),
+                    categoryIcon: _getCategoryIcon(_selectedCategory),
+                    isDark: isDark,
+                    onPickTime: () => _pickQuickTime(context),
+                    onCycleCategory: _cycleCategory,
+                    onSubmit: () => _submitQuickReminder(context),
+                    onOpenFullOptions: () =>
+                        _openFullReminderSheet(context, isDark),
+                  ),
+                ],
               ),
             ),
             AppSpacing.gapH12,
 
-            // 4. Live Search Bar & AppDropdownMenu Filter / Sort Controls
-            _buildControlsBar(isDark),
-            AppSpacing.gapH8,
-
-            // 5. Segmented Status Tabs & Clear Done Action
-            _buildSegmentedStatusBar(
-              totalCount,
-              pendingCount,
-              completedCount,
-              isDark,
+            // 3. Quick templates (edge-to-edge horizontal scroll)
+            SizedBox(
+              height: 36,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: gutter,
+                itemCount: _quickTemplates.length,
+                separatorBuilder: (_, _) => AppSpacing.gapW8,
+                itemBuilder: (context, index) {
+                  final tmpl = _quickTemplates[index];
+                  return _buildTemplateChip(tmpl, isDark);
+                },
+              ),
             ),
-            AppSpacing.gapH12,
+            AppSpacing.gapH24,
 
-            // 6. Items from DB
-            if (state is PlannerLoading || state is PlannerInitial)
-              ...[1, 2, 3].map(
-                (_) => const Padding(
-                  padding: EdgeInsets.only(bottom: 12),
-                  child: AppShimmerLoader.card(height: 100),
-                ),
-              )
-            else if (state is PlannerLoaded) ...[
-              if (filteredItems.isEmpty)
-                AppEmptyState(
-                  icon: _searchQuery.isNotEmpty
-                      ? Icons.search_off_rounded
-                      : (_selectedStatusFilter == 'Completed'
-                          ? Icons.task_alt_rounded
-                          : Icons.alarm_add_rounded),
-                  title: _searchQuery.isNotEmpty
-                      ? 'No matching reminders'
-                      : (_selectedStatusFilter == 'Completed'
-                          ? 'No completed tasks yet'
-                          : (_selectedReminderCategoryFilter == 'All'
-                              ? 'No reminders yet'
-                              : 'No $_selectedReminderCategoryFilter reminders')),
-                  description: _searchQuery.isNotEmpty
-                      ? 'No reminders match "$_searchQuery". Try a different search.'
-                      : (_selectedStatusFilter == 'Completed'
-                          ? 'Finish a reminder to see it archived here.'
-                          : 'Tap "Quick Set" above or select a template to create one.'),
-                  actionLabel: _searchQuery.isNotEmpty
-                      ? 'Clear Search'
-                      : (_selectedReminderCategoryFilter != 'All' || _typeFilter != 'all'
-                          ? 'Reset Filters'
-                          : null),
-                  onAction: () {
-                    setState(() {
-                      _searchQuery = '';
-                      _selectedReminderCategoryFilter = 'All';
-                      _typeFilter = 'all';
-                    });
-                  },
-                )
-              else if (_searchQuery.isNotEmpty ||
-                  _selectedStatusFilter != 'All' ||
-                  _selectedReminderCategoryFilter != 'All' ||
-                  _typeFilter != 'all') ...[
-                _buildSectionHeader(
-                  title: _searchQuery.isNotEmpty
-                      ? 'Search Results'
-                      : (_selectedReminderCategoryFilter != 'All'
-                          ? '$_selectedReminderCategoryFilter Reminders'
-                          : (_typeFilter != 'all'
-                              ? (_typeFilter == 'habits' ? 'Habits' : 'One-Off Reminders')
-                              : '$_selectedStatusFilter Reminders')),
-                  icon: Icons.filter_list_rounded,
-                  color: AppColors.moduleTime,
-                  count: filteredItems.length,
-                  isDark: isDark,
-                ),
-                ...filteredItems.map(
-                  (item) => _buildReminderItemCard(context, item, isDark),
-                ),
-              ] else ...[
-                () {
-                  final overdue =
-                      filteredItems.where((i) => i.isOverdue).toList();
-                  final todayAndRecurring = filteredItems
-                      .where((i) =>
-                          !i.isDone &&
-                          !i.isOverdue &&
-                          (i.isToday || i.isRecurring))
-                      .toList();
-                  final upcoming = filteredItems
-                      .where((i) => !i.isDone && !i.isOverdue && i.isUpcoming)
-                      .toList();
-                  final otherPending = filteredItems
-                      .where((i) =>
-                          !i.isDone &&
-                          !i.isOverdue &&
-                          !i.isToday &&
-                          !i.isRecurring &&
-                          !i.isUpcoming)
-                      .toList();
-                  final completed =
-                      filteredItems.where((i) => i.isDone).toList();
+            Padding(
+              padding: gutter,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // 4. Search + filter + sort
+                  _buildControlsBar(isDark),
+                  AppSpacing.gapH12,
 
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 1. Overdue Section
-                      if (overdue.isNotEmpty) ...[
-                        _buildSectionHeader(
-                          title: 'Overdue',
-                          icon: Icons.warning_amber_rounded,
-                          color: AppColors.error,
-                          count: overdue.length,
-                          isDark: isDark,
-                          onMarkAllDone: () => _markAllDone(overdue),
-                        ),
-                        ...overdue.map(
-                          (item) =>
-                              _buildReminderItemCard(context, item, isDark),
-                        ),
-                      ],
+                  // 5. Status segments
+                  _buildSegmentedStatusBar(
+                    totalCount,
+                    pendingCount,
+                    completedCount,
+                    isDark,
+                  ),
+                  AppSpacing.gapH8,
 
-                      // 2. Today & Recurring Routines
-                      if (todayAndRecurring.isNotEmpty) ...[
-                        _buildSectionHeader(
-                          title: 'Today & Routines',
-                          icon: Icons.today_rounded,
-                          color: AppColors.moduleTime,
-                          count: todayAndRecurring.length,
-                          isDark: isDark,
-                          onMarkAllDone: () => _markAllDone(todayAndRecurring),
-                        ),
-                        ...todayAndRecurring.map(
-                          (item) =>
-                              _buildReminderItemCard(context, item, isDark),
-                        ),
-                      ],
+                  // 6. Items from DB
+                  if (state is PlannerLoading || state is PlannerInitial)
+                    ...[1, 2, 3].map(
+                      (_) => const Padding(
+                        padding: EdgeInsets.only(bottom: 12),
+                        child: AppShimmerLoader.card(height: 100),
+                      ),
+                    )
+                  else if (state is PlannerLoaded) ...[
+                    if (filteredItems.isEmpty)
+                      AppEmptyState(
+                        icon: _searchQuery.isNotEmpty
+                            ? Icons.search_off_rounded
+                            : (_selectedStatusFilter == 'Completed'
+                                  ? Icons.task_alt_rounded
+                                  : Icons.alarm_add_rounded),
+                        title: _searchQuery.isNotEmpty
+                            ? 'No matching reminders'
+                            : (_selectedStatusFilter == 'Completed'
+                                  ? 'No completed tasks yet'
+                                  : (_selectedReminderCategoryFilter == 'All'
+                                        ? 'No reminders yet'
+                                        : 'No $_selectedReminderCategoryFilter reminders')),
+                        description: _searchQuery.isNotEmpty
+                            ? 'No reminders match "$_searchQuery". Try a different search.'
+                            : (_selectedStatusFilter == 'Completed'
+                                  ? 'Finish a reminder to see it archived here.'
+                                  : 'Tap "Quick Set" above or select a template to create one.'),
+                        actionLabel: _searchQuery.isNotEmpty
+                            ? 'Clear Search'
+                            : (_selectedReminderCategoryFilter != 'All' ||
+                                      _typeFilter != 'all'
+                                  ? 'Reset Filters'
+                                  : null),
+                        onAction: () {
+                          setState(() {
+                            _searchQuery = '';
+                            _selectedReminderCategoryFilter = 'All';
+                            _typeFilter = 'all';
+                          });
+                        },
+                      )
+                    else if (_searchQuery.isNotEmpty ||
+                        _selectedStatusFilter != 'All' ||
+                        _selectedReminderCategoryFilter != 'All' ||
+                        _typeFilter != 'all') ...[
+                      _buildSectionHeader(
+                        title: _searchQuery.isNotEmpty
+                            ? 'Search Results'
+                            : (_selectedReminderCategoryFilter != 'All'
+                                  ? '$_selectedReminderCategoryFilter Reminders'
+                                  : (_typeFilter != 'all'
+                                        ? (_typeFilter == 'habits'
+                                              ? 'Habits'
+                                              : 'One-Off Reminders')
+                                        : '$_selectedStatusFilter Reminders')),
+                        icon: Icons.filter_list_rounded,
+                        color: AppColors.moduleTime,
+                        count: filteredItems.length,
+                        isDark: isDark,
+                      ),
+                      ...filteredItems.map(
+                        (item) => _buildReminderItemCard(context, item, isDark),
+                      ),
+                    ] else ...[
+                      () {
+                        final overdue = filteredItems
+                            .where((i) => i.isOverdue)
+                            .toList();
+                        final todayAndRecurring = filteredItems
+                            .where(
+                              (i) =>
+                                  !i.isDone &&
+                                  !i.isOverdue &&
+                                  (i.isToday || i.isRecurring),
+                            )
+                            .toList();
+                        final upcoming = filteredItems
+                            .where(
+                              (i) => !i.isDone && !i.isOverdue && i.isUpcoming,
+                            )
+                            .toList();
+                        final otherPending = filteredItems
+                            .where(
+                              (i) =>
+                                  !i.isDone &&
+                                  !i.isOverdue &&
+                                  !i.isToday &&
+                                  !i.isRecurring &&
+                                  !i.isUpcoming,
+                            )
+                            .toList();
+                        final completed = filteredItems
+                            .where((i) => i.isDone)
+                            .toList();
 
-                      // 3. Upcoming Section
-                      if (upcoming.isNotEmpty) ...[
-                        _buildSectionHeader(
-                          title: 'Upcoming',
-                          icon: Icons.upcoming_rounded,
-                          color: AppColors.primary,
-                          count: upcoming.length,
-                          isDark: isDark,
-                        ),
-                        ...upcoming.map(
-                          (item) =>
-                              _buildReminderItemCard(context, item, isDark),
-                        ),
-                      ],
-
-                      // 4. Other Pending Section
-                      if (otherPending.isNotEmpty) ...[
-                        _buildSectionHeader(
-                          title: 'Other Reminders',
-                          icon: Icons.checklist_rounded,
-                          color: AppColors.textBody,
-                          count: otherPending.length,
-                          isDark: isDark,
-                        ),
-                        ...otherPending.map(
-                          (item) =>
-                              _buildReminderItemCard(context, item, isDark),
-                        ),
-                      ],
-
-                      // 5. Completed Section (Collapsible)
-                      if (completed.isNotEmpty) ...[
-                        _buildSectionHeader(
-                          title: 'Completed',
-                          icon: Icons.check_circle_outline_rounded,
-                          color: AppColors.success,
-                          count: completed.length,
-                          isDark: isDark,
-                          trailing: TextButton(
-                            onPressed: () {
-                              setState(() {
-                                _isCompletedExpanded = !_isCompletedExpanded;
-                              });
-                            },
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
-                              minimumSize: Size.zero,
-                            ),
-                            child: Text(
-                              _isCompletedExpanded ? 'Hide' : 'Show',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: isDark
-                                    ? AppColors.darkTextCaption
-                                    : AppColors.textCaption,
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // 1. Overdue Section
+                            if (overdue.isNotEmpty) ...[
+                              _buildSectionHeader(
+                                title: 'Overdue',
+                                icon: Icons.warning_amber_rounded,
+                                color: AppColors.error,
+                                count: overdue.length,
+                                isDark: isDark,
+                                onMarkAllDone: () => _markAllDone(overdue),
                               ),
-                            ),
-                          ),
-                        ),
-                        if (_isCompletedExpanded)
-                          ...completed.map(
-                            (item) =>
-                                _buildReminderItemCard(context, item, isDark),
-                          ),
-                      ],
+                              ...overdue.map(
+                                (item) => _buildReminderItemCard(
+                                  context,
+                                  item,
+                                  isDark,
+                                ),
+                              ),
+                            ],
+
+                            // 2. Today & Recurring Routines
+                            if (todayAndRecurring.isNotEmpty) ...[
+                              _buildSectionHeader(
+                                title: 'Today & Routines',
+                                icon: Icons.today_rounded,
+                                color: AppColors.moduleTime,
+                                count: todayAndRecurring.length,
+                                isDark: isDark,
+                                onMarkAllDone: () =>
+                                    _markAllDone(todayAndRecurring),
+                              ),
+                              ...todayAndRecurring.map(
+                                (item) => _buildReminderItemCard(
+                                  context,
+                                  item,
+                                  isDark,
+                                ),
+                              ),
+                            ],
+
+                            // 3. Upcoming Section
+                            if (upcoming.isNotEmpty) ...[
+                              _buildSectionHeader(
+                                title: 'Upcoming',
+                                icon: Icons.upcoming_rounded,
+                                color: AppColors.primary,
+                                count: upcoming.length,
+                                isDark: isDark,
+                              ),
+                              ...upcoming.map(
+                                (item) => _buildReminderItemCard(
+                                  context,
+                                  item,
+                                  isDark,
+                                ),
+                              ),
+                            ],
+
+                            // 4. Other Pending Section
+                            if (otherPending.isNotEmpty) ...[
+                              _buildSectionHeader(
+                                title: 'Other Reminders',
+                                icon: Icons.checklist_rounded,
+                                color: AppColors.textBody,
+                                count: otherPending.length,
+                                isDark: isDark,
+                              ),
+                              ...otherPending.map(
+                                (item) => _buildReminderItemCard(
+                                  context,
+                                  item,
+                                  isDark,
+                                ),
+                              ),
+                            ],
+
+                            // 5. Completed Section (Collapsible)
+                            if (completed.isNotEmpty) ...[
+                              _buildSectionHeader(
+                                title: 'Completed',
+                                icon: Icons.check_circle_outline_rounded,
+                                color: AppColors.success,
+                                count: completed.length,
+                                isDark: isDark,
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _buildHeaderAction(
+                                      label: 'Clear',
+                                      color: AppColors.error,
+                                      onTap: () =>
+                                          _confirmClearCompleted(context),
+                                    ),
+                                    AppSpacing.gapW8,
+                                    _buildHeaderAction(
+                                      label: _isCompletedExpanded
+                                          ? 'Hide'
+                                          : 'Show',
+                                      color: isDark
+                                          ? AppColors.darkTextCaption
+                                          : AppColors.textCaption,
+                                      onTap: () => setState(
+                                        () => _isCompletedExpanded =
+                                            !_isCompletedExpanded,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (_isCompletedExpanded)
+                                ...completed.map(
+                                  (item) => _buildReminderItemCard(
+                                    context,
+                                    item,
+                                    isDark,
+                                  ),
+                                ),
+                            ],
+                          ],
+                        );
+                      }(),
                     ],
-                  );
-                }(),
-              ],
-            ],
+                  ],
+                ],
+              ),
+            ),
           ],
         );
       },
@@ -795,70 +832,52 @@ class _PlannerViewState extends State<_PlannerView>
     required int completedCount,
     required bool isDark,
   }) {
-    final completionRate =
-        totalCount > 0 ? ((completedCount / totalCount) * 100).round() : 0;
-    final cardBg =
-        isDark ? AppColors.darkCardBackground : AppColors.cardBackground;
+    final completionRate = totalCount > 0
+        ? ((completedCount / totalCount) * 100).round()
+        : 0;
     final borderCol = isDark ? AppColors.darkDivider : AppColors.divider;
 
+    Widget divider() => Container(width: 1, height: 32, color: borderCol);
+
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm, vertical: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
       decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: AppRadius.radiusMd,
-        border: Border.all(color: borderCol, width: 0.8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
+        borderRadius: AppRadius.radiusLg,
+        border: Border.all(color: borderCol),
       ),
       child: Row(
         children: [
           Expanded(
             child: _buildMetricTile(
-              label: 'ACTIVE',
+              label: 'Active',
               value: '${totalCount - completedCount}',
-              color: AppColors.moduleTime,
-              icon: Icons.checklist_rounded,
               isDark: isDark,
             ),
           ),
-          Container(width: 1, height: 26, color: borderCol),
+          divider(),
           Expanded(
             child: _buildMetricTile(
-              label: 'TODAY',
+              label: 'Today',
               value: '$todayCount',
-              color: AppColors.success,
-              icon: Icons.today_rounded,
               isDark: isDark,
             ),
           ),
-          Container(width: 1, height: 26, color: borderCol),
+          divider(),
           Expanded(
             child: _buildMetricTile(
-              label: 'OVERDUE',
+              label: 'Overdue',
               value: '$overdueCount',
-              color: overdueCount > 0
-                  ? AppColors.error
-                  : (isDark
-                      ? AppColors.darkTextCaption
-                      : AppColors.textCaption),
-              icon: Icons.warning_amber_rounded,
+              valueColor: overdueCount > 0 ? AppColors.error : null,
               isDark: isDark,
             ),
           ),
-          Container(width: 1, height: 26, color: borderCol),
+          divider(),
           Expanded(
             child: _buildMetricTile(
-              label: 'RATE',
+              label: 'Done',
               value: '$completionRate%',
-              color: AppColors.primary,
-              icon: Icons.pie_chart_outline_rounded,
+              valueColor: AppColors.moduleTime,
               isDark: isDark,
             ),
           ),
@@ -870,40 +889,120 @@ class _PlannerViewState extends State<_PlannerView>
   Widget _buildMetricTile({
     required String label,
     required String value,
-    required Color color,
-    required IconData icon,
     required bool isDark,
+    Color? valueColor,
   }) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 12, color: color),
-            const SizedBox(width: 3),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                color:
-                    isDark ? AppColors.darkTextHeading : AppColors.textHeading,
-              ),
-            ),
-          ],
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 20,
+            height: 1.2,
+            fontWeight: FontWeight.w700,
+            fontFeatures: const [FontFeature.tabularFigures()],
+            color:
+                valueColor ??
+                (isDark ? AppColors.darkTextHeading : AppColors.textHeading),
+          ),
         ),
         const SizedBox(height: 2),
         Text(
           label,
           style: TextStyle(
-            fontSize: 8.5,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.5,
-            color: color,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildTemplateChip(Map<String, dynamic> tmpl, bool isDark) {
+    final catColor = _getCategoryColor(tmpl['category'] as String);
+    return Material(
+      color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
+      shape: StadiumBorder(
+        side: BorderSide(
+          color: isDark ? AppColors.darkDivider : AppColors.divider,
+        ),
+      ),
+      child: InkWell(
+        customBorder: const StadiumBorder(),
+        onTap: () => _applyQuickTemplate(tmpl),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(tmpl['icon'] as IconData, size: 16, color: catColor),
+              const SizedBox(width: 6),
+              Text(
+                tmpl['title'] as String,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: isDark
+                      ? AppColors.darkTextHeading
+                      : AppColors.textHeading,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Square 48px icon button that matches the search field's height/border.
+  Widget _buildControlSquare({
+    required IconData icon,
+    required bool isDark,
+    bool isActive = false,
+  }) {
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: isActive
+            ? AppColors.moduleTime.withValues(alpha: 0.12)
+            : (isDark ? AppColors.darkSurfaceSecondary : Colors.white),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isActive
+              ? AppColors.moduleTime.withValues(alpha: 0.5)
+              : (isDark ? AppColors.darkBorder : AppColors.border),
+        ),
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Icon(
+            icon,
+            size: 20,
+            color: isActive
+                ? AppColors.moduleTime
+                : (isDark ? AppColors.darkIconColor : AppColors.iconColor),
+          ),
+          if (isActive)
+            const Positioned(
+              top: 10,
+              right: 10,
+              child: SizedBox(
+                width: 7,
+                height: 7,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.moduleTime,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -915,7 +1014,7 @@ class _PlannerViewState extends State<_PlannerView>
       children: [
         Expanded(
           child: SearchBarWidget(
-            hintText: 'Search title, notes, subtasks...',
+            hintText: 'Search reminders',
             onChanged: (query) => setState(() => _searchQuery = query.trim()),
             onClear: () => setState(() => _searchQuery = ''),
           ),
@@ -947,8 +1046,11 @@ class _PlannerViewState extends State<_PlannerView>
               icon: Icons.grid_view_rounded,
               label: 'All Categories',
               trailing: _selectedReminderCategoryFilter == 'All'
-                  ? const Icon(Icons.check_rounded,
-                      size: 14, color: AppColors.moduleTime)
+                  ? const Icon(
+                      Icons.check_rounded,
+                      size: 14,
+                      color: AppColors.moduleTime,
+                    )
                   : null,
             ),
             ..._categories.map(
@@ -958,8 +1060,11 @@ class _PlannerViewState extends State<_PlannerView>
                 label: cat,
                 tintColor: _getCategoryColor(cat),
                 trailing: _selectedReminderCategoryFilter == cat
-                    ? Icon(Icons.check_rounded,
-                        size: 14, color: _getCategoryColor(cat))
+                    ? Icon(
+                        Icons.check_rounded,
+                        size: 14,
+                        color: _getCategoryColor(cat),
+                      )
                     : null,
               ),
             ),
@@ -973,8 +1078,11 @@ class _PlannerViewState extends State<_PlannerView>
               icon: Icons.all_inclusive_rounded,
               label: 'All Types',
               trailing: _typeFilter == 'all'
-                  ? const Icon(Icons.check_rounded,
-                      size: 14, color: AppColors.moduleTime)
+                  ? const Icon(
+                      Icons.check_rounded,
+                      size: 14,
+                      color: AppColors.moduleTime,
+                    )
                   : null,
             ),
             AppDropdownItem(
@@ -983,8 +1091,11 @@ class _PlannerViewState extends State<_PlannerView>
               label: 'Recurring Habits Only',
               tintColor: AppColors.moduleTime,
               trailing: _typeFilter == 'habits'
-                  ? const Icon(Icons.check_rounded,
-                      size: 14, color: AppColors.moduleTime)
+                  ? const Icon(
+                      Icons.check_rounded,
+                      size: 14,
+                      color: AppColors.moduleTime,
+                    )
                   : null,
             ),
             AppDropdownItem(
@@ -992,8 +1103,11 @@ class _PlannerViewState extends State<_PlannerView>
               icon: Icons.event_note_rounded,
               label: 'One-off Reminders Only',
               trailing: _typeFilter == 'one_off'
-                  ? const Icon(Icons.check_rounded,
-                      size: 14, color: AppColors.moduleTime)
+                  ? const Icon(
+                      Icons.check_rounded,
+                      size: 14,
+                      color: AppColors.moduleTime,
+                    )
                   : null,
             ),
             AppDropdownItem(
@@ -1002,8 +1116,11 @@ class _PlannerViewState extends State<_PlannerView>
               label: 'Overdue Only',
               tintColor: AppColors.error,
               trailing: _typeFilter == 'overdue'
-                  ? const Icon(Icons.check_rounded,
-                      size: 14, color: AppColors.error)
+                  ? const Icon(
+                      Icons.check_rounded,
+                      size: 14,
+                      color: AppColors.error,
+                    )
                   : null,
             ),
             if (hasActiveFilter) ...[
@@ -1016,45 +1133,10 @@ class _PlannerViewState extends State<_PlannerView>
               ),
             ],
           ],
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: hasActiveFilter
-                  ? AppColors.moduleTime.withValues(alpha: 0.15)
-                  : (isDark
-                      ? AppColors.darkSurfaceSecondary
-                      : AppColors.surfaceSecondary),
-              borderRadius: AppRadius.radiusSm,
-              border: Border.all(
-                color: hasActiveFilter
-                    ? AppColors.moduleTime.withValues(alpha: 0.5)
-                    : (isDark ? AppColors.darkDivider : AppColors.divider),
-                width: 0.8,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.filter_list_rounded,
-                  size: 16,
-                  color: hasActiveFilter
-                      ? AppColors.moduleTime
-                      : (isDark ? AppColors.darkIconColor : AppColors.iconColor),
-                ),
-                if (hasActiveFilter) ...[
-                  const SizedBox(width: 4),
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: const BoxDecoration(
-                      color: AppColors.moduleTime,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ],
-              ],
-            ),
+          child: _buildControlSquare(
+            icon: Icons.tune_rounded,
+            isDark: isDark,
+            isActive: hasActiveFilter,
           ),
         ),
         AppSpacing.gapW8,
@@ -1073,8 +1155,11 @@ class _PlannerViewState extends State<_PlannerView>
               icon: Icons.access_time_rounded,
               label: 'Time (Earliest First)',
               trailing: _sortOption == PlannerSortOption.timeAsc
-                  ? const Icon(Icons.check_rounded,
-                      size: 14, color: AppColors.moduleTime)
+                  ? const Icon(
+                      Icons.check_rounded,
+                      size: 14,
+                      color: AppColors.moduleTime,
+                    )
                   : null,
             ),
             AppDropdownItem(
@@ -1082,8 +1167,11 @@ class _PlannerViewState extends State<_PlannerView>
               icon: Icons.history_toggle_off_rounded,
               label: 'Time (Latest First)',
               trailing: _sortOption == PlannerSortOption.timeDesc
-                  ? const Icon(Icons.check_rounded,
-                      size: 14, color: AppColors.moduleTime)
+                  ? const Icon(
+                      Icons.check_rounded,
+                      size: 14,
+                      color: AppColors.moduleTime,
+                    )
                   : null,
             ),
             AppDropdownItem(
@@ -1091,8 +1179,11 @@ class _PlannerViewState extends State<_PlannerView>
               icon: Icons.flag_rounded,
               label: 'Priority (Urgent First)',
               trailing: _sortOption == PlannerSortOption.priority
-                  ? const Icon(Icons.check_rounded,
-                      size: 14, color: AppColors.moduleTime)
+                  ? const Icon(
+                      Icons.check_rounded,
+                      size: 14,
+                      color: AppColors.moduleTime,
+                    )
                   : null,
             ),
             AppDropdownItem(
@@ -1100,28 +1191,17 @@ class _PlannerViewState extends State<_PlannerView>
               icon: Icons.sort_by_alpha_rounded,
               label: 'Title (A to Z)',
               trailing: _sortOption == PlannerSortOption.title
-                  ? const Icon(Icons.check_rounded,
-                      size: 14, color: AppColors.moduleTime)
+                  ? const Icon(
+                      Icons.check_rounded,
+                      size: 14,
+                      color: AppColors.moduleTime,
+                    )
                   : null,
             ),
           ],
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.darkSurfaceSecondary
-                  : AppColors.surfaceSecondary,
-              borderRadius: AppRadius.radiusSm,
-              border: Border.all(
-                color: isDark ? AppColors.darkDivider : AppColors.divider,
-                width: 0.8,
-              ),
-            ),
-            child: Icon(
-              Icons.swap_vert_rounded,
-              size: 16,
-              color: isDark ? AppColors.darkIconColor : AppColors.iconColor,
-            ),
+          child: _buildControlSquare(
+            icon: Icons.swap_vert_rounded,
+            isDark: isDark,
           ),
         ),
       ],
@@ -1134,26 +1214,22 @@ class _PlannerViewState extends State<_PlannerView>
     int completedCount,
     bool isDark,
   ) {
-    final statusBg =
-        isDark ? AppColors.darkSurfaceSecondary : AppColors.surfaceSecondary;
     final hasActiveFilter =
         _selectedReminderCategoryFilter != 'All' || _typeFilter != 'all';
 
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Segmented capsule
         Container(
-          padding: const EdgeInsets.all(3),
+          height: 44,
+          padding: const EdgeInsets.all(AppSpacing.xxs),
           decoration: BoxDecoration(
-            color: statusBg,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isDark ? AppColors.darkDivider : AppColors.divider,
-              width: 0.6,
-            ),
+            color: isDark
+                ? AppColors.darkSurfaceSecondary
+                : AppColors.surfaceSecondary,
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
               _buildSegmentPill('All', totalCount, isDark),
               _buildSegmentPill('Pending', pendingCount, isDark),
@@ -1161,66 +1237,41 @@ class _PlannerViewState extends State<_PlannerView>
             ],
           ),
         ),
-        const Spacer(),
 
-        // Active Filter indicator badge with quick clear
-        if (hasActiveFilter)
-          InkWell(
-            onTap: () => setState(() {
+        // Active filter summary with quick clear
+        if (hasActiveFilter) ...[
+          AppSpacing.gapH12,
+          InputChip(
+            label: Text(
+              _selectedReminderCategoryFilter != 'All'
+                  ? _selectedReminderCategoryFilter
+                  : (_typeFilter == 'habits'
+                        ? 'Recurring only'
+                        : (_typeFilter == 'overdue'
+                              ? 'Overdue only'
+                              : 'One-off only')),
+            ),
+            labelStyle: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.moduleTime,
+            ),
+            avatar: const Icon(
+              Icons.filter_list_rounded,
+              size: 16,
+              color: AppColors.moduleTime,
+            ),
+            deleteIcon: const Icon(Icons.close_rounded, size: 16),
+            deleteIconColor: AppColors.moduleTime,
+            onDeleted: () => setState(() {
               _selectedReminderCategoryFilter = 'All';
               _typeFilter = 'all';
             }),
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppColors.moduleTime.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    _selectedReminderCategoryFilter != 'All'
-                        ? _selectedReminderCategoryFilter
-                        : (_typeFilter == 'habits'
-                            ? 'Habits'
-                            : (_typeFilter == 'overdue'
-                                ? 'Overdue'
-                                : 'One-off')),
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.moduleTime,
-                    ),
-                  ),
-                  const SizedBox(width: 3),
-                  const Icon(Icons.close_rounded,
-                      size: 12, color: AppColors.moduleTime),
-                ],
-              ),
-            ),
-          ),
-
-        // Clear Done button if completed items exist
-        if (completedCount > 0) ...[
-          AppSpacing.gapW8,
-          TextButton.icon(
-            onPressed: () => _confirmClearCompleted(context),
-            icon: const Icon(Icons.delete_sweep_rounded,
-                size: 14, color: AppColors.error),
-            label: const Text(
-              'Clear Done',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: AppColors.error,
-              ),
-            ),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              minimumSize: Size.zero,
-            ),
+            backgroundColor: AppColors.moduleTime.withValues(alpha: 0.1),
+            side: BorderSide.none,
+            shape: const StadiumBorder(),
+            visualDensity: VisualDensity.compact,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
         ],
       ],
@@ -1229,36 +1280,57 @@ class _PlannerViewState extends State<_PlannerView>
 
   Widget _buildSegmentPill(String title, int count, bool isDark) {
     final isSelected = _selectedStatusFilter == title;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedStatusFilter = title),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? (isDark ? AppColors.darkCardBackground : Colors.white)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
-                    blurRadius: 4,
-                    offset: const Offset(0, 1),
-                  ),
-                ]
-              : null,
-        ),
-        child: Text(
-          '$title ($count)',
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+    final textColor = isSelected
+        ? (isDark ? AppColors.darkTextHeading : AppColors.textHeading)
+        : (isDark ? AppColors.darkTextCaption : AppColors.textCaption);
+
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => setState(() => _selectedStatusFilter = title),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
             color: isSelected
-                ? AppColors.moduleTime
-                : (isDark
-                    ? AppColors.darkTextCaption
-                    : AppColors.textCaption),
+                ? (isDark ? AppColors.darkCardBackground : Colors.white)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(9),
+            boxShadow: isSelected && !isDark
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ]
+                : null,
+          ),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(text: title),
+                  TextSpan(
+                    text: '  $count',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: isSelected
+                          ? AppColors.moduleTime
+                          : (isDark
+                                ? AppColors.darkTextMuted
+                                : AppColors.textMuted),
+                    ),
+                  ),
+                ],
+              ),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: textColor,
+              ),
+            ),
           ),
         ),
       ),
@@ -1275,98 +1347,91 @@ class _PlannerViewState extends State<_PlannerView>
     VoidCallback? onMarkAllDone,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(top: 14, bottom: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: AppRadius.radiusSm,
-                ),
-                child: Icon(icon, size: 14, color: color),
+      padding: const EdgeInsets.only(top: AppSpacing.md, bottom: AppSpacing.sm),
+      child: SizedBox(
+        height: 28,
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: color),
+            AppSpacing.gapW8,
+            Text(
+              title,
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: isDark
+                    ? AppColors.darkTextHeading
+                    : AppColors.textHeading,
               ),
-              AppSpacing.gapW8,
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: isDark
-                      ? AppColors.darkTextHeading
-                      : AppColors.textHeading,
-                  letterSpacing: 0.2,
-                ),
+            ),
+            AppSpacing.gapW8,
+            Text(
+              '$count',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: isDark
+                    ? AppColors.darkTextCaption
+                    : AppColors.textCaption,
               ),
-              const SizedBox(width: 6),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.14),
-                  borderRadius: AppRadius.radiusFull,
-                ),
-                child: Text(
-                  '$count',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    color: color,
-                  ),
-                ),
+            ),
+            const Spacer(),
+            if (onMarkAllDone != null)
+              _buildHeaderAction(
+                label: 'Mark All Done',
+                color: color,
+                onTap: onMarkAllDone,
               ),
-            ],
-          ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (onMarkAllDone != null)
-                TextButton(
-                  onPressed: onMarkAllDone,
-                  style: TextButton.styleFrom(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    minimumSize: Size.zero,
-                  ),
-                  child: Text(
-                    'Mark All Done',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: color,
-                    ),
-                  ),
-                ),
-              ?trailing,
-            ],
-          ),
-        ],
+            ?trailing,
+          ],
+        ),
       ),
+    );
+  }
+
+  /// Text action used in section headers; right edge sits on the gutter.
+  Widget _buildHeaderAction({
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return TextButton(
+      onPressed: onTap,
+      style: TextButton.styleFrom(
+        foregroundColor: color,
+        padding: const EdgeInsets.only(left: AppSpacing.sm),
+        minimumSize: const Size(0, 28),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        textStyle: const TextStyle(
+          fontFamily: AppTextStyles.fontFamily,
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      child: Text(label),
     );
   }
 
   void _duplicateReminder(PlannerItemEntity item) {
     context.read<PlannerBloc>().add(
-          AddPlannerItem(
-            title: '${item.title} (Copy)',
-            date: item.date,
-            startTime: item.startTime,
-            endTime: item.endTime,
-            category: item.category,
-            colorValue: item.colorValue,
-            iconCodePoint: item.iconCodePoint,
-            repeatType: item.repeatType,
-            repeatDays: item.repeatDays,
-            endDate: item.endDate,
-            priority: item.priority,
-            reminderOffsetMinutes: item.reminderOffsetMinutes,
-            checklist: item.checklist,
-            notes: item.notes,
-          ),
-        );
+      AddPlannerItem(
+        title: '${item.title} (Copy)',
+        date: item.date,
+        startTime: item.startTime,
+        endTime: item.endTime,
+        category: item.category,
+        colorValue: item.colorValue,
+        iconCodePoint: item.iconCodePoint,
+        repeatType: item.repeatType,
+        repeatDays: item.repeatDays,
+        endDate: item.endDate,
+        priority: item.priority,
+        reminderOffsetMinutes: item.reminderOffsetMinutes,
+        checklist: item.checklist,
+        notes: item.notes,
+      ),
+    );
     SnackbarUtils.showSuccess(context, 'Duplicated "${item.title}"');
   }
 
@@ -1376,24 +1441,24 @@ class _PlannerViewState extends State<_PlannerView>
     final tomorrowStr =
         '${tomorrow.year}-${tomorrow.month.toString().padLeft(2, '0')}-${tomorrow.day.toString().padLeft(2, '0')}';
     context.read<PlannerBloc>().add(
-          UpdatePlannerItem(
-            id: item.id,
-            title: item.title,
-            date: tomorrowStr,
-            startTime: item.startTime,
-            endTime: item.endTime,
-            category: item.category,
-            colorValue: item.colorValue,
-            iconCodePoint: item.iconCodePoint,
-            repeatType: item.repeatType,
-            repeatDays: item.repeatDays,
-            endDate: item.endDate,
-            priority: item.priority,
-            reminderOffsetMinutes: item.reminderOffsetMinutes,
-            checklist: item.checklist,
-            notes: item.notes,
-          ),
-        );
+      UpdatePlannerItem(
+        id: item.id,
+        title: item.title,
+        date: tomorrowStr,
+        startTime: item.startTime,
+        endTime: item.endTime,
+        category: item.category,
+        colorValue: item.colorValue,
+        iconCodePoint: item.iconCodePoint,
+        repeatType: item.repeatType,
+        repeatDays: item.repeatDays,
+        endDate: item.endDate,
+        priority: item.priority,
+        reminderOffsetMinutes: item.reminderOffsetMinutes,
+        checklist: item.checklist,
+        notes: item.notes,
+      ),
+    );
     SnackbarUtils.showSuccess(context, 'Rescheduled to tomorrow');
   }
 
@@ -1401,10 +1466,13 @@ class _PlannerViewState extends State<_PlannerView>
     final pending = items.where((i) => !i.isDone).toList();
     for (final item in pending) {
       context.read<PlannerBloc>().add(
-            TogglePlannerItem(item.id, targetDate: 'all'),
-          );
+        TogglePlannerItem(item.id, targetDate: 'all'),
+      );
     }
-    SnackbarUtils.showSuccess(context, 'Marked ${pending.length} reminders as done');
+    SnackbarUtils.showSuccess(
+      context,
+      'Marked ${pending.length} reminders as done',
+    );
   }
 
   Widget _buildReminderItemCard(
@@ -1416,39 +1484,36 @@ class _PlannerViewState extends State<_PlannerView>
       item: item,
       isDark: isDark,
       onToggle: (_) => context.read<PlannerBloc>().add(
-            TogglePlannerItem(
-              item.id,
-              targetDate: 'all',
-            ),
-          ),
+        TogglePlannerItem(item.id, targetDate: 'all'),
+      ),
       onEdit: () => _openEditReminderSheet(context, item, isDark),
       onDuplicate: () => _duplicateReminder(item),
       onPushTomorrow: () => _pushToTomorrow(item),
       onChecklistChanged: (updatedChecklist) {
         context.read<PlannerBloc>().add(
-              UpdatePlannerItem(
-                id: item.id,
-                title: item.title,
-                date: item.date,
-                startTime: item.startTime,
-                endTime: item.endTime,
-                category: item.category,
-                colorValue: item.colorValue,
-                iconCodePoint: item.iconCodePoint,
-                repeatType: item.repeatType,
-                repeatDays: item.repeatDays,
-                endDate: item.endDate,
-                priority: item.priority,
-                reminderOffsetMinutes: item.reminderOffsetMinutes,
-                checklist: updatedChecklist,
-                notes: item.notes,
-              ),
-            );
+          UpdatePlannerItem(
+            id: item.id,
+            title: item.title,
+            date: item.date,
+            startTime: item.startTime,
+            endTime: item.endTime,
+            category: item.category,
+            colorValue: item.colorValue,
+            iconCodePoint: item.iconCodePoint,
+            repeatType: item.repeatType,
+            repeatDays: item.repeatDays,
+            endDate: item.endDate,
+            priority: item.priority,
+            reminderOffsetMinutes: item.reminderOffsetMinutes,
+            checklist: updatedChecklist,
+            notes: item.notes,
+          ),
+        );
       },
       onDelete: () {
         final notifId =
             ('${item.title}${item.date}${item.startTime}').hashCode &
-                0x7FFFFFFF;
+            0x7FFFFFFF;
         try {
           sl<NotificationService>().cancelNotification(notifId);
         } catch (_) {}
@@ -1467,7 +1532,8 @@ class _PlannerViewState extends State<_PlannerView>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-            'Template "${template['title']}" applied! Tap "Quick Set" or edit details.'),
+          'Template "${template['title']}" applied! Tap "Quick Set" or edit details.',
+        ),
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
       ),
@@ -1478,8 +1544,7 @@ class _PlannerViewState extends State<_PlannerView>
     final confirmed = await ConfirmationDialog.show(
       context,
       title: 'Clear Completed Reminders?',
-      message:
-          'This will permanently remove all completed one-off reminders.',
+      message: 'This will permanently remove all completed one-off reminders.',
       confirmLabel: 'Clear All',
       isDestructive: true,
     );
@@ -1495,11 +1560,13 @@ class _PlannerViewState extends State<_PlannerView>
   }
 
   void _showSnoozeOptions(
-      BuildContext context, PlannerItemEntity item, bool isDark) {
+    BuildContext context,
+    PlannerItemEntity item,
+    bool isDark,
+  ) {
     showModalBottomSheet(
       context: context,
-      backgroundColor:
-          isDark ? AppColors.darkCardBackground : Colors.white,
+      backgroundColor: isDark ? AppColors.darkCardBackground : Colors.white,
       shape: const RoundedRectangleBorder(borderRadius: AppRadius.topXxl),
       builder: (ctx) {
         return SafeArea(
@@ -1514,8 +1581,7 @@ class _PlannerViewState extends State<_PlannerView>
                     width: 36,
                     height: 4,
                     decoration: BoxDecoration(
-                      color:
-                          isDark ? AppColors.darkDivider : AppColors.divider,
+                      color: isDark ? AppColors.darkDivider : AppColors.divider,
                       borderRadius: AppRadius.radiusFull,
                     ),
                   ),
@@ -1532,51 +1598,78 @@ class _PlannerViewState extends State<_PlannerView>
                 ),
                 AppSpacing.gapH12,
                 ListTile(
-                  leading: const Icon(Icons.timer_10_rounded,
-                      color: AppColors.moduleTime),
-                  title: const Text('15 Minutes',
-                      style: TextStyle(fontWeight: FontWeight.w600)),
+                  leading: const Icon(
+                    Icons.timer_10_rounded,
+                    color: AppColors.moduleTime,
+                  ),
+                  title: const Text(
+                    '15 Minutes',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   subtitle: Text(
-                      'Alert at ${_formatTimeOfDay(TimeOfDay.fromDateTime(DateTime.now().add(const Duration(minutes: 15))))}'),
+                    'Alert at ${_formatTimeOfDay(TimeOfDay.fromDateTime(DateTime.now().add(const Duration(minutes: 15))))}',
+                  ),
                   onTap: () {
                     Navigator.pop(ctx);
                     _snoozeReminder(
-                        context, item, const Duration(minutes: 15), '15m');
+                      context,
+                      item,
+                      const Duration(minutes: 15),
+                      '15m',
+                    );
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.hourglass_top_rounded,
-                      color: AppColors.primary),
-                  title: const Text('1 Hour',
-                      style: TextStyle(fontWeight: FontWeight.w600)),
+                  leading: const Icon(
+                    Icons.hourglass_top_rounded,
+                    color: AppColors.primary,
+                  ),
+                  title: const Text(
+                    '1 Hour',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   subtitle: Text(
-                      'Alert at ${_formatTimeOfDay(TimeOfDay.fromDateTime(DateTime.now().add(const Duration(hours: 1))))}'),
+                    'Alert at ${_formatTimeOfDay(TimeOfDay.fromDateTime(DateTime.now().add(const Duration(hours: 1))))}',
+                  ),
                   onTap: () {
                     Navigator.pop(ctx);
                     _snoozeReminder(
-                        context, item, const Duration(hours: 1), '1 hour');
+                      context,
+                      item,
+                      const Duration(hours: 1),
+                      '1 hour',
+                    );
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.wb_sunny_rounded,
-                      color: AppColors.warning),
-                  title: const Text('Tomorrow Morning',
-                      style: TextStyle(fontWeight: FontWeight.w600)),
+                  leading: const Icon(
+                    Icons.wb_sunny_rounded,
+                    color: AppColors.warning,
+                  ),
+                  title: const Text(
+                    'Tomorrow Morning',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   subtitle: const Text('Alert at 9:00 AM'),
                   onTap: () {
                     Navigator.pop(ctx);
-                    final tomorrow =
-                        DateTime.now().add(const Duration(days: 1));
+                    final tomorrow = DateTime.now().add(
+                      const Duration(days: 1),
+                    );
                     final target = DateTime(
-                        tomorrow.year, tomorrow.month, tomorrow.day, 9, 0);
+                      tomorrow.year,
+                      tomorrow.month,
+                      tomorrow.day,
+                      9,
+                      0,
+                    );
                     final diff = target.difference(DateTime.now());
                     _snoozeReminder(
-                        context,
-                        item,
-                        diff > Duration.zero
-                            ? diff
-                            : const Duration(hours: 12),
-                        'Tomorrow 9:00 AM');
+                      context,
+                      item,
+                      diff > Duration.zero ? diff : const Duration(hours: 12),
+                      'Tomorrow 9:00 AM',
+                    );
                   },
                 ),
               ],
@@ -1629,15 +1722,15 @@ class _PlannerViewState extends State<_PlannerView>
     final timeStr = _formatTimeOfDay(_selectedTime);
 
     context.read<PlannerBloc>().add(
-          AddPlannerItem(
-            title: title,
-            date: today,
-            startTime: timeStr,
-            category: _selectedCategory,
-            colorValue: _getCategoryColor(_selectedCategory).toARGB32(),
-            iconCodePoint: _getCategoryIcon(_selectedCategory).codePoint,
-          ),
-        );
+      AddPlannerItem(
+        title: title,
+        date: today,
+        startTime: timeStr,
+        category: _selectedCategory,
+        colorValue: _getCategoryColor(_selectedCategory).toARGB32(),
+        iconCodePoint: _getCategoryIcon(_selectedCategory).codePoint,
+      ),
+    );
 
     // Schedule local mobile notification
     final now = DateTime.now();
@@ -1699,58 +1792,61 @@ class _PlannerViewState extends State<_PlannerView>
       initialTime: _selectedTime,
       initialCategory: _selectedCategory,
       isDark: isDark,
-      onSubmit: ({
-        required title,
-        required date,
-        required time,
-        required category,
-        required repeatType,
-        required repeatDays,
-        required endDate,
-        required priority,
-        required reminderOffsetMinutes,
-        required checklist,
-        required notes,
-      }) {
-        final dateStr = _formatDateToIso(date);
-        final endDateStr = endDate != null ? _formatDateToIso(endDate) : null;
-        final timeStr = _formatTimeOfDay(time);
+      onSubmit:
+          ({
+            required title,
+            required date,
+            required time,
+            required category,
+            required repeatType,
+            required repeatDays,
+            required endDate,
+            required priority,
+            required reminderOffsetMinutes,
+            required checklist,
+            required notes,
+          }) {
+            final dateStr = _formatDateToIso(date);
+            final endDateStr = endDate != null
+                ? _formatDateToIso(endDate)
+                : null;
+            final timeStr = _formatTimeOfDay(time);
 
-        plannerBloc.add(
-          AddPlannerItem(
-            title: title,
-            date: dateStr,
-            startTime: timeStr,
-            category: category,
-            colorValue: _getCategoryColor(category).toARGB32(),
-            iconCodePoint: _getCategoryIcon(category).codePoint,
-            repeatType: repeatType,
-            repeatDays: repeatDays,
-            endDate: endDateStr,
-            priority: priority,
-            reminderOffsetMinutes: reminderOffsetMinutes,
-            checklist: checklist,
-            notes: notes,
-          ),
-        );
+            plannerBloc.add(
+              AddPlannerItem(
+                title: title,
+                date: dateStr,
+                startTime: timeStr,
+                category: category,
+                colorValue: _getCategoryColor(category).toARGB32(),
+                iconCodePoint: _getCategoryIcon(category).codePoint,
+                repeatType: repeatType,
+                repeatDays: repeatDays,
+                endDate: endDateStr,
+                priority: priority,
+                reminderOffsetMinutes: reminderOffsetMinutes,
+                checklist: checklist,
+                notes: notes,
+              ),
+            );
 
-        _scheduleReminderNotification(
-          title: title,
-          date: date,
-          time: time,
-          category: category,
-          repeatType: repeatType,
-          offsetMinutes: reminderOffsetMinutes,
-        );
+            _scheduleReminderNotification(
+              title: title,
+              date: date,
+              time: time,
+              category: category,
+              repeatType: repeatType,
+              offsetMinutes: reminderOffsetMinutes,
+            );
 
-        _quickReminderController.clear();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Reminder "$title" saved!'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      },
+            _quickReminderController.clear();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Reminder "$title" saved!'),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          },
     );
   }
 
@@ -1776,8 +1872,9 @@ class _PlannerViewState extends State<_PlannerView>
     }
 
     final initialTime = _parseTimeString(item.startTime) ?? _selectedTime;
-    final category =
-        item.category.isNotEmpty ? item.category : _selectedCategory;
+    final category = item.category.isNotEmpty
+        ? item.category
+        : _selectedCategory;
 
     SetReminderSheet.show(
       context,
@@ -1795,68 +1892,71 @@ class _PlannerViewState extends State<_PlannerView>
       initialChecklist: item.checklist,
       initialNotes: item.notes,
       isDark: isDark,
-      onSubmit: ({
-        required title,
-        required date,
-        required time,
-        required category,
-        required repeatType,
-        required repeatDays,
-        required endDate,
-        required priority,
-        required reminderOffsetMinutes,
-        required checklist,
-        required notes,
-      }) {
-        final dateStr = _formatDateToIso(date);
-        final endDateStr = endDate != null ? _formatDateToIso(endDate) : null;
-        final timeStr = _formatTimeOfDay(time);
+      onSubmit:
+          ({
+            required title,
+            required date,
+            required time,
+            required category,
+            required repeatType,
+            required repeatDays,
+            required endDate,
+            required priority,
+            required reminderOffsetMinutes,
+            required checklist,
+            required notes,
+          }) {
+            final dateStr = _formatDateToIso(date);
+            final endDateStr = endDate != null
+                ? _formatDateToIso(endDate)
+                : null;
+            final timeStr = _formatTimeOfDay(time);
 
-        // Cancel previous notification
-        final oldNotifId =
-            ('${item.title}${item.date}${item.startTime}').hashCode &
+            // Cancel previous notification
+            final oldNotifId =
+                ('${item.title}${item.date}${item.startTime}').hashCode &
                 0x7FFFFFFF;
-        try {
-          sl<NotificationService>().cancelNotification(oldNotifId);
-        } catch (_) {}
+            try {
+              sl<NotificationService>().cancelNotification(oldNotifId);
+            } catch (_) {}
 
-        // Dispatch update
-        plannerBloc.add(
-          UpdatePlannerItem(
-            id: item.id,
-            title: title,
-            date: dateStr,
-            startTime: timeStr,
-            category: category,
-            colorValue: _getCategoryColor(category).toARGB32(),
-            iconCodePoint: _getCategoryIcon(category).codePoint,
-            repeatType: repeatType,
-            repeatDays: repeatDays,
-            endDate: endDateStr,
-            priority: priority,
-            reminderOffsetMinutes: reminderOffsetMinutes,
-            checklist: checklist,
-            notes: notes,
-          ),
-        );
+            // Dispatch update
+            plannerBloc.add(
+              UpdatePlannerItem(
+                id: item.id,
+                title: title,
+                date: dateStr,
+                startTime: timeStr,
+                category: category,
+                colorValue: _getCategoryColor(category).toARGB32(),
+                iconCodePoint: _getCategoryIcon(category).codePoint,
+                repeatType: repeatType,
+                repeatDays: repeatDays,
+                endDate: endDateStr,
+                priority: priority,
+                reminderOffsetMinutes: reminderOffsetMinutes,
+                checklist: checklist,
+                notes: notes,
+              ),
+            );
 
-        // Reschedule updated notification
-        _scheduleReminderNotification(
-          title: title,
-          date: date,
-          time: time,
-          category: category,
-          repeatType: repeatType,
-          offsetMinutes: reminderOffsetMinutes,
-        );
+            // Reschedule updated notification
+            _scheduleReminderNotification(
+              title: title,
+              date: date,
+              time: time,
+              category: category,
+              repeatType: repeatType,
+              offsetMinutes: reminderOffsetMinutes,
+            );
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Reminder "$title" updated!'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      },
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Reminder "$title" updated!'),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          },
     );
   }
 
@@ -1900,229 +2000,290 @@ class _PlannerViewState extends State<_PlannerView>
     } catch (_) {}
   }
 
-
-
   // =========================================================================
   // TAB 2: POMODORO FOCUS TAB
   // =========================================================================
   Widget _buildFocusTimerTab(BuildContext context, bool isDark) {
+    const gutter = EdgeInsets.symmetric(horizontal: AppSpacing.pageGutter);
+
     return ListView(
-      padding: const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 90),
+      padding: const EdgeInsets.only(top: AppSpacing.md, bottom: 96),
       children: [
-        // Mode Selector Pills
-        PomodoroModeSelector(
-          selectedIndex: _focusModeIndex,
-          workMinutes: _workMinutes,
-          shortBreakMinutes: _shortBreakMinutes,
-          longBreakMinutes: _longBreakMinutes,
-          onModeSelected: _switchFocusMode,
-          isDark: isDark,
-        ),
-        AppSpacing.gapH16,
-
-        // Hero Pomodoro Focus Card
-        PomodoroFocusCard(
-          focusModeIndex: _focusModeIndex,
-          currentRound: _currentRound,
-          totalRounds: _totalRounds,
-          timerProgress: _timerProgress,
-          formattedTime: _formatTimer(_secondsRemaining),
-          isTimerRunning: _isTimerRunning,
-          linkedTask: _linkedTask,
-          onToggleTimer: _toggleTimer,
-          onResetTimer: _resetTimer,
-          onSkipSession: _skipSession,
-          onChangeTask: () => _openLinkedTaskSheet(context, isDark),
-        ),
-        AppSpacing.gapH20,
-
-        // Presets & Custom
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Focus Presets & Custom Time',
-              style: AppTextStyles.titleSmall.copyWith(
-                fontWeight: FontWeight.w800,
-                color:
-                    isDark ? AppColors.darkTextHeading : AppColors.textHeading,
+        Padding(
+          padding: gutter,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              PomodoroModeSelector(
+                selectedIndex: _focusModeIndex,
+                workMinutes: _workMinutes,
+                shortBreakMinutes: _shortBreakMinutes,
+                longBreakMinutes: _longBreakMinutes,
+                onModeSelected: _switchFocusMode,
+                isDark: isDark,
               ),
-            ),
-            InkWell(
-              borderRadius: AppRadius.radiusSm,
-              onTap: () => _openCustomDurationSheet(context, isDark),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                child: Row(
-                  children: [
-                    const Icon(Icons.tune_rounded,
-                        size: 14, color: AppColors.moduleTime),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Custom...',
-                      style: AppTextStyles.captionBold.copyWith(
-                        color: AppColors.moduleTime,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
+              AppSpacing.gapH16,
+              PomodoroFocusCard(
+                focusModeIndex: _focusModeIndex,
+                currentRound: _currentRound,
+                totalRounds: _totalRounds,
+                timerProgress: _timerProgress,
+                formattedTime: _formatTimer(_secondsRemaining),
+                isTimerRunning: _isTimerRunning,
+                linkedTask: _linkedTask,
+                onToggleTimer: _toggleTimer,
+                onResetTimer: _resetTimer,
+                onSkipSession: _skipSession,
+                onChangeTask: () => _openLinkedTaskSheet(context, isDark),
+              ),
+              _buildFocusSectionHeader(
+                'Focus Presets & Custom Time',
+                isDark,
+                action: _buildHeaderAction(
+                  label: 'Custom',
+                  color: AppColors.moduleTime,
+                  onTap: () => _openCustomDurationSheet(context, isDark),
                 ),
               ),
-            ),
+            ],
+          ),
+        ),
+        _buildChipStrip(
+          children: [
+            for (final preset in const [
+              ('15m Sprint', 15),
+              ('25m Classic', 25),
+              ('45m Deep Work', 45),
+              ('60m Ultra Focus', 60),
+            ])
+              _buildSelectableChip(
+                label: preset.$1,
+                isSelected: _focusModeIndex == 0 && _workMinutes == preset.$2,
+                isDark: isDark,
+                onTap: () {
+                  _timer?.cancel();
+                  setState(() {
+                    _workMinutes = preset.$2;
+                    _focusModeIndex = 0;
+                    _secondsRemaining = preset.$2 * 60;
+                    _isTimerRunning = false;
+                  });
+                },
+              ),
           ],
         ),
-        AppSpacing.gapH12,
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          child: Row(
-            children: [
-              _buildPresetChip('15m Sprint', 15, isDark),
-              AppSpacing.gapW8,
-              _buildPresetChip('25m Classic', 25, isDark),
-              AppSpacing.gapW8,
-              _buildPresetChip('45m Deep Work', 45, isDark),
-              AppSpacing.gapW8,
-              _buildPresetChip('60m Ultra Focus', 60, isDark),
-            ],
-          ),
+        Padding(
+          padding: gutter,
+          child: _buildFocusSectionHeader('Focus Ambience & Sounds', isDark),
         ),
-        AppSpacing.gapH20,
-
-        // Ambient Sound Bar
-        Text(
-          'Focus Ambience & Sounds',
-          style: AppTextStyles.titleSmall.copyWith(
-            fontWeight: FontWeight.w800,
-            color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
-          ),
-        ),
-        AppSpacing.gapH12,
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          child: Row(
-            children: _ambienceOptions.map((opt) {
-              final name = opt['name'] as String;
-              final icon = opt['icon'] as IconData;
-              final isSelected = _selectedAmbience == name;
-
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: ChoiceChip(
-                  avatar: Icon(
-                    icon,
-                    size: 15,
-                    color: isSelected
-                        ? Colors.white
-                        : (isDark
-                            ? AppColors.darkTextCaption
-                            : AppColors.textCaption),
-                  ),
-                  label: Text(name),
-                  selected: isSelected,
-                  selectedColor: AppColors.moduleTime,
-                  labelStyle: TextStyle(
-                    fontSize: 12,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                    color: isSelected
-                        ? Colors.white
-                        : (isDark
-                            ? AppColors.darkTextHeading
-                            : AppColors.textHeading),
-                  ),
-                  onSelected: (val) {
-                    if (val) {
-                      setState(() => _selectedAmbience = name);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(name == 'Mute'
-                              ? 'Ambience sound muted'
-                              : 'Ambience set to $name'),
-                          duration: const Duration(seconds: 1),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    }
-                  },
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-        AppSpacing.gapH20,
-
-        // Daily Activity Summary
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isDark
-                ? AppColors.darkCardBackground
-                : AppColors.cardBackground,
-            borderRadius: AppRadius.radiusLg,
-            border: Border.all(
-                color: isDark ? AppColors.darkDivider : AppColors.divider),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.local_fire_department_rounded,
-                          color: AppColors.focusPomodoro, size: 18),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Daily Focus Activity',
-                        style: AppTextStyles.captionBold.copyWith(
-                          fontSize: 12,
-                          color: isDark
-                              ? AppColors.darkTextHeading
-                              : AppColors.textHeading,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    '🎯 4 Sessions Goal',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: isDark
-                          ? AppColors.darkTextCaption
-                          : AppColors.textCaption,
+        _buildChipStrip(
+          children: _ambienceOptions.map((opt) {
+            final name = opt['name'] as String;
+            return _buildSelectableChip(
+              label: name,
+              icon: opt['icon'] as IconData,
+              isSelected: _selectedAmbience == name,
+              isDark: isDark,
+              onTap: () {
+                setState(() => _selectedAmbience = name);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      name == 'Mute'
+                          ? 'Ambience sound muted'
+                          : 'Ambience set to $name',
                     ),
+                    duration: const Duration(seconds: 1),
+                    behavior: SnackBarBehavior.floating,
                   ),
-                ],
+                );
+              },
+            );
+          }).toList(),
+        ),
+        AppSpacing.gapH24,
+        Padding(padding: gutter, child: _buildDailyFocusCard(isDark)),
+      ],
+    );
+  }
+
+  Widget _buildFocusSectionHeader(String title, bool isDark, {Widget? action}) {
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.xl, bottom: AppSpacing.sm),
+      child: SizedBox(
+        height: 28,
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: isDark
+                      ? AppColors.darkTextHeading
+                      : AppColors.textHeading,
+                ),
               ),
-              const SizedBox(height: 14),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildStatColumn('$_completedSessionsToday', 'Sessions Done',
-                      AppColors.moduleTime),
-                  Container(
-                      width: 1,
-                      height: 32,
-                      color:
-                          isDark ? AppColors.darkDivider : AppColors.divider),
-                  _buildStatColumn('${_completedSessionsToday * _workMinutes}m',
-                      'Time Focused', AppColors.success),
-                  Container(
-                      width: 1,
-                      height: 32,
-                      color:
-                          isDark ? AppColors.darkDivider : AppColors.divider),
-                  _buildStatColumn(
-                      '4 Days', 'Focus Streak', AppColors.focusPomodoro),
-                ],
+            ),
+            ?action,
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Horizontal chip row that scrolls edge-to-edge but starts on the gutter.
+  Widget _buildChipStrip({required List<Widget> children}) {
+    return SizedBox(
+      height: 36,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageGutter),
+        itemCount: children.length,
+        separatorBuilder: (_, _) => AppSpacing.gapW8,
+        itemBuilder: (_, i) => children[i],
+      ),
+    );
+  }
+
+  Widget _buildSelectableChip({
+    required String label,
+    required bool isSelected,
+    required bool isDark,
+    required VoidCallback onTap,
+    IconData? icon,
+  }) {
+    final fg = isSelected
+        ? AppColors.moduleTime
+        : (isDark ? AppColors.darkTextHeading : AppColors.textHeading);
+    return Material(
+      color: isSelected
+          ? AppColors.moduleTime.withValues(alpha: 0.12)
+          : (isDark ? AppColors.darkCardBackground : AppColors.cardBackground),
+      shape: StadiumBorder(
+        side: BorderSide(
+          color: isSelected
+              ? AppColors.moduleTime.withValues(alpha: 0.6)
+              : (isDark ? AppColors.darkDivider : AppColors.divider),
+        ),
+      ),
+      child: InkWell(
+        customBorder: const StadiumBorder(),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null) ...[
+                Icon(
+                  icon,
+                  size: 16,
+                  color: isSelected
+                      ? AppColors.moduleTime
+                      : (isDark
+                            ? AppColors.darkIconColor
+                            : AppColors.iconColor),
+                ),
+                const SizedBox(width: 6),
+              ],
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  color: fg,
+                ),
               ),
             ],
           ),
         ),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildDailyFocusCard(bool isDark) {
+    final dividerColor = isDark ? AppColors.darkDivider : AppColors.divider;
+    Widget divider() => Container(width: 1, height: 32, color: dividerColor);
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
+        borderRadius: AppRadius.radiusLg,
+        border: Border.all(color: dividerColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.local_fire_department_rounded,
+                color: AppColors.focusPomodoro,
+                size: 18,
+              ),
+              AppSpacing.gapW8,
+              Expanded(
+                child: Text(
+                  'Daily Focus Activity',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: isDark
+                        ? AppColors.darkTextHeading
+                        : AppColors.textHeading,
+                  ),
+                ),
+              ),
+              Text(
+                'Goal: 4 sessions',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: isDark
+                      ? AppColors.darkTextCaption
+                      : AppColors.textCaption,
+                ),
+              ),
+            ],
+          ),
+          AppSpacing.gapH16,
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatColumn(
+                  '$_completedSessionsToday',
+                  'Sessions',
+                  AppColors.moduleTime,
+                  isDark,
+                ),
+              ),
+              divider(),
+              Expanded(
+                child: _buildStatColumn(
+                  '${_completedSessionsToday * _workMinutes}m',
+                  'Focused',
+                  AppColors.success,
+                  isDark,
+                ),
+              ),
+              divider(),
+              Expanded(
+                child: _buildStatColumn(
+                  '4 days',
+                  'Streak',
+                  AppColors.focusPomodoro,
+                  isDark,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -2165,66 +2326,32 @@ class _PlannerViewState extends State<_PlannerView>
     );
   }
 
-  Widget _buildPresetChip(String label, int minutes, bool isDark) {
-    final isSelected = _focusModeIndex == 0 && _workMinutes == minutes;
-
-    return GestureDetector(
-      onTap: () {
-        _timer?.cancel();
-        setState(() {
-          _workMinutes = minutes;
-          _focusModeIndex = 0;
-          _secondsRemaining = minutes * 60;
-          _isTimerRunning = false;
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.moduleTime.withValues(alpha: 0.15)
-              : (isDark
-                  ? AppColors.darkCardBackground
-                  : AppColors.cardBackground),
-          borderRadius: AppRadius.radiusMd,
-          border: Border.all(
-            color: isSelected
-                ? AppColors.moduleTime
-                : (isDark ? AppColors.darkDivider : AppColors.divider),
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected
-                ? AppColors.moduleTime
-                : (isDark ? AppColors.darkTextBody : AppColors.textBody),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatColumn(String value, String label, Color color) {
+  Widget _buildStatColumn(
+    String value,
+    String label,
+    Color color,
+    bool isDark,
+  ) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           value,
           style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
+            fontSize: 20,
+            height: 1.2,
+            fontWeight: FontWeight.w700,
+            fontFeatures: const [FontFeature.tabularFigures()],
             color: color,
           ),
         ),
         const SizedBox(height: 2),
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 11,
+          style: TextStyle(
+            fontSize: 12,
             fontWeight: FontWeight.w500,
-            color: AppColors.textCaption,
+            color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
           ),
         ),
       ],
@@ -2238,146 +2365,188 @@ class _PlannerViewState extends State<_PlannerView>
     final filtered = _selectedCountdownCategory == 'All'
         ? _countdowns
         : _countdowns
-            .where((c) => c.category == _selectedCountdownCategory)
-            .toList();
+              .where((c) => c.category == _selectedCountdownCategory)
+              .toList();
+
+    const gutter = EdgeInsets.symmetric(horizontal: AppSpacing.pageGutter);
 
     return ListView(
-      padding: const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 90),
+      padding: const EdgeInsets.only(top: AppSpacing.md, bottom: 96),
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Important Countdowns',
-                  style: AppTextStyles.titleMedium.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: isDark
-                        ? AppColors.darkTextHeading
-                        : AppColors.textHeading,
-                  ),
-                ),
-                Text(
-                  '${_countdowns.length} upcoming events & milestones',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isDark
-                        ? AppColors.darkTextCaption
-                        : AppColors.textCaption,
-                  ),
-                ),
-              ],
-            ),
-            FilledButton.icon(
-              onPressed: () => _openCountdownSheet(context, isDark),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.moduleTime,
-                foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusMd),
-              ),
-              icon: const Icon(Icons.add_rounded, size: 16),
-              label: const Text(
-                'Add Event',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
-              ),
-            ),
-          ],
-        ),
-        AppSpacing.gapH12,
-
-        // Filter Strip
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
+        Padding(
+          padding: gutter,
           child: Row(
-            children: _countdownCategories.map((cat) {
-              final isSelected = _selectedCountdownCategory == cat;
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: FilterChip(
-                  label: Text(cat),
-                  selected: isSelected,
-                  selectedColor: AppColors.moduleTime.withValues(alpha: 0.15),
-                  checkmarkColor: AppColors.moduleTime,
-                  labelStyle: TextStyle(
-                    fontSize: 12,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                    color: isSelected
-                        ? AppColors.moduleTime
-                        : (isDark
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Important Countdowns',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: isDark
+                            ? AppColors.darkTextHeading
+                            : AppColors.textHeading,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${_countdowns.length} upcoming events & milestones',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isDark
                             ? AppColors.darkTextCaption
-                            : AppColors.textCaption),
-                  ),
-                  onSelected: (val) {
-                    setState(() => _selectedCountdownCategory = cat);
-                  },
+                            : AppColors.textCaption,
+                      ),
+                    ),
+                  ],
                 ),
-              );
-            }).toList(),
+              ),
+              AppSpacing.gapW12,
+              FilledButton.icon(
+                onPressed: () => _openCountdownSheet(context, isDark),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.moduleTime,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  minimumSize: const Size(0, 40),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                  ),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: AppRadius.radiusSm,
+                  ),
+                  textStyle: const TextStyle(
+                    fontFamily: AppTextStyles.fontFamily,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                icon: const Icon(Icons.add_rounded, size: 18),
+                label: const Text('Add Event'),
+              ),
+            ],
           ),
         ),
         AppSpacing.gapH16,
 
-        if (filtered.isEmpty)
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 40),
-              child: Column(
-                children: [
-                  Icon(Icons.celebration_rounded,
-                      size: 48,
-                      color: isDark
-                          ? AppColors.darkDivider
-                          : AppColors.divider),
-                  const SizedBox(height: 12),
-                  Text(
-                    'No countdowns in $_selectedCountdownCategory',
-                    style: TextStyle(
-                      color: isDark
-                          ? AppColors.darkTextCaption
-                          : AppColors.textCaption,
-                      fontWeight: FontWeight.w600,
+        // Category filter strip (edge-to-edge)
+        SizedBox(
+          height: 36,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: gutter,
+            itemCount: _countdownCategories.length,
+            separatorBuilder: (_, _) => AppSpacing.gapW8,
+            itemBuilder: (context, index) {
+              final cat = _countdownCategories[index];
+              final isSelected = _selectedCountdownCategory == cat;
+              return FilterChip(
+                label: Text(cat),
+                selected: isSelected,
+                showCheckmark: false,
+                onSelected: (_) =>
+                    setState(() => _selectedCountdownCategory = cat),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
+                shape: const StadiumBorder(),
+                backgroundColor: isDark
+                    ? AppColors.darkCardBackground
+                    : AppColors.cardBackground,
+                selectedColor: AppColors.moduleTime.withValues(alpha: 0.12),
+                side: BorderSide(
+                  color: isSelected
+                      ? AppColors.moduleTime.withValues(alpha: 0.6)
+                      : (isDark ? AppColors.darkDivider : AppColors.divider),
+                ),
+                labelStyle: TextStyle(
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  color: isSelected
+                      ? AppColors.moduleTime
+                      : (isDark
+                            ? AppColors.darkTextHeading
+                            : AppColors.textHeading),
+                ),
+              );
+            },
+          ),
+        ),
+        AppSpacing.gapH16,
+
+        Padding(
+          padding: gutter,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (filtered.isEmpty)
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 40),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.celebration_rounded,
+                          size: 48,
+                          color: isDark
+                              ? AppColors.darkDivider
+                              : AppColors.divider,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'No countdowns in $_selectedCountdownCategory',
+                          style: TextStyle(
+                            color: isDark
+                                ? AppColors.darkTextCaption
+                                : AppColors.textCaption,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        OutlinedButton.icon(
+                          onPressed: () => _openCountdownSheet(context, isDark),
+                          icon: const Icon(Icons.add_rounded, size: 16),
+                          label: const Text('Create a Countdown'),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    onPressed: () => _openCountdownSheet(context, isDark),
-                    icon: const Icon(Icons.add_rounded, size: 16),
-                    label: const Text('Create a Countdown'),
+                )
+              else
+                ...filtered.map(
+                  (cd) => CountdownCard(
+                    item: cd,
+                    isDark: isDark,
+                    onAddToPlanner: () => _addCountdownToPlanner(context, cd),
+                    onEdit: () =>
+                        _openCountdownSheet(context, isDark, editItem: cd),
+                    onDelete: () => _deleteCountdown(context, cd),
                   ),
-                ],
-              ),
-            ),
-          )
-        else
-          ...filtered.map(
-            (cd) => CountdownCard(
-              item: cd,
-              isDark: isDark,
-              onAddToPlanner: () => _addCountdownToPlanner(context, cd),
-              onEdit: () =>
-                  _openCountdownSheet(context, isDark, editItem: cd),
-              onDelete: () => _deleteCountdown(context, cd),
-            ),
+                ),
+            ],
           ),
+        ),
       ],
     );
   }
 
-  void _openCountdownSheet(BuildContext context, bool isDark,
-      {CountdownItemEntity? editItem}) {
+  void _openCountdownSheet(
+    BuildContext context,
+    bool isDark, {
+    CountdownItemEntity? editItem,
+  }) {
     CountdownSheet.show(
       context,
       editItem: editItem,
       isDark: isDark,
       onSave: (savedItem) async {
         if (editItem != null) {
-          final index =
-              _countdowns.indexWhere((item) => item.id == editItem.id);
+          final index = _countdowns.indexWhere(
+            (item) => item.id == editItem.id,
+          );
           if (index != -1) {
             setState(() => _countdowns[index] = savedItem);
           }
@@ -2402,19 +2571,24 @@ class _PlannerViewState extends State<_PlannerView>
   void _addCountdownToPlanner(BuildContext context, CountdownItemEntity cd) {
     final dateStr = cd.date.toIso8601String().substring(0, 10);
     context.read<PlannerBloc>().add(
-          AddPlannerItem(
-            title: '${_getCategoryEmoji(cd.category)} ${cd.title}',
-            date: dateStr,
-            startTime: '09:00 AM',
-            category: 'Important',
-            colorValue: cd.colorValue,
-            iconCodePoint: cd.iconCodePoint,
-          ),
-        );
+      AddPlannerItem(
+        title: '${_getCategoryEmoji(cd.category)} ${cd.title}',
+        date: dateStr,
+        startTime: '09:00 AM',
+        category: 'Important',
+        colorValue: cd.colorValue,
+        iconCodePoint: cd.iconCodePoint,
+      ),
+    );
 
     final eventDate = cd.date;
-    final scheduledDate =
-        DateTime(eventDate.year, eventDate.month, eventDate.day, 9, 0);
+    final scheduledDate = DateTime(
+      eventDate.year,
+      eventDate.month,
+      eventDate.day,
+      9,
+      0,
+    );
     final notifId = ('${cd.title}$dateStr').hashCode & 0x7FFFFFFF;
     try {
       sl<NotificationService>().scheduleNotification(
@@ -2435,7 +2609,9 @@ class _PlannerViewState extends State<_PlannerView>
   }
 
   Future<void> _deleteCountdown(
-      BuildContext context, CountdownItemEntity cd) async {
+    BuildContext context,
+    CountdownItemEntity cd,
+  ) async {
     final confirmed = await ConfirmationDialog.show(
       context,
       title: 'Delete Countdown?',
@@ -2467,8 +2643,13 @@ class _PlannerViewState extends State<_PlannerView>
       if (item.remindAdvance) {
         final now = DateTime.now();
         // Day of event (at 9:00 AM)
-        final dayOf =
-            DateTime(item.date.year, item.date.month, item.date.day, 9, 0);
+        final dayOf = DateTime(
+          item.date.year,
+          item.date.month,
+          item.date.day,
+          9,
+          0,
+        );
         await sl<NotificationService>().scheduleNotification(
           id: baseId,
           title: 'Today: ${item.title}',
@@ -2484,8 +2665,7 @@ class _PlannerViewState extends State<_PlannerView>
           await sl<NotificationService>().scheduleNotification(
             id: (baseId + 1) & 0x7FFFFFFF,
             title: 'Tomorrow: ${item.title}',
-            body:
-                '1 day remaining until "${item.title}" (${item.category})!',
+            body: '1 day remaining until "${item.title}" (${item.category})!',
             scheduledDate: oneDayBefore,
             channelId: NotificationChannels.countdowns,
             payload: 'countdown_${item.id}_1d',
@@ -2498,8 +2678,7 @@ class _PlannerViewState extends State<_PlannerView>
           await sl<NotificationService>().scheduleNotification(
             id: (baseId + 7) & 0x7FFFFFFF,
             title: 'Upcoming in 7 Days: ${item.title}',
-            body:
-                '7 days remaining until "${item.title}" (${item.category})!',
+            body: '7 days remaining until "${item.title}" (${item.category})!',
             scheduledDate: sevenDaysBefore,
             channelId: NotificationChannels.countdowns,
             payload: 'countdown_${item.id}_7d',
@@ -2517,8 +2696,12 @@ class _PlannerViewState extends State<_PlannerView>
     final baseId = countdownId.hashCode & 0x7FFFFFFF;
     try {
       await sl<NotificationService>().cancelNotification(baseId);
-      await sl<NotificationService>().cancelNotification((baseId + 1) & 0x7FFFFFFF);
-      await sl<NotificationService>().cancelNotification((baseId + 7) & 0x7FFFFFFF);
+      await sl<NotificationService>().cancelNotification(
+        (baseId + 1) & 0x7FFFFFFF,
+      );
+      await sl<NotificationService>().cancelNotification(
+        (baseId + 7) & 0x7FFFFFFF,
+      );
     } catch (e) {
       debugPrint('Error canceling countdown notifications: $e');
     }
@@ -2552,9 +2735,10 @@ class _PlannerViewState extends State<_PlannerView>
   TimeOfDay? _parseTimeString(String? timeStr) {
     if (timeStr == null || timeStr.trim().isEmpty) return null;
     final clean = timeStr.trim();
-    final match =
-        RegExp(r'^(\d{1,2}):(\d{2})\s*(AM|PM)?$', caseSensitive: false)
-            .firstMatch(clean);
+    final match = RegExp(
+      r'^(\d{1,2}):(\d{2})\s*(AM|PM)?$',
+      caseSensitive: false,
+    ).firstMatch(clean);
     if (match != null) {
       int hour = int.parse(match.group(1)!);
       final minute = int.parse(match.group(2)!);

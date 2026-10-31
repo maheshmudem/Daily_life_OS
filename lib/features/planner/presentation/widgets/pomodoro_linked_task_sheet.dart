@@ -61,8 +61,7 @@ class _PomodoroLinkedTaskSheetState extends State<PomodoroLinkedTaskSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final cardBg =
-        widget.isDark ? AppColors.darkCardBackground : Colors.white;
+    final cardBg = widget.isDark ? AppColors.darkCardBackground : Colors.white;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -129,13 +128,14 @@ class _PomodoroLinkedTaskSheetState extends State<PomodoroLinkedTaskSheet> {
                     .where((it) => !it.isDone)
                     .take(4)
                     .map((task) {
-                  return ActionChip(
-                    label: Text(task.title),
-                    onPressed: () {
-                      _taskController.text = task.title;
-                    },
-                  );
-                }).toList(),
+                      return ActionChip(
+                        label: Text(task.title),
+                        onPressed: () {
+                          _taskController.text = task.title;
+                        },
+                      );
+                    })
+                    .toList(),
               ),
               const SizedBox(height: 16),
             ],

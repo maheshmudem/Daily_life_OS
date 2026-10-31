@@ -78,8 +78,10 @@ class FilterBottomSheet extends StatelessWidget {
                 ),
                 TextButton(
                   onPressed: onClear,
-                  child: const Text('Clear All',
-                      style: TextStyle(color: AppColors.primary)),
+                  child: const Text(
+                    'Clear All',
+                    style: TextStyle(color: AppColors.primary),
+                  ),
                 ),
               ],
             ),
@@ -110,8 +112,10 @@ class FilterBottomSheet extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text('Apply Filters',
-                    style: TextStyle(fontWeight: FontWeight.w600)),
+                child: const Text(
+                  'Apply Filters',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
             ),
           ],

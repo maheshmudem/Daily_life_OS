@@ -105,10 +105,7 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
     final cardBg = isDark ? AppColors.darkCardBackground : Colors.white;
 
     return Container(
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: AppRadius.topXxl,
-      ),
+      decoration: BoxDecoration(color: cardBg, borderRadius: AppRadius.topXxl),
       padding: EdgeInsets.only(
         left: 24,
         right: 24,
@@ -164,7 +161,11 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
             color: AppColors.moduleVault.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.shield_rounded, size: 36, color: AppColors.moduleVault),
+          child: const Icon(
+            Icons.shield_rounded,
+            size: 36,
+            color: AppColors.moduleVault,
+          ),
         ),
         const SizedBox(height: 14),
         Text(
@@ -221,9 +222,14 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.moduleVault,
               padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: const RoundedRectangleBorder(borderRadius: AppRadius.radiusMd),
+              shape: const RoundedRectangleBorder(
+                borderRadius: AppRadius.radiusMd,
+              ),
             ),
-            child: const Text('Continue', style: TextStyle(fontWeight: FontWeight.w700)),
+            child: const Text(
+              'Continue',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
           ),
         ),
       ],
@@ -254,7 +260,9 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
           ),
           color: isSelected
               ? AppColors.moduleVault.withValues(alpha: isDark ? 0.15 : 0.08)
-              : (isDark ? AppColors.darkSurfaceSecondary : AppColors.surfaceSecondary),
+              : (isDark
+                    ? AppColors.darkSurfaceSecondary
+                    : AppColors.surfaceSecondary),
         ),
         child: Row(
           children: [
@@ -280,7 +288,9 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 15,
-                      color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
+                      color: isDark
+                          ? AppColors.darkTextHeading
+                          : AppColors.textHeading,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -288,15 +298,21 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
                     subtitle,
                     style: TextStyle(
                       fontSize: 12,
-                      color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
+                      color: isDark
+                          ? AppColors.darkTextCaption
+                          : AppColors.textCaption,
                     ),
                   ),
                 ],
               ),
             ),
             Icon(
-              isSelected ? Icons.check_circle_rounded : Icons.radio_button_off_rounded,
-              color: isSelected ? AppColors.moduleVault : (isDark ? AppColors.darkDivider : AppColors.divider),
+              isSelected
+                  ? Icons.check_circle_rounded
+                  : Icons.radio_button_off_rounded,
+              color: isSelected
+                  ? AppColors.moduleVault
+                  : (isDark ? AppColors.darkDivider : AppColors.divider),
             ),
           ],
         ),
@@ -393,7 +409,9 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
         ),
         const SizedBox(height: 6),
         Text(
-          isPin ? 'Re-enter your 4-digit passcode to confirm' : 'Draw the same pattern again to verify',
+          isPin
+              ? 'Re-enter your 4-digit passcode to confirm'
+              : 'Draw the same pattern again to verify',
           style: TextStyle(
             fontSize: 13,
             color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
@@ -437,7 +455,9 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
                 _proceedAfterConfirm();
               } else {
                 HapticFeedback.heavyImpact();
-                setState(() => _errorMessage = 'Pattern does not match. Try again.');
+                setState(
+                  () => _errorMessage = 'Pattern does not match. Try again.',
+                );
               }
             },
           ),
@@ -476,7 +496,11 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
             color: AppColors.moduleVault.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.fingerprint_rounded, size: 48, color: AppColors.moduleVault),
+          child: const Icon(
+            Icons.fingerprint_rounded,
+            size: 48,
+            color: AppColors.moduleVault,
+          ),
         ),
         const SizedBox(height: 16),
         Text(
@@ -509,7 +533,9 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
                 },
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: const RoundedRectangleBorder(borderRadius: AppRadius.radiusMd),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: AppRadius.radiusMd,
+                  ),
                 ),
                 child: const Text('Skip'),
               ),
@@ -526,10 +552,15 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.moduleVault,
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: const RoundedRectangleBorder(borderRadius: AppRadius.radiusMd),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: AppRadius.radiusMd,
+                  ),
                 ),
                 icon: const Icon(Icons.check_rounded, size: 18),
-                label: const Text('Enable', style: TextStyle(fontWeight: FontWeight.w700)),
+                label: const Text(
+                  'Enable',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
               ),
             ),
           ],
@@ -548,7 +579,11 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
             color: AppColors.error.withValues(alpha: 0.12),
             shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.warning_amber_rounded, size: 44, color: AppColors.error),
+          child: const Icon(
+            Icons.warning_amber_rounded,
+            size: 44,
+            color: AppColors.error,
+          ),
         ),
         const SizedBox(height: 16),
         Text(
@@ -576,7 +611,9 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
                 onPressed: _finalizeSetup,
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: const RoundedRectangleBorder(borderRadius: AppRadius.radiusMd),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: AppRadius.radiusMd,
+                  ),
                 ),
                 child: const Text('Finish Setup'),
               ),
@@ -590,9 +627,14 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.moduleVault,
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: const RoundedRectangleBorder(borderRadius: AppRadius.radiusMd),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: AppRadius.radiusMd,
+                  ),
                 ),
-                child: const Text('Set Decoy PIN', style: TextStyle(fontWeight: FontWeight.w700)),
+                child: const Text(
+                  'Set Decoy PIN',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
               ),
             ),
           ],

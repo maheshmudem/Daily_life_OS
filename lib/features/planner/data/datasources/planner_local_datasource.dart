@@ -51,12 +51,12 @@ class PlannerLocalDataSourceImpl implements PlannerLocalDataSource {
   @override
   Future<List<PlannerItemModel>> getItemsForDate(String isoDate) async {
     if (isoDate == 'all' || isoDate.trim().isEmpty) {
-      final rows = await (_db.select(_db.plannerItems)
-            ..orderBy([
-              (t) => OrderingTerm.asc(t.date),
-              (t) => OrderingTerm.asc(t.startTime),
-            ]))
-          .get();
+      final rows =
+          await (_db.select(_db.plannerItems)..orderBy([
+                (t) => OrderingTerm.asc(t.date),
+                (t) => OrderingTerm.asc(t.startTime),
+              ]))
+              .get();
       return rows.map((row) => PlannerItemModel.fromDrift(row)).toList();
     }
 
@@ -65,10 +65,11 @@ class PlannerLocalDataSourceImpl implements PlannerLocalDataSource {
     if (targetDateTime == null) return [];
 
     // Query all items that start on or before target date
-    final rows = await (_db.select(_db.plannerItems)
-          ..where((t) => t.date.isSmallerOrEqualValue(dateOnly))
-          ..orderBy([(t) => OrderingTerm.asc(t.startTime)]))
-        .get();
+    final rows =
+        await (_db.select(_db.plannerItems)
+              ..where((t) => t.date.isSmallerOrEqualValue(dateOnly))
+              ..orderBy([(t) => OrderingTerm.asc(t.startTime)]))
+            .get();
 
     final result = <PlannerItemModel>[];
 
@@ -111,9 +112,9 @@ class PlannerLocalDataSourceImpl implements PlannerLocalDataSource {
         // Resolve isDone for this specific date
         final isCompletedForDate = (repeat != 'none' && repeat.isNotEmpty)
             ? row.completedDates
-                .split(',')
-                .map((s) => s.trim())
-                .contains(dateOnly)
+                  .split(',')
+                  .map((s) => s.trim())
+                  .contains(dateOnly)
             : row.isDone;
 
         final model = PlannerItemModel(
@@ -159,7 +160,9 @@ class PlannerLocalDataSourceImpl implements PlannerLocalDataSource {
     List<ChecklistItem> checklist = const [],
     String notes = '',
   }) async {
-    await _db.into(_db.plannerItems).insert(
+    await _db
+        .into(_db.plannerItems)
+        .insert(
           PlannerItemsCompanion.insert(
             title: title,
             date: date.substring(0, 10),
@@ -170,10 +173,14 @@ class PlannerLocalDataSourceImpl implements PlannerLocalDataSource {
             iconCodePoint: iconCodePoint,
             repeatType: Value(repeatType),
             repeatDays: Value(repeatDays),
-            endDate: Value(endDate?.isNotEmpty == true ? endDate!.substring(0, 10) : null),
+            endDate: Value(
+              endDate?.isNotEmpty == true ? endDate!.substring(0, 10) : null,
+            ),
             priority: Value(priority),
             reminderOffsetMinutes: Value(reminderOffsetMinutes),
-            checklistJson: Value(PlannerItemEntity.serializeChecklist(checklist)),
+            checklistJson: Value(
+              PlannerItemEntity.serializeChecklist(checklist),
+            ),
             notes: Value(notes),
           ),
         );
@@ -208,7 +215,9 @@ class PlannerLocalDataSourceImpl implements PlannerLocalDataSource {
         iconCodePoint: Value(iconCodePoint),
         repeatType: Value(repeatType),
         repeatDays: Value(repeatDays),
-        endDate: Value(endDate?.isNotEmpty == true ? endDate!.substring(0, 10) : null),
+        endDate: Value(
+          endDate?.isNotEmpty == true ? endDate!.substring(0, 10) : null,
+        ),
         priority: Value(priority),
         reminderOffsetMinutes: Value(reminderOffsetMinutes),
         checklistJson: Value(PlannerItemEntity.serializeChecklist(checklist)),
@@ -219,16 +228,19 @@ class PlannerLocalDataSourceImpl implements PlannerLocalDataSource {
 
   @override
   Future<void> toggleItem(int id, {String? targetDate}) async {
-    final item = await (_db.select(_db.plannerItems)..where((t) => t.id.equals(id))).getSingle();
-    final dateKey = (targetDate != null &&
-            targetDate != 'all' &&
-            targetDate.length >= 10)
+    final item = await (_db.select(
+      _db.plannerItems,
+    )..where((t) => t.id.equals(id))).getSingle();
+    final dateKey =
+        (targetDate != null && targetDate != 'all' && targetDate.length >= 10)
         ? targetDate.substring(0, 10)
         : (item.repeatType != 'none' && item.repeatType.isNotEmpty
-            ? DateTime.now().toIso8601String().substring(0, 10)
-            : null);
+              ? DateTime.now().toIso8601String().substring(0, 10)
+              : null);
 
-    if (item.repeatType != 'none' && item.repeatType.isNotEmpty && dateKey != null) {
+    if (item.repeatType != 'none' &&
+        item.repeatType.isNotEmpty &&
+        dateKey != null) {
       final set = item.completedDates
           .split(',')
           .map((s) => s.trim())
@@ -256,10 +268,11 @@ class PlannerLocalDataSourceImpl implements PlannerLocalDataSource {
 
   @override
   Future<void> clearCompletedItems() async {
-    await (_db.delete(_db.plannerItems)
-          ..where((t) =>
+    await (_db.delete(_db.plannerItems)..where(
+          (t) =>
               t.isDone.equals(true) &
-              (t.repeatType.equals('none') | t.repeatType.equals(''))))
+              (t.repeatType.equals('none') | t.repeatType.equals('')),
+        ))
         .go();
   }
 }

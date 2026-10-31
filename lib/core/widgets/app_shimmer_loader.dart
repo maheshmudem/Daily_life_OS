@@ -15,12 +15,10 @@ class AppShimmerLoader extends StatefulWidget {
     this.borderRadius,
   });
 
-  const AppShimmerLoader.circular({
-    super.key,
-    required double size,
-  })  : width = size,
-        height = size,
-        borderRadius = AppRadius.radiusFull;
+  const AppShimmerLoader.circular({super.key, required double size})
+    : width = size,
+      height = size,
+      borderRadius = AppRadius.radiusFull;
 
   const AppShimmerLoader.card({
     super.key,
@@ -60,7 +58,9 @@ class _AppShimmerLoaderState extends State<AppShimmerLoader>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final baseColor = isDark ? AppColors.darkSurfaceSecondary : AppColors.surfaceSecondary;
+    final baseColor = isDark
+        ? AppColors.darkSurfaceSecondary
+        : AppColors.surfaceSecondary;
     final highlightColor = isDark
         ? AppColors.darkSurfaceMuted.withValues(alpha: 0.6)
         : Colors.white.withValues(alpha: 0.85);
@@ -81,11 +81,7 @@ class _AppShimmerLoaderState extends State<AppShimmerLoader>
                 _animation.value.clamp(0.0, 1.0),
                 (_animation.value + 0.3).clamp(0.0, 1.0),
               ],
-              colors: [
-                baseColor,
-                highlightColor,
-                baseColor,
-              ],
+              colors: [baseColor, highlightColor, baseColor],
             ),
           ),
         );

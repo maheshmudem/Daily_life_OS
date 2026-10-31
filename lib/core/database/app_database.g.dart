@@ -1161,6 +1161,15 @@ class $TransactionsTable extends Transactions
     requiredDuringInsert: false,
     defaultValue: const Constant('expense'),
   );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1171,6 +1180,7 @@ class $TransactionsTable extends Transactions
     iconCodePoint,
     date,
     type,
+    note,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1244,6 +1254,12 @@ class $TransactionsTable extends Transactions
         type.isAcceptableOrUnknown(data['type']!, _typeMeta),
       );
     }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
     return context;
   }
 
@@ -1285,6 +1301,10 @@ class $TransactionsTable extends Transactions
         DriftSqlType.string,
         data['${effectivePrefix}type'],
       )!,
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
     );
   }
 
@@ -1303,6 +1323,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   final int iconCodePoint;
   final String date;
   final String type;
+  final String? note;
   const Transaction({
     required this.id,
     required this.title,
@@ -1312,6 +1333,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     required this.iconCodePoint,
     required this.date,
     required this.type,
+    this.note,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1324,6 +1346,9 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     map['icon_code_point'] = Variable<int>(iconCodePoint);
     map['date'] = Variable<String>(date);
     map['type'] = Variable<String>(type);
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
     return map;
   }
 
@@ -1337,6 +1362,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       iconCodePoint: Value(iconCodePoint),
       date: Value(date),
       type: Value(type),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
     );
   }
 
@@ -1354,6 +1380,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       iconCodePoint: serializer.fromJson<int>(json['iconCodePoint']),
       date: serializer.fromJson<String>(json['date']),
       type: serializer.fromJson<String>(json['type']),
+      note: serializer.fromJson<String?>(json['note']),
     );
   }
   @override
@@ -1368,6 +1395,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       'iconCodePoint': serializer.toJson<int>(iconCodePoint),
       'date': serializer.toJson<String>(date),
       'type': serializer.toJson<String>(type),
+      'note': serializer.toJson<String?>(note),
     };
   }
 
@@ -1380,6 +1408,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     int? iconCodePoint,
     String? date,
     String? type,
+    Value<String?> note = const Value.absent(),
   }) => Transaction(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -1389,6 +1418,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     iconCodePoint: iconCodePoint ?? this.iconCodePoint,
     date: date ?? this.date,
     type: type ?? this.type,
+    note: note.present ? note.value : this.note,
   );
   Transaction copyWithCompanion(TransactionsCompanion data) {
     return Transaction(
@@ -1402,6 +1432,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           : this.iconCodePoint,
       date: data.date.present ? data.date.value : this.date,
       type: data.type.present ? data.type.value : this.type,
+      note: data.note.present ? data.note.value : this.note,
     );
   }
 
@@ -1415,14 +1446,24 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           ..write('mode: $mode, ')
           ..write('iconCodePoint: $iconCodePoint, ')
           ..write('date: $date, ')
-          ..write('type: $type')
+          ..write('type: $type, ')
+          ..write('note: $note')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, title, category, amount, mode, iconCodePoint, date, type);
+  int get hashCode => Object.hash(
+    id,
+    title,
+    category,
+    amount,
+    mode,
+    iconCodePoint,
+    date,
+    type,
+    note,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1434,7 +1475,8 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           other.mode == this.mode &&
           other.iconCodePoint == this.iconCodePoint &&
           other.date == this.date &&
-          other.type == this.type);
+          other.type == this.type &&
+          other.note == this.note);
 }
 
 class TransactionsCompanion extends UpdateCompanion<Transaction> {
@@ -1446,6 +1488,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
   final Value<int> iconCodePoint;
   final Value<String> date;
   final Value<String> type;
+  final Value<String?> note;
   const TransactionsCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
@@ -1455,6 +1498,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     this.iconCodePoint = const Value.absent(),
     this.date = const Value.absent(),
     this.type = const Value.absent(),
+    this.note = const Value.absent(),
   });
   TransactionsCompanion.insert({
     this.id = const Value.absent(),
@@ -1465,6 +1509,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     required int iconCodePoint,
     required String date,
     this.type = const Value.absent(),
+    this.note = const Value.absent(),
   }) : title = Value(title),
        category = Value(category),
        amount = Value(amount),
@@ -1480,6 +1525,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     Expression<int>? iconCodePoint,
     Expression<String>? date,
     Expression<String>? type,
+    Expression<String>? note,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1490,6 +1536,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       if (iconCodePoint != null) 'icon_code_point': iconCodePoint,
       if (date != null) 'date': date,
       if (type != null) 'type': type,
+      if (note != null) 'note': note,
     });
   }
 
@@ -1502,6 +1549,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     Value<int>? iconCodePoint,
     Value<String>? date,
     Value<String>? type,
+    Value<String?>? note,
   }) {
     return TransactionsCompanion(
       id: id ?? this.id,
@@ -1512,6 +1560,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       iconCodePoint: iconCodePoint ?? this.iconCodePoint,
       date: date ?? this.date,
       type: type ?? this.type,
+      note: note ?? this.note,
     );
   }
 
@@ -1542,6 +1591,9 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     if (type.present) {
       map['type'] = Variable<String>(type.value);
     }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
     return map;
   }
 
@@ -1555,7 +1607,8 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
           ..write('mode: $mode, ')
           ..write('iconCodePoint: $iconCodePoint, ')
           ..write('date: $date, ')
-          ..write('type: $type')
+          ..write('type: $type, ')
+          ..write('note: $note')
           ..write(')'))
         .toString();
   }
@@ -1601,8 +1654,56 @@ class $BudgetSettingsTable extends BudgetSettings
     requiredDuringInsert: false,
     defaultValue: const Constant(8000),
   );
+  static const VerificationMeta _currencyCodeMeta = const VerificationMeta(
+    'currencyCode',
+  );
   @override
-  List<GeneratedColumn> get $columns => [id, monthlyBudget, fixedBills];
+  late final GeneratedColumn<String> currencyCode = GeneratedColumn<String>(
+    'currency_code',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('INR'),
+  );
+  static const VerificationMeta _budgetAlertsEnabledMeta =
+      const VerificationMeta('budgetAlertsEnabled');
+  @override
+  late final GeneratedColumn<bool> budgetAlertsEnabled = GeneratedColumn<bool>(
+    'budget_alerts_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("budget_alerts_enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _moneyLockEnabledMeta = const VerificationMeta(
+    'moneyLockEnabled',
+  );
+  @override
+  late final GeneratedColumn<bool> moneyLockEnabled = GeneratedColumn<bool>(
+    'money_lock_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("money_lock_enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    monthlyBudget,
+    fixedBills,
+    currencyCode,
+    budgetAlertsEnabled,
+    moneyLockEnabled,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1633,6 +1734,33 @@ class $BudgetSettingsTable extends BudgetSettings
         fixedBills.isAcceptableOrUnknown(data['fixed_bills']!, _fixedBillsMeta),
       );
     }
+    if (data.containsKey('currency_code')) {
+      context.handle(
+        _currencyCodeMeta,
+        currencyCode.isAcceptableOrUnknown(
+          data['currency_code']!,
+          _currencyCodeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('budget_alerts_enabled')) {
+      context.handle(
+        _budgetAlertsEnabledMeta,
+        budgetAlertsEnabled.isAcceptableOrUnknown(
+          data['budget_alerts_enabled']!,
+          _budgetAlertsEnabledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('money_lock_enabled')) {
+      context.handle(
+        _moneyLockEnabledMeta,
+        moneyLockEnabled.isAcceptableOrUnknown(
+          data['money_lock_enabled']!,
+          _moneyLockEnabledMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1654,6 +1782,18 @@ class $BudgetSettingsTable extends BudgetSettings
         DriftSqlType.double,
         data['${effectivePrefix}fixed_bills'],
       )!,
+      currencyCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency_code'],
+      )!,
+      budgetAlertsEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}budget_alerts_enabled'],
+      )!,
+      moneyLockEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}money_lock_enabled'],
+      )!,
     );
   }
 
@@ -1667,10 +1807,16 @@ class BudgetSetting extends DataClass implements Insertable<BudgetSetting> {
   final int id;
   final double monthlyBudget;
   final double fixedBills;
+  final String currencyCode;
+  final bool budgetAlertsEnabled;
+  final bool moneyLockEnabled;
   const BudgetSetting({
     required this.id,
     required this.monthlyBudget,
     required this.fixedBills,
+    required this.currencyCode,
+    required this.budgetAlertsEnabled,
+    required this.moneyLockEnabled,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1678,6 +1824,9 @@ class BudgetSetting extends DataClass implements Insertable<BudgetSetting> {
     map['id'] = Variable<int>(id);
     map['monthly_budget'] = Variable<double>(monthlyBudget);
     map['fixed_bills'] = Variable<double>(fixedBills);
+    map['currency_code'] = Variable<String>(currencyCode);
+    map['budget_alerts_enabled'] = Variable<bool>(budgetAlertsEnabled);
+    map['money_lock_enabled'] = Variable<bool>(moneyLockEnabled);
     return map;
   }
 
@@ -1686,6 +1835,9 @@ class BudgetSetting extends DataClass implements Insertable<BudgetSetting> {
       id: Value(id),
       monthlyBudget: Value(monthlyBudget),
       fixedBills: Value(fixedBills),
+      currencyCode: Value(currencyCode),
+      budgetAlertsEnabled: Value(budgetAlertsEnabled),
+      moneyLockEnabled: Value(moneyLockEnabled),
     );
   }
 
@@ -1698,6 +1850,11 @@ class BudgetSetting extends DataClass implements Insertable<BudgetSetting> {
       id: serializer.fromJson<int>(json['id']),
       monthlyBudget: serializer.fromJson<double>(json['monthlyBudget']),
       fixedBills: serializer.fromJson<double>(json['fixedBills']),
+      currencyCode: serializer.fromJson<String>(json['currencyCode']),
+      budgetAlertsEnabled: serializer.fromJson<bool>(
+        json['budgetAlertsEnabled'],
+      ),
+      moneyLockEnabled: serializer.fromJson<bool>(json['moneyLockEnabled']),
     );
   }
   @override
@@ -1707,6 +1864,9 @@ class BudgetSetting extends DataClass implements Insertable<BudgetSetting> {
       'id': serializer.toJson<int>(id),
       'monthlyBudget': serializer.toJson<double>(monthlyBudget),
       'fixedBills': serializer.toJson<double>(fixedBills),
+      'currencyCode': serializer.toJson<String>(currencyCode),
+      'budgetAlertsEnabled': serializer.toJson<bool>(budgetAlertsEnabled),
+      'moneyLockEnabled': serializer.toJson<bool>(moneyLockEnabled),
     };
   }
 
@@ -1714,10 +1874,16 @@ class BudgetSetting extends DataClass implements Insertable<BudgetSetting> {
     int? id,
     double? monthlyBudget,
     double? fixedBills,
+    String? currencyCode,
+    bool? budgetAlertsEnabled,
+    bool? moneyLockEnabled,
   }) => BudgetSetting(
     id: id ?? this.id,
     monthlyBudget: monthlyBudget ?? this.monthlyBudget,
     fixedBills: fixedBills ?? this.fixedBills,
+    currencyCode: currencyCode ?? this.currencyCode,
+    budgetAlertsEnabled: budgetAlertsEnabled ?? this.budgetAlertsEnabled,
+    moneyLockEnabled: moneyLockEnabled ?? this.moneyLockEnabled,
   );
   BudgetSetting copyWithCompanion(BudgetSettingsCompanion data) {
     return BudgetSetting(
@@ -1728,6 +1894,15 @@ class BudgetSetting extends DataClass implements Insertable<BudgetSetting> {
       fixedBills: data.fixedBills.present
           ? data.fixedBills.value
           : this.fixedBills,
+      currencyCode: data.currencyCode.present
+          ? data.currencyCode.value
+          : this.currencyCode,
+      budgetAlertsEnabled: data.budgetAlertsEnabled.present
+          ? data.budgetAlertsEnabled.value
+          : this.budgetAlertsEnabled,
+      moneyLockEnabled: data.moneyLockEnabled.present
+          ? data.moneyLockEnabled.value
+          : this.moneyLockEnabled,
     );
   }
 
@@ -1736,45 +1911,74 @@ class BudgetSetting extends DataClass implements Insertable<BudgetSetting> {
     return (StringBuffer('BudgetSetting(')
           ..write('id: $id, ')
           ..write('monthlyBudget: $monthlyBudget, ')
-          ..write('fixedBills: $fixedBills')
+          ..write('fixedBills: $fixedBills, ')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('budgetAlertsEnabled: $budgetAlertsEnabled, ')
+          ..write('moneyLockEnabled: $moneyLockEnabled')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, monthlyBudget, fixedBills);
+  int get hashCode => Object.hash(
+    id,
+    monthlyBudget,
+    fixedBills,
+    currencyCode,
+    budgetAlertsEnabled,
+    moneyLockEnabled,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is BudgetSetting &&
           other.id == this.id &&
           other.monthlyBudget == this.monthlyBudget &&
-          other.fixedBills == this.fixedBills);
+          other.fixedBills == this.fixedBills &&
+          other.currencyCode == this.currencyCode &&
+          other.budgetAlertsEnabled == this.budgetAlertsEnabled &&
+          other.moneyLockEnabled == this.moneyLockEnabled);
 }
 
 class BudgetSettingsCompanion extends UpdateCompanion<BudgetSetting> {
   final Value<int> id;
   final Value<double> monthlyBudget;
   final Value<double> fixedBills;
+  final Value<String> currencyCode;
+  final Value<bool> budgetAlertsEnabled;
+  final Value<bool> moneyLockEnabled;
   const BudgetSettingsCompanion({
     this.id = const Value.absent(),
     this.monthlyBudget = const Value.absent(),
     this.fixedBills = const Value.absent(),
+    this.currencyCode = const Value.absent(),
+    this.budgetAlertsEnabled = const Value.absent(),
+    this.moneyLockEnabled = const Value.absent(),
   });
   BudgetSettingsCompanion.insert({
     this.id = const Value.absent(),
     this.monthlyBudget = const Value.absent(),
     this.fixedBills = const Value.absent(),
+    this.currencyCode = const Value.absent(),
+    this.budgetAlertsEnabled = const Value.absent(),
+    this.moneyLockEnabled = const Value.absent(),
   });
   static Insertable<BudgetSetting> custom({
     Expression<int>? id,
     Expression<double>? monthlyBudget,
     Expression<double>? fixedBills,
+    Expression<String>? currencyCode,
+    Expression<bool>? budgetAlertsEnabled,
+    Expression<bool>? moneyLockEnabled,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (monthlyBudget != null) 'monthly_budget': monthlyBudget,
       if (fixedBills != null) 'fixed_bills': fixedBills,
+      if (currencyCode != null) 'currency_code': currencyCode,
+      if (budgetAlertsEnabled != null)
+        'budget_alerts_enabled': budgetAlertsEnabled,
+      if (moneyLockEnabled != null) 'money_lock_enabled': moneyLockEnabled,
     });
   }
 
@@ -1782,11 +1986,17 @@ class BudgetSettingsCompanion extends UpdateCompanion<BudgetSetting> {
     Value<int>? id,
     Value<double>? monthlyBudget,
     Value<double>? fixedBills,
+    Value<String>? currencyCode,
+    Value<bool>? budgetAlertsEnabled,
+    Value<bool>? moneyLockEnabled,
   }) {
     return BudgetSettingsCompanion(
       id: id ?? this.id,
       monthlyBudget: monthlyBudget ?? this.monthlyBudget,
       fixedBills: fixedBills ?? this.fixedBills,
+      currencyCode: currencyCode ?? this.currencyCode,
+      budgetAlertsEnabled: budgetAlertsEnabled ?? this.budgetAlertsEnabled,
+      moneyLockEnabled: moneyLockEnabled ?? this.moneyLockEnabled,
     );
   }
 
@@ -1802,6 +2012,15 @@ class BudgetSettingsCompanion extends UpdateCompanion<BudgetSetting> {
     if (fixedBills.present) {
       map['fixed_bills'] = Variable<double>(fixedBills.value);
     }
+    if (currencyCode.present) {
+      map['currency_code'] = Variable<String>(currencyCode.value);
+    }
+    if (budgetAlertsEnabled.present) {
+      map['budget_alerts_enabled'] = Variable<bool>(budgetAlertsEnabled.value);
+    }
+    if (moneyLockEnabled.present) {
+      map['money_lock_enabled'] = Variable<bool>(moneyLockEnabled.value);
+    }
     return map;
   }
 
@@ -1810,7 +2029,10 @@ class BudgetSettingsCompanion extends UpdateCompanion<BudgetSetting> {
     return (StringBuffer('BudgetSettingsCompanion(')
           ..write('id: $id, ')
           ..write('monthlyBudget: $monthlyBudget, ')
-          ..write('fixedBills: $fixedBills')
+          ..write('fixedBills: $fixedBills, ')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('budgetAlertsEnabled: $budgetAlertsEnabled, ')
+          ..write('moneyLockEnabled: $moneyLockEnabled')
           ..write(')'))
         .toString();
   }
@@ -4117,6 +4339,662 @@ class PlannerItemsCompanion extends UpdateCompanion<PlannerItem> {
   }
 }
 
+class $CategoryBudgetsTable extends CategoryBudgets
+    with TableInfo<$CategoryBudgetsTable, CategoryBudget> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CategoryBudgetsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _monthlyLimitMeta = const VerificationMeta(
+    'monthlyLimit',
+  );
+  @override
+  late final GeneratedColumn<double> monthlyLimit = GeneratedColumn<double>(
+    'monthly_limit',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, category, monthlyLimit];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'category_budgets';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CategoryBudget> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('category')) {
+      context.handle(
+        _categoryMeta,
+        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_categoryMeta);
+    }
+    if (data.containsKey('monthly_limit')) {
+      context.handle(
+        _monthlyLimitMeta,
+        monthlyLimit.isAcceptableOrUnknown(
+          data['monthly_limit']!,
+          _monthlyLimitMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CategoryBudget map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CategoryBudget(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      category: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category'],
+      )!,
+      monthlyLimit: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}monthly_limit'],
+      )!,
+    );
+  }
+
+  @override
+  $CategoryBudgetsTable createAlias(String alias) {
+    return $CategoryBudgetsTable(attachedDatabase, alias);
+  }
+}
+
+class CategoryBudget extends DataClass implements Insertable<CategoryBudget> {
+  final int id;
+  final String category;
+  final double monthlyLimit;
+  const CategoryBudget({
+    required this.id,
+    required this.category,
+    required this.monthlyLimit,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['category'] = Variable<String>(category);
+    map['monthly_limit'] = Variable<double>(monthlyLimit);
+    return map;
+  }
+
+  CategoryBudgetsCompanion toCompanion(bool nullToAbsent) {
+    return CategoryBudgetsCompanion(
+      id: Value(id),
+      category: Value(category),
+      monthlyLimit: Value(monthlyLimit),
+    );
+  }
+
+  factory CategoryBudget.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CategoryBudget(
+      id: serializer.fromJson<int>(json['id']),
+      category: serializer.fromJson<String>(json['category']),
+      monthlyLimit: serializer.fromJson<double>(json['monthlyLimit']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'category': serializer.toJson<String>(category),
+      'monthlyLimit': serializer.toJson<double>(monthlyLimit),
+    };
+  }
+
+  CategoryBudget copyWith({int? id, String? category, double? monthlyLimit}) =>
+      CategoryBudget(
+        id: id ?? this.id,
+        category: category ?? this.category,
+        monthlyLimit: monthlyLimit ?? this.monthlyLimit,
+      );
+  CategoryBudget copyWithCompanion(CategoryBudgetsCompanion data) {
+    return CategoryBudget(
+      id: data.id.present ? data.id.value : this.id,
+      category: data.category.present ? data.category.value : this.category,
+      monthlyLimit: data.monthlyLimit.present
+          ? data.monthlyLimit.value
+          : this.monthlyLimit,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CategoryBudget(')
+          ..write('id: $id, ')
+          ..write('category: $category, ')
+          ..write('monthlyLimit: $monthlyLimit')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, category, monthlyLimit);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CategoryBudget &&
+          other.id == this.id &&
+          other.category == this.category &&
+          other.monthlyLimit == this.monthlyLimit);
+}
+
+class CategoryBudgetsCompanion extends UpdateCompanion<CategoryBudget> {
+  final Value<int> id;
+  final Value<String> category;
+  final Value<double> monthlyLimit;
+  const CategoryBudgetsCompanion({
+    this.id = const Value.absent(),
+    this.category = const Value.absent(),
+    this.monthlyLimit = const Value.absent(),
+  });
+  CategoryBudgetsCompanion.insert({
+    this.id = const Value.absent(),
+    required String category,
+    this.monthlyLimit = const Value.absent(),
+  }) : category = Value(category);
+  static Insertable<CategoryBudget> custom({
+    Expression<int>? id,
+    Expression<String>? category,
+    Expression<double>? monthlyLimit,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (category != null) 'category': category,
+      if (monthlyLimit != null) 'monthly_limit': monthlyLimit,
+    });
+  }
+
+  CategoryBudgetsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? category,
+    Value<double>? monthlyLimit,
+  }) {
+    return CategoryBudgetsCompanion(
+      id: id ?? this.id,
+      category: category ?? this.category,
+      monthlyLimit: monthlyLimit ?? this.monthlyLimit,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
+    if (monthlyLimit.present) {
+      map['monthly_limit'] = Variable<double>(monthlyLimit.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CategoryBudgetsCompanion(')
+          ..write('id: $id, ')
+          ..write('category: $category, ')
+          ..write('monthlyLimit: $monthlyLimit')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $MoneyAccountsTable extends MoneyAccounts
+    with TableInfo<$MoneyAccountsTable, MoneyAccount> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MoneyAccountsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _balanceMeta = const VerificationMeta(
+    'balance',
+  );
+  @override
+  late final GeneratedColumn<double> balance = GeneratedColumn<double>(
+    'balance',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _colorValueMeta = const VerificationMeta(
+    'colorValue',
+  );
+  @override
+  late final GeneratedColumn<int> colorValue = GeneratedColumn<int>(
+    'color_value',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _iconCodePointMeta = const VerificationMeta(
+    'iconCodePoint',
+  );
+  @override
+  late final GeneratedColumn<int> iconCodePoint = GeneratedColumn<int>(
+    'icon_code_point',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    type,
+    balance,
+    colorValue,
+    iconCodePoint,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'money_accounts';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MoneyAccount> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('balance')) {
+      context.handle(
+        _balanceMeta,
+        balance.isAcceptableOrUnknown(data['balance']!, _balanceMeta),
+      );
+    }
+    if (data.containsKey('color_value')) {
+      context.handle(
+        _colorValueMeta,
+        colorValue.isAcceptableOrUnknown(data['color_value']!, _colorValueMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_colorValueMeta);
+    }
+    if (data.containsKey('icon_code_point')) {
+      context.handle(
+        _iconCodePointMeta,
+        iconCodePoint.isAcceptableOrUnknown(
+          data['icon_code_point']!,
+          _iconCodePointMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_iconCodePointMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  MoneyAccount map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MoneyAccount(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      balance: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}balance'],
+      )!,
+      colorValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}color_value'],
+      )!,
+      iconCodePoint: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}icon_code_point'],
+      )!,
+    );
+  }
+
+  @override
+  $MoneyAccountsTable createAlias(String alias) {
+    return $MoneyAccountsTable(attachedDatabase, alias);
+  }
+}
+
+class MoneyAccount extends DataClass implements Insertable<MoneyAccount> {
+  final int id;
+  final String name;
+  final String type;
+  final double balance;
+  final int colorValue;
+  final int iconCodePoint;
+  const MoneyAccount({
+    required this.id,
+    required this.name,
+    required this.type,
+    required this.balance,
+    required this.colorValue,
+    required this.iconCodePoint,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['type'] = Variable<String>(type);
+    map['balance'] = Variable<double>(balance);
+    map['color_value'] = Variable<int>(colorValue);
+    map['icon_code_point'] = Variable<int>(iconCodePoint);
+    return map;
+  }
+
+  MoneyAccountsCompanion toCompanion(bool nullToAbsent) {
+    return MoneyAccountsCompanion(
+      id: Value(id),
+      name: Value(name),
+      type: Value(type),
+      balance: Value(balance),
+      colorValue: Value(colorValue),
+      iconCodePoint: Value(iconCodePoint),
+    );
+  }
+
+  factory MoneyAccount.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MoneyAccount(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      type: serializer.fromJson<String>(json['type']),
+      balance: serializer.fromJson<double>(json['balance']),
+      colorValue: serializer.fromJson<int>(json['colorValue']),
+      iconCodePoint: serializer.fromJson<int>(json['iconCodePoint']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'type': serializer.toJson<String>(type),
+      'balance': serializer.toJson<double>(balance),
+      'colorValue': serializer.toJson<int>(colorValue),
+      'iconCodePoint': serializer.toJson<int>(iconCodePoint),
+    };
+  }
+
+  MoneyAccount copyWith({
+    int? id,
+    String? name,
+    String? type,
+    double? balance,
+    int? colorValue,
+    int? iconCodePoint,
+  }) => MoneyAccount(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    type: type ?? this.type,
+    balance: balance ?? this.balance,
+    colorValue: colorValue ?? this.colorValue,
+    iconCodePoint: iconCodePoint ?? this.iconCodePoint,
+  );
+  MoneyAccount copyWithCompanion(MoneyAccountsCompanion data) {
+    return MoneyAccount(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      type: data.type.present ? data.type.value : this.type,
+      balance: data.balance.present ? data.balance.value : this.balance,
+      colorValue: data.colorValue.present
+          ? data.colorValue.value
+          : this.colorValue,
+      iconCodePoint: data.iconCodePoint.present
+          ? data.iconCodePoint.value
+          : this.iconCodePoint,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MoneyAccount(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('type: $type, ')
+          ..write('balance: $balance, ')
+          ..write('colorValue: $colorValue, ')
+          ..write('iconCodePoint: $iconCodePoint')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, name, type, balance, colorValue, iconCodePoint);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MoneyAccount &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.type == this.type &&
+          other.balance == this.balance &&
+          other.colorValue == this.colorValue &&
+          other.iconCodePoint == this.iconCodePoint);
+}
+
+class MoneyAccountsCompanion extends UpdateCompanion<MoneyAccount> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<String> type;
+  final Value<double> balance;
+  final Value<int> colorValue;
+  final Value<int> iconCodePoint;
+  const MoneyAccountsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.type = const Value.absent(),
+    this.balance = const Value.absent(),
+    this.colorValue = const Value.absent(),
+    this.iconCodePoint = const Value.absent(),
+  });
+  MoneyAccountsCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    required String type,
+    this.balance = const Value.absent(),
+    required int colorValue,
+    required int iconCodePoint,
+  }) : name = Value(name),
+       type = Value(type),
+       colorValue = Value(colorValue),
+       iconCodePoint = Value(iconCodePoint);
+  static Insertable<MoneyAccount> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<String>? type,
+    Expression<double>? balance,
+    Expression<int>? colorValue,
+    Expression<int>? iconCodePoint,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (type != null) 'type': type,
+      if (balance != null) 'balance': balance,
+      if (colorValue != null) 'color_value': colorValue,
+      if (iconCodePoint != null) 'icon_code_point': iconCodePoint,
+    });
+  }
+
+  MoneyAccountsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? name,
+    Value<String>? type,
+    Value<double>? balance,
+    Value<int>? colorValue,
+    Value<int>? iconCodePoint,
+  }) {
+    return MoneyAccountsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      type: type ?? this.type,
+      balance: balance ?? this.balance,
+      colorValue: colorValue ?? this.colorValue,
+      iconCodePoint: iconCodePoint ?? this.iconCodePoint,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (balance.present) {
+      map['balance'] = Variable<double>(balance.value);
+    }
+    if (colorValue.present) {
+      map['color_value'] = Variable<int>(colorValue.value);
+    }
+    if (iconCodePoint.present) {
+      map['icon_code_point'] = Variable<int>(iconCodePoint.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MoneyAccountsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('type: $type, ')
+          ..write('balance: $balance, ')
+          ..write('colorValue: $colorValue, ')
+          ..write('iconCodePoint: $iconCodePoint')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4128,6 +5006,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $IouEntriesTable iouEntries = $IouEntriesTable(this);
   late final $NotesTable notes = $NotesTable(this);
   late final $PlannerItemsTable plannerItems = $PlannerItemsTable(this);
+  late final $CategoryBudgetsTable categoryBudgets = $CategoryBudgetsTable(
+    this,
+  );
+  late final $MoneyAccountsTable moneyAccounts = $MoneyAccountsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4141,6 +5023,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     iouEntries,
     notes,
     plannerItems,
+    categoryBudgets,
+    moneyAccounts,
   ];
 }
 
@@ -4683,6 +5567,7 @@ typedef $$TransactionsTableCreateCompanionBuilder =
       required int iconCodePoint,
       required String date,
       Value<String> type,
+      Value<String?> note,
     });
 typedef $$TransactionsTableUpdateCompanionBuilder =
     TransactionsCompanion Function({
@@ -4694,6 +5579,7 @@ typedef $$TransactionsTableUpdateCompanionBuilder =
       Value<int> iconCodePoint,
       Value<String> date,
       Value<String> type,
+      Value<String?> note,
     });
 
 class $$TransactionsTableFilterComposer
@@ -4742,6 +5628,11 @@ class $$TransactionsTableFilterComposer
 
   ColumnFilters<String> get type => $composableBuilder(
     column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4794,6 +5685,11 @@ class $$TransactionsTableOrderingComposer
     column: $table.type,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$TransactionsTableAnnotationComposer
@@ -4830,6 +5726,9 @@ class $$TransactionsTableAnnotationComposer
 
   GeneratedColumn<String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
 }
 
 class $$TransactionsTableTableManager
@@ -4871,6 +5770,7 @@ class $$TransactionsTableTableManager
                 Value<int> iconCodePoint = const Value.absent(),
                 Value<String> date = const Value.absent(),
                 Value<String> type = const Value.absent(),
+                Value<String?> note = const Value.absent(),
               }) => TransactionsCompanion(
                 id: id,
                 title: title,
@@ -4880,6 +5780,7 @@ class $$TransactionsTableTableManager
                 iconCodePoint: iconCodePoint,
                 date: date,
                 type: type,
+                note: note,
               ),
           createCompanionCallback:
               ({
@@ -4891,6 +5792,7 @@ class $$TransactionsTableTableManager
                 required int iconCodePoint,
                 required String date,
                 Value<String> type = const Value.absent(),
+                Value<String?> note = const Value.absent(),
               }) => TransactionsCompanion.insert(
                 id: id,
                 title: title,
@@ -4900,6 +5802,7 @@ class $$TransactionsTableTableManager
                 iconCodePoint: iconCodePoint,
                 date: date,
                 type: type,
+                note: note,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -4931,12 +5834,18 @@ typedef $$BudgetSettingsTableCreateCompanionBuilder =
       Value<int> id,
       Value<double> monthlyBudget,
       Value<double> fixedBills,
+      Value<String> currencyCode,
+      Value<bool> budgetAlertsEnabled,
+      Value<bool> moneyLockEnabled,
     });
 typedef $$BudgetSettingsTableUpdateCompanionBuilder =
     BudgetSettingsCompanion Function({
       Value<int> id,
       Value<double> monthlyBudget,
       Value<double> fixedBills,
+      Value<String> currencyCode,
+      Value<bool> budgetAlertsEnabled,
+      Value<bool> moneyLockEnabled,
     });
 
 class $$BudgetSettingsTableFilterComposer
@@ -4960,6 +5869,21 @@ class $$BudgetSettingsTableFilterComposer
 
   ColumnFilters<double> get fixedBills => $composableBuilder(
     column: $table.fixedBills,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get budgetAlertsEnabled => $composableBuilder(
+    column: $table.budgetAlertsEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get moneyLockEnabled => $composableBuilder(
+    column: $table.moneyLockEnabled,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4987,6 +5911,21 @@ class $$BudgetSettingsTableOrderingComposer
     column: $table.fixedBills,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get budgetAlertsEnabled => $composableBuilder(
+    column: $table.budgetAlertsEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get moneyLockEnabled => $composableBuilder(
+    column: $table.moneyLockEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$BudgetSettingsTableAnnotationComposer
@@ -5008,6 +5947,21 @@ class $$BudgetSettingsTableAnnotationComposer
 
   GeneratedColumn<double> get fixedBills => $composableBuilder(
     column: $table.fixedBills,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get budgetAlertsEnabled => $composableBuilder(
+    column: $table.budgetAlertsEnabled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get moneyLockEnabled => $composableBuilder(
+    column: $table.moneyLockEnabled,
     builder: (column) => column,
   );
 }
@@ -5048,20 +6002,32 @@ class $$BudgetSettingsTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<double> monthlyBudget = const Value.absent(),
                 Value<double> fixedBills = const Value.absent(),
+                Value<String> currencyCode = const Value.absent(),
+                Value<bool> budgetAlertsEnabled = const Value.absent(),
+                Value<bool> moneyLockEnabled = const Value.absent(),
               }) => BudgetSettingsCompanion(
                 id: id,
                 monthlyBudget: monthlyBudget,
                 fixedBills: fixedBills,
+                currencyCode: currencyCode,
+                budgetAlertsEnabled: budgetAlertsEnabled,
+                moneyLockEnabled: moneyLockEnabled,
               ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
                 Value<double> monthlyBudget = const Value.absent(),
                 Value<double> fixedBills = const Value.absent(),
+                Value<String> currencyCode = const Value.absent(),
+                Value<bool> budgetAlertsEnabled = const Value.absent(),
+                Value<bool> moneyLockEnabled = const Value.absent(),
               }) => BudgetSettingsCompanion.insert(
                 id: id,
                 monthlyBudget: monthlyBudget,
                 fixedBills: fixedBills,
+                currencyCode: currencyCode,
+                budgetAlertsEnabled: budgetAlertsEnabled,
+                moneyLockEnabled: moneyLockEnabled,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -6215,6 +7181,387 @@ typedef $$PlannerItemsTableProcessedTableManager =
       PlannerItem,
       PrefetchHooks Function()
     >;
+typedef $$CategoryBudgetsTableCreateCompanionBuilder =
+    CategoryBudgetsCompanion Function({
+      Value<int> id,
+      required String category,
+      Value<double> monthlyLimit,
+    });
+typedef $$CategoryBudgetsTableUpdateCompanionBuilder =
+    CategoryBudgetsCompanion Function({
+      Value<int> id,
+      Value<String> category,
+      Value<double> monthlyLimit,
+    });
+
+class $$CategoryBudgetsTableFilterComposer
+    extends Composer<_$AppDatabase, $CategoryBudgetsTable> {
+  $$CategoryBudgetsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get monthlyLimit => $composableBuilder(
+    column: $table.monthlyLimit,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CategoryBudgetsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CategoryBudgetsTable> {
+  $$CategoryBudgetsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get monthlyLimit => $composableBuilder(
+    column: $table.monthlyLimit,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CategoryBudgetsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CategoryBudgetsTable> {
+  $$CategoryBudgetsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<double> get monthlyLimit => $composableBuilder(
+    column: $table.monthlyLimit,
+    builder: (column) => column,
+  );
+}
+
+class $$CategoryBudgetsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CategoryBudgetsTable,
+          CategoryBudget,
+          $$CategoryBudgetsTableFilterComposer,
+          $$CategoryBudgetsTableOrderingComposer,
+          $$CategoryBudgetsTableAnnotationComposer,
+          $$CategoryBudgetsTableCreateCompanionBuilder,
+          $$CategoryBudgetsTableUpdateCompanionBuilder,
+          (
+            CategoryBudget,
+            BaseReferences<
+              _$AppDatabase,
+              $CategoryBudgetsTable,
+              CategoryBudget
+            >,
+          ),
+          CategoryBudget,
+          PrefetchHooks Function()
+        > {
+  $$CategoryBudgetsTableTableManager(
+    _$AppDatabase db,
+    $CategoryBudgetsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CategoryBudgetsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CategoryBudgetsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CategoryBudgetsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> category = const Value.absent(),
+                Value<double> monthlyLimit = const Value.absent(),
+              }) => CategoryBudgetsCompanion(
+                id: id,
+                category: category,
+                monthlyLimit: monthlyLimit,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String category,
+                Value<double> monthlyLimit = const Value.absent(),
+              }) => CategoryBudgetsCompanion.insert(
+                id: id,
+                category: category,
+                monthlyLimit: monthlyLimit,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CategoryBudgetsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CategoryBudgetsTable,
+      CategoryBudget,
+      $$CategoryBudgetsTableFilterComposer,
+      $$CategoryBudgetsTableOrderingComposer,
+      $$CategoryBudgetsTableAnnotationComposer,
+      $$CategoryBudgetsTableCreateCompanionBuilder,
+      $$CategoryBudgetsTableUpdateCompanionBuilder,
+      (
+        CategoryBudget,
+        BaseReferences<_$AppDatabase, $CategoryBudgetsTable, CategoryBudget>,
+      ),
+      CategoryBudget,
+      PrefetchHooks Function()
+    >;
+typedef $$MoneyAccountsTableCreateCompanionBuilder =
+    MoneyAccountsCompanion Function({
+      Value<int> id,
+      required String name,
+      required String type,
+      Value<double> balance,
+      required int colorValue,
+      required int iconCodePoint,
+    });
+typedef $$MoneyAccountsTableUpdateCompanionBuilder =
+    MoneyAccountsCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<String> type,
+      Value<double> balance,
+      Value<int> colorValue,
+      Value<int> iconCodePoint,
+    });
+
+class $$MoneyAccountsTableFilterComposer
+    extends Composer<_$AppDatabase, $MoneyAccountsTable> {
+  $$MoneyAccountsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get balance => $composableBuilder(
+    column: $table.balance,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get colorValue => $composableBuilder(
+    column: $table.colorValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get iconCodePoint => $composableBuilder(
+    column: $table.iconCodePoint,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$MoneyAccountsTableOrderingComposer
+    extends Composer<_$AppDatabase, $MoneyAccountsTable> {
+  $$MoneyAccountsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get balance => $composableBuilder(
+    column: $table.balance,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get colorValue => $composableBuilder(
+    column: $table.colorValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get iconCodePoint => $composableBuilder(
+    column: $table.iconCodePoint,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MoneyAccountsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $MoneyAccountsTable> {
+  $$MoneyAccountsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<double> get balance =>
+      $composableBuilder(column: $table.balance, builder: (column) => column);
+
+  GeneratedColumn<int> get colorValue => $composableBuilder(
+    column: $table.colorValue,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get iconCodePoint => $composableBuilder(
+    column: $table.iconCodePoint,
+    builder: (column) => column,
+  );
+}
+
+class $$MoneyAccountsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $MoneyAccountsTable,
+          MoneyAccount,
+          $$MoneyAccountsTableFilterComposer,
+          $$MoneyAccountsTableOrderingComposer,
+          $$MoneyAccountsTableAnnotationComposer,
+          $$MoneyAccountsTableCreateCompanionBuilder,
+          $$MoneyAccountsTableUpdateCompanionBuilder,
+          (
+            MoneyAccount,
+            BaseReferences<_$AppDatabase, $MoneyAccountsTable, MoneyAccount>,
+          ),
+          MoneyAccount,
+          PrefetchHooks Function()
+        > {
+  $$MoneyAccountsTableTableManager(_$AppDatabase db, $MoneyAccountsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MoneyAccountsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MoneyAccountsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MoneyAccountsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<double> balance = const Value.absent(),
+                Value<int> colorValue = const Value.absent(),
+                Value<int> iconCodePoint = const Value.absent(),
+              }) => MoneyAccountsCompanion(
+                id: id,
+                name: name,
+                type: type,
+                balance: balance,
+                colorValue: colorValue,
+                iconCodePoint: iconCodePoint,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String name,
+                required String type,
+                Value<double> balance = const Value.absent(),
+                required int colorValue,
+                required int iconCodePoint,
+              }) => MoneyAccountsCompanion.insert(
+                id: id,
+                name: name,
+                type: type,
+                balance: balance,
+                colorValue: colorValue,
+                iconCodePoint: iconCodePoint,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$MoneyAccountsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $MoneyAccountsTable,
+      MoneyAccount,
+      $$MoneyAccountsTableFilterComposer,
+      $$MoneyAccountsTableOrderingComposer,
+      $$MoneyAccountsTableAnnotationComposer,
+      $$MoneyAccountsTableCreateCompanionBuilder,
+      $$MoneyAccountsTableUpdateCompanionBuilder,
+      (
+        MoneyAccount,
+        BaseReferences<_$AppDatabase, $MoneyAccountsTable, MoneyAccount>,
+      ),
+      MoneyAccount,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6235,4 +7582,8 @@ class $AppDatabaseManager {
       $$NotesTableTableManager(_db, _db.notes);
   $$PlannerItemsTableTableManager get plannerItems =>
       $$PlannerItemsTableTableManager(_db, _db.plannerItems);
+  $$CategoryBudgetsTableTableManager get categoryBudgets =>
+      $$CategoryBudgetsTableTableManager(_db, _db.categoryBudgets);
+  $$MoneyAccountsTableTableManager get moneyAccounts =>
+      $$MoneyAccountsTableTableManager(_db, _db.moneyAccounts);
 }

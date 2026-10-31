@@ -39,6 +39,27 @@ class AppColors {
   static const Color safeSpendPositive = Color(0xFF10B981);
   static const Color safeSpendNegative = Color(0xFFEF4444);
 
+  // Money — Spending Category Palette (charts, category tiles, budgets)
+  static const Color moneyCatFood = Color(0xFFF97316); // Orange
+  static const Color moneyCatTransport = Color(0xFF3B82F6); // Blue
+  static const Color moneyCatShopping = Color(0xFFA855F7); // Purple
+  static const Color moneyCatHealth = Color(0xFFEC4899); // Pink
+  static const Color moneyCatEntertainment = Color(0xFF06B6D4); // Cyan
+  static const Color moneyCatBills = Color(0xFF64748B); // Slate
+  static const Color moneyCatTravel = Color(0xFF22C55E); // Green
+  static const Color moneyCatOther = Color(0xFF78716C); // Stone
+  static const Color moneyCatIncome = Color(0xFF10B981); // Emerald (credits)
+
+  // Money — Asset / Account Palette (Total Assets bar)
+  static const Color moneyAssetCash = Color(0xFF14B8A6); // Teal
+  static const Color moneyAssetSavings = Color(0xFFF43F5E); // Rose
+  static const Color moneyAssetInvest = Color(0xFF6366F1); // Indigo
+
+  // Money — Chart helpers
+  static const Color moneyChartPrevious = Color(
+    0xFFA7F3D0,
+  ); // Muted mint (previous period)
+
   // ==========================================
   // MODULE 4: NOTES & IDEAS (Mind & Thoughts)
   // ==========================================
@@ -72,15 +93,20 @@ class AppColors {
   static const Color scaffoldBackground = Color(0xFFF8FAFC); // Slate-50
   static const Color cardBackground = Color(0xFFFFFFFF);
   static const Color surfaceColor = Color(0xFFFFFFFF);
+  static const Color surface = Color(0xFFFFFFFF);
   static const Color surfaceSecondary = Color(0xFFF1F5F9); // Slate-100
+  static const Color surfaceElevated = Color(0xFFF1F5F9); // Slate-100
   static const Color surfaceMuted = Color(0xFFE2E8F0); // Slate-200
 
   // ==========================================
   // SURFACES & BACKGROUNDS (DARK THEME)
   // ==========================================
-  static const Color darkScaffoldBackground = Color(0xFF0B0F19); // Ultra-deep Slate
+  static const Color darkScaffoldBackground = Color(
+    0xFF0B0F19,
+  ); // Ultra-deep Slate
   static const Color darkCardBackground = Color(0xFF151D2C); // Elevation 1
   static const Color darkSurfaceColor = Color(0xFF151D2C);
+  static const Color darkSurface = Color(0xFF151D2C);
   static const Color darkSurfaceSecondary = Color(0xFF1E293B); // Elevation 2
   static const Color darkSurfaceMuted = Color(0xFF334155); // Slate-700
 
@@ -88,13 +114,19 @@ class AppColors {
   // TYPOGRAPHY & TEXT COLORS
   // ==========================================
   static const Color textHeading = Color(0xFF0F172A); // Slate-900
+  static const Color textPrimary = Color(0xFF0F172A); // Slate-900
   static const Color textBody = Color(0xFF334155); // Slate-700
+  static const Color textSecondary = Color(0xFF475569); // Slate-600
   static const Color textCaption = Color(0xFF64748B); // Slate-500
+  static const Color textMuted = Color(0xFF64748B); // Slate-500
   static const Color textWhite = Colors.white;
 
   static const Color darkTextHeading = Color(0xFFF8FAFC); // Slate-50
+  static const Color darkTextPrimary = Color(0xFFF8FAFC); // Slate-50
   static const Color darkTextBody = Color(0xFFE2E8F0); // Slate-200
+  static const Color darkTextSecondary = Color(0xFFCBD5E1); // Slate-300
   static const Color darkTextCaption = Color(0xFF94A3B8); // Slate-400
+  static const Color darkTextMuted = Color(0xFF94A3B8); // Slate-400
 
   // ==========================================
   // STATUS & SEMANTIC FEEDBACK
