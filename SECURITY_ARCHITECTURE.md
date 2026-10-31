@@ -56,7 +56,7 @@ Android's native `BiometricPrompt` dialog requires the host activity to inherit 
 
 Update `android/app/src/main/kotlin/.../MainActivity.kt`:
 ```kotlin
-package com.example.daily_life_os
+package com.dailylifeos.app
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

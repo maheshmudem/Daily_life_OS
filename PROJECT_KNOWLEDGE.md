@@ -1,506 +1,861 @@
-# 📘 Daily Life OS — Comprehensive Architecture & Knowledge Base
+# 📘 Daily Life OS — Project Knowledge Base
 
-> **Document Version:** 1.0.0  
-> **Target Audience:** Developers, Maintainers, and AI Agents working on **Daily Life OS**.  
-> **Purpose:** Detailed reference manual explaining the architecture, data pipeline, module-by-module functionalities, database schemas, function implementations, and developer guides.
-
----
-
-## 📑 Table of Contents
-1. [Executive Summary & Product Vision](#1-executive-summary--product-vision)
-2. [High-Level System Architecture](#2-high-level-system-architecture)
-3. [End-to-End Architectural Data Flow](#3-end-to-end-architectural-data-flow)
-4. [Module-by-Module Technical Deep Dive](#4-module-by-module-technical-deep-dive)
-   - [4.1 Navigation Shell & Quick Capture](#41-navigation-shell--quick-capture)
-   - [4.2 Today Hub (Command Center)](#42-today-hub-command-center)
-   - [4.3 Planner & Focus Timer](#43-planner--focus-timer)
-   - [4.4 Money Manager](#44-money-manager)
-   - [4.5 Notes & Daily Scratchpad](#45-notes--daily-scratchpad)
-   - [4.6 Secure Vault](#46-secure-vault)
-5. [Drift SQLite Database Schema & Persistence](#5-drift-sqlite-database-schema--persistence)
-6. [Local Notifications Engine](#6-local-notifications-engine)
-7. [Dependency Injection (`get_it`) Wiring](#7-dependency-injection-get_it-wiring)
-8. [Design System & Theme Tokens](#8-design-system--theme-tokens)
-9. [Shared Core Widgets Library](#9-shared-core-widgets-library)
-10. [Testing Strategy & Test Suites](#10-testing-strategy--test-suites)
-11. [Developer Extension Playbook](#11-developer-extension-playbook)
+> **Purpose of this file:** a single place where any developer (or AI assistant) can learn
+> how this project is built, how data flows, where things live, and what is real vs. mocked.
+> Read this before touching the code.
+>
+> _Last updated: 2026-10-31 (branch `implement_branch`)_
 
 ---
 
-## 1. Executive Summary & Product Vision
+## Table of Contents
 
-### 1.1 The Core Problem
-Users typically juggle 4 to 6 disparate apps every day:
-- A to-do list / calendar app for daily schedule.
-- An expense tracker for logging money spent.
-- A note-taking app for random thoughts and checklists.
-- A password manager or gallery vault for credentials and warranties.
-
-These apps operate in isolation: a bill reminder in a calendar never automatically updates an expense ledger, and logging a purchased gadget never prompts to save the receipt and set a warranty reminder.
-
-### 1.2 The Solution
-**Daily Life OS** is an offline-first personal operating system built with Flutter. It connects:
-- **Time** (Reminders, Schedules, Focus Pomodoro)
-- **Money** (Expenses, Monthly Budgets, Subscriptions, IOU Debts)
-- **Mind** (Notes, Quick Scratchpad, Voice Audio Briefings)
-- **Security** (AES-256 Passwords, Document & Warranty Locker, Decoy Mode)
-
-All modules integrate into a unified **Today Hub** dashboard, coupled with a persistent floating **Quick-Capture Bar** accessible from anywhere.
+1. [What the App Is](#1-what-the-app-is)
+2. [Tech Stack](#2-tech-stack)
+3. [Folder Structure](#3-folder-structure)
+4. [Architecture (Clean Architecture + BLoC)](#4-architecture-clean-architecture--bloc)
+5. [App Startup Flow](#5-app-startup-flow)
+6. [Dependency Injection](#6-dependency-injection)
+7. [Navigation & Screen Layout](#7-navigation--screen-layout)
+8. [Database (Drift / SQLite)](#8-database-drift--sqlite)
+9. [Other Storage (SharedPreferences & Secure Storage)](#9-other-storage-sharedpreferences--secure-storage)
+10. [Notifications](#10-notifications)
+11. [Feature Modules — Deep Dive](#11-feature-modules--deep-dive)
+    - [Today Hub](#111-today-hub)
+    - [Planner (Reminders, Pomodoro, Countdowns)](#112-planner-reminders-pomodoro-countdowns)
+    - [Money Manager](#113-money-manager)
+    - [Notes](#114-notes)
+    - [Vault](#115-vault)
+    - [Security (PIN / Pattern / Biometrics / Decoy)](#116-security-pin--pattern--biometrics--decoy)
+12. [Shared Core Code](#12-shared-core-code)
+13. [Theme & Design System](#13-theme--design-system)
+14. [Platform Configuration](#14-platform-configuration)
+15. [Testing](#15-testing)
+16. [CI/CD](#16-cicd)
+17. [Real vs. Mocked — Implementation Status](#17-real-vs-mocked--implementation-status)
+18. [Known Issues & Tech Debt](#18-known-issues--tech-debt)
+19. [How-To Recipes](#19-how-to-recipes)
+20. [Glossary](#20-glossary)
+21. [Other Docs in the Repo](#21-other-docs-in-the-repo)
 
 ---
 
-## 2. High-Level System Architecture
+## 1. What the App Is
 
-Daily Life OS strictly adheres to **Clean Architecture** combined with a **Feature-First** structure.
+**Daily Life OS** is an all-in-one personal utility app built in Flutter. It brings together:
+
+| Pillar | Module | What it does |
+|---|---|---|
+| ⏱ Time | **Planner** | Reminders (recurring, priorities, checklists), Pomodoro focus timer, countdowns to important dates |
+| 💰 Money | **Money Manager** | Expenses, monthly budget, "safe to spend per day", subscriptions, IOUs (lend/borrow) |
+| 🧠 Mind | **Notes** | Colored, pinnable, tagged notes + a scratchpad |
+| 🔒 Security | **Vault** + **Security** | Passwords/documents behind PIN, pattern, or biometric lock with a decoy mode |
+| 🏠 Hub | **Today Hub** | Dashboard: habits with streaks, today's timeline, spend meter, audio briefing |
+
+**Design principles** (from the PRD): offline-first, input in under 3 seconds (voice/type/scan),
+modules that talk to each other, and privacy.
+
+**Current reality:** 100% offline. There is **no backend**. All data is on the device.
+
+---
+
+## 2. Tech Stack
+
+| Concern | Package | Notes |
+|---|---|---|
+| Language / SDK | Dart `^3.12.2`, Flutter `3.44.6` stable | Version pinned in CI |
+| State management | `flutter_bloc ^9.1.1` | One Bloc per feature (except Security) |
+| Dependency injection | `get_it ^9.2.1` | Global locator `sl` |
+| Routing | `go_router ^14.2.7` | Only one route right now |
+| Local DB | `drift ^2.21.0` + `drift_flutter` | SQLite; codegen via `build_runner` |
+| Key-value storage | `shared_preferences` | Countdowns, notes scratchpad |
+| Secure storage | `flutter_secure_storage` | PIN/pattern hashes, security flags |
+| Biometrics | `local_auth ^3.0.2` | Fingerprint / Face ID |
+| Hashing | `crypto` | SHA-256 + salt |
+| Notifications | `flutter_local_notifications ^22.3.2` + `timezone` | Scheduled and instant |
+| Env config | `flutter_dotenv` | `.env` keys: `API_BASE_URL`, `APP_ENV`, `APP_NAME` |
+| Networking (unused) | `dio` | Ready but not used by any feature |
+| Functional types (unused) | `dartz`, `equatable` | `equatable` is used; `dartz` `Either` is not |
+| Misc | `intl`, `image_picker`, `device_info_plus`, `permission_handler`, `app_settings`, `path_provider` | |
+| Testing | `flutter_test`, `bloc_test`, `mocktail` | |
+| Lint | `flutter_lints ^6.0.0` | `analysis_options.yaml` uses defaults |
+| Font | DMSans (variable) | `assets/fonts/` |
+
+---
+
+## 3. Folder Structure
 
 ```
 lib/
- ├── config/                 # App-wide routing and design system
- │    ├── routes/            # go_router configuration
- │    └── theme/             # Colors, styles, radius, spacing, themes
- ├── core/                   # Shared cross-cutting infrastructure
- │    ├── constants/         # App constants, string literals, asset paths
- │    ├── database/          # Drift (SQLite) ORM and Database Seeder
- │    ├── error/             # Failures and Exception classes
- │    ├── network/           # Dio client, interceptors, connectivity info
- │    ├── usecase/           # Generic UseCase<Type, Params> abstraction
- │    ├── utils/             # Formatters, date helpers, validators
- │    └── widgets/           # Global design system widgets
- ├── di/                     # Dependency Injection with get_it
- └── features/               # Isolated feature modules
-      ├── today_hub/
-      ├── planner/
-      ├── money/
-      ├── notes/
-      ├── vault/
-      └── navigation/
+├── main.dart                         # Entry point (startup sequence)
+├── config/
+│   ├── routes/app_router.dart        # GoRouter: single route "/"
+│   └── theme/                        # Colors, text styles, spacing, radius, decorations, ThemeData
+├── core/
+│   ├── constants/                    # app_constants, string_constants, asset_paths
+│   ├── database/
+│   │   ├── app_database.dart         # Drift tables + DB class (schema v2)
+│   │   ├── app_database.g.dart       # GENERATED — never edit by hand
+│   │   └── database_seeder.dart      # Demo data on first launch
+│   ├── error/                        # exceptions.dart, failures.dart (mostly unused)
+│   ├── network/                      # Dio ApiClient + interceptors (UNUSED today)
+│   ├── notifications/notification_service.dart
+│   ├── usecase/usecase.dart          # Base UseCase<T, Params> (UNUSED by features)
+│   ├── utils/                        # date_utils, validators, snackbar_utils
+│   └── widgets/                      # Reusable UI (buttons, sheets, loaders, quick capture…)
+├── di/injection_container.dart       # get_it registrations
+└── features/
+    ├── navigation/                   # MainNavigationShell (bottom nav + quick-capture bar)
+    ├── home/                         # HomePage — LEGACY, not referenced anywhere
+    ├── today_hub/   { data, domain, presentation }
+    ├── planner/     { data, domain, presentation(+widgets) }
+    ├── money/       { data, domain, presentation }
+    ├── notes/       { data, domain, presentation }
+    ├── vault/       { data, domain, presentation }
+    └── security/    { data, domain, presentation/widgets }   # no Bloc
+
+test/                                 # mirrors lib/ structure
+.github/workflows/                    # ci.yml, release.yml
 ```
 
-### The Three Feature Layers:
-1. **Domain Layer (`domain/`)**:
-   - Contains pure business logic: **Entities**, **Use Cases**, and **Repository Interfaces**.
-   - **Zero external dependencies**: Contains pure Dart code with no UI, Drift, or Flutter imports.
-2. **Data Layer (`data/`)**:
-   - Contains **Data Sources** (Drift local database queries), **Models** (mapping between Drift generated row classes and Domain entities), and **Repository Implementations**.
-   - Depends directly on the Domain layer.
-3. **Presentation Layer (`presentation/`)**:
-   - Contains **BLoCs**, **Events**, **States**, **Pages**, and **Feature Widgets**.
-   - Reacts to user interaction by dispatching BLoC events and rendering based on emitted states.
-
----
-
-## 3. End-to-End Architectural Data Flow
-
-Every state transition and database query follows a predictable, unidirectional cycle:
+Every feature folder follows the same pattern:
 
 ```
-[User Action in UI]
-        │
-        ▼ (1)
-[BLoC Event Dispatched]
-        │
-        ▼ (2)
-[BLoC Handler Invokes UseCase]
-        │
-        ▼ (3)
-[UseCase Calls Repository Interface]
-        │
-        ▼ (4)
-[Repository Implementation Calls LocalDataSource]
-        │
-        ▼ (5)
-[LocalDataSource Executes Drift / SQLite Query]
-        │
-        ▼ (6)
-[Drift Returns Raw Row Data / Companion]
-        │
-        ▼ (7)
-[Model Mappers Convert Drift Row -> Domain Entity]
-        │
-        ▼ (8)
-[Repository Returns Entity to UseCase]
-        │
-        ▼ (9)
-[BLoC Emits Loaded State with Immutable Entities]
-        │
-        ▼ (10)
-[BlocBuilder Rebuilds UI Reactively]
+feature/
+├── data/
+│   ├── datasources/   xxx_local_datasource.dart   (abstract + Impl; talks to Drift)
+│   ├── models/        xxx_model.dart              (extends Entity; fromDrift/fromEntity/fromJson)
+│   └── repositories/  xxx_repository_impl.dart    (implements domain repo; delegates to datasource)
+├── domain/
+│   ├── entities/      xxx_entity.dart             (pure Equatable classes + computed getters)
+│   ├── repositories/  xxx_repository.dart         (abstract contract)
+│   └── usecases/      *_usecase.dart              (one class per action, callable via call())
+└── presentation/
+    ├── bloc/          xxx_bloc.dart / _event.dart / _state.dart
+    ├── pages/         xxx_page.dart
+    └── widgets/       (feature-specific widgets)
 ```
 
-### Error Handling Protocol:
-- If a database operation fails, the `DataSource` throws a typed exception (e.g., `DatabaseException`).
-- The `RepositoryImpl` catches the exception and returns a `Failure` or throws an expected domain error.
-- The `BLoC` emits an error state (e.g., `NotesError(message: ...)`), allowing the UI to present a snackbar or retry state without crashing.
+---
+
+## 4. Architecture (Clean Architecture + BLoC)
+
+### Layer diagram
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│ PRESENTATION   Page ─► BlocProvider(sl<XBloc>()..add(LoadX)) │
+│                Widgets dispatch Events ─► Bloc emits States   │
+└───────────────────────────────┬──────────────────────────────┘
+                                │ calls
+┌───────────────────────────────▼──────────────────────────────┐
+│ DOMAIN         UseCase.call()  ─►  Repository (abstract)     │
+│                Entities (pure Dart + Equatable)               │
+└───────────────────────────────┬──────────────────────────────┘
+                                │ implemented by
+┌───────────────────────────────▼──────────────────────────────┐
+│ DATA           RepositoryImpl ─► LocalDataSourceImpl          │
+│                Models (Entity ⇄ Drift row)                    │
+└───────────────────────────────┬──────────────────────────────┘
+                                │
+                     AppDatabase (Drift/SQLite)
+```
+
+### Conventions that hold across the codebase
+
+- **Use cases return plain `Future<T>`.** They do *not* return `Either<Failure, T>`,
+  even though `core/usecase/usecase.dart` defines that base class.
+- **Errors** are caught in the Bloc (`try/catch` → `XError(e.toString())`), and only in the
+  `Load` handlers for most features. Mutation handlers (add/delete/toggle) usually have **no try/catch**.
+- **Reload after mutate:** after any write, the Bloc re-fetches the entire list and emits a new
+  `XLoaded`. There are no optimistic updates.
+- **States:** `XInitial → XLoading → XLoaded | XError`.
+- **Bloc files** re-export their event/state files (`export 'x_event.dart';`), so importing the
+  bloc file gives you everything.
+- **Blocs are `registerFactory`.** Each page creates its own Bloc instance. Blocs are **not
+  shared across tabs**, so a change in one tab does not refresh another tab's Bloc automatically.
+- Repositories/use cases/data sources are `registerLazySingleton`.
+- Dates are stored as **ISO-8601 strings** (`'2026-10-31'` or the full timestamp), not DateTime columns.
+- Colors and icons are stored as ints (`colorValue` = ARGB32, `iconCodePoint` = Material icon
+  code point) and rebuilt with `Color(v)` / `IconData(cp, fontFamily: 'MaterialIcons')`.
 
 ---
 
-## 4. Module-by-Module Technical Deep Dive
+## 5. App Startup Flow
+
+`lib/main.dart`:
+
+```
+main()
+ ├─ WidgetsFlutterBinding.ensureInitialized()
+ ├─ dotenv.load('.env')                         (errors ignored)
+ ├─ await initDependencies()                    (lib/di/injection_container.dart)
+ ├─ NotificationService.initialize()            (timezones + Android channels)
+ │   └─ requestPermissions()                    (Android 13+ / iOS prompt)
+ ├─ DatabaseSeeder.seedIfEmpty(db)              (only if the habits table is empty)
+ └─ runApp(DailyLifeOSApp(router: createRouter()))
+        └─ MaterialApp.router
+             theme: AppTheme.lightTheme / darkTheme, themeMode: system
+             route "/" → MainNavigationShell
+```
+
+Each startup step is wrapped in `try/catch` with `debugPrint`, so a failure in notifications or
+seeding never stops the app from launching.
+
+`DailyLifeOSApp` takes an optional `router` so tests can inject one.
 
 ---
 
-### 4.1 Navigation Shell & Quick Capture
-- **Location:** `lib/features/navigation/presentation/pages/main_navigation_shell.dart`
-- **Core Component:** `MainNavigationShell`
-- **State Management:** Local `StatefulWidget` using `IndexedStack` to preserve state across tabs.
+## 6. Dependency Injection
 
-#### Key Functions & Implementation:
-1. **`_buildFloatingQuickCaptureBar()`**:
-   - Renders a floating frosted pill 74px from the bottom, above the `BottomNavigationBar`.
-   - Contains:
-     - `[Hold to Speak]`: Opens `QuickCaptureSheet` in voice recording mode.
-     - `[Quick Type]`: Opens `QuickCaptureSheet` in text input mode.
-     - `[Scan Bill/Text]`: Opens `QuickCaptureSheet` in camera/OCR mode.
-2. **`QuickCaptureSheet._parseIntent()`** (`lib/core/widgets/quick_capture_sheet.dart`):
-   - Natural language classification that categorizes inputs in real-time as the user types:
-     - **Expense**: matches words like `spent`, `paid`, `bought`, `₹`, `rs`, `bill`, `cost`.
-     - **Vault**: matches words like `password`, `pin`, `secret`, `warranty`.
-     - **Reminder**: matches words like `remind`, `at`, `tomorrow`, `pm`, `am`, `meeting`.
-     - **Note**: default fallback for open thoughts and ideas.
+File: `lib/di/injection_container.dart`. Global: `final sl = GetIt.instance;`
 
----
+```dart
+Future<void> initDependencies({
+  AppDatabase? database,                 // tests pass AppDatabase(NativeDatabase.memory())
+  NotificationService? notificationService,  // tests pass FakeNotificationService
+  FlutterSecureStorage? secureStorage,
+  LocalAuthentication? localAuth,
+})
+```
 
-### 4.2 Today Hub (Command Center)
-- **Location:** `lib/features/today_hub/`
-- **Presentation:** `TodayHubPage`, `_LoadedView`, `_LoadingView`
-- **BLoC:** `TodayHubBloc` (`today_hub_event.dart`, `today_hub_state.dart`)
-- **Domain:** `HabitEntity`, `TimelineItemEntity`
-- **Database Tables:** `Habits`, `TimelineItems`
+- If called again (as tests do), it calls `sl.reset()` first.
+- Registration order: Core services → Database → DataSources → Repositories → UseCases → Blocs.
 
-#### Business Logic & Functions:
-1. **`LoadTodayHub` Event (`_onLoad` in `TodayHubBloc`)**:
-   - Calls `GetHabitsUseCase` and `GetTodayTimelineUseCase`.
-   - Computes habit completion counts (`completedHabits`).
-   - Emits `TodayHubLoaded(habits: ..., timelineItems: ...)`.
-2. **`ToggleHabit` Event (`_onToggleHabit` in `TodayHubBloc`)**:
-   - Calls `ToggleHabitUseCase(habitId)`.
-   - Flips `isDoneToday`, increments or decrements `streakDays`, and updates `lastCompletedDate`.
-   - Automatically reloads the refreshed habits list.
-3. **`ToggleTimelineItem` Event (`_onToggleTimelineItem` in `TodayHubBloc`)**:
-   - Calls `ToggleTimelineItemUseCase(timelineId)`.
-   - Toggles `isDone` boolean in SQLite.
-4. **Safe-to-Spend Calculation Formula** (`SafeSpendMeterWidget`):
-   $$\text{Daily Safe Spend} = \frac{\text{Monthly Budget} - (\text{Fixed Bills} + \text{Spent So Far})}{\text{Days Remaining in Current Month}}$$
-   - Prevents end-of-month budget depletion by setting dynamic daily limits.
-5. **Audio Briefing Pill (`AudioBriefingSheet.show(context)`)**:
-   - Opens the modal TTS preview summarizing today's active tasks and remaining budget.
+| Type | Lifetime |
+|---|---|
+| `NotificationService`, `AppDatabase` | Lazy singleton |
+| All `*LocalDataSource`, `*Repository`, `*UseCase` | Lazy singleton |
+| `TodayHubBloc`, `PlannerBloc`, `MoneyBloc`, `NotesBloc`, `VaultBloc` | **Factory** (new per page) |
+| Security | No Bloc; widgets get `sl<SecurityRepository>()` directly |
+
+UI code also calls `sl<NotificationService>()` and, in Notes, `sl<AppDatabase>()` directly.
 
 ---
 
-### 4.3 Planner & Focus Timer
-- **Location:** `lib/features/planner/`
-- **Presentation:** `PlannerPage`
-- **BLoC:** `PlannerBloc` (`planner_event.dart`, `planner_state.dart`)
-- **Domain:** `PlannerItemEntity`
-- **Database Table:** `PlannerItems`
-- **Persistence:** SQLite via Drift (`PlannerItems`) + `SharedPreferences` for `CountdownItem` models
+## 7. Navigation & Screen Layout
 
-#### Business Logic & Functions:
-1. **`LoadPlanner` Event**:
-   - Fetches all scheduled items for the chosen ISO date (defaults to `DateTime.now()`).
-2. **`AddPlannerItem` Event**:
-   - Inserts a new planner task with `title`, `date`, `startTime`, `category`, `colorValue`, and `iconCodePoint`.
-3. **`TogglePlannerItem` Event**:
-   - Toggles task completion state (`isDone`).
-4. **`DeletePlannerItem` Event**:
-   - Permanently deletes the reminder from SQLite.
-5. **Interactive Reminder Engine & Local Notifications (`SetReminderSheet` & `SetReminderCard`)**:
-   - Lets users specify reminder title, pick a custom date (`showDatePicker`), pick a time (`showTimePicker`), and choose from 5 categories: *Personal*, *Work*, *Health*, *Finance*, and *Important*.
-   - **Local Notification Scheduling:** On submit (quick add or modal sheet), the app automatically computes the exact `DateTime` and schedules a system alert via `NotificationChannels.reminders`.
-   - **Snooze Support:** Tapping "Snooze" on any reminder card dynamically schedules a 15-minute follow-up notification.
-   - **Cancellation on Delete:** Deleting a task automatically cancels its associated notification from the system queue.
-6. **Advanced Pomodoro Focus Engine (`_PlannerViewState`)**:
-   - **Mode Switcher:** ⚡ *Deep Work*, ☕ *Short Break*, and 🌴 *Long Break* with dynamic color themes (Amber for work, Emerald for short break, Ocean Blue for long break).
-   - **Circular Progress Visualizer:** Dynamic `CircularProgressIndicator` displaying real-time session progress, countdown in `MM:SS`, and 4-round dot progression.
-   - **Focus Presets & Custom Stepper:** Quick presets (`15m Sprint`, `25m Classic`, `45m Deep Work`, `60m Ultra Focus`) and a custom stepper sheet to configure custom Work, Short Break, and Long Break durations.
-   - **Linked Task Integration:** Allows users to focus on a specific task either typed manually or selected directly from today's scheduled planner items.
-   - **Ambient Sounds Bar:** Built-in ambient options (*Mute*, *Rain*, *Cafe*, *Waves*, *Forest*, *White Noise*) with active indicators.
-   - **Daily Focus Activity Card:** Tracks completed sessions today, minutes focused, and multi-day focus streaks.
-   - **Sprint Transition Notifications:** Triggers instant system alerts on `NotificationChannels.focus` when work sprints or break sessions elapse, even if the device is locked.
-7. **Important Countdowns & Milestones (`CountdownItem`)**:
-   - **Data Model:** `CountdownItem` storing `id`, `title`, `date`, `category`, `colorValue`, `iconCodePoint`, `notes`, and `remindAdvance`.
-   - **Persistence:** Automatically serialized and saved to `SharedPreferences` (`planner_saved_countdowns`).
-   - **Category Filters:** Filter by *All*, *Birthday*, *Renewal*, *Travel*, *Milestone*, *Anniversary*, and *Event*.
-   - **Creation & Editing Modal:** Bottom sheet to customize title, target date via `showDatePicker`, category choice chips, optional gift ideas/notes, and advance alert toggles.
-   - **Production Advance Notifications:** When `remindAdvance` is true, schedules:
-     - **Day-of-Event Alert:** Scheduled for 9:00 AM on the milestone date.
-     - **1-Day-Before Alert:** Advance warning scheduled for 9:00 AM the day before.
-     - **7-Days-Before Alert:** 1-week advance preparation warning scheduled for 9:00 AM.
-   - **Cross-Module Link ("Add to Planner"):** 1-tap action that automatically creates a scheduled task in the user's Planner on the target date and schedules an event notification.
-   - **Destructive Deletion:** Safe deletion flow guarded by `ConfirmationDialog`, which cleanly purges all pending scheduled notifications for that milestone.
+- `config/routes/app_router.dart`: a single `GoRoute('/')` → `MainNavigationShell`.
+  Sheets and dialogs use `showModalBottomSheet` / `Navigator.pop`, not go_router.
+- `features/navigation/presentation/pages/main_navigation_shell.dart`:
+  - `IndexedStack` holding 5 pages, **all built at startup and kept alive**:
+
+    | Index | Tab | Page | Accent color |
+    |---|---|---|---|
+    | 0 | Today | `TodayHubPage` | `AppColors.primary` (indigo) |
+    | 1 | Planner | `PlannerPage` | `moduleTime` (amber) |
+    | 2 | Money | `MoneyManagerPage` | `moduleMoney` (emerald) |
+    | 3 | Notes | `NotesPage` | `moduleNotes` (sky) |
+    | 4 | Vault | `VaultPage` | `moduleVault` (violet) |
+
+  - **Floating Quick-Capture Bar** (positioned 74px above the bottom nav) with 3 actions that open
+    `QuickCaptureSheet.show(context, mode: …)` with `voice`, `text` or `scan`.
+    ⚠️ The sheet is **UI only**: submitting shows a SnackBar and saves nothing.
 
 ---
 
-### 4.4 Money Manager
-- **Location:** `lib/features/money/`
-- **Presentation:** `MoneyManagerPage`
-- **BLoC:** `MoneyBloc` (`money_event.dart`, `money_state.dart`)
-- **Domain:** `TransactionEntity`, `SubscriptionEntity`, `IouEntity`, `BudgetEntity`
-- **Database Tables:** `Transactions`, `BudgetSettings`, `Subscriptions`, `IouEntries`
+## 8. Database (Drift / SQLite)
 
-#### Business Logic & Functions:
-1. **`LoadMoney` Event (`_onLoad` in `MoneyBloc`)**:
-   - Concurrently loads:
-     - `GetRecentTransactionsUseCase()`
-     - `GetBudgetUseCase()`
-     - `GetSubscriptionsUseCase()`
-     - `GetIousUseCase()`
-   - Emits `MoneyLoaded` containing the unified financial snapshot.
-2. **`AddTransaction` Event**:
-   - Saves new transaction (title, category, amount, mode [UPI, Card, Cash], date, expense/income).
-   - Triggers dynamic budget recalculation.
-3. **`ToggleAutoKill` Event**:
-   - Toggles `autoKillEnabled` flag on subscriptions. When enabled, users receive automated cancellation reminders 48 hours prior to renewal.
-4. **`SettleIou` & `AddIou` Events**:
-   - Tracks mini-ledger entries for money lent or borrowed.
-   - `SettleIou` toggles `isSettled` state with full timestamp recording.
+File: `lib/core/database/app_database.dart` · DB name: `daily_life_os` · **schemaVersion = 2**
 
----
+On web, Drift uses `sqlite3.wasm` + `drift_worker.js` from `web/`.
 
-### 4.5 Notes & Daily Scratchpad
-- **Location:** `lib/features/notes/`
-- **Presentation:** `NotesPage`
-- **BLoC:** `NotesBloc` (`notes_event.dart`, `notes_state.dart`)
-- **Domain:** `NoteEntity`
-- **Database Table:** `Notes`
+### Tables
 
-#### Business Logic & Functions:
-1. **`LoadNotes` Event**:
-   - Queries all notes from Drift, sorted by `isPinned DESC, updatedAt DESC`.
-2. **`AddNote` & `UpdateNote` Events**:
-   - Supports creating and updating note content, title, color accent (from curated 6-color palette), and tag strings.
-3. **`TogglePinNote` & `DeleteNote` Events**:
-   - `TogglePinNote` updates pin status, immediately floating priority notes to the top.
-   - `DeleteNote` removes the note with an accompanying `ConfirmationDialog`.
-4. **Daily Scratchpad (`_loadScratchpad`, `_saveScratchpadAsNote`)**:
-   - Real-time scratchpad persisted in `SharedPreferences` (`daily_scratchpad_content`).
-   - "Save as Note" button converts unorganized thoughts directly into a full database note.
-5. **Context Menu Actions (`AppDropdownMenu`)**:
-   - **Edit**: Opens bottom sheet editor with pre-filled values.
-   - **Pin / Unpin**: Toggles pinned state.
-   - **Copy Text**: Copies note title and content to system clipboard via `Clipboard.setData`.
-   - **Add to Planner**: Directly converts note title and content into a scheduled Planner reminder item.
-   - **Delete**: Triggers deletion modal confirmation.
+#### `Habits`
+| Column | Type | Notes |
+|---|---|---|
+| id | int PK auto | |
+| title | text | |
+| iconCodePoint, colorValue | int | |
+| streakDays | int (0) | +1 on check, −1 on uncheck |
+| isDoneToday | bool (false) | ⚠️ never reset at midnight |
+| lastCompletedDate | text? | ISO date |
+| createdAt | text | |
 
----
+#### `TimelineItems` (Today Hub feed — separate from the planner)
+`id, time (text, e.g. '09:00 AM'), title, category, colorValue, iconCodePoint, isDone, action (text label for the action button), date (ISO date)`
 
-### 4.6 Secure Vault
-- **Location:** `lib/features/vault/`
-- **Presentation:** `VaultPage`
-- **BLoC:** `VaultBloc` (`vault_event.dart`, `vault_state.dart`)
-- **Domain:** `VaultItemEntity`
+#### `Transactions`
+`id, title, category, amount (real), mode ('UPI'|'Card'|'Cash'), iconCodePoint, date (full ISO timestamp), type ('expense'|'income', default 'expense')`
 
-#### Business Logic & Functions:
-1. **`LoadVault` Event**:
-   - Loads stored password entries and document/warranty records.
-2. **`ToggleDecoyMode` Event**:
-   - Toggles `isDecoyMode`. When active, only non-sensitive demo accounts appear.
-   - Protects users under duress (Panic PIN feature specified in PRD).
-3. **Warranty Expiry Alerts**:
-   - Identifies approaching warranty expiration dates and displays remaining days warnings.
+#### `BudgetSettings` (single row, id = 1)
+`id (PK, default 1), monthlyBudget (default 40000), fixedBills (default 8000)`
 
----
+#### `Subscriptions`
+`id, name, amount, renewalDate (ISO), autoKillEnabled (bool), iconCodePoint`
 
-## 5. Drift SQLite Database Schema & Persistence
+#### `IouEntries`
+`id, person, amount, type ('lent'|'borrowed'), note, date, isSettled (bool)`
 
-All persistence is managed by **Drift** in `lib/core/database/app_database.dart`.
+#### `Notes`
+`id, title, content, colorValue, isPinned, tags (comma-separated text), createdAt, updatedAt`
 
-### Tables Overview
+#### `PlannerItems` (the richest table)
+| Column | Type / default | Meaning |
+|---|---|---|
+| id | int PK auto | |
+| title | text | |
+| date | text | **Start date**, `yyyy-MM-dd` (always truncated to 10 chars) |
+| startTime / endTime | text? | e.g. `'09:00 AM'` |
+| category | text | `'Work'`, `'Personal'`, `'Health'`, `'Notes'`… |
+| colorValue, iconCodePoint | int | |
+| isDone | bool (false) | Used **only for non-recurring** items |
+| notes | text ('') | |
+| repeatType | text ('none') | `none / daily / weekdays / weekly / monthly` *(v2)* |
+| repeatDays | text ('') | `'1,3,5'` = Mon, Wed, Fri (ISO weekday 1–7) *(v2)* |
+| endDate | text? | Recurrence end (`yyyy-MM-dd`), null = forever *(v2)* |
+| priority | text ('medium') | `low / medium / high / urgent` *(v2)* |
+| reminderOffsetMinutes | int (0) | 0, 5, 15, 30, 60, 1440 *(v2)* |
+| checklistJson | text ('[]') | JSON `[{id,title,isDone}]` *(v2)* |
+| completedDates | text ('') | `'2026-10-24,2026-10-25'`: per-day done flags for **recurring** items *(v2)* |
 
-| Table Name | Entity | Key Columns & Types | Description |
-| :--- | :--- | :--- | :--- |
-| **`habits`** | `HabitEntity` | `id` (Int PK), `title` (Text), `iconCodePoint` (Int), `colorValue` (Int), `streakDays` (Int), `isDoneToday` (Bool), `lastCompletedDate` (Text) | Tracks habits, daily completion, and ongoing streaks |
-| **`timeline_items`** | `TimelineItemEntity` | `id` (Int PK), `time` (Text), `title` (Text), `category` (Text), `colorValue` (Int), `iconCodePoint` (Int), `isDone` (Bool), `action` (Text), `date` (Text) | Chronological tasks shown in Today Hub |
-| **`transactions`** | `TransactionEntity` | `id` (Int PK), `title` (Text), `category` (Text), `amount` (Real), `mode` (Text: UPI/Card/Cash), `date` (Text), `type` (Text: expense/income) | Financial transaction log |
-| **`budget_settings`** | `BudgetEntity` | `id` (Int PK, default 1), `monthlyBudget` (Real), `fixedBills` (Real) | User budget preferences for safe-spend logic |
-| **`subscriptions`** | `SubscriptionEntity`| `id` (Int PK), `name` (Text), `amount` (Real), `renewalDate` (Text), `autoKillEnabled` (Bool) | Recurring bills and cancellation tracking |
-| **`iou_entries`** | `IouEntity` | `id` (Int PK), `person` (Text), `amount` (Real), `type` (Text: lent/borrowed), `note` (Text), `isSettled` (Bool) | Peer-to-peer debts ledger |
-| **`notes`** | `NoteEntity` | `id` (Int PK), `title` (Text), `content` (Text), `colorValue` (Int), `isPinned` (Bool), `tags` (Text), `createdAt` (Text), `updatedAt` (Text) | Structured notes and brain dumps |
-| **`planner_items`** | `PlannerItemEntity` | `id` (Int PK), `title` (Text), `date` (Text), `startTime` (Text), `category` (Text), `isDone` (Bool), `notes` (Text) | Scheduled calendar tasks & reminders |
+### Migrations
+```dart
+onCreate: m.createAll()
+onUpgrade: if (from < 2) addColumn(plannerItems, …7 new columns…)
+```
+**When you change a table:** bump `schemaVersion`, add an `if (from < N)` block, then run
+`dart run build_runner build --delete-conflicting-outputs` to regenerate `app_database.g.dart`.
 
-### Database Seeding (`DatabaseSeeder`)
-- Defined in `lib/core/database/database_seeder.dart`.
-- Triggered on launch via `DatabaseSeeder.seedIfEmpty(db)` in `main.dart`.
-- If `habits` table is empty, pre-populates initial records for habits, timeline items, budget settings, transactions, subscriptions, and notes so the UI never launches into an empty screen on first run.
+### Seeder (`database_seeder.dart`)
+Runs only when `habits` is empty. It inserts:
+- Habits: *Drink 3L Water, Daily Vitamins, Read 15 mins, Meditation (10m)*
+- Timeline (today): *Morning Standup & Deep Focus, Electricity Bill Due (₹450), Call Bank re: Card Upgrade, Sarah's Birthday Gift Planning*
+- Budget row, Transactions (*Organic Grocery, Metro Card Recharge, Fiber Internet Bill*)
+- Subscriptions (*Netflix 4K, Spotify, GitHub Copilot*), IOUs (*David Kumar, Priya Sen*)
+- Notes (*Sarah's Birthday Gift Ideas, Weekly Goals*), Planner (*Morning Standup, Gym Workout*)
 
 ---
 
-## 6. Local Notifications Engine
+## 9. Other Storage (SharedPreferences & Secure Storage)
 
-Daily Life OS provides an industry-standard, production-grade notification infrastructure located at `lib/core/notifications/notification_service.dart`.
-
-### 6.1 Architectural Design & Interfaces
-- **`NotificationService` Contract:**
-  ```dart
-  abstract class NotificationService {
-    Future<void> initialize();
-    Future<bool> requestPermissions();
-    Future<void> showInstantNotification({required int id, required String title, required String body, String? payload, String channelId});
-    Future<void> scheduleNotification({required int id, required String title, required String body, required DateTime scheduledDate, String? payload, String channelId});
-    Future<void> cancelNotification(int id);
-    Future<void> cancelAllNotifications();
-  }
-  ```
-- **`NotificationServiceImpl`:** Implements `NotificationService` utilizing `flutter_local_notifications` (v22+) and `timezone`.
-- **Dependency Injection Integration:** Registered as a lazy singleton in `initDependencies(notificationService: ...)` allowing clean substitution with test doubles (`FakeNotificationService`) in headless unit and widget tests.
-
-### 6.2 Notification Channels Architecture
-Three dedicated Android notification channels guarantee fine-grained user control:
-
-| Channel ID | Name | Importance | Priority | Purpose |
-| :--- | :--- | :--- | :--- | :--- |
-| **`daily_life_reminders`** | Daily Life Reminders | `Importance.max` | `Priority.high` | Planner tasks, scheduled alarms, snoozed reminders (Amber LED, vibration, sound) |
-| **`daily_life_countdowns`** | Important Countdowns | `Importance.high` | `Priority.high` | Milestone alerts: Day of event (9 AM), 1 day before (9 AM), 7 days before (9 AM) |
-| **`daily_life_focus`** | Pomodoro Focus Alerts | `Importance.high` | `Priority.high` | Focus sprint completion and break timer transitions |
-
-### 6.3 Android 13+ & Modern Platform Features
-- **Android Manifest Configuration (`android/app/src/main/AndroidManifest.xml`):**
-  - `POST_NOTIFICATIONS` (Android 13+ runtime permissions)
-  - `SCHEDULE_EXACT_ALARM` & `USE_EXACT_ALARM` (Exact alarm triggers for timely reminders)
-  - `RECEIVE_BOOT_COMPLETED` (Persists pending alarms across device restarts)
-  - `ScheduledNotificationReceiver` & `ScheduledNotificationBootReceiver`
-- **Timezone Scheduling:** Uses `tz.TZDateTime.from(scheduledDate, tz.local)` with `AndroidScheduleMode.exactAllowWhileIdle` to guarantee alarms fire even when the device enters deep Doze mode.
-- **Fail-Safe Fallback:** If exact alarm permission is restricted by user battery-saver policies, gracefully falls back to instant notifications rather than crashing.
+| Store | Key | Owner | Content |
+|---|---|---|---|
+| SharedPreferences | `planner_saved_countdowns` | `planner_page.dart` | JSON list of `CountdownItemModel` |
+| SharedPreferences | (scratchpad key in `notes_page.dart`) | Notes | Scratchpad text |
+| Secure storage | `vault_sec_salt` | Security | 32-byte random salt (base64url) |
+| Secure storage | `vault_sec_pin_hash`, `vault_sec_decoy_pin_hash` | Security | SHA-256(salt:pin) |
+| Secure storage | `vault_sec_pattern_hash`, `vault_sec_decoy_pattern_hash` | Security | SHA-256(salt:"0-1-2-5-8") |
+| Secure storage | `vault_sec_enabled`, `vault_sec_biometric_enabled` | Security | `'true'/'false'` |
+| Secure storage | `vault_sec_lock_mode` | Security | `'pin'` or `'pattern'` |
+| Secure storage | `vault_sec_failed_attempts`, `vault_sec_lockout_until` | Security | Brute-force counter / epoch ms |
 
 ---
 
-## 7. Dependency Injection (`get_it`) Wiring
+## 10. Notifications
 
-All application singletons, data sources, repositories, use cases, and BLoC factories are registered in `lib/di/injection_container.dart` via `initDependencies()`.
+File: `lib/core/notifications/notification_service.dart`
 
-### Registration Hierarchy (Bottom-Up):
-1. **Core Database & Notifications:** `sl.registerLazySingleton<AppDatabase>(() => ...)` and `sl.registerLazySingleton<NotificationService>(() => ...)`
-2. **DataSources:** Local data sources receiving `sl<AppDatabase>()`
-3. **Repositories:** Repository implementations receiving their respective data sources
-4. **UseCases:** Atomic business actions receiving their repository interface
-5. **BLoCs:** Factory registrations (`sl.registerFactory<T>()`) instantiated freshly per page lifecycle
+```dart
+abstract class NotificationService {
+  initialize(); requestPermissions();
+  showInstantNotification({id, title, body, payload, channelId});
+  scheduleNotification({id, title, body, scheduledDate, payload, channelId, matchDateTimeComponents});
+  cancelNotification(id); cancelAllNotifications();
+}
+```
 
----
+**Channels** (`NotificationChannels`):
+| ID | Name | Used for |
+|---|---|---|
+| `daily_life_reminders` | Daily Life Reminders | Planner reminders, snoozes |
+| `daily_life_countdowns` | Important Countdowns | Countdown day-of / 1-day / 7-day alerts |
+| `daily_life_focus` | Pomodoro Focus Alerts | Pomodoro session end |
 
-## 8. Design System & Theme Tokens
+**Behavior rules in `scheduleNotification`:**
+- If the date is in the past **and** it doesn't repeat, the notification is shown **immediately** instead.
+- It uses `AndroidScheduleMode.exactAllowWhileIdle`.
+- If scheduling throws (for example, no exact-alarm permission), it falls back to an instant notification.
+- `matchDateTimeComponents`: `time` for daily/weekdays, `dayOfWeekAndTime` for weekly.
+  Monthly has no match component, so it fires once.
+- A notification tap only `debugPrint`s the payload. There is no deep-link handling yet.
 
-The design system enforces a sleek, modern, high-contrast dark and light theme.
+**Notification ID scheme.** IDs are built in the UI as `string.hashCode & 0x7FFFFFFF`:
+| Where | ID source |
+|---|---|
+| Quick reminder (Planner) | `'$title$today$timeStr'` |
+| Full reminder sheet | `'$title$date$time$repeatType'` (DateTime/TimeOfDay `toString`) |
+| Delete reminder | `'${title}${date}${startTime}'` |
+| Countdown | `id.hashCode`, then `+1` (1 day before) and `+7` (7 days before) |
+| Pomodoro end | instant notification on the focus channel |
 
-- **Theme Files:** `lib/config/theme/`
-  - `app_colors.dart`:
-    - `primary`: Deep Indigo `#4F46E5`
-    - `secondary`: Cyan / Sky `#06B6D4`
-    - Module Accents:
-      - Time: `#3B82F6` (Blue)
-      - Money: `#10B981` (Emerald Green)
-      - Notes: `#F59E0B` (Amber Gold)
-      - Vault: `#8B5CF6` (Purple)
-  - `app_radius.dart`: Standardized radiuses (`radiusSm: 8`, `radiusMd: 14`, `radiusLg: 20`, `radiusFull: 999`).
-  - `app_spacing.dart`: Standard spacing constants and `SizedBox` helpers (`gapH8`, `gapH16`, `gapW12`, etc.).
-  - `app_text_styles.dart`: High-legibility typography scale based on font family `DMSans`.
-  - `app_decorations.dart`: Reusable card shadows, gradient banners, and floating bar decorations.
+⚠️ These formats don't all match (see [Known Issues](#18-known-issues--tech-debt)).
 
----
-
-## 9. Shared Core Widgets Library
-
-Located in `lib/core/widgets/`:
-
-1. **`AppDropdownMenu<T>`**:
-   - Custom overlay dropdown avoiding standard flutter popup limitations.
-   - Provides smooth tap outside detection, custom styling, and item selection callbacks.
-2. **`ConfirmationDialog`**:
-   - Clean alert dialog for confirming destructive operations (e.g., Note deletion).
-3. **`AppShimmerLoader`**:
-   - Skeleton card loaders displaying shimmering placeholders while data loads.
-4. **`SafeSpendMeterWidget`**:
-   - Custom progress meter visualizing daily expenses against remaining budget limits.
-5. **`HabitBubbleWidget`**:
-   - Animated circular bubble showing habit icon, streak counter, and tap-to-complete animations.
-6. **`QuickCaptureSheet`**:
-   - Universal bottom sheet capturing Voice, Text, and OCR scans with real-time intent parsing.
-7. **`AudioBriefingSheet`**:
-   - Daily overview sheet reading out time, tasks, and budgets via voice synthesis.
-
-### Feature-Specific Custom Widgets (`lib/features/planner/presentation/widgets/`)
-1. **`PomodoroFocusCard`**:
-   - Hero card with mode badges, round dot counters, circular progress indicator, timer typography, linked task capsule, and full playback controls.
-2. **`PomodoroModeSelector`**:
-   - Animated capsule selector for Deep Work, Short Break, and Long Break modes.
-3. **`PomodoroCustomDurationSheet`**:
-   - Modal sheet with steppers for adjusting Work, Short Break, and Long Break durations.
-4. **`PomodoroLinkedTaskSheet`**:
-   - Modal sheet for configuring linked focus goals or selecting directly from today's planner items.
-5. **`CountdownCard`**:
-   - Category-colored card displaying upcoming event details, days left badges, notes preview, and 1-tap "Add to Planner".
-6. **`CountdownSheet`**:
-   - Modal bottom sheet for creating and updating countdown events with date picker, category chips, and notes.
-7. **`PlannerItemCard`**:
-   - Modular scheduled task card with checkbox, category tag, snooze, done toggle, and delete options.
-8. **`SetReminderCard`**:
-   - Quick add reminder widget with time selector, category cycle, and "Full Options" trigger.
-9. **`SetReminderSheet`**:
-   - Comprehensive modal sheet for scheduling reminders with date and time pickers.
+**Who calls notifications:** only `planner_page.dart`, directly through `sl<NotificationService>()`.
+Blocs never touch notifications.
 
 ---
 
-## 10. Testing Strategy & Test Suites
+## 11. Feature Modules — Deep Dive
 
-The test suite mirrors the `lib/` directory structure feature-by-feature, ensuring complete isolation and unit/widget test coverage:
+### 11.1 Today Hub
 
-### Feature-Wise Tests:
-1. **Core & Notifications:**
-   - `test/core/notifications/notification_service_test.dart`: Verifies notification channels contract, initialization, instant alert dispatch, timezone scheduling, and ID-targeted cancellations.
-   - `test/core/notifications/fake_notification_service.dart`: High-fidelity in-memory test double recording all dispatched and scheduled notifications for deterministic headless testing.
-2. **Planner Feature:**
-   - `test/features/planner/data/datasources/planner_local_datasource_test.dart`: In-memory SQLite CRUD, querying by ISO date, toggling, and deleting items.
-   - `test/features/planner/presentation/widgets/pomodoro_focus_card_test.dart`: Tests `PomodoroFocusCard` rendering, circular progress indicator, and control callbacks.
-   - `test/features/planner/presentation/widgets/countdown_card_test.dart`: Tests `CountdownCard` rendering, days-left calculations, and user actions.
-   - `test/features/planner/presentation/widgets/countdown_sheet_test.dart`: Tests `CountdownSheet` form interactions, category switching, and advance alert toggles.
-   - `test/features/planner/presentation/widgets/set_reminder_sheet_test.dart`: Tests `SetReminderSheet` modal input capture, schedule picker, category selection, and submission callback.
-3. **Today Hub Feature:**
-   - `test/features/today_hub/data/datasources/today_hub_local_datasource_test.dart`: Tests habit streaks, daily completion toggles, and chronological timeline queries.
-4. **Notes Feature:**
-   - `test/features/notes/data/datasources/notes_local_datasource_test.dart`: Tests full note CRUD, pinning, updating, and tag handling.
-5. **Money Feature:**
-   - `test/features/money/data/datasources/money_local_datasource_test.dart`: Tests transaction logging, dynamic budget recalculations, and IOU debt settlements.
+**Files:** `features/today_hub/…`
 
-### Core & Integration Tests:
-1. **`test/database_test.dart`**: Multi-table schema integration tests.
-2. **`test/app_dropdown_menu_test.dart`**: Dropdown menu widget tests.
-3. **`test/widget_test.dart`**: End-to-end integration smoke test across all 5 navigation tabs, interactive Pomodoro focus timer, Countdowns, and notifications scheduling assertions.
+| Layer | Items |
+|---|---|
+| Entities | `HabitEntity` (`icon`, `color`, `copyWith`), `TimelineItemEntity` |
+| Use cases | `GetHabitsUseCase`, `ToggleHabitUseCase`, `GetTodayTimelineUseCase`, `ToggleTimelineItemUseCase` |
+| Bloc events | `LoadTodayHub`, `ToggleHabit(id)`, `ToggleTimelineItem(id)` |
+| State | `TodayHubLoaded{habits, timelineItems}` + `completedHabits` getter |
 
-To execute tests at any time:
+**Flow:**
+```
+TodayHubPage → sl<TodayHubBloc>()..add(LoadTodayHub)
+  → getHabits() + getTodayTimeline()   (timeline WHERE date == today ORDER BY time)
+  → TodayHubLoaded
+Tap habit bubble → ToggleHabit(id) → flip isDoneToday, streak ±1 → reload habits only
+Tap timeline tile → ToggleTimelineItem(id) → flip isDone → reload timeline only
+```
+
+**UI pieces:** greeting header, "Play briefing" → `AudioBriefingSheet` (UI only, no TTS),
+`SafeSpendMeterWidget` (⚠️ **hardcoded values**: spent 450, limit 1200, 12 days, 35000 budget),
+habit strip (`HabitBubbleWidget`), timeline tiles.
+
+---
+
+### 11.2 Planner (Reminders, Pomodoro, Countdowns)
+
+**Files:** `features/planner/…`. `planner_page.dart` is about 2,600 lines.
+
+#### Domain
+- `PlannerItemEntity`: all DB columns plus computed getters:
+  `icon, color, timeRange, dateDisplay ('Today'/'Tomorrow'/'Yesterday'/dd/MM), isRecurring,
+  isOverdue (non-recurring, not done, before today), isToday, isUpcoming, parsedRepeatDays,
+  recurrenceSummary ('Weekly (Mon, Wed)'), priorityColor, checklistDoneCount`
+  and static `parseChecklistJson` / `serializeChecklist`.
+- `ChecklistItem {id, title, isDone}` with toJson/fromJson.
+- `CountdownItemEntity {id (String), title, date, category, colorValue, iconCodePoint, notes, remindAdvance}`.
+- Repository: `getItemsForDate(isoDate)`, `addItem`, `updateItem`, `toggleItem(id, {targetDate})`,
+  `deleteItem`, `clearCompletedItems`.
+- Use cases: `GetPlannerItemsUseCase`, `AddPlannerItemUseCase`, `UpdatePlannerItemUseCase`,
+  `TogglePlannerItemUseCase`, `DeletePlannerItemUseCase`, `ClearCompletedPlannerItemsUseCase`.
+
+#### Data: how recurrence works (`planner_local_datasource.dart`)
+`getItemsForDate(isoDate)`:
+- `'all'` or empty → returns **every row** ordered by date and startTime (this is what the page loads).
+- A specific date `D` → selects rows with `date <= D`, then in Dart:
+  1. Skip if `endDate` exists and `D > endDate`.
+  2. Check whether the item occurs on `D`:
+     | repeatType | Occurs on D when |
+     |---|---|
+     | none | `date == D` |
+     | daily | always |
+     | weekdays | D is Mon–Fri |
+     | weekly | D's weekday is in `repeatDays` (or the same weekday as the start date if `repeatDays` is empty) |
+     | monthly | same day-of-month as the start date |
+  3. `isDone` for that date: recurring → `D in completedDates`; non-recurring → `row.isDone`.
+
+`toggleItem(id, targetDate)`:
+- Recurring: adds or removes the date key in `completedDates`. The key is `targetDate`, or **today**
+  when `targetDate` is `'all'`/null.
+- Non-recurring: flips `isDone`.
+
+`clearCompletedItems()`: deletes only **non-recurring** rows with `isDone = true`.
+
+#### Bloc
+- Events: `LoadPlanner(date)`, `AddPlannerItem{…}`, `UpdatePlannerItem{id,…}`,
+  `TogglePlannerItem(id, {targetDate})`, `DeletePlannerItem(id)`, `ClearCompletedPlannerItems`.
+- It remembers `_currentDate` (default `'all'`) and calls `_reload` after every mutation.
+- `PlannerLoaded{items, date}` + `completedCount`.
+
+#### Page: 3 tabs (`TabController(length: 3)`)
+1. **Reminders tab**
+   - Productivity metrics bar, controls bar (filters/sort), segmented status bar
+     (e.g. today / upcoming / overdue / done), section headers.
+   - `SetReminderCard`: quick inline add (title + time + category cycle) → `_submitQuickReminder`:
+     dispatches `AddPlannerItem` for today, then schedules a notification.
+   - Full sheet: `SetReminderSheet.show(...)` with recurrence, priority, offset, checklist and notes.
+     `onSubmit` dispatches `AddPlannerItem`/`UpdatePlannerItem`, then calls `_scheduleReminderNotification`.
+     Editing cancels the old notification first.
+   - `PlannerItemCard`: toggle, checklist toggles (via `UpdatePlannerItem`), delete (cancel notification,
+     then `DeletePlannerItem`), snooze (15 min / 1 h / tomorrow → schedules a notification only),
+     duplicate, push to tomorrow, mark all done, clear completed (with `ConfirmationDialog`), quick templates.
+2. **Focus (Pomodoro) tab**: everything is **local widget state**, not in the Bloc or DB:
+   - Modes: Work 25 / Short break 5 / Long break 15 (customisable via `PomodoroCustomDurationSheet`),
+     4 rounds, `Timer.periodic(1s)`.
+   - On completion: instant notification on the `focus` channel, then moves to the next mode/round.
+   - `PomodoroLinkedTaskSheet` picks a planner item as the linked task. Ambience chips are UI only.
+   - `_completedSessionsToday` starts at a hardcoded 3.
+3. **Countdowns tab**
+   - List stored in **SharedPreferences** (`planner_saved_countdowns`). There are default examples
+     if nothing is saved.
+   - `CountdownSheet` adds/edits → `_saveCountdowns` + `_syncCountdownNotifications`
+     (9:00 AM on the day, 1 day before, 7 days before).
+   - `CountdownCard`; "add to planner" dispatches `AddPlannerItem` and schedules a notification.
+   - Category filter chips.
+
+---
+
+### 11.3 Money Manager
+
+**Files:** `features/money/…`
+
+| Layer | Items |
+|---|---|
+| Entities | `TransactionEntity` (`isExpense`, `formattedDate`), `BudgetEntity` (`daysRemaining`, `dailySafeSpend`), `SubscriptionEntity` (`renewalLabel`), `IouEntity` (`isLent`, `typeLabel`) |
+| Use cases | `GetRecentTransactions`, `GetBudget`, `GetSubscriptions`, `GetIous`, `AddTransaction`, `UpdateBudget`, `ToggleAutoKill`, `SettleIou`, `AddIou` |
+| Events | `LoadMoney`, `AddTransaction`, `UpdateBudget`, `ToggleAutoKill`, `SettleIou`, `AddIou` |
+| State | `MoneyLoaded{transactions, budget, subscriptions, ious}` |
+
+**Key formulas:**
+```
+totalSpent    = SUM(amount) of expense transactions since the 1st of this month
+daysRemaining = lastDayOfMonth − today
+dailySafeSpend = max(0, monthlyBudget − fixedBills − totalSpent) / max(1, daysRemaining)
+```
+- `getBudget()` auto-creates the budget row (40000 / 8000) if it's missing.
+- `getRecentTransactions(limit: 30)` is ordered by date, newest first.
+- `getIous()` returns **unsettled** only. `settleIou` sets `isSettled = true`.
+
+**Page:** 3 tabs: *Expenses · Subscriptions · Lend & Borrow (IOU)*. The UI dispatches
+`ToggleAutoKill` and `SettleIou`. ⚠️ `AddTransaction`, `AddIou` and `UpdateBudget` exist in the
+Bloc but **no UI dispatches them yet**. "Auto-kill" is just a flag; nothing cancels anything.
+
+---
+
+### 11.4 Notes
+
+**Files:** `features/notes/…`
+
+| Layer | Items |
+|---|---|
+| Entity | `NoteEntity` (`tags: List<String>`, `color`, `previewContent` = first 3 lines) |
+| Use cases | `GetNotes`, `AddNote`, `UpdateNote`, `DeleteNote`, `TogglePinNote` |
+| Events | `LoadNotes`, `AddNote`, `UpdateNote`, `DeleteNote`, `TogglePinNote` |
+| State | `NotesLoaded(notes)` + `pinned` / `unpinned` getters |
+
+- Notes are ordered **pinned first, then newest `updatedAt`**.
+- Tags are stored as a comma string and split in `NoteModel.fromDrift`.
+- `updateNote` only writes the fields you pass and always bumps `updatedAt`.
+- **Scratchpad:** auto-saved to SharedPreferences, with a "save as note" button that dispatches `AddNote`.
+  It contains cleanup code that removes an old hardcoded "Locksmith phone" text.
+- **Convert note → planner task:** `_convertToPlannerTask` inserts **directly into
+  `db.plannerItems`** (today, 09:00 AM, category `'Notes'`) and skips the Planner Bloc and repository.
+  The Planner tab won't show it until it reloads.
+- Editor bottom sheet uses `BlocProvider.value` to pass the existing bloc into the sheet.
+
+---
+
+### 11.5 Vault
+
+**Files:** `features/vault/…`
+
+- Entities: `VaultPasswordEntity {id, title, username, category, iconCodePoint}`,
+  `VaultDocumentEntity {id, title, category, expiry (display string), isExpiringSoon, hasReminder, iconCodePoint}`.
+- ⚠️ `VaultLocalDataSourceImpl` returns **hardcoded lists** (HDFC NetBanking, Google Workspace,
+  Wi-Fi; MacBook warranty, health insurance, motorcycle insurance). There is no DB table and no password storage.
+- Bloc events: `LoadVault`, `ToggleDecoyMode`, `UnlockVault(isDecoy)`, `LockVault`.
+  `VaultLoaded{passwords, documents, isDecoyMode, isUnlocked}`. `LoadVault` keeps the previous lock/decoy flags.
+- Page has 2 tabs (passwords, documents).
+
+**Lock flow (`vault_page.dart`):**
+```
+initState → _checkSecurity(): SecurityRepository.getConfig()
+   security disabled → _isUnlocked = true (opt-in security)
+   security enabled  → locked, shows VaultLockScreen
+VaultLockScreen.onUnlocked(isDecoy) → VaultBloc.add(UnlockVault(isDecoy))
+App paused/inactive (WidgetsBindingObserver) → auto-lock + LockVault
+Header actions: decoy toggle, SecuritySettingsSheet, manual lock
+No security yet → button opens SecuritySetupWizard → onCompleted → _checkSecurity()
+```
+The page keeps its own `_isUnlocked` flag **and** the Bloc has `isUnlocked`, so the state is duplicated.
+
+---
+
+### 11.6 Security (PIN / Pattern / Biometrics / Decoy)
+
+**Files:** `features/security/…`. There is no Bloc; widgets receive a `SecurityRepository`.
+
+- `SecurityConfigEntity {isSecurityEnabled, isBiometricEnabled, hasPin, hasPattern, hasDecoyPin,
+  hasDecoyPattern, activeMode (pin|pattern)}` + `isConfigured`.
+- `isSecurityEnabled` is true **only if** the flag is `'true'` **and** a PIN or pattern exists.
+
+**Crypto & verification (`security_local_datasource.dart`):**
+```
+salt  = 32 random bytes (Random.secure), base64url, created once
+hash  = sha256("$salt:$value")      value = PIN string, or pattern joined with '-'
+verifyPin/Pattern:
+   if lockout active → false
+   if no stored hash → false        (no default PIN)
+   match   → reset failed attempts
+   mismatch→ failedAttempts++ ; at ≥5 → lockoutUntil = now + 30s
+isDecoyPin/Pattern: match → reset attempts (no failure counting)
+getLockoutUntil: once expired, clears both lockout and counter
+authenticateBiometrics: availability check (500ms timeouts) → local_auth.authenticate → reset attempts on success
+setPin/setPattern: also set enabled = true and lock mode
+clearAllSecurity: deletes everything except the salt
+```
+
+**Widgets:**
+| Widget | Role |
+|---|---|
+| `SecuritySetupWizard` | Multi-step bottom sheet: pick PIN/pattern → enter → confirm → optional decoy → biometrics |
+| `VaultLockScreen` | Unlock UI; tries biometrics, real PIN/pattern, then decoy; shows lockout |
+| `SecuritySettingsSheet` | Change PIN/pattern, set decoy, toggle biometrics, switch mode, disable/clear security |
+| `PinDialpadWidget` | Numeric keypad |
+| `PatternLockGridWidget` | 3×3 grid with a `CustomPainter`; emits a `List<int>` of dot indices |
+
+Full design spec: `SECURITY_ARCHITECTURE.md`.
+
+---
+
+## 12. Shared Core Code
+
+### `core/widgets/`
+| Widget | Purpose |
+|---|---|
+| `AppButton`, `AppTextField`, `SearchBarWidget`, `ChipInputWidget` | Basic inputs |
+| `AppDropdownMenu` (`AppDropdownItem`, `AppDropdownDivider`) | Custom dropdown/popup menu |
+| `AppActionSheet.show` (`AppActionItem`) | Generic action bottom sheet |
+| `ConfirmationDialog.show` → `bool?` | Yes/no dialog |
+| `FilterBottomSheet.show` | Filter UI |
+| `AppLoader`, `InlineLoader`, `FullScreenLoader`, `AppShimmerLoader` | Loading states |
+| `AppEmptyState`, `AppErrorWidget` | Empty and error states |
+| `PaginatedListView` | Infinite-scroll list |
+| `NetworkAwareWidget` | Online/offline wrapper (unused while there's no network) |
+| `QuickCaptureSheet.show(mode)` | Voice/Type/Scan capture (UI only) |
+| `AudioBriefingSheet.show` | "Play my day" (UI only) |
+| `HabitBubbleWidget`, `SafeSpendMeterWidget` | Today Hub building blocks |
+
+### `core/utils/`
+`date_utils.dart`, `validators.dart`, `snackbar_utils.dart`.
+
+### `core/constants/`
+- `app_constants.dart`: timeouts, storage keys for a future auth system (JWT, onboarding), page size 10, retries.
+- `string_constants.dart`: UI strings (`appName`, `holdToSpeak`, `quickType`, `scanText`, …).
+- `asset_paths.dart`.
+
+### `core/network/` (not used yet)
+`ApiClient` (Dio), `ApiEndpoints`, `AuthInterceptor`, `ErrorInterceptor`, `LoggingInterceptor`,
+`NetworkInfo`. Prepared for future cloud sync.
+
+### `core/error/`
+Exceptions: `ServerException`, `CacheException`, `NetworkException`, `ValidationException`.
+Failures: `ServerFailure`, `CacheFailure`, `NetworkFailure`, `ValidationFailure`. Not wired into features.
+
+---
+
+## 13. Theme & Design System
+
+`lib/config/theme/`:
+- `app_colors.dart`: brand `primary #6366F1` (indigo), plus module colors:
+  Time/Planner `#F59E0B` amber · Money `#10B981` emerald · Notes `#0EA5E9` sky · Vault `#8B5CF6` violet.
+  Each has `Light`/`Dark` variants, and there's a full dark palette (`darkScaffoldBackground`, `darkCardBackground`, …).
+- `app_text_styles.dart`, `app_spacing.dart`, `app_radius.dart`, `app_decorations.dart`
+  (e.g. `floatingBar`), `app_theme.dart` (`lightTheme`, `darkTheme`).
+- Font: **DMSans**. Theme follows the system (light/dark).
+- Pages commonly check `Theme.of(context).brightness == Brightness.dark` and pass an `isDark` flag into widgets.
+- Priority colors (in `PlannerItemEntity.priorityColor`): urgent red, high orange, medium indigo, low emerald.
+
+---
+
+## 14. Platform Configuration
+
+**Android** (`android/app/src/main/AndroidManifest.xml`):
+- Permissions: `POST_NOTIFICATIONS`, `SCHEDULE_EXACT_ALARM`, `USE_EXACT_ALARM`,
+  `RECEIVE_BOOT_COMPLETED`, `VIBRATE`, `USE_BIOMETRIC`, `USE_FINGERPRINT`.
+- Receivers: `ScheduledNotificationReceiver` and `ScheduledNotificationBootReceiver` (reschedule after reboot).
+- `MainActivity : FlutterFragmentActivity` (required by `local_auth`).
+- ⚠️ The Android package / applicationId is `com.dailylifeos.app`.
+
+**iOS / macOS:** Darwin notification settings are set in code. The Face ID usage description
+must be in `Info.plist` (see `SECURITY_ARCHITECTURE.md`).
+
+**Web:** Drift needs `web/sqlite3.wasm` and `web/drift_worker.js`.
+
+**Linux / Windows / macOS:** generated plugin registrants exist (they often show up as modified
+files after `pub get`).
+
+---
+
+## 15. Testing
+
+Run: `flutter test` · coverage: `flutter test --coverage` · lint: `flutter analyze --fatal-infos`
+
+| File | Covers | ~Tests |
+|---|---|---|
+| `test/database_test.dart` | Schema, CRUD, seeder | 9 |
+| `test/core/notifications/notification_service_test.dart` | Notification service | 6 |
+| `test/core/notifications/fake_notification_service.dart` | **Test double**: records calls | — |
+| `test/features/security/security_test.dart` | Hashing, lockout, decoy, config | 12 |
+| `test/features/planner/data/datasources/planner_local_datasource_test.dart` | Recurrence, toggle | 3 |
+| `test/features/planner/presentation/bloc/planner_bloc_test.dart` | Bloc flows | 2 |
+| `test/features/planner/presentation/widgets/*_test.dart` | Card, sheets, pomodoro, countdown | 7 |
+| `test/features/{money,notes,today_hub}/…datasource_test.dart` | Data sources | 1 each |
+| `test/widget_test.dart` | App boots | 2 |
+| `test/app_dropdown_menu_test.dart` | Dropdown widget | 1 |
+
+**Typical test setup:**
+```dart
+final db = AppDatabase(NativeDatabase.memory());
+await initDependencies(
+  database: db,
+  notificationService: FakeNotificationService(),
+  secureStorage: mockStorage,      // mocktail
+  localAuth: mockLocalAuth,
+);
+```
+
+---
+
+## 16. CI/CD
+
+Plan doc: `cicd_pipeline_plan.md`.
+
+**`.github/workflows/ci.yml`** runs on push or PR to `main`/`dev`. Steps:
+1. Checkout, then set up Flutter 3.44.6 (cached), then `flutter doctor -v`
+2. `flutter pub get`
+3. `dart format --set-exit-if-changed .`  ← **unformatted code fails CI**
+4. `flutter analyze --fatal-infos`  ← **even info-level lints fail CI**
+5. `flutter test --coverage`, then upload `coverage/lcov.info` (kept 14 days)
+
+Concurrency cancels older runs on the same ref.
+
+**`.github/workflows/release.yml`** runs on a `v*` tag: CI checks, then **build Android** (Java 17, APK + AAB),
+then create a GitHub Release with the artifacts.
+
 ```bash
+git tag v1.0.0 && git push origin v1.0.0
+```
+
+**Before pushing, always run:**
+```bash
+dart format .
+flutter analyze --fatal-infos
 flutter test
 ```
 
 ---
 
-## 11. Developer Extension Playbook
+## 17. Real vs. Mocked — Implementation Status
 
-### How to Add a New Table & Feature to Daily Life OS
+| Feature | Status |
+|---|---|
+| Habits toggle + streak | ✅ Real (DB) |
+| Today timeline | ✅ Real (DB, seeded only; no UI to add items) |
+| Safe-spend meter on Today | 🟡 Hardcoded numbers |
+| Audio briefing / TTS | 🟡 UI only |
+| Quick-Capture voice/type/scan | 🟡 UI only, nothing saved |
+| Planner reminders CRUD + recurrence + checklist | ✅ Real (DB) |
+| Planner notifications | ✅ Real (local notifications) |
+| Snooze | 🟡 Schedules a notification; doesn't change the item |
+| Pomodoro | 🟡 Works, but state is in memory only (lost on restart); ambience is UI only |
+| Countdowns | ✅ Real (SharedPreferences + notifications) |
+| Money: list, budget, subscriptions, IOUs | ✅ Real reads; toggle auto-kill / settle IOU are real |
+| Money: add expense / add IOU / edit budget | 🔴 Bloc ready, **no UI wired** |
+| Notes CRUD, pin, tags, scratchpad | ✅ Real |
+| Note → planner task | ✅ Real (direct DB insert) |
+| Vault passwords / documents | 🔴 Hardcoded mock data |
+| Vault lock (PIN / pattern / biometric / decoy / lockout / auto-lock) | ✅ Real |
+| Cloud sync / API | 🔴 Not started (Dio layer scaffolded) |
+| Natural-language dates, OCR, location triggers, TTS reminders | 🔴 Not started (in PRD) |
 
-When adding a new feature (e.g., *Habit Statistics* or *Goal Tracker*):
+---
 
-1. **Add Table Schema:**
-   - Define table in `lib/core/database/app_database.dart`:
-     ```dart
-     class Goals extends Table {
-       IntColumn get id => integer().autoIncrement()();
-       TextColumn get title => text()();
-       RealColumn get targetAmount => real()();
-     }
-     ```
-   - Run code generator:
-     ```bash
-     dart run build_runner build --delete-conflicting-outputs
-     ```
-2. **Create Domain Entity & Repository Interface:**
-   - Create `lib/features/goals/domain/entities/goal_entity.dart`.
-   - Create `lib/features/goals/domain/repositories/goal_repository.dart`.
-3. **Implement Data Layer:**
-   - Create `GoalLocalDataSource` querying `AppDatabase`.
-   - Create `GoalRepositoryImpl` implementing the domain interface and mapping Drift models to entities.
-4. **Create Use Cases:**
-   - E.g., `GetGoalsUseCase`, `AddGoalUseCase`.
-5. **Implement BLoC:**
-   - Define `GoalsEvent`, `GoalsState`, and `GoalsBloc`.
-6. **Register in DI:**
-   - Register DataSources, Repositories, UseCases, and BLoC in `lib/di/injection_container.dart`.
-7. **Wire UI:**
-   - Create page in `lib/features/goals/presentation/pages/goals_page.dart` with `BlocProvider`.
+## 18. Known Issues & Tech Debt
+
+1. **Notification ID mismatch.** The full reminder sheet hashes `'$title$date$time$repeatType'`
+   (with `DateTime`/`TimeOfDay` `toString()`), but delete hashes `'${title}${date}${startTime}'`.
+   Deleting a reminder created from the full sheet probably **doesn't cancel** its notification.
+   Fix idea: derive the notification ID from the DB `id`.
+2. **Habits never reset daily.** `isDoneToday` stays true after midnight, and the streak isn't
+   checked against `lastCompletedDate`.
+3. **Blocs aren't shared across tabs.** Converting a note to a task, or adding a countdown to the
+   planner, won't refresh other tabs until they reload. Today Hub's timeline doesn't read `PlannerItems` at all.
+4. **Logic in the UI.** `planner_page.dart` (~2.6k lines) holds notification scheduling, Pomodoro
+   and countdown persistence. Good candidates to move into use cases or a Cubit.
+5. **Notes page writes to the DB directly** (`sl<AppDatabase>()`), bypassing clean architecture.
+6. **Unused abstractions:** `UseCase`/`Either`/`Failure`, `core/network`, `HomePage`, auth keys in `AppConstants`.
+7. **Missing try/catch** in most Bloc mutation handlers, so a DB error there is unhandled.
+8. **Monthly recurrence** doesn't handle day 29–31 in short months, and monthly notifications fire only once.
+9. **Duplicate lock state** in Vault (page `_isUnlocked` + Bloc `isUnlocked`).
+10. **`.env` is bundled as an asset.** Never put real secrets in it.
+11. **Android package** is `com.dailylifeos.app` (renamed from the template `com.example.fine_route`).
+12. Equatable `props` on some events/entities are incomplete (e.g. `AddPlannerItem`, `HabitEntity`),
+    so two different objects can compare equal.
+
+---
+
+## 19. How-To Recipes
+
+### Add a new feature module
+1. Create `lib/features/<name>/{data/{datasources,models,repositories},domain/{entities,repositories,usecases},presentation/{bloc,pages,widgets}}`.
+2. If it needs persistence, add a Drift table in `app_database.dart`, add it to `@DriftDatabase(tables: …)`,
+   bump `schemaVersion`, add a migration step, and run build_runner.
+3. Write Entity → Repository (abstract) → UseCases → Model → LocalDataSource → RepositoryImpl.
+4. Write Event/State/Bloc (export event and state from the bloc file).
+5. Register everything in `injection_container.dart` (lazy singletons + `registerFactory` for the Bloc).
+6. Page: `BlocProvider(create: (_) => sl<XBloc>()..add(const LoadX()), child: _XView())`.
+7. Add it to `MainNavigationShell._pages` or open it as a sheet.
+8. Add tests using `AppDatabase(NativeDatabase.memory())`.
+
+### Add a column to an existing table
+```dart
+// 1. app_database.dart
+TextColumn get myField => text().withDefault(const Constant(''))();
+// 2. schemaVersion => 3;
+// 3. onUpgrade: if (from < 3) { await m.addColumn(table, table.myField); }
+```
+```bash
+dart run build_runner build --delete-conflicting-outputs
+```
+Then update the Model's `fromDrift`, the Entity, the data source insert/update, and the tests.
+
+### Schedule a notification
+```dart
+await sl<NotificationService>().scheduleNotification(
+  id: someStableId & 0x7FFFFFFF,
+  title: 'Reminder: …', body: '…',
+  scheduledDate: dateTime,
+  channelId: NotificationChannels.reminders,
+  matchDateTimeComponents: DateTimeComponents.time, // daily repeat (optional)
+);
+```
+In tests, inject `FakeNotificationService`.
+
+### Common commands
+```bash
+flutter pub get
+flutter run
+dart run build_runner build --delete-conflicting-outputs
+dart format .
+flutter analyze --fatal-infos
+flutter test --coverage
+```
+
+---
+
+## 20. Glossary
+
+| Term | Meaning |
+|---|---|
+| **sl** | Global `GetIt` service locator |
+| **Entity / Model** | Entity = domain object; Model = Entity subclass with DB/JSON mapping |
+| **Companion** | Drift-generated insert/update object (`PlannerItemsCompanion`) |
+| **Value / Value.absent()** | Drift wrapper: set a column / leave it unchanged |
+| **completedDates** | Per-day completion list for recurring planner items |
+| **repeatDays** | ISO weekdays `1=Mon … 7=Sun`, comma-separated |
+| **Safe spend** | Money left per day for the rest of the month |
+| **Auto-kill** | Subscription flag meant to auto-cancel before renewal (not yet active) |
+| **IOU** | Money lent to or borrowed from a person |
+| **Decoy PIN/pattern** | Second credential that opens the vault in "decoy mode" (fake content) for coercion scenarios |
+| **Lockout** | 30s block after 5 wrong PIN/pattern attempts |
+| **Quick-Capture** | Floating bar for voice/type/scan input |
+
+---
+
+## 21. Other Docs in the Repo
+
+| File | Content |
+|---|---|
+| `README.md` | Setup, run, CI badges |
+| `daily_life_os_product_requirements_document.md` | Full PRD: vision, modules, future features |
+| `SECURITY_ARCHITECTURE.md` | Vault security design, native setup, unlock decision flow |
+| `sqlite_plan.md` | Original Drift integration plan |
+| `cicd_pipeline_plan.md` | CI/CD design and GitHub secrets setup |
+| `PROJECT_KNOWLEDGE.md` | **This file** |
+
+> ✏️ **Keep this file updated** when you add a feature, change the schema, or fix an item in
+> [Known Issues](#18-known-issues--tech-debt).
