@@ -85,7 +85,7 @@ void main() {
 
     // 3. Verify Today Hub Header & Audio Briefing Pill
     expect(find.text(StringConstants.playBriefing), findsOneWidget);
-    expect(find.textContaining('Alex'), findsOneWidget);
+    expect(find.textContaining('Aarav'), findsOneWidget);
     expect(find.text(StringConstants.habitsAndRoutines), findsOneWidget);
 
     // 4. Verify Tab switching works (Tap 'Planner')
