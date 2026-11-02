@@ -25,13 +25,17 @@ class PomodoroModeSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 44,
-      padding: const EdgeInsets.all(AppSpacing.xxs),
+      height: 36,
+      padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: isDark
             ? AppColors.darkSurfaceSecondary
             : AppColors.surfaceSecondary,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isDark ? AppColors.darkDivider : AppColors.divider,
+          width: 0.8,
+        ),
       ),
       child: Row(
         children: [
@@ -65,18 +69,18 @@ class PomodoroModeSelector extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: () => onModeSelected(index),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
+          duration: const Duration(milliseconds: 160),
           alignment: Alignment.center,
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
           decoration: BoxDecoration(
             color: isSelected
                 ? (isDark ? AppColors.darkCardBackground : Colors.white)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(9),
+            borderRadius: BorderRadius.circular(7),
             boxShadow: isSelected && !isDark
                 ? [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 4,
                       offset: const Offset(0, 1),
                     ),
@@ -88,12 +92,12 @@ class PomodoroModeSelector extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, size: 16, color: color),
-                AppSpacing.gapW4,
+                Icon(icon, size: 14, color: color),
+                const SizedBox(width: 4),
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                     color: isSelected
                         ? (isDark

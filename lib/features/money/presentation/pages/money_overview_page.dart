@@ -6,7 +6,7 @@ import '../../../../config/theme/app_spacing.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/utils/date_utils.dart';
-import '../../../../core/widgets/app_shimmer_loader.dart';
+import '../../../../core/widgets/feature_scaffold.dart';
 import '../../../../core/widgets/quick_capture_sheet.dart';
 import '../../domain/entities/money_category.dart';
 import '../bloc/money_bloc.dart';
@@ -43,80 +43,49 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.darkScaffoldBackground
-          : AppColors.scaffoldBackground,
-      appBar: AppBar(
-        leading: IconButton(
-          tooltip: 'Back',
-          icon: const Icon(Icons.arrow_back_rounded, size: 20),
-          onPressed: () => MoneyShellScope.handleBack(context),
-        ),
-        titleSpacing: 0,
-        title: const Text(
-          StringConstants.navMoney,
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-        ),
+    return BlocBuilder<MoneyBloc, MoneyState>(
+      builder: (context, state) => FeatureScaffold(
+        title: StringConstants.navMoney,
+        onBack: () => MoneyShellScope.handleBack(context),
+        accentColor: AppColors.moduleMoney,
+        actionsEndPadding: AppSpacing.pageGutter,
         actions: [
-          BlocBuilder<MoneyBloc, MoneyState>(
-            builder: (context, state) {
-              if (state is! MoneyLoaded) return const SizedBox.shrink();
-              return MonthSelectorChip(
-                selectedMonth: state.selectedMonth,
-                onChanged: (m) => context.read<MoneyBloc>().add(ChangeMonth(m)),
-              );
-            },
-          ),
-          IconButton(
+          FeatureIconButton(
             tooltip: StringConstants.quickCaptureTitle,
-            icon: const Icon(Icons.bolt_rounded, size: 20),
+            icon: Icons.bolt_rounded,
             onPressed: () =>
                 QuickCaptureSheet.show(context, mode: QuickCaptureMode.text),
           ),
-          IconButton(
+          const SizedBox(width: 8),
+          FeatureIconButton(
             tooltip: StringConstants.moneySettings,
-            icon: const Icon(Icons.tune_rounded, size: 19),
+            icon: Icons.tune_rounded,
             onPressed: () => MoneySettingsSheet.show(context),
           ),
         ],
-      ),
-      body: BlocBuilder<MoneyBloc, MoneyState>(
-        builder: (context, state) {
-          if (state is MoneyLoading || state is MoneyInitial) {
-            return ListView(
-              padding: const EdgeInsets.all(20),
-              children: const [
-                AppShimmerLoader.card(height: 180),
-                SizedBox(height: 14),
-                AppShimmerLoader.card(height: 120),
-                SizedBox(height: 14),
-                AppShimmerLoader.card(height: 180),
-              ],
-            );
-          }
-          if (state is MoneyError) {
-            return Center(child: Text('Error: ${state.message}'));
-          }
-          if (state is MoneyLoaded) {
-            return Column(
-              children: [
-                // Sub-view organizer pills so every feature is clearly labeled & 1 tap away
-                Padding(
-                  padding: const EdgeInsets.only(top: 4, bottom: 8),
-                  child: _buildSubViewBar(state, isDark),
-                ),
-                Expanded(child: _buildActiveSubView(context, state, isDark)),
-              ],
-            );
-          }
-          return const SizedBox.shrink();
+        status: moneyFeatureStatus(state),
+        errorMessage: state is MoneyError ? state.message : null,
+        onRetry: () => context.read<MoneyBloc>().add(const LoadMoney()),
+        loading: const FeatureLoadingView(blockHeights: [40, 180, 120, 180]),
+        builder: (context) {
+          final loaded = state as MoneyLoaded;
+          return Column(
+            children: [
+              // Top control bar: Month selector on left, scrollable sub-view pills on right
+              _buildTopControlBar(context, loaded, isDark),
+              Expanded(child: _buildActiveSubView(context, loaded, isDark)),
+            ],
+          );
         },
       ),
     );
   }
 
-  Widget _buildSubViewBar(MoneyLoaded state, bool isDark) {
+  Widget _buildTopControlBar(
+    BuildContext context,
+    MoneyLoaded state,
+    bool isDark,
+  ) {
     final tabs = [
       (icon: Icons.dashboard_outlined, label: 'Dashboard'),
       (
@@ -127,67 +96,89 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
       (icon: Icons.shield_outlined, label: 'Safe Spend'),
     ];
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageGutter),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.pageGutter,
+        4,
+        AppSpacing.pageGutter,
+        8,
+      ),
       child: Row(
-        children: List.generate(tabs.length, (idx) {
-          final isSelected = _subView == idx;
-          final tab = tabs[idx];
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: GestureDetector(
-              onTap: () => setState(() => _subView = idx),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 160),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 7,
-                ),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.primary
-                      : (isDark ? AppColors.darkSurface : AppColors.surface),
-                  borderRadius: AppRadius.radiusFull,
-                  border: Border.all(
-                    color: isSelected
-                        ? AppColors.primary
-                        : (isDark ? AppColors.darkBorder : AppColors.border),
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      tab.icon,
-                      size: 14,
-                      color: isSelected
-                          ? Colors.white
-                          : (isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.textSecondary),
-                    ),
-                    const SizedBox(width: 5),
-                    Text(
-                      tab.label,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: isSelected
-                            ? FontWeight.w600
-                            : FontWeight.w500,
-                        color: isSelected
-                            ? Colors.white
-                            : (isDark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.textPrimary),
+        children: [
+          MonthSelectorChip(
+            selectedMonth: state.selectedMonth,
+            onChanged: (m) => context.read<MoneyBloc>().add(ChangeMonth(m)),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: List.generate(tabs.length, (idx) {
+                  final isSelected = _subView == idx;
+                  final tab = tabs[idx];
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: GestureDetector(
+                      onTap: () => setState(() => _subView = idx),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 160),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 7,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppColors.primary
+                              : (isDark
+                                    ? AppColors.darkSurface
+                                    : AppColors.surface),
+                          borderRadius: AppRadius.radiusFull,
+                          border: Border.all(
+                            color: isSelected
+                                ? AppColors.primary
+                                : (isDark
+                                      ? AppColors.darkBorder
+                                      : AppColors.border),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              tab.icon,
+                              size: 14,
+                              color: isSelected
+                                  ? Colors.white
+                                  : (isDark
+                                        ? AppColors.darkTextSecondary
+                                        : AppColors.textSecondary),
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              tab.label,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                                color: isSelected
+                                    ? Colors.white
+                                    : (isDark
+                                          ? AppColors.darkTextPrimary
+                                          : AppColors.textPrimary),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ],
-                ),
+                  );
+                }),
               ),
             ),
-          );
-        }),
+          ),
+        ],
       ),
     );
   }
@@ -509,7 +500,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
         color: AppColors.primary,
         title: StringConstants.subscriptionsShort,
         subtitle:
-            '${state.subscriptions.length} • ${CurrencyUtils.format(state.subscriptionsTotal)}/mo',
+            '${state.subscriptions.length} • ${CurrencyUtils.format(state.subscriptionsTotal, decimals: 0)}/mo',
         onTap: () => SubscriptionsSheet.show(context),
       ),
       _ToolItem(
@@ -523,14 +514,14 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
         icon: Icons.account_balance_rounded,
         color: AppColors.moneyAssetCash,
         title: StringConstants.accounts,
-        subtitle: CurrencyUtils.format(state.insights.totalAssets),
+        subtitle: CurrencyUtils.format(state.insights.totalAssets, decimals: 0),
         onTap: () => MoneyAccountsSheet.show(context),
       ),
       _ToolItem(
         icon: Icons.tune_rounded,
         color: AppColors.moduleVault,
         title: StringConstants.moneySettings,
-        subtitle: '${state.settings.currencyCode} • Alerts',
+        subtitle: '${state.settings.currencyCode} • Security',
         onTap: () => MoneySettingsSheet.show(context),
       ),
     ];
@@ -543,7 +534,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
         crossAxisCount: 2,
         mainAxisSpacing: 8,
         crossAxisSpacing: 8,
-        childAspectRatio: 2.4,
+        mainAxisExtent: 64,
       ),
       itemBuilder: (context, index) {
         final item = items[index];
@@ -551,7 +542,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
           borderRadius: AppRadius.borderMd,
           onTap: item.onTap,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
               color: isDark ? AppColors.darkSurface : AppColors.surface,
               borderRadius: AppRadius.borderMd,
@@ -588,16 +579,19 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                               : AppColors.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 1),
-                      Text(
-                        item.subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          color: isDark
-                              ? AppColors.darkTextMuted
-                              : AppColors.textMuted,
+                      const SizedBox(height: 2),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          item.subtitle,
+                          maxLines: 1,
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            color: isDark
+                                ? AppColors.darkTextMuted
+                                : AppColors.textMuted,
+                          ),
                         ),
                       ),
                     ],

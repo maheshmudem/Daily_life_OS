@@ -38,10 +38,12 @@ class WebTtsService implements AppTtsService {
         final lang = v.lang.toLowerCase();
         final name = v.name.toLowerCase();
 
-        final isIndianLang = lang.contains('en-in') ||
+        final isIndianLang =
+            lang.contains('en-in') ||
             lang.contains('hi-in') ||
             lang.contains('in');
-        final isFemale = name.contains('female') ||
+        final isFemale =
+            name.contains('female') ||
             name.contains('neerja') ||
             name.contains('heera') ||
             name.contains('swara') ||

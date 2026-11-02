@@ -74,17 +74,21 @@ class TransactionTile extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(
-              CurrencyUtils.signed(
-                transaction.amount,
-                isCredit: isIncome,
-                decimals: 2,
-              ),
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: amountColor,
-                fontFeatures: const [FontFeature.tabularFigures()],
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: Text(
+                CurrencyUtils.signed(
+                  transaction.amount,
+                  isCredit: isIncome,
+                  decimals: 2,
+                ),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: amountColor,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
               ),
             ),
             const SizedBox(height: 3),

@@ -48,24 +48,23 @@ class SafeToSpendHeroCard extends StatelessWidget {
             children: [
               const Icon(Icons.shield_outlined, color: Colors.white, size: 15),
               const SizedBox(width: 6),
-              const Expanded(
-                child: Text(
-                  'SAFE-TO-SPEND TODAY',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.6,
-                  ),
+              const Text(
+                'SAFE-TO-SPEND TODAY',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.5,
                 ),
               ),
+              const Spacer(),
               if (onOpenSalaryPlan != null) ...[
                 InkWell(
                   onTap: onOpenSalaryPlan,
                   borderRadius: AppRadius.radiusFull,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
+                      horizontal: 7,
                       vertical: 3,
                     ),
                     decoration: BoxDecoration(
@@ -80,9 +79,9 @@ class SafeToSpendHeroCard extends StatelessWidget {
                           size: 11,
                           color: Colors.white,
                         ),
-                        SizedBox(width: 4),
+                        SizedBox(width: 3),
                         Text(
-                          'Set Budget / Salary',
+                          'Plan',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 10,
@@ -93,10 +92,10 @@ class SafeToSpendHeroCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 5),
               ],
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: AppRadius.radiusFull,
@@ -111,12 +110,12 @@ class SafeToSpendHeroCard extends StatelessWidget {
                 ),
               ),
               if (onEditBudget != null) ...[
-                const SizedBox(width: 6),
+                const SizedBox(width: 5),
                 InkWell(
                   onTap: onEditBudget,
                   borderRadius: AppRadius.radiusFull,
                   child: Container(
-                    padding: const EdgeInsets.all(5),
+                    padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
@@ -235,29 +234,36 @@ class SafeToSpendHeroCard extends StatelessWidget {
 
           // 4-Metric Summary Strip (Spent Today, 7-Day Budget, Bills, Monthly Budget)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildMetricStat(
-                  'Today Spent',
-                  CurrencyUtils.format(spentToday),
+                Expanded(
+                  child: _buildMetricStat(
+                    'Today Spent',
+                    CurrencyUtils.format(spentToday),
+                  ),
                 ),
-                _buildMetricStat(
-                  '7-Day Cap',
-                  CurrencyUtils.format(weeklyLimit),
+                Expanded(
+                  child: _buildMetricStat(
+                    '7-Day Cap',
+                    CurrencyUtils.format(weeklyLimit),
+                  ),
                 ),
-                _buildMetricStat(
-                  'Fixed Bills',
-                  CurrencyUtils.format(budget.fixedBills),
+                Expanded(
+                  child: _buildMetricStat(
+                    'Fixed Bills',
+                    CurrencyUtils.format(budget.fixedBills),
+                  ),
                 ),
-                _buildMetricStat(
-                  'Month Cap',
-                  CurrencyUtils.format(budget.monthlyBudget),
+                Expanded(
+                  child: _buildMetricStat(
+                    'Month Cap',
+                    CurrencyUtils.format(budget.monthlyBudget),
+                  ),
                 ),
               ],
             ),
@@ -273,16 +279,21 @@ class SafeToSpendHeroCard extends StatelessWidget {
       children: [
         Text(
           label,
+          maxLines: 1,
           style: const TextStyle(color: Colors.white70, fontSize: 10),
         ),
-        const SizedBox(height: 1),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
-            fontSize: 12,
-            fontFeatures: [FontFeature.tabularFigures()],
+        const SizedBox(height: 2),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+              fontFeatures: [FontFeature.tabularFigures()],
+            ),
           ),
         ),
       ],

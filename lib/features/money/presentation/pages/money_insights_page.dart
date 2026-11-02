@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/theme/app_colors.dart';
+import '../../../../config/theme/app_spacing.dart';
+import '../../../../config/theme/theme_context.dart';
+import '../../../../core/widgets/feature_scaffold.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/date_utils.dart';
 import '../bloc/money_bloc.dart';
@@ -25,44 +28,18 @@ class MoneyInsightsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.darkScaffoldBackground
-          : AppColors.scaffoldBackground,
-      appBar: AppBar(
-        leading: IconButton(
-          tooltip: 'Back',
-          icon: const Icon(Icons.arrow_back_rounded, size: 20),
-          onPressed: () => MoneyShellScope.handleBack(context),
-        ),
-        titleSpacing: 0,
-        title: const Text(
-          StringConstants.analytics,
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-        ),
-        actions: [
-          BlocBuilder<MoneyBloc, MoneyState>(
-            builder: (context, state) {
-              if (state is! MoneyLoaded) return const SizedBox.shrink();
-              return Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: MonthSelectorChip(
-                  selectedMonth: state.selectedMonth,
-                  onChanged: (m) =>
-                      context.read<MoneyBloc>().add(ChangeMonth(m)),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-      body: BlocBuilder<MoneyBloc, MoneyState>(
-        builder: (context, state) {
-          if (state is! MoneyLoaded) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    return BlocBuilder<MoneyBloc, MoneyState>(
+      builder: (context, moneyState) => FeatureScaffold(
+        title: StringConstants.analytics,
+        onBack: () => MoneyShellScope.handleBack(context),
+        accentColor: AppColors.moduleMoney,
+        actions: const [],
+        status: moneyFeatureStatus(moneyState),
+        errorMessage: moneyState is MoneyError ? moneyState.message : null,
+        onRetry: () => context.read<MoneyBloc>().add(const LoadMoney()),
+        loading: const FeatureLoadingView(blockHeights: [40, 220, 120, 160]),
+        builder: (context) {
+          final state = moneyState as MoneyLoaded;
           final insights = state.insights;
 
           return LayoutBuilder(
@@ -77,12 +54,10 @@ class MoneyInsightsPage extends StatelessWidget {
                       child: ListView(
                         padding: const EdgeInsets.fromLTRB(20, 8, 10, 32),
                         children: [
-                          PeriodSelectorBar(
-                            selected: state.selectedPeriod,
+                          _buildPeriodHeader(
+                            context,
+                            state,
                             useShortLabels: true,
-                            onChanged: (p) => context.read<MoneyBloc>().add(
-                              ChangeMoneyPeriod(p),
-                            ),
                           ),
                           const SizedBox(height: 12),
                           SpentSummaryChartCard(insights: insights),
@@ -125,14 +100,14 @@ class MoneyInsightsPage extends StatelessWidget {
               }
 
               return ListView(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.pageGutter,
+                  8,
+                  AppSpacing.pageGutter,
+                  32,
+                ),
                 children: [
-                  PeriodSelectorBar(
-                    selected: state.selectedPeriod,
-                    useShortLabels: false,
-                    onChanged: (p) =>
-                        context.read<MoneyBloc>().add(ChangeMoneyPeriod(p)),
-                  ),
+                  _buildPeriodHeader(context, state, useShortLabels: false),
                   const SizedBox(height: 12),
                   SpentSummaryChartCard(insights: insights),
                   const SizedBox(height: 12),
@@ -174,6 +149,40 @@ class MoneyInsightsPage extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildPeriodHeader(
+    BuildContext context,
+    MoneyLoaded state, {
+    required bool useShortLabels,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Analysis Horizon',
+              style: context.text.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: context.palette.heading,
+              ),
+            ),
+            MonthSelectorChip(
+              selectedMonth: state.selectedMonth,
+              onChanged: (m) => context.read<MoneyBloc>().add(ChangeMonth(m)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        PeriodSelectorBar(
+          selected: state.selectedPeriod,
+          useShortLabels: useShortLabels,
+          onChanged: (p) => context.read<MoneyBloc>().add(ChangeMoneyPeriod(p)),
+        ),
+      ],
     );
   }
 }

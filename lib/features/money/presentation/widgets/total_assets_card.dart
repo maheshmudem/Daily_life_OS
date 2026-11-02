@@ -53,15 +53,19 @@ class TotalAssetsCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Text(
-                CurrencyUtils.format(total, decimals: 2),
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.textPrimary,
-                  fontFeatures: const [FontFeature.tabularFigures()],
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerRight,
+                child: Text(
+                  CurrencyUtils.format(total, decimals: 2),
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.textPrimary,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
                 ),
               ),
               if (onManageAccounts != null) ...[

@@ -6,4 +6,3 @@ import 'tts_service_stub.dart'
 export 'tts_service_interface.dart';
 
 AppTtsService getAppTtsService() => createTtsService();
-

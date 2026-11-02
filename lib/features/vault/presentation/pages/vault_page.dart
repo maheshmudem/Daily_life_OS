@@ -6,8 +6,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
+import '../../../../config/theme/app_spacing.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/widgets/app_shimmer_loader.dart';
+import '../../../../core/widgets/feature_scaffold.dart';
 import '../../../../di/injection_container.dart';
 import '../../domain/entities/vault_item_entity.dart';
 import '../bloc/vault_bloc.dart';
@@ -201,276 +204,217 @@ class _VaultViewState extends State<_VaultView>
       builder: (context, state) {
         final isDecoy = state is VaultLoaded ? state.isDecoyMode : false;
 
-        return Scaffold(
-          backgroundColor: isDark
-              ? AppColors.darkScaffoldBackground
-              : AppColors.scaffoldBackground,
-          appBar: AppBar(
-            toolbarHeight: 48,
-            backgroundColor: isDark
-                ? AppColors.darkScaffoldBackground
-                : AppColors.scaffoldBackground,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            titleSpacing: 16,
-            title: Row(
+        final isLoading =
+            _isLoadingSecurity ||
+            (_isUnlocked && (state is VaultLoading || state is VaultInitial));
+
+        return FeatureScaffold(
+          title: StringConstants.navVault,
+          accentColor: AppColors.moduleVault,
+          titleTrailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: AppColors.moduleVault.withValues(alpha: 0.12),
+              borderRadius: AppRadius.radiusFull,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  StringConstants.navVault,
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.3,
-                    color: isDark
-                        ? AppColors.darkTextHeading
-                        : AppColors.textHeading,
-                  ),
+                const Icon(
+                  Icons.verified_user_rounded,
+                  size: 12,
+                  color: AppColors.moduleVault,
                 ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                    vertical: 2.5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.moduleVault.withValues(alpha: 0.14),
-                    borderRadius: AppRadius.radiusFull,
-                    border: Border.all(
-                      color: AppColors.moduleVault.withValues(alpha: 0.28),
-                      width: 0.8,
-                    ),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.verified_user_rounded,
-                        size: 11,
-                        color: AppColors.moduleVault,
-                      ),
-                      SizedBox(width: 3.5),
-                      Text(
-                        'AES-256',
-                        style: TextStyle(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.moduleVault,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                    ],
+                const SizedBox(width: 4),
+                Text(
+                  'AES-256',
+                  style: context.text.labelMedium?.copyWith(
+                    color: AppColors.moduleVault,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
-            actions: [
-              // Compact Decoy Pill Toggle (PRD Feature)
-              GestureDetector(
-                onTap: () {
-                  final nextDecoy = !isDecoy;
-                  context.read<VaultBloc>().add(const ToggleDecoyMode());
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        nextDecoy
-                            ? 'Decoy Mode active! Safe dummy data shown.'
-                            : 'Standard Secure Vault active.',
-                      ),
-                      behavior: SnackBarBehavior.floating,
-                      duration: const Duration(seconds: 2),
+          ),
+          actionsEndPadding: AppSpacing.pageGutter,
+          actions: [
+            // Compact Decoy Pill Toggle (PRD Feature)
+            GestureDetector(
+              onTap: () {
+                final nextDecoy = !isDecoy;
+                context.read<VaultBloc>().add(const ToggleDecoyMode());
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      nextDecoy
+                          ? 'Decoy Mode active! Safe dummy data shown.'
+                          : 'Standard Secure Vault active.',
                     ),
-                  );
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  height: 28,
-                  padding: const EdgeInsets.symmetric(horizontal: 9),
-                  decoration: BoxDecoration(
-                    color: isDecoy
-                        ? AppColors.error.withValues(alpha: 0.15)
-                        : (isDark
-                              ? AppColors.darkCardBackground
-                              : AppColors.cardBackground),
-                    borderRadius: AppRadius.radiusFull,
-                    border: Border.all(
-                      color: isDecoy
-                          ? AppColors.error.withValues(alpha: 0.5)
-                          : (isDark
-                                ? AppColors.darkDivider
-                                : AppColors.divider),
-                      width: 0.8,
-                    ),
+                    behavior: SnackBarBehavior.floating,
+                    duration: const Duration(seconds: 2),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isDecoy
-                              ? AppColors.error
-                              : (isDark
-                                    ? AppColors.darkTextCaption
-                                    : AppColors.textCaption),
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        'Decoy',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: isDecoy
-                              ? AppColors.error
-                              : (isDark
-                                    ? AppColors.darkTextBody
-                                    : AppColors.textBody),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-              // Compact Security Settings Icon Button
-              _buildHeaderIconButton(
-                isDark: isDark,
-                tooltip: 'Security Settings',
-                icon: Icons.shield_outlined,
-                color: AppColors.moduleVault,
-                onTap: () {
-                  SecuritySettingsSheet.show(
-                    context,
-                    securityRepository: sl<SecurityRepository>(),
-                    onLockNow: () {
-                      setState(() => _isUnlocked = false);
-                      context.read<VaultBloc>().add(const LockVault());
-                    },
-                  ).then((_) {
-                    _checkSecurity();
-                  });
-                },
-              ),
-              const SizedBox(width: 6),
-              // Compact Lock / Unlock Icon Button
-              _buildHeaderIconButton(
-                isDark: isDark,
-                tooltip: !_isSecurityEnabled
-                    ? 'Set Up Security'
-                    : (_isUnlocked ? 'Lock Vault' : 'Vault Locked'),
-                icon: !_isSecurityEnabled
-                    ? Icons.lock_open_rounded
-                    : (_isUnlocked
-                          ? Icons.lock_open_rounded
-                          : Icons.lock_rounded),
-                color: !_isSecurityEnabled
-                    ? AppColors.warning
-                    : AppColors.moduleVault,
-                onTap: () {
-                  if (!_isSecurityEnabled) {
-                    _openSecuritySetup(context);
-                    return;
-                  }
-                  if (_isUnlocked) {
-                    setState(() => _isUnlocked = false);
-                    context.read<VaultBloc>().add(const LockVault());
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Enter PIN or draw Pattern below to unlock.',
-                        ),
-                        behavior: SnackBarBehavior.floating,
-                        duration: Duration(seconds: 1),
-                      ),
-                    );
-                  }
-                },
-              ),
-              const SizedBox(width: 6),
-              // Compact + Add Button
-              if (_isUnlocked)
-                Padding(
-                  padding: const EdgeInsets.only(right: 14),
-                  child: GestureDetector(
-                    onTap: () => _showAddVaultItemSheet(context, isDark),
-                    child: Container(
-                      height: 28,
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      decoration: BoxDecoration(
-                        color: AppColors.moduleVault,
-                        borderRadius: AppRadius.radiusFull,
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.add_rounded,
-                            size: 14,
-                            color: Colors.white,
-                          ),
-                          SizedBox(width: 3),
-                          Text(
-                            'Add',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                )
-              else
-                const SizedBox(width: 10),
-            ],
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(38),
-              child: Container(
+                );
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                height: 32,
+                padding: const EdgeInsets.symmetric(horizontal: 10),
                 decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(
-                      color: isDark ? AppColors.darkDivider : AppColors.divider,
-                      width: 0.8,
-                    ),
+                  color: isDecoy
+                      ? AppColors.error.withValues(alpha: 0.15)
+                      : (isDark
+                            ? AppColors.darkCardBackground
+                            : AppColors.cardBackground),
+                  borderRadius: AppRadius.radiusFull,
+                  border: Border.all(
+                    color: isDecoy
+                        ? AppColors.error.withValues(alpha: 0.5)
+                        : (isDark ? AppColors.darkDivider : AppColors.divider),
+                    width: 0.8,
                   ),
                 ),
-                child: TabBar(
-                  controller: _tabController,
-                  indicatorColor: AppColors.moduleVault,
-                  indicatorWeight: 2.2,
-                  labelColor: AppColors.moduleVault,
-                  unselectedLabelColor: isDark
-                      ? AppColors.darkTextCaption
-                      : AppColors.textCaption,
-                  indicatorSize: TabBarIndicatorSize.label,
-                  dividerColor: Colors.transparent,
-                  labelStyle: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12.5,
-                  ),
-                  unselectedLabelStyle: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12.5,
-                  ),
-                  tabs: const [
-                    Tab(height: 36, text: 'Passwords & Logins'),
-                    Tab(height: 36, text: 'Warranty Locker'),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isDecoy
+                            ? AppColors.error
+                            : (isDark
+                                  ? AppColors.darkTextCaption
+                                  : AppColors.textCaption),
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      'Decoy',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: isDecoy
+                            ? AppColors.error
+                            : (isDark
+                                  ? AppColors.darkTextBody
+                                  : AppColors.textBody),
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
+            const SizedBox(width: 6),
+            FeatureIconButton(
+              tooltip: 'Security Settings',
+              icon: Icons.shield_outlined,
+              color: AppColors.moduleVault,
+              onPressed: () {
+                SecuritySettingsSheet.show(
+                  context,
+                  securityRepository: sl<SecurityRepository>(),
+                  onLockNow: () {
+                    setState(() => _isUnlocked = false);
+                    context.read<VaultBloc>().add(const LockVault());
+                  },
+                ).then((_) {
+                  _checkSecurity();
+                });
+              },
+            ),
+            const SizedBox(width: 6),
+            FeatureIconButton(
+              tooltip: !_isSecurityEnabled
+                  ? 'Set Up Security'
+                  : (_isUnlocked ? 'Lock Vault' : 'Vault Locked'),
+              icon: !_isSecurityEnabled
+                  ? Icons.lock_open_rounded
+                  : (_isUnlocked
+                        ? Icons.lock_open_rounded
+                        : Icons.lock_rounded),
+              color: !_isSecurityEnabled
+                  ? AppColors.warning
+                  : AppColors.moduleVault,
+              onPressed: () {
+                if (!_isSecurityEnabled) {
+                  _openSecuritySetup(context);
+                  return;
+                }
+                if (_isUnlocked) {
+                  setState(() => _isUnlocked = false);
+                  context.read<VaultBloc>().add(const LockVault());
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Enter PIN or draw Pattern below to unlock.',
+                      ),
+                      behavior: SnackBarBehavior.floating,
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
+                }
+              },
+            ),
+            if (_isUnlocked) ...[
+              const SizedBox(width: 6),
+              FeatureIconButton(
+                tooltip: 'Add Vault Item',
+                icon: Icons.add_rounded,
+                color: Colors.white,
+                backgroundColor: AppColors.moduleVault,
+                borderColor: AppColors.moduleVault,
+                onPressed: () => _showAddVaultItemSheet(context, isDark),
+              ),
+            ],
+          ],
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(38),
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: isDark ? AppColors.darkDivider : AppColors.divider,
+                    width: 0.8,
+                  ),
+                ),
+              ),
+              child: TabBar(
+                controller: _tabController,
+                indicatorColor: AppColors.moduleVault,
+                indicatorWeight: 2.2,
+                labelColor: AppColors.moduleVault,
+                unselectedLabelColor: isDark
+                    ? AppColors.darkTextCaption
+                    : AppColors.textCaption,
+                indicatorSize: TabBarIndicatorSize.label,
+                dividerColor: Colors.transparent,
+                labelStyle: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12.5,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12.5,
+                ),
+                tabs: const [
+                  Tab(height: 36, text: 'Passwords & Logins'),
+                  Tab(height: 36, text: 'Warranty Locker'),
+                ],
+              ),
+            ),
           ),
-          body: _isLoadingSecurity
-              ? const _VaultLoadingView()
-              : !_isUnlocked
+          status: switch (state) {
+            _ when isLoading => FeatureStatus.loading,
+            VaultError() when _isUnlocked => FeatureStatus.error,
+            _ => FeatureStatus.content,
+          },
+          errorMessage: state is VaultError ? state.message : null,
+          onRetry: () => context.read<VaultBloc>().add(const LoadVault()),
+          loading: const _VaultLoadingView(),
+          builder: (context) => !_isUnlocked
               ? _buildLockedScreen(isDark)
-              : (state is VaultLoading || state is VaultInitial)
-              ? const _VaultLoadingView()
               : state is VaultLoaded
               ? TabBarView(
                   controller: _tabController,
@@ -494,37 +438,6 @@ class _VaultViewState extends State<_VaultView>
               : const SizedBox.shrink(),
         );
       },
-    );
-  }
-
-  Widget _buildHeaderIconButton({
-    required bool isDark,
-    required String tooltip,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          width: 30,
-          height: 28,
-          decoration: BoxDecoration(
-            color: isDark
-                ? AppColors.darkCardBackground
-                : AppColors.cardBackground,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: isDark ? AppColors.darkDivider : AppColors.divider,
-              width: 0.8,
-            ),
-          ),
-          child: Icon(icon, size: 15, color: color),
-        ),
-      ),
     );
   }
 

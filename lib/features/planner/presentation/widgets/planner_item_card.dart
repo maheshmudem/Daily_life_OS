@@ -43,9 +43,9 @@ class PlannerItemCard extends StatefulWidget {
 }
 
 class _PlannerItemCardState extends State<PlannerItemCard> {
-  static const double _checkSize = 22;
-  static const double _titleLineHeight = 22;
-  static const double _contentInset = _checkSize + AppSpacing.sm;
+  static const double _checkSize = 20;
+  static const double _titleLineHeight = 20;
+  static const double _contentInset = _checkSize + 10;
 
   bool _isExpanded = false;
 
@@ -63,7 +63,7 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
 
     final Color borderColor;
     if (item.isOverdue) {
-      borderColor = AppColors.error.withValues(alpha: 0.35);
+      borderColor = AppColors.error.withValues(alpha: 0.4);
     } else if (item.isDone) {
       borderColor = AppColors.success.withValues(alpha: 0.3);
     } else {
@@ -71,19 +71,14 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
     }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.md,
-        AppSpacing.xs,
-        AppSpacing.sm,
-      ),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: _isDark
             ? AppColors.darkCardBackground
             : AppColors.cardBackground,
-        borderRadius: AppRadius.radiusLg,
-        border: Border.all(color: borderColor),
+        borderRadius: AppRadius.radiusMd,
+        border: Border.all(color: borderColor, width: 0.85),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,26 +87,26 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildCheck(item),
-              AppSpacing.gapW12,
+              const SizedBox(width: 10),
               Expanded(
                 child: InkWell(
                   onTap: widget.onEdit,
-                  borderRadius: AppRadius.radiusSm,
+                  borderRadius: AppRadius.radiusXs,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildTitleRow(item),
-                      AppSpacing.gapH4,
+                      const SizedBox(height: 4),
                       _buildMeta(item),
                       if (item.notes.isNotEmpty) ...[
-                        AppSpacing.gapH8,
+                        const SizedBox(height: 6),
                         Text(
                           item.notes,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 13,
-                            height: 1.4,
+                            fontSize: 12,
+                            height: 1.35,
                             color: _isDark
                                 ? AppColors.darkTextBody
                                 : AppColors.textBody,
@@ -122,35 +117,23 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
                   ),
                 ),
               ),
+              const SizedBox(width: 4),
               _buildMenu(item),
             ],
           ),
 
           if (_isExpanded && item.checklist.isNotEmpty) ...[
-            AppSpacing.gapH12,
+            const SizedBox(height: 8),
             Padding(
-              padding: const EdgeInsets.only(
-                left: _contentInset,
-                right: AppSpacing.xs,
-              ),
+              padding: const EdgeInsets.only(left: _contentInset),
               child: _buildChecklist(item),
             ),
           ],
 
-          AppSpacing.gapH12,
-          Padding(
-            padding: const EdgeInsets.only(
-              left: _contentInset,
-              right: AppSpacing.xs,
-            ),
-            child: Column(
-              children: [
-                Divider(height: 1, thickness: 1, color: _dividerColor),
-                AppSpacing.gapH12,
-                _buildActions(item),
-              ],
-            ),
-          ),
+          const SizedBox(height: 8),
+          Divider(height: 1, thickness: 0.8, color: _dividerColor),
+          const SizedBox(height: 8),
+          _buildActions(item),
         ],
       ),
     );
@@ -164,7 +147,7 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
       button: true,
       child: InkResponse(
         onTap: () => widget.onToggle(!isDone),
-        radius: 20,
+        radius: 18,
         child: SizedBox(
           height: _titleLineHeight,
           child: Center(
@@ -183,13 +166,13 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
                             : (_isDark
                                   ? AppColors.darkBorder
                                   : AppColors.textCaption)),
-                  width: 2,
+                  width: 1.8,
                 ),
               ),
               child: isDone
                   ? const Icon(
                       Icons.check_rounded,
-                      size: 14,
+                      size: 13,
                       color: Colors.white,
                     )
                   : null,
@@ -212,8 +195,8 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 15,
-              height: _titleLineHeight / 15,
+              fontSize: 13.5,
+              height: _titleLineHeight / 13.5,
               fontWeight: FontWeight.w600,
               color: item.isDone ? _captionColor : _headingColor,
               decoration: item.isDone ? TextDecoration.lineThrough : null,
@@ -222,14 +205,14 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
           ),
         ),
         if (showPriority) ...[
-          AppSpacing.gapW8,
+          const SizedBox(width: 6),
           SizedBox(
             height: _titleLineHeight,
             child: Center(
               child: _Pill(
                 label: item.priority.toUpperCase(),
                 color: item.priorityColor,
-                letterSpacing: 0.4,
+                letterSpacing: 0.3,
               ),
             ),
           ),
@@ -242,8 +225,8 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
   Widget _buildMeta(PlannerItemEntity item) {
     final metaColor = item.isOverdue ? AppColors.error : _captionColor;
     return Wrap(
-      spacing: AppSpacing.sm,
-      runSpacing: AppSpacing.xs,
+      spacing: 8,
+      runSpacing: 4,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         if (!item.isRecurring && item.date.isNotEmpty)
@@ -282,7 +265,7 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
                 _isExpanded
                     ? Icons.keyboard_arrow_up_rounded
                     : Icons.keyboard_arrow_down_rounded,
-                size: 16,
+                size: 14,
                 color: AppColors.primary,
               ),
             ),
@@ -306,20 +289,20 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
         color: _isDark
             ? AppColors.darkSurfaceSecondary
             : AppColors.surfaceSecondary,
-        borderRadius: AppRadius.radiusMd,
+        borderRadius: AppRadius.radiusSm,
       ),
       child: Column(
         children: item.checklist.map((c) {
           return InkWell(
-            borderRadius: AppRadius.radiusSm,
+            borderRadius: AppRadius.radiusXs,
             onTap: () => _setChecklistItem(item, c, !c.isDone),
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
+              padding: const EdgeInsets.symmetric(vertical: 2),
               child: Row(
                 children: [
                   SizedBox(
-                    width: 32,
-                    height: 32,
+                    width: 26,
+                    height: 26,
                     child: Checkbox(
                       value: c.isDone,
                       activeColor: AppColors.moduleTime,
@@ -332,12 +315,12 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
                           _setChecklistItem(item, c, val ?? false),
                     ),
                   ),
-                  AppSpacing.gapW4,
+                  const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       c.title,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 12,
                         color: c.isDone ? _captionColor : _headingColor,
                         decoration: c.isDone
                             ? TextDecoration.lineThrough
@@ -368,20 +351,21 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
     );
   }
 
-  // ── Footer actions (equal widths so every card lines up) ──────────────────
+  // ── Footer actions (full card width so left/right edges align strictly) ──
   Widget _buildActions(PlannerItemEntity item) {
     final outlinedStyle = OutlinedButton.styleFrom(
-      minimumSize: const Size(0, 34),
+      minimumSize: const Size(0, 28),
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       foregroundColor: _isDark ? AppColors.darkTextBody : AppColors.textBody,
       side: BorderSide(
-        color: _isDark ? AppColors.darkBorder : AppColors.border,
+        color: _isDark ? AppColors.darkDivider : AppColors.divider,
+        width: 0.85,
       ),
-      shape: const RoundedRectangleBorder(borderRadius: AppRadius.radiusSm),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       textStyle: const TextStyle(
         fontFamily: AppTextStyles.fontFamily,
-        fontSize: 12,
+        fontSize: 11.5,
         fontWeight: FontWeight.w600,
       ),
     );
@@ -393,11 +377,11 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
             child: OutlinedButton.icon(
               onPressed: widget.onEdit,
               style: outlinedStyle,
-              icon: const Icon(Icons.edit_outlined, size: 14),
+              icon: const Icon(Icons.edit_outlined, size: 13),
               label: const Text('Edit'),
             ),
           ),
-          AppSpacing.gapW8,
+          const SizedBox(width: 6),
         ],
         Expanded(
           child: OutlinedButton(
@@ -409,14 +393,14 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
             ),
           ),
         ),
-        AppSpacing.gapW8,
+        const SizedBox(width: 6),
         Expanded(
           child: FilledButton(
             onPressed: () => widget.onToggle(!item.isDone),
             style: FilledButton.styleFrom(
-              minimumSize: const Size(0, 34),
+              minimumSize: const Size(0, 28),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
               elevation: 0,
               backgroundColor: item.isDone
                   ? (_isDark
@@ -428,12 +412,12 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
                   : (_isDark
                         ? AppColors.moduleTimeLight
                         : AppColors.moduleTime),
-              shape: const RoundedRectangleBorder(
-                borderRadius: AppRadius.radiusSm,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
               ),
               textStyle: const TextStyle(
                 fontFamily: AppTextStyles.fontFamily,
-                fontSize: 12,
+                fontSize: 11.5,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -448,7 +432,7 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
   Widget _buildMenu(PlannerItemEntity item) {
     return AppDropdownMenu<String>(
       tooltip: 'More actions',
-      offset: const Offset(0, 8),
+      offset: const Offset(0, 6),
       onSelected: (value) {
         switch (value) {
           case 'edit':
@@ -502,12 +486,15 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
         ),
       ],
       child: SizedBox(
-        width: 36,
+        width: 24,
         height: _titleLineHeight,
-        child: Icon(
-          Icons.more_vert_rounded,
-          size: 20,
-          color: _isDark ? AppColors.darkIconColor : AppColors.iconColor,
+        child: Align(
+          alignment: Alignment.centerRight,
+          child: Icon(
+            Icons.more_horiz_rounded,
+            size: 18,
+            color: _isDark ? AppColors.darkIconColor : AppColors.iconColor,
+          ),
         ),
       ),
     );
@@ -533,12 +520,12 @@ class _MetaItem extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: color),
-        AppSpacing.gapW4,
+        Icon(icon, size: 12.5, color: color),
+        const SizedBox(width: 3.5),
         Text(
           label,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 11.5,
             fontWeight: FontWeight.w500,
             color: color,
           ),
@@ -564,18 +551,15 @@ class _Pill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.xs,
-        vertical: AppSpacing.xxxs,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: AppRadius.radiusXs,
+        borderRadius: BorderRadius.circular(5),
       ),
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: FontWeight.w700,
           letterSpacing: letterSpacing,
           color: color,

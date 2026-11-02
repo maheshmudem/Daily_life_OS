@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/theme/app_colors.dart';
+import '../../../../core/widgets/feature_scaffold.dart';
+import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/currency_utils.dart';
@@ -57,60 +59,18 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.darkScaffoldBackground
-          : AppColors.scaffoldBackground,
-      appBar: AppBar(
-        leading: IconButton(
-          tooltip: 'Back',
-          icon: const Icon(Icons.arrow_back_rounded, size: 20),
-          onPressed: () => MoneyShellScope.handleBack(context),
-        ),
-        titleSpacing: 0,
-        title: const Text(
-          StringConstants.moneyNavActivity,
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-        ),
-        actions: [
-          BlocBuilder<MoneyBloc, MoneyState>(
-            builder: (context, state) {
-              if (state is! MoneyLoaded) return const SizedBox.shrink();
-              return Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FilterChip(
-                    label: const Text(
-                      'All time',
-                      style: TextStyle(fontSize: 11.5),
-                    ),
-                    selected: _allMonths,
-                    showCheckmark: false,
-                    visualDensity: VisualDensity.compact,
-                    selectedColor: AppColors.primary.withValues(alpha: 0.16),
-                    onSelected: (v) => setState(() => _allMonths = v),
-                  ),
-                  const SizedBox(width: 6),
-                  if (!_allMonths)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 12),
-                      child: MonthSelectorChip(
-                        selectedMonth: state.selectedMonth,
-                        onChanged: (m) =>
-                            context.read<MoneyBloc>().add(ChangeMonth(m)),
-                      ),
-                    ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-      body: BlocBuilder<MoneyBloc, MoneyState>(
-        builder: (context, state) {
-          if (state is! MoneyLoaded) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    return BlocBuilder<MoneyBloc, MoneyState>(
+      builder: (context, moneyState) => FeatureScaffold(
+        title: StringConstants.moneyNavActivity,
+        onBack: () => MoneyShellScope.handleBack(context),
+        accentColor: AppColors.moduleMoney,
+        actions: const [],
+        status: moneyFeatureStatus(moneyState),
+        errorMessage: moneyState is MoneyError ? moneyState.message : null,
+        onRetry: () => context.read<MoneyBloc>().add(const LoadMoney()),
+        loading: const FeatureLoadingView(blockHeights: [48, 72, 220, 160]),
+        builder: (context) {
+          final state = moneyState as MoneyLoaded;
           final filtered = _applyFilters(state);
           final totalIn = filtered
               .where((t) => t.isIncome)
@@ -131,7 +91,12 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
           return Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 6, 20, 6),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.pageGutter,
+                  6,
+                  AppSpacing.pageGutter,
+                  6,
+                ),
                 child: SearchBarWidget(
                   hintText: StringConstants.searchTransactions,
                   onChanged: (val) => setState(() => _query = val),
@@ -139,18 +104,49 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
                 ),
               ),
 
-              // Type + Category filters
+              // Unified horizontal filter bar: Time window + Type + Category
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.pageGutter,
+                ),
                 child: Row(
                   children: [
+                    FilterChip(
+                      label: const Text('All time'),
+                      selected: _allMonths,
+                      showCheckmark: false,
+                      visualDensity: VisualDensity.compact,
+                      selectedColor: AppColors.primary.withValues(alpha: 0.16),
+                      onSelected: (v) => setState(() => _allMonths = v),
+                    ),
+                    if (!_allMonths) ...[
+                      const SizedBox(width: 6),
+                      MonthSelectorChip(
+                        selectedMonth: state.selectedMonth,
+                        onChanged: (m) =>
+                            context.read<MoneyBloc>().add(ChangeMonth(m)),
+                      ),
+                    ],
+                    const SizedBox(width: 8),
+                    Container(
+                      width: 1,
+                      height: 18,
+                      color: isDark ? AppColors.darkDivider : AppColors.divider,
+                    ),
+                    const SizedBox(width: 8),
                     _buildTypeChip(StringConstants.allTypes, 'all', isDark),
                     const SizedBox(width: 6),
                     _buildTypeChip(StringConstants.expenses, 'expense', isDark),
                     const SizedBox(width: 6),
                     _buildTypeChip(StringConstants.income, 'income', isDark),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
+                    Container(
+                      width: 1,
+                      height: 18,
+                      color: isDark ? AppColors.darkDivider : AppColors.divider,
+                    ),
+                    const SizedBox(width: 8),
                     ...MoneyCategory.all.map((cat) {
                       final selected = _categoryFilter == cat.key;
                       return Padding(
@@ -205,27 +201,32 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
                     ),
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _SummaryPair(
-                        label: StringConstants.income,
-                        value: '+${CurrencyUtils.format(totalIn)}',
-                        color: AppColors.success,
-                      ),
-                      _SummaryPair(
-                        label: StringConstants.expenses,
-                        value: '-${CurrencyUtils.format(totalOut)}',
-                        color: AppColors.error,
-                      ),
-                      _SummaryPair(
-                        label: StringConstants.netCashflow,
-                        value: CurrencyUtils.signed(
-                          totalIn - totalOut,
-                          isCredit: totalIn >= totalOut,
+                      Expanded(
+                        child: _SummaryPair(
+                          label: StringConstants.income,
+                          value: '+${CurrencyUtils.format(totalIn)}',
+                          color: AppColors.success,
                         ),
-                        color: totalIn >= totalOut
-                            ? AppColors.primary
-                            : AppColors.error,
+                      ),
+                      Expanded(
+                        child: _SummaryPair(
+                          label: StringConstants.expenses,
+                          value: '-${CurrencyUtils.format(totalOut)}',
+                          color: AppColors.error,
+                        ),
+                      ),
+                      Expanded(
+                        child: _SummaryPair(
+                          label: StringConstants.netCashflow,
+                          value: CurrencyUtils.signed(
+                            totalIn - totalOut,
+                            isCredit: totalIn >= totalOut,
+                          ),
+                          color: totalIn >= totalOut
+                              ? AppColors.primary
+                              : AppColors.error,
+                        ),
                       ),
                     ],
                   ),
@@ -403,13 +404,17 @@ class _SummaryPair extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 2),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 12.5,
-            fontWeight: FontWeight.w700,
-            color: color,
-            fontFeatures: const [FontFeature.tabularFigures()],
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            value,
+            maxLines: 1,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: color,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
           ),
         ),
       ],

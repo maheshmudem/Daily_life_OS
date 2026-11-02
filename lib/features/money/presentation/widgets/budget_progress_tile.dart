@@ -77,10 +77,10 @@ class BudgetProgressTile extends StatelessWidget {
                               !budget.hasLimit
                                   ? StringConstants.noLimitSet
                                   : budget.isOverBudget
-                                  ? '${StringConstants.overBudget} (${CurrencyUtils.format(budget.overBy)})'
+                                  ? '${StringConstants.overBudget} (${CurrencyUtils.format(budget.overBy, decimals: 0)})'
                                   : budget.isNearLimit
                                   ? StringConstants.nearLimit
-                                  : '${CurrencyUtils.format(budget.remaining)} left',
+                                  : '${CurrencyUtils.format(budget.remaining, decimals: 0)} left',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
@@ -101,40 +101,44 @@ class BudgetProgressTile extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(
-                            text: CurrencyUtils.format(budget.spent),
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: budget.isOverBudget
-                                  ? AppColors.error
-                                  : (isDark
-                                        ? AppColors.darkTextPrimary
-                                        : AppColors.textPrimary),
-                              fontFeatures: const [
-                                FontFeature.tabularFigures(),
-                              ],
-                            ),
-                          ),
-                          if (budget.hasLimit)
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text.rich(
+                        TextSpan(
+                          children: [
                             TextSpan(
-                              text:
-                                  ' / ${CurrencyUtils.format(budget.monthlyLimit)}',
+                              text: CurrencyUtils.format(budget.spent),
                               style: TextStyle(
-                                fontSize: 11.5,
-                                color: captionColor,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: budget.isOverBudget
+                                    ? AppColors.error
+                                    : (isDark
+                                          ? AppColors.darkTextPrimary
+                                          : AppColors.textPrimary),
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
                               ),
                             ),
-                        ],
+                            if (budget.hasLimit)
+                              TextSpan(
+                                text:
+                                    ' / ${CurrencyUtils.format(budget.monthlyLimit)}',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  color: captionColor,
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),

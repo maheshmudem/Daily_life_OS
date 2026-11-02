@@ -15,4 +15,3 @@ abstract class AppTtsService {
   Future<void> setRate(double rate);
   void dispose();
 }
-

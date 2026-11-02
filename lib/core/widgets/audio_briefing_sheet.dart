@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_radius.dart';
+import '../../config/theme/app_spacing.dart';
 import '../../config/theme/app_text_styles.dart';
 import '../../di/injection_container.dart';
 import '../../features/money/domain/usecases/get_transactions_and_budget_usecase.dart';
@@ -132,7 +133,7 @@ class _AudioBriefingSheetState extends State<AudioBriefingSheet>
     final buffer = StringBuffer();
     buffer.write(
       'Namaste $userName! 🎶 Wishing you a very sweet and bright $greeting. '
-      'Here is your Daily Life OS morning melody briefing. ',
+      'Here is your Daily Life OS briefing. ',
     );
 
     // 1. Habits
@@ -195,7 +196,9 @@ class _AudioBriefingSheetState extends State<AudioBriefingSheet>
       );
     }
 
-    buffer.write('Stay inspired, stay in rhythm, and have a harmonious, productive day! 🎵');
+    buffer.write(
+      'Stay inspired, stay in rhythm, and have a harmonious, productive day! 🎵',
+    );
     return buffer.toString();
   }
 
@@ -292,218 +295,235 @@ class _AudioBriefingSheetState extends State<AudioBriefingSheet>
     super.dispose();
   }
 
+  String get _statusLabel {
+    if (_isPlaying) return 'Playing';
+    if (_isPaused) return 'Paused';
+    return 'Ready';
+  }
+
+  void _cycleSpeed() {
+    setState(() {
+      if (_speed == 1.0) {
+        _speed = 1.25;
+      } else if (_speed == 1.25) {
+        _speed = 1.5;
+      } else {
+        _speed = 1.0;
+      }
+    });
+    _tts.setRate(_speed);
+  }
+
+  String get _speedLabel =>
+      _speed == _speed.roundToDouble() ? '${_speed.toInt()}x' : '${_speed}x';
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final media = MediaQuery.of(context);
+    const accent = AppColors.primary;
+
+    final headingColor = isDark
+        ? AppColors.darkTextHeading
+        : AppColors.textHeading;
+    final captionColor = isDark
+        ? AppColors.darkTextCaption
+        : AppColors.textCaption;
+    final iconColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.textSecondary;
+    final mutedFill = isDark
+        ? AppColors.darkSurfaceSecondary
+        : AppColors.surfaceSecondary;
+    final dividerColor = isDark ? AppColors.darkDivider : AppColors.divider;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      constraints: BoxConstraints(maxHeight: media.size.height * 0.85),
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.pageGutter,
+        AppSpacing.xs,
+        AppSpacing.pageGutter,
+        AppSpacing.md + media.padding.bottom,
+      ),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCardBackground : Colors.white,
-        borderRadius: AppRadius.topXxl,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
-            blurRadius: 30,
-            offset: const Offset(0, -6),
-          ),
-        ],
+        color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
+        borderRadius: AppRadius.topXl,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Drag handle
-          Container(
-            width: 36,
-            height: 4,
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.darkDivider : AppColors.divider,
-              borderRadius: AppRadius.radiusFull,
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Shreya Ghoshal Melodic Voice Badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFEC4899), Color(0xFF8B5CF6)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: dividerColor,
+                borderRadius: AppRadius.radiusFull,
               ),
-              borderRadius: AppRadius.radiusFull,
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFEC4899).withValues(alpha: 0.35),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.music_note_rounded, size: 14, color: Colors.white),
-                SizedBox(width: 5),
-                Text(
-                  'SHREYA GHOSHAL MELODIC VOICE',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-              ],
             ),
           ),
-          const SizedBox(height: 14),
+          AppSpacing.gapH16,
 
-          // Audio Title & Icon
+          // Header: icon · title/subtitle · close
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.all(9),
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEC4899).withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
+                  color: accent.withValues(alpha: isDark ? 0.2 : 0.1),
+                  borderRadius: AppRadius.radiusSm,
                 ),
                 child: const Icon(
-                  Icons.mic_external_on_rounded,
-                  color: Color(0xFFEC4899),
-                  size: 20,
+                  Icons.graphic_eq_rounded,
+                  color: accent,
+                  size: 22,
                 ),
               ),
-              const SizedBox(width: 10),
-              const Text(
-                'Personal Audio Briefing',
-                style: AppTextStyles.headingSmall,
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Melodic Audio Wave Bars (Pink to Purple Gradient)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(18, (i) {
-              return AnimatedBuilder(
-                animation: _animController,
-                builder: (context, child) {
-                  final height = _isPlaying
-                      ? 10.0 +
-                          (32.0 *
-                              ((_animController.value + (i * 0.11)) % 1.0))
-                      : 6.0;
-                  return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 2.2),
-                    width: 3.5,
-                    height: height,
-                    decoration: BoxDecoration(
-                      gradient: _isPlaying
-                          ? LinearGradient(
-                              colors: [
-                                Color.lerp(
-                                  const Color(0xFFEC4899),
-                                  const Color(0xFF8B5CF6),
-                                  i / 18,
-                                )!,
-                                const Color(0xFF8B5CF6),
-                              ],
-                              begin: Alignment.bottomCenter,
-                              end: Alignment.topCenter,
-                            )
-                          : null,
-                      color: _isPlaying ? null : AppColors.divider,
-                      borderRadius: AppRadius.radiusFull,
+              AppSpacing.gapW12,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Daily Briefing',
+                      style: AppTextStyles.titleLarge.copyWith(
+                        color: headingColor,
+                      ),
                     ),
-                  );
-                },
-              );
-            }),
-          ),
-          const SizedBox(height: 20),
-
-          // Live Transcript Container
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.darkSurfaceSecondary
-                  : AppColors.surfaceSecondary,
-              borderRadius: AppRadius.radiusLg,
-              border: Border.all(
-                color: isDark ? AppColors.darkBorder : AppColors.border,
-              ),
-            ),
-            child: Text(
-              _briefingScript,
-              style: TextStyle(
-                fontSize: 13,
-                height: 1.55,
-                color: isDark ? AppColors.darkTextBody : AppColors.textBody,
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Controls Row (Speed, Replay, Play/Pause, Stop, Close)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    if (_speed == 1.0) {
-                      _speed = 1.25;
-                    } else if (_speed == 1.25) {
-                      _speed = 1.5;
-                    } else {
-                      _speed = 1.0;
-                    }
-                  });
-                  _tts.setRate(_speed);
-                },
-                child: Text(
-                  '${_speed}x',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                    color: Color(0xFFEC4899),
-                  ),
-                ),
-              ),
-              IconButton(
-                iconSize: 32,
-                tooltip: 'Replay from start',
-                icon: const Icon(Icons.replay_rounded),
-                onPressed: _replay,
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFEC4899), Color(0xFF8B5CF6)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFEC4899).withValues(alpha: 0.35),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Your day in under a minute',
+                      style: AppTextStyles.caption.copyWith(
+                        color: captionColor,
+                      ),
                     ),
                   ],
                 ),
-                child: IconButton(
-                  iconSize: 32,
+              ),
+              IconButton(
+                tooltip: 'Close',
+                visualDensity: VisualDensity.compact,
+                icon: Icon(Icons.close_rounded, size: 22, color: iconColor),
+                onPressed: () {
+                  _stop();
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
+          AppSpacing.gapH20,
+
+          // Status row: compact waveform + label
+          Row(
+            children: [
+              SizedBox(
+                height: 20,
+                child: Row(
+                  children: List.generate(12, (i) {
+                    return AnimatedBuilder(
+                      animation: _animController,
+                      builder: (context, child) {
+                        final height = _isPlaying
+                            ? 4.0 +
+                                  16.0 *
+                                      ((_animController.value + i * 0.17) % 1.0)
+                            : 4.0;
+                        return Container(
+                          margin: const EdgeInsets.only(right: 3),
+                          width: 3,
+                          height: height,
+                          decoration: BoxDecoration(
+                            color: _isPlaying ? accent : dividerColor,
+                            borderRadius: AppRadius.radiusFull,
+                          ),
+                        );
+                      },
+                    );
+                  }),
+                ),
+              ),
+              AppSpacing.gapW8,
+              Text(
+                _statusLabel,
+                style: AppTextStyles.captionBold.copyWith(
+                  color: _isPlaying ? accent : captionColor,
+                ),
+              ),
+            ],
+          ),
+          AppSpacing.gapH12,
+
+          // Transcript (scrolls when long)
+          Flexible(
+            child: Container(
+              constraints: BoxConstraints(maxHeight: media.size.height * 0.32),
+              decoration: BoxDecoration(
+                color: mutedFill,
+                borderRadius: AppRadius.radiusMd,
+              ),
+              child: SingleChildScrollView(
+                padding: AppSpacing.edgeInsetsAllMd,
+                child: Text(
+                  _briefingScript,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    height: 1.55,
+                    color: isDark ? AppColors.darkTextBody : AppColors.textBody,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          AppSpacing.gapH24,
+
+          // Transport controls: speed left, play/pause centred
+          Row(
+            children: [
+              SizedBox(
+                width: 56,
+                child: TextButton(
+                  onPressed: _cycleSpeed,
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(56, 36),
+                    padding: EdgeInsets.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    backgroundColor: mutedFill,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: AppRadius.radiusFull,
+                    ),
+                  ),
+                  child: Text(
+                    _speedLabel,
+                    style: AppTextStyles.titleSmall.copyWith(
+                      color: headingColor,
+                    ),
+                  ),
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                tooltip: 'Replay from start',
+                iconSize: 26,
+                color: iconColor,
+                icon: const Icon(Icons.replay_rounded),
+                onPressed: _replay,
+              ),
+              AppSpacing.gapW16,
+              SizedBox(
+                width: 56,
+                height: 56,
+                child: IconButton.filled(
+                  tooltip: _isPlaying ? 'Pause' : 'Play',
+                  style: IconButton.styleFrom(
+                    backgroundColor: accent,
+                    foregroundColor: Colors.white,
+                  ),
+                  iconSize: 30,
                   icon: Icon(
                     _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
                   ),
-                  color: Colors.white,
                   onPressed: () async {
                     if (_isPlaying) {
                       await _pause();
@@ -513,22 +533,18 @@ class _AudioBriefingSheetState extends State<AudioBriefingSheet>
                   },
                 ),
               ),
+              AppSpacing.gapW16,
               IconButton(
-                iconSize: 32,
-                tooltip: 'Stop audio',
+                tooltip: 'Stop',
+                iconSize: 26,
+                color: iconColor,
                 icon: const Icon(Icons.stop_rounded),
                 onPressed: _stop,
               ),
-              IconButton(
-                icon: const Icon(Icons.close_rounded),
-                onPressed: () {
-                  _stop();
-                  Navigator.of(context).pop();
-                },
-              ),
+              const Spacer(),
+              const SizedBox(width: 56),
             ],
           ),
-          const SizedBox(height: 10),
         ],
       ),
     );

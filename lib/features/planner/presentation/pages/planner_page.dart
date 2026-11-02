@@ -8,12 +8,13 @@ import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/app_text_styles.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_shimmer_loader.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
-import '../../../../core/widgets/search_bar_widget.dart';
+import '../../../../core/widgets/feature_scaffold.dart';
 import '../../../../di/injection_container.dart';
 import '../../domain/entities/countdown_item_entity.dart';
 import '../../domain/entities/planner_item_entity.dart';
@@ -135,6 +136,7 @@ class _PlannerViewState extends State<_PlannerView>
   // ── Set Reminder State ────────────────────────────────────────────────────
   final TextEditingController _quickReminderController =
       TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   TimeOfDay _selectedTime = const TimeOfDay(hour: 9, minute: 0);
   String _selectedCategory = 'Personal';
   String _selectedReminderCategoryFilter = 'All';
@@ -208,6 +210,7 @@ class _PlannerViewState extends State<_PlannerView>
   void dispose() {
     _timer?.cancel();
     _quickReminderController.dispose();
+    _searchController.dispose();
     _tabController.dispose();
     super.dispose();
   }
@@ -367,60 +370,84 @@ class _PlannerViewState extends State<_PlannerView>
   // ── Main Build ────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final palette = context.palette;
+    final isDark = palette.isDark;
 
-    return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.darkScaffoldBackground
-          : AppColors.scaffoldBackground,
-      appBar: AppBar(
-        title: const Text(
-          StringConstants.navPlanner,
-          style: TextStyle(fontWeight: FontWeight.w800),
-        ),
-        actions: [
-          BlocBuilder<PlannerBloc, PlannerState>(
-            builder: (context, state) {
-              if (state is PlannerLoaded) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: AppSpacing.sm),
-                  child: Center(
-                    child: Text(
-                      '${state.completedCount}/${state.items.length} done',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.moduleTime,
+    return FeatureScaffold(
+      title: StringConstants.navPlanner,
+      accentColor: AppColors.moduleTime,
+      titleTrailing: BlocBuilder<PlannerBloc, PlannerState>(
+        builder: (context, state) {
+          if (state is! PlannerLoaded) return const SizedBox.shrink();
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: AppColors.moduleTime.withValues(alpha: 0.12),
+              borderRadius: AppRadius.radiusFull,
+            ),
+            child: Text(
+              '${state.completedCount}/${state.items.length} done',
+              style: context.text.labelMedium?.copyWith(
+                color: AppColors.moduleTimeDark,
+                fontWeight: FontWeight.w600,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          );
+        },
+      ),
+      actionsEndPadding: AppSpacing.pageGutter,
+      actions: [_buildAppBarAction(context, isDark)],
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(48),
+        child: Container(
+          height: 38,
+          margin: const EdgeInsets.fromLTRB(
+            AppSpacing.pageGutter,
+            0,
+            AppSpacing.pageGutter,
+            10,
+          ),
+          padding: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            color: palette.surfaceMuted,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: TabBar(
+            controller: _tabController,
+            indicatorSize: TabBarIndicatorSize.tab,
+            dividerColor: Colors.transparent,
+            splashBorderRadius: BorderRadius.circular(9),
+            indicator: BoxDecoration(
+              color: palette.card,
+              borderRadius: BorderRadius.circular(9),
+              boxShadow: isDark
+                  ? null
+                  : [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.06),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
                       ),
-                    ),
-                  ),
-                );
-              }
-              return const SizedBox.shrink();
-            },
+                    ],
+            ),
+            labelColor: palette.heading,
+            unselectedLabelColor: palette.caption,
+            labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+            labelStyle: context.text.labelLarge?.copyWith(fontSize: 13),
+            unselectedLabelStyle: context.text.labelLarge?.copyWith(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+            tabs: const [
+              Tab(height: 32, text: 'Reminders'),
+              Tab(height: 32, text: 'Pomodoro Focus'),
+              Tab(height: 32, text: 'Countdowns'),
+            ],
           ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: AppColors.moduleTime,
-          unselectedLabelColor: isDark
-              ? AppColors.darkTextCaption
-              : AppColors.textCaption,
-          indicatorColor: AppColors.moduleTime,
-          indicatorWeight: 3,
-          labelPadding: const EdgeInsets.symmetric(horizontal: 8),
-          labelStyle: const TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 13,
-          ),
-          tabs: const [
-            Tab(text: 'Reminders'),
-            Tab(text: 'Pomodoro Focus'),
-            Tab(text: 'Countdowns'),
-          ],
         ),
       ),
-      body: TabBarView(
+      builder: (context) => TabBarView(
         controller: _tabController,
         children: [
           _buildRemindersTab(context, isDark),
@@ -428,6 +455,34 @@ class _PlannerViewState extends State<_PlannerView>
           _buildCountdownsTab(context, isDark),
         ],
       ),
+    );
+  }
+
+  Widget _buildAppBarAction(BuildContext context, bool isDark) {
+    final tabIndex = _tabController.index;
+    final IconData icon;
+    final String label;
+    final VoidCallback onTap;
+
+    if (tabIndex == 1) {
+      icon = Icons.tune_rounded;
+      label = 'Timer';
+      onTap = () => _openCustomDurationSheet(context, isDark);
+    } else if (tabIndex == 2) {
+      icon = Icons.add_rounded;
+      label = 'New Event';
+      onTap = () => _openCountdownSheet(context, isDark);
+    } else {
+      icon = Icons.add_rounded;
+      label = 'New Task';
+      onTap = () => _openFullReminderSheet(context, isDark);
+    }
+
+    return FeatureHeaderButton(
+      icon: icon,
+      label: label,
+      color: AppColors.moduleTime,
+      onPressed: onTap,
     );
   }
 
@@ -483,12 +538,16 @@ class _PlannerViewState extends State<_PlannerView>
         int prioScore(String p) {
           switch (p) {
             case 'urgent_important':
+            case 'urgent':
               return 4;
             case 'urgent_not_important':
+            case 'high':
               return 3;
             case 'important_not_urgent':
+            case 'medium':
               return 2;
             case 'neither':
+            case 'low':
             default:
               return 1;
           }
@@ -523,16 +582,14 @@ class _PlannerViewState extends State<_PlannerView>
         const gutter = EdgeInsets.symmetric(horizontal: AppSpacing.pageGutter);
 
         return ListView(
-          // Horizontal gutter is applied per section so the templates row can
-          // scroll edge-to-edge while everything else stays on the gutter.
-          padding: const EdgeInsets.only(top: AppSpacing.md, bottom: 96),
+          padding: const EdgeInsets.only(top: 6, bottom: 88),
           children: [
             Padding(
               padding: gutter,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // 1. Overview stats
+                  // 1. Compact Overview stats
                   _buildProductivityMetricsBar(
                     totalCount: totalCount,
                     todayCount: todayCount,
@@ -540,7 +597,7 @@ class _PlannerViewState extends State<_PlannerView>
                     completedCount: completedCount,
                     isDark: isDark,
                   ),
-                  AppSpacing.gapH16,
+                  const SizedBox(height: 8),
 
                   // 2. Quick add
                   SetReminderCard(
@@ -559,48 +616,48 @@ class _PlannerViewState extends State<_PlannerView>
                 ],
               ),
             ),
-            AppSpacing.gapH12,
+            const SizedBox(height: 8),
 
-            // 3. Quick templates (edge-to-edge horizontal scroll)
+            // 3. Quick templates (edge-to-edge horizontal scroll starting on 16px gutter)
             SizedBox(
-              height: 36,
+              height: 28,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: gutter,
                 itemCount: _quickTemplates.length,
-                separatorBuilder: (_, _) => AppSpacing.gapW8,
+                separatorBuilder: (_, _) => const SizedBox(width: 6),
                 itemBuilder: (context, index) {
                   final tmpl = _quickTemplates[index];
                   return _buildTemplateChip(tmpl, isDark);
                 },
               ),
             ),
-            AppSpacing.gapH24,
+            const SizedBox(height: 10),
 
             Padding(
               padding: gutter,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // 4. Search + filter + sort
+                  // 4. Compact 36px Search + filter + sort
                   _buildControlsBar(isDark),
-                  AppSpacing.gapH12,
+                  const SizedBox(height: 8),
 
-                  // 5. Status segments
+                  // 5. Compact 34px Status segments
                   _buildSegmentedStatusBar(
                     totalCount,
                     pendingCount,
                     completedCount,
                     isDark,
                   ),
-                  AppSpacing.gapH8,
+                  const SizedBox(height: 4),
 
                   // 6. Items from DB
                   if (state is PlannerLoading || state is PlannerInitial)
                     ...[1, 2, 3].map(
                       (_) => const Padding(
-                        padding: EdgeInsets.only(bottom: 12),
-                        child: AppShimmerLoader.card(height: 100),
+                        padding: EdgeInsets.only(bottom: 8),
+                        child: AppShimmerLoader.card(height: 84),
                       ),
                     )
                   else if (state is PlannerLoaded) ...[
@@ -622,7 +679,7 @@ class _PlannerViewState extends State<_PlannerView>
                             ? 'No reminders match "$_searchQuery". Try a different search.'
                             : (_selectedStatusFilter == 'Completed'
                                   ? 'Finish a reminder to see it archived here.'
-                                  : 'Tap "Quick Set" above or select a template to create one.'),
+                                  : 'Tap "Set Reminder" above or select a template to create one.'),
                         actionLabel: _searchQuery.isNotEmpty
                             ? 'Clear Search'
                             : (_selectedReminderCategoryFilter != 'All' ||
@@ -630,6 +687,7 @@ class _PlannerViewState extends State<_PlannerView>
                                   ? 'Reset Filters'
                                   : null),
                         onAction: () {
+                          _searchController.clear();
                           setState(() {
                             _searchQuery = '';
                             _selectedReminderCategoryFilter = 'All';
@@ -786,7 +844,7 @@ class _PlannerViewState extends State<_PlannerView>
                                       onTap: () =>
                                           _confirmClearCompleted(context),
                                     ),
-                                    AppSpacing.gapW8,
+                                    const SizedBox(width: 8),
                                     _buildHeaderAction(
                                       label: _isCompletedExpanded
                                           ? 'Hide'
@@ -837,19 +895,21 @@ class _PlannerViewState extends State<_PlannerView>
         : 0;
     final borderCol = isDark ? AppColors.darkDivider : AppColors.divider;
 
-    Widget divider() => Container(width: 1, height: 32, color: borderCol);
+    Widget divider() => Container(width: 0.8, height: 22, color: borderCol);
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
-        borderRadius: AppRadius.radiusLg,
-        border: Border.all(color: borderCol),
+        borderRadius: AppRadius.radiusMd,
+        border: Border.all(color: borderCol, width: 0.85),
       ),
       child: Row(
         children: [
           Expanded(
             child: _buildMetricTile(
+              icon: Icons.pending_actions_rounded,
+              iconColor: AppColors.primary,
               label: 'Active',
               value: '${totalCount - completedCount}',
               isDark: isDark,
@@ -858,6 +918,8 @@ class _PlannerViewState extends State<_PlannerView>
           divider(),
           Expanded(
             child: _buildMetricTile(
+              icon: Icons.today_rounded,
+              iconColor: AppColors.moduleTime,
               label: 'Today',
               value: '$todayCount',
               isDark: isDark,
@@ -866,6 +928,10 @@ class _PlannerViewState extends State<_PlannerView>
           divider(),
           Expanded(
             child: _buildMetricTile(
+              icon: Icons.warning_amber_rounded,
+              iconColor: overdueCount > 0
+                  ? AppColors.error
+                  : AppColors.textCaption,
               label: 'Overdue',
               value: '$overdueCount',
               valueColor: overdueCount > 0 ? AppColors.error : null,
@@ -875,6 +941,8 @@ class _PlannerViewState extends State<_PlannerView>
           divider(),
           Expanded(
             child: _buildMetricTile(
+              icon: Icons.check_circle_outline_rounded,
+              iconColor: AppColors.success,
               label: 'Done',
               value: '$completionRate%',
               valueColor: AppColors.moduleTime,
@@ -887,36 +955,58 @@ class _PlannerViewState extends State<_PlannerView>
   }
 
   Widget _buildMetricTile({
+    required IconData icon,
+    required Color iconColor,
     required String label,
     required String value,
     required bool isDark,
     Color? valueColor,
   }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 20,
-            height: 1.2,
-            fontWeight: FontWeight.w700,
-            fontFeatures: const [FontFeature.tabularFigures()],
-            color:
-                valueColor ??
-                (isDark ? AppColors.darkTextHeading : AppColors.textHeading),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 13.5, color: iconColor),
+          const SizedBox(width: 5),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.15,
+                    fontWeight: FontWeight.w800,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                    color:
+                        valueColor ??
+                        (isDark
+                            ? AppColors.darkTextHeading
+                            : AppColors.textHeading),
+                  ),
+                ),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: isDark
+                        ? AppColors.darkTextCaption
+                        : AppColors.textCaption,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -927,23 +1017,24 @@ class _PlannerViewState extends State<_PlannerView>
       shape: StadiumBorder(
         side: BorderSide(
           color: isDark ? AppColors.darkDivider : AppColors.divider,
+          width: 0.8,
         ),
       ),
       child: InkWell(
         customBorder: const StadiumBorder(),
         onTap: () => _applyQuickTemplate(tmpl),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(tmpl['icon'] as IconData, size: 16, color: catColor),
-              const SizedBox(width: 6),
+              Icon(tmpl['icon'] as IconData, size: 13, color: catColor),
+              const SizedBox(width: 4),
               Text(
                 tmpl['title'] as String,
                 style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
                   color: isDark
                       ? AppColors.darkTextHeading
                       : AppColors.textHeading,
@@ -956,24 +1047,25 @@ class _PlannerViewState extends State<_PlannerView>
     );
   }
 
-  /// Square 48px icon button that matches the search field's height/border.
+  /// Square 36px icon button that matches the compact search field's height/border.
   Widget _buildControlSquare({
     required IconData icon,
     required bool isDark,
     bool isActive = false,
   }) {
     return Container(
-      width: 48,
-      height: 48,
+      width: 36,
+      height: 36,
       decoration: BoxDecoration(
         color: isActive
             ? AppColors.moduleTime.withValues(alpha: 0.12)
-            : (isDark ? AppColors.darkSurfaceSecondary : Colors.white),
-        borderRadius: BorderRadius.circular(12),
+            : (isDark ? AppColors.darkCardBackground : Colors.white),
+        borderRadius: AppRadius.radiusSm,
         border: Border.all(
           color: isActive
               ? AppColors.moduleTime.withValues(alpha: 0.5)
-              : (isDark ? AppColors.darkBorder : AppColors.border),
+              : (isDark ? AppColors.darkDivider : AppColors.border),
+          width: 0.8,
         ),
       ),
       child: Stack(
@@ -981,18 +1073,18 @@ class _PlannerViewState extends State<_PlannerView>
         children: [
           Icon(
             icon,
-            size: 20,
+            size: 17,
             color: isActive
                 ? AppColors.moduleTime
                 : (isDark ? AppColors.darkIconColor : AppColors.iconColor),
           ),
           if (isActive)
             const Positioned(
-              top: 10,
-              right: 10,
+              top: 7,
+              right: 7,
               child: SizedBox(
-                width: 7,
-                height: 7,
+                width: 6,
+                height: 6,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: AppColors.moduleTime,
@@ -1013,13 +1105,77 @@ class _PlannerViewState extends State<_PlannerView>
     return Row(
       children: [
         Expanded(
-          child: SearchBarWidget(
-            hintText: 'Search reminders',
-            onChanged: (query) => setState(() => _searchQuery = query.trim()),
-            onClear: () => setState(() => _searchQuery = ''),
+          child: SizedBox(
+            height: 36,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkCardBackground : Colors.white,
+                borderRadius: AppRadius.radiusSm,
+                border: Border.all(
+                  color: isDark ? AppColors.darkDivider : AppColors.border,
+                  width: 0.8,
+                ),
+              ),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (query) =>
+                    setState(() => _searchQuery = query.trim()),
+                style: TextStyle(
+                  fontSize: 12.5,
+                  color: isDark
+                      ? AppColors.darkTextHeading
+                      : AppColors.textHeading,
+                ),
+                decoration: InputDecoration(
+                  isDense: true,
+                  filled: false,
+                  hintText: 'Search reminders, checklists, notes...',
+                  hintStyle: TextStyle(
+                    color: isDark
+                        ? AppColors.darkTextCaption
+                        : AppColors.textCaption,
+                    fontSize: 12,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search_rounded,
+                    color: isDark
+                        ? AppColors.darkTextCaption
+                        : AppColors.iconColor,
+                    size: 16,
+                  ),
+                  prefixIconConstraints: const BoxConstraints(
+                    minWidth: 34,
+                    minHeight: 34,
+                  ),
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? GestureDetector(
+                          onTap: () {
+                            _searchController.clear();
+                            setState(() => _searchQuery = '');
+                          },
+                          child: Icon(
+                            Icons.close_rounded,
+                            size: 15,
+                            color: isDark
+                                ? AppColors.darkTextCaption
+                                : AppColors.textCaption,
+                          ),
+                        )
+                      : null,
+                  suffixIconConstraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                ),
+              ),
+            ),
           ),
         ),
-        AppSpacing.gapW8,
+        const SizedBox(width: 6),
 
         // 1. Filter Dropdown Menu
         AppDropdownMenu<String>(
@@ -1139,7 +1295,7 @@ class _PlannerViewState extends State<_PlannerView>
             isActive: hasActiveFilter,
           ),
         ),
-        AppSpacing.gapW8,
+        const SizedBox(width: 6),
 
         // 2. Sort Dropdown Menu
         AppDropdownMenu<PlannerSortOption>(
@@ -1221,13 +1377,17 @@ class _PlannerViewState extends State<_PlannerView>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          height: 44,
-          padding: const EdgeInsets.all(AppSpacing.xxs),
+          height: 34,
+          padding: const EdgeInsets.all(3),
           decoration: BoxDecoration(
             color: isDark
                 ? AppColors.darkSurfaceSecondary
                 : AppColors.surfaceSecondary,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isDark ? AppColors.darkDivider : AppColors.divider,
+              width: 0.8,
+            ),
           ),
           child: Row(
             children: [
@@ -1240,7 +1400,7 @@ class _PlannerViewState extends State<_PlannerView>
 
         // Active filter summary with quick clear
         if (hasActiveFilter) ...[
-          AppSpacing.gapH12,
+          const SizedBox(height: 8),
           InputChip(
             label: Text(
               _selectedReminderCategoryFilter != 'All'
@@ -1252,16 +1412,16 @@ class _PlannerViewState extends State<_PlannerView>
                               : 'One-off only')),
             ),
             labelStyle: const TextStyle(
-              fontSize: 13,
+              fontSize: 11.5,
               fontWeight: FontWeight.w600,
               color: AppColors.moduleTime,
             ),
             avatar: const Icon(
               Icons.filter_list_rounded,
-              size: 16,
+              size: 14,
               color: AppColors.moduleTime,
             ),
-            deleteIcon: const Icon(Icons.close_rounded, size: 16),
+            deleteIcon: const Icon(Icons.close_rounded, size: 14),
             deleteIconColor: AppColors.moduleTime,
             onDeleted: () => setState(() {
               _selectedReminderCategoryFilter = 'All';
@@ -1289,17 +1449,17 @@ class _PlannerViewState extends State<_PlannerView>
         behavior: HitTestBehavior.opaque,
         onTap: () => setState(() => _selectedStatusFilter = title),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
+          duration: const Duration(milliseconds: 160),
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: isSelected
                 ? (isDark ? AppColors.darkCardBackground : Colors.white)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(9),
+            borderRadius: BorderRadius.circular(7),
             boxShadow: isSelected && !isDark
                 ? [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 4,
                       offset: const Offset(0, 1),
                     ),
@@ -1315,7 +1475,7 @@ class _PlannerViewState extends State<_PlannerView>
                   TextSpan(
                     text: '  $count',
                     style: TextStyle(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                       color: isSelected
                           ? AppColors.moduleTime
                           : (isDark
@@ -1326,7 +1486,7 @@ class _PlannerViewState extends State<_PlannerView>
                 ],
               ),
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 11.5,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                 color: textColor,
               ),
@@ -1347,33 +1507,38 @@ class _PlannerViewState extends State<_PlannerView>
     VoidCallback? onMarkAllDone,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.md, bottom: AppSpacing.sm),
+      padding: const EdgeInsets.only(top: 10, bottom: 6),
       child: SizedBox(
-        height: 28,
+        height: 24,
         child: Row(
           children: [
-            Icon(icon, size: 18, color: color),
-            AppSpacing.gapW8,
+            Icon(icon, size: 15, color: color),
+            const SizedBox(width: 6),
             Text(
               title,
               maxLines: 1,
               style: TextStyle(
-                fontSize: 15,
+                fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: isDark
                     ? AppColors.darkTextHeading
                     : AppColors.textHeading,
               ),
             ),
-            AppSpacing.gapW8,
-            Text(
-              '$count',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: isDark
-                    ? AppColors.darkTextCaption
-                    : AppColors.textCaption,
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                '$count',
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                ),
               ),
             ),
             const Spacer(),
@@ -1400,12 +1565,12 @@ class _PlannerViewState extends State<_PlannerView>
       onPressed: onTap,
       style: TextButton.styleFrom(
         foregroundColor: color,
-        padding: const EdgeInsets.only(left: AppSpacing.sm),
-        minimumSize: const Size(0, 28),
+        padding: const EdgeInsets.only(left: 8),
+        minimumSize: const Size(0, 24),
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         textStyle: const TextStyle(
           fontFamily: AppTextStyles.fontFamily,
-          fontSize: 13,
+          fontSize: 11.5,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -2007,7 +2172,7 @@ class _PlannerViewState extends State<_PlannerView>
     const gutter = EdgeInsets.symmetric(horizontal: AppSpacing.pageGutter);
 
     return ListView(
-      padding: const EdgeInsets.only(top: AppSpacing.md, bottom: 96),
+      padding: const EdgeInsets.only(top: 6, bottom: 88),
       children: [
         Padding(
           padding: gutter,
@@ -2022,7 +2187,7 @@ class _PlannerViewState extends State<_PlannerView>
                 onModeSelected: _switchFocusMode,
                 isDark: isDark,
               ),
-              AppSpacing.gapH16,
+              const SizedBox(height: 10),
               PomodoroFocusCard(
                 focusModeIndex: _focusModeIndex,
                 currentRound: _currentRound,
@@ -2101,7 +2266,7 @@ class _PlannerViewState extends State<_PlannerView>
             );
           }).toList(),
         ),
-        AppSpacing.gapH24,
+        const SizedBox(height: 12),
         Padding(padding: gutter, child: _buildDailyFocusCard(isDark)),
       ],
     );
@@ -2109,9 +2274,9 @@ class _PlannerViewState extends State<_PlannerView>
 
   Widget _buildFocusSectionHeader(String title, bool isDark, {Widget? action}) {
     return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.xl, bottom: AppSpacing.sm),
+      padding: const EdgeInsets.only(top: 12, bottom: 6),
       child: SizedBox(
-        height: 28,
+        height: 24,
         child: Row(
           children: [
             Expanded(
@@ -2120,8 +2285,9 @@ class _PlannerViewState extends State<_PlannerView>
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: 13,
                   fontWeight: FontWeight.w700,
+                  letterSpacing: -0.1,
                   color: isDark
                       ? AppColors.darkTextHeading
                       : AppColors.textHeading,
@@ -2138,12 +2304,12 @@ class _PlannerViewState extends State<_PlannerView>
   /// Horizontal chip row that scrolls edge-to-edge but starts on the gutter.
   Widget _buildChipStrip({required List<Widget> children}) {
     return SizedBox(
-      height: 36,
+      height: 30,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageGutter),
         itemCount: children.length,
-        separatorBuilder: (_, _) => AppSpacing.gapW8,
+        separatorBuilder: (_, _) => const SizedBox(width: 6),
         itemBuilder: (_, i) => children[i],
       ),
     );
@@ -2166,34 +2332,35 @@ class _PlannerViewState extends State<_PlannerView>
       shape: StadiumBorder(
         side: BorderSide(
           color: isSelected
-              ? AppColors.moduleTime.withValues(alpha: 0.6)
+              ? AppColors.moduleTime.withValues(alpha: 0.5)
               : (isDark ? AppColors.darkDivider : AppColors.divider),
+          width: 0.85,
         ),
       ),
       child: InkWell(
         customBorder: const StadiumBorder(),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 11),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (icon != null) ...[
                 Icon(
                   icon,
-                  size: 16,
+                  size: 14,
                   color: isSelected
                       ? AppColors.moduleTime
                       : (isDark
                             ? AppColors.darkIconColor
                             : AppColors.iconColor),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 5),
               ],
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 11.5,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   color: fg,
                 ),
@@ -2207,51 +2374,70 @@ class _PlannerViewState extends State<_PlannerView>
 
   Widget _buildDailyFocusCard(bool isDark) {
     final dividerColor = isDark ? AppColors.darkDivider : AppColors.divider;
-    Widget divider() => Container(width: 1, height: 32, color: dividerColor);
+    Widget divider() => Container(width: 1, height: 24, color: dividerColor);
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
-        borderRadius: AppRadius.radiusLg,
-        border: Border.all(color: dividerColor),
+        borderRadius: AppRadius.radiusMd,
+        border: Border.all(color: dividerColor, width: 0.85),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
-              const Icon(
-                Icons.local_fire_department_rounded,
-                color: AppColors.focusPomodoro,
-                size: 18,
+              Container(
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  color: AppColors.focusPomodoro.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Icon(
+                  Icons.local_fire_department_rounded,
+                  color: AppColors.focusPomodoro,
+                  size: 13.5,
+                ),
               ),
-              AppSpacing.gapW8,
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Daily Focus Activity',
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
+                    letterSpacing: -0.1,
                     color: isDark
                         ? AppColors.darkTextHeading
                         : AppColors.textHeading,
                   ),
                 ),
               ),
-              Text(
-                'Goal: 4 sessions',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
                   color: isDark
-                      ? AppColors.darkTextCaption
-                      : AppColors.textCaption,
+                      ? AppColors.darkScaffoldBackground
+                      : AppColors.scaffoldBackground,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: dividerColor, width: 0.8),
+                ),
+                child: Text(
+                  'Goal: 4 sessions',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    color: isDark
+                        ? AppColors.darkTextCaption
+                        : AppColors.textCaption,
+                  ),
                 ),
               ),
             ],
           ),
-          AppSpacing.gapH16,
+          const SizedBox(height: 10),
           Row(
             children: [
               Expanded(
@@ -2338,18 +2524,18 @@ class _PlannerViewState extends State<_PlannerView>
         Text(
           value,
           style: TextStyle(
-            fontSize: 20,
-            height: 1.2,
+            fontSize: 16,
+            height: 1.15,
             fontWeight: FontWeight.w700,
             fontFeatures: const [FontFeature.tabularFigures()],
             color: color,
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 1),
         Text(
           label,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: FontWeight.w500,
             color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
           ),
@@ -2371,7 +2557,7 @@ class _PlannerViewState extends State<_PlannerView>
     const gutter = EdgeInsets.symmetric(horizontal: AppSpacing.pageGutter);
 
     return ListView(
-      padding: const EdgeInsets.only(top: AppSpacing.md, bottom: 96),
+      padding: const EdgeInsets.only(top: 6, bottom: 88),
       children: [
         Padding(
           padding: gutter,
@@ -2384,18 +2570,19 @@ class _PlannerViewState extends State<_PlannerView>
                     Text(
                       'Important Countdowns',
                       style: TextStyle(
-                        fontSize: 17,
+                        fontSize: 14.5,
                         fontWeight: FontWeight.w700,
+                        letterSpacing: -0.1,
                         color: isDark
                             ? AppColors.darkTextHeading
                             : AppColors.textHeading,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 1),
                     Text(
                       '${_countdowns.length} upcoming events & milestones',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 11.5,
                         color: isDark
                             ? AppColors.darkTextCaption
                             : AppColors.textCaption,
@@ -2404,43 +2591,41 @@ class _PlannerViewState extends State<_PlannerView>
                   ],
                 ),
               ),
-              AppSpacing.gapW12,
+              const SizedBox(width: 8),
               FilledButton.icon(
                 onPressed: () => _openCountdownSheet(context, isDark),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.moduleTime,
                   foregroundColor: Colors.white,
                   elevation: 0,
-                  minimumSize: const Size(0, 40),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                  ),
+                  minimumSize: const Size(0, 30),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: AppRadius.radiusSm,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   textStyle: const TextStyle(
                     fontFamily: AppTextStyles.fontFamily,
-                    fontSize: 13,
+                    fontSize: 11.5,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                icon: const Icon(Icons.add_rounded, size: 18),
+                icon: const Icon(Icons.add_rounded, size: 15),
                 label: const Text('Add Event'),
               ),
             ],
           ),
         ),
-        AppSpacing.gapH16,
+        const SizedBox(height: 10),
 
         // Category filter strip (edge-to-edge)
         SizedBox(
-          height: 36,
+          height: 30,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: gutter,
             itemCount: _countdownCategories.length,
-            separatorBuilder: (_, _) => AppSpacing.gapW8,
+            separatorBuilder: (_, _) => const SizedBox(width: 6),
             itemBuilder: (context, index) {
               final cat = _countdownCategories[index];
               final isSelected = _selectedCountdownCategory == cat;
@@ -2448,10 +2633,11 @@ class _PlannerViewState extends State<_PlannerView>
                 label: Text(cat),
                 selected: isSelected,
                 showCheckmark: false,
+                visualDensity: VisualDensity.compact,
                 onSelected: (_) =>
                     setState(() => _selectedCountdownCategory = cat),
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
+                padding: const EdgeInsets.symmetric(horizontal: 6),
                 shape: const StadiumBorder(),
                 backgroundColor: isDark
                     ? AppColors.darkCardBackground
@@ -2459,11 +2645,12 @@ class _PlannerViewState extends State<_PlannerView>
                 selectedColor: AppColors.moduleTime.withValues(alpha: 0.12),
                 side: BorderSide(
                   color: isSelected
-                      ? AppColors.moduleTime.withValues(alpha: 0.6)
+                      ? AppColors.moduleTime.withValues(alpha: 0.5)
                       : (isDark ? AppColors.darkDivider : AppColors.divider),
+                  width: 0.85,
                 ),
                 labelStyle: TextStyle(
-                  fontSize: 13,
+                  fontSize: 11.5,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   color: isSelected
                       ? AppColors.moduleTime
@@ -2475,7 +2662,7 @@ class _PlannerViewState extends State<_PlannerView>
             },
           ),
         ),
-        AppSpacing.gapH16,
+        const SizedBox(height: 10),
 
         Padding(
           padding: gutter,
@@ -2485,31 +2672,40 @@ class _PlannerViewState extends State<_PlannerView>
               if (filtered.isEmpty)
                 Center(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 40),
+                    padding: const EdgeInsets.symmetric(vertical: 32),
                     child: Column(
                       children: [
                         Icon(
                           Icons.celebration_rounded,
-                          size: 48,
+                          size: 36,
                           color: isDark
                               ? AppColors.darkDivider
                               : AppColors.divider,
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
                         Text(
                           'No countdowns in $_selectedCountdownCategory',
                           style: TextStyle(
+                            fontSize: 12.5,
                             color: isDark
                                 ? AppColors.darkTextCaption
                                 : AppColors.textCaption,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 10),
                         OutlinedButton.icon(
                           onPressed: () => _openCountdownSheet(context, isDark),
-                          icon: const Icon(Icons.add_rounded, size: 16),
-                          label: const Text('Create a Countdown'),
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size(0, 30),
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          icon: const Icon(Icons.add_rounded, size: 15),
+                          label: const Text(
+                            'Create a Countdown',
+                            style: TextStyle(fontSize: 11.5),
+                          ),
                         ),
                       ],
                     ),

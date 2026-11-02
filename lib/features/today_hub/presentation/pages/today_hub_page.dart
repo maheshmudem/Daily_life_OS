@@ -1,23 +1,25 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../config/theme/app_colors.dart';
-import '../../../../config/theme/app_decorations.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
-import '../../../../config/theme/app_text_styles.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
+import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/app_shimmer_loader.dart';
 import '../../../../core/widgets/audio_briefing_sheet.dart';
+import '../../../../core/widgets/feature_scaffold.dart';
 import '../../../../core/widgets/habit_bubble_widget.dart';
 import '../../../../core/widgets/quick_capture_sheet.dart';
 import '../../../../core/widgets/safe_spend_meter_widget.dart';
 import '../../../../di/injection_container.dart';
 import '../../../money/domain/usecases/get_transactions_and_budget_usecase.dart';
-import '../../domain/entities/habit_entity.dart';
 import '../../domain/entities/timeline_item_entity.dart';
 import '../bloc/today_hub_bloc.dart';
+
+/// Bottom inset so the last card clears the floating Quick-Capture bar.
+const double _kFloatingBarClearance = 96;
 
 class TodayHubPage extends StatelessWidget {
   const TodayHubPage({super.key});
@@ -34,864 +36,680 @@ class TodayHubPage extends StatelessWidget {
 class _TodayHubView extends StatelessWidget {
   const _TodayHubView();
 
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.darkScaffoldBackground
-          : AppColors.scaffoldBackground,
-      body: SafeArea(
-        child: BlocBuilder<TodayHubBloc, TodayHubState>(
-          builder: (context, state) {
-            if (state is TodayHubLoading || state is TodayHubInitial) {
-              return const _LoadingView();
-            }
-            if (state is TodayHubError) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.error_outline_rounded,
-                        color: AppColors.error,
-                        size: 40,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Error: ${state.message}',
-                        textAlign: TextAlign.center,
-                        style: AppTextStyles.bodyMedium,
-                      ),
-                      const SizedBox(height: 16),
-                      FilledButton.icon(
-                        onPressed: () => context.read<TodayHubBloc>().add(
-                              const LoadTodayHub(),
-                            ),
-                        icon: const Icon(Icons.refresh_rounded, size: 18),
-                        label: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
-            if (state is TodayHubLoaded) {
-              return _LoadedView(state: state, isDark: isDark);
-            }
-            return const SizedBox.shrink();
-          },
-        ),
-      ),
-    );
-  }
-}
-
-// ── Loading skeleton (preserves layout during fetch) ─────────────────────────
-class _LoadingView extends StatelessWidget {
-  const _LoadingView();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(20),
-      children: [
-        const AppShimmerLoader.card(height: 60),
-        const SizedBox(height: 16),
-        const AppShimmerLoader.card(height: 130),
-        const SizedBox(height: 16),
-        const AppShimmerLoader.card(height: 90),
-        const SizedBox(height: 16),
-        const AppShimmerLoader.card(height: 128),
-        const SizedBox(height: 16),
-        const AppShimmerLoader.card(height: 200),
-      ],
-    );
-  }
-}
-
-// ── Loaded view with modernized Header, Momentum Ring & Live Glance ──────────
-class _LoadedView extends StatelessWidget {
-  final TodayHubLoaded state;
-  final bool isDark;
-
-  const _LoadedView({required this.state, required this.isDark});
-
-  @override
-  Widget build(BuildContext context) {
-    final spendSnapshotFuture = sl.isRegistered<GetDailySpendSnapshotUseCase>()
-        ? sl<GetDailySpendSnapshotUseCase>()()
-        : null;
-
-    return FutureBuilder<DailySpendSnapshot>(
-      future: spendSnapshotFuture,
-      builder: (context, snapshot) {
-        final spendData = snapshot.data;
-
-        return CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            // Top App Bar with Avatar, Full Date Format & Audio Briefing Pill
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                child: _buildHeader(context, spendData),
-              ),
-            ),
-
-            // Modern Hero Momentum Card with Score Ring & Daily Stats Bar
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                child: _buildHeroCard(context, spendData),
-              ),
-            ),
-
-            // Daily Safe-to-Spend Meter
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                child: SafeSpendMeterWidget(
-                  spentToday: spendData?.spentToday ?? 450,
-                  dailySafeLimit: spendData?.dailySafeLimit ?? 1200,
-                  daysRemaining: spendData?.daysRemaining ?? 12,
-                  monthlyBudget: spendData?.monthlyBudget ?? 35000,
-                  onLogExpense: () async {
-                    await QuickCaptureSheet.show(context, mode: QuickCaptureMode.text);
-                    if (context.mounted) {
-                      context.read<TodayHubBloc>().add(const LoadTodayHub());
-                    }
-                  },
-                ),
-              ),
-            ),
-
-            // Habit & Micro-Routine Strip
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 14, bottom: 6),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            StringConstants.habitsAndRoutines,
-                            style: AppTextStyles.titleMedium,
-                          ),
-                          Text(
-                            '${state.completedHabits}/${state.habits.length} completed',
-                            style: AppTextStyles.caption.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      height: 128,
-                      child: ListView.separated(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        scrollDirection: Axis.horizontal,
-                        physics: const BouncingScrollPhysics(),
-                        itemCount: state.habits.length,
-                        separatorBuilder: (context, index) => AppSpacing.gapW12,
-                        itemBuilder: (context, index) {
-                          final habit = state.habits[index];
-                          return _HabitBubble(habit: habit);
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Chronological Timeline Feed
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          StringConstants.timelineFeed,
-                          style: AppTextStyles.titleMedium,
-                        ),
-                        Text(
-                          'Sorted by time',
-                          style: AppTextStyles.caption.copyWith(
-                            color: isDark
-                                ? AppColors.darkTextCaption
-                                : AppColors.textCaption,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    ...state.timelineItems.map(
-                      (item) => _TimelineTile(item: item, isDark: isDark),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // 60-Second Evening Wrap-Up Banner
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  left: 20,
-                  right: 20,
-                  bottom: 84,
-                  top: 4,
-                ),
-                child: Container(
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.darkSurfaceSecondary
-                        : AppColors.surfaceSecondary,
-                    borderRadius: AppRadius.radiusLg,
-                    border: Border.all(
-                      color: isDark ? AppColors.darkBorder : AppColors.border,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppColors.moduleVault.withValues(alpha: 0.15),
-                          borderRadius: AppRadius.radiusMd,
-                        ),
-                        child: const Icon(
-                          Icons.nightlight_round,
-                          color: AppColors.moduleVault,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              StringConstants.eveningWrapUpTitle,
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              StringConstants.eveningWrapUpSubtitle,
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: isDark
-                                    ? AppColors.darkTextCaption
-                                    : AppColors.textCaption,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      TextButton(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Evening Wrap-Up opens automatically at 9:30 PM.',
-                              ),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        },
-                        style: TextButton.styleFrom(
-                          backgroundColor: AppColors.moduleVault,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: AppRadius.radiusSm,
-                          ),
-                        ),
-                        child: const Text(
-                          'Review',
-                          style: TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // ── Header with Avatar, Dynamic Date & Greeting ────────────────────────────
-  Widget _buildHeader(BuildContext context, DailySpendSnapshot? spendData) {
-    final now = DateTime.now();
-    final formattedDate = DateFormat('EEEE, d MMMM').format(now).toUpperCase();
-
-    return Row(
-      children: [
-        // Profile Avatar Monogram with glowing border & active indicator
-        Stack(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF4F46E5), Color(0xFF8B5CF6)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.28),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              alignment: Alignment.center,
-              child: const Text(
-                'A',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 18,
-                ),
-              ),
-            ),
-            Positioned(
-              right: 1,
-              bottom: 1,
-              child: Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF10B981),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isDark
-                        ? AppColors.darkScaffoldBackground
-                        : AppColors.scaffoldBackground,
-                    width: 2,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(width: 12),
-
-        // Date & Dynamic Greeting
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    _greetingIcon(),
-                    size: 13,
-                    color: AppColors.primary,
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    'TODAY • $formattedDate',
-                    style: AppTextStyles.overline.copyWith(
-                      color: AppColors.primary,
-                      letterSpacing: 0.8,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 2),
-              Text(
-                'Good ${_greeting()}, Aarav',
-                style: AppTextStyles.headingMedium.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.5,
-                  fontSize: 20,
-                  color: isDark
-                      ? AppColors.darkTextHeading
-                      : AppColors.textHeading,
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // "Play My Day" Audio Briefing Pill
-        GestureDetector(
-          onTap: () => AudioBriefingSheet.show(
-            context,
-            userName: 'Aarav',
-            habits: state.habits,
-            timelineItems: state.timelineItems,
-            spendSnapshot: spendData,
-          ),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 8,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(
-                alpha: isDark ? 0.2 : 0.1,
-              ),
-              borderRadius: AppRadius.radiusFull,
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.35),
-              ),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.graphic_eq_rounded,
-                  size: 16,
-                  color: AppColors.primary,
-                ),
-                SizedBox(width: 6),
-                Text(
-                  StringConstants.playBriefing,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ── Hero Momentum Card with Score Ring & Daily Stats Bar ───────────────────
-  Widget _buildHeroCard(BuildContext context, DailySpendSnapshot? spendData) {
-    final totalHabits = state.habits.length;
-    final completedHabits = state.completedHabits;
-    final totalTimeline = state.timelineItems.length;
-    final completedTimeline = state.timelineItems.where((t) => t.isDone).length;
-    final pendingTimeline = totalTimeline - completedTimeline;
-
-    final totalGoals = totalHabits + totalTimeline;
-    final completedGoals = completedHabits + completedTimeline;
-    final momentumScore = totalGoals > 0
-        ? ((completedGoals / totalGoals) * 100).round()
-        : 0;
-
-    String momentumLabel;
-    if (momentumScore == 100) {
-      momentumLabel = 'Peak Flow 🌟';
-    } else if (momentumScore >= 65) {
-      momentumLabel = 'High Momentum 🔥';
-    } else if (momentumScore >= 35) {
-      momentumLabel = 'On Track ⚡';
-    } else if (momentumScore > 0) {
-      momentumLabel = 'Building Pace 🌱';
-    } else {
-      momentumLabel = 'Ready to Win 🎯';
-    }
-
-    final safeSpendText = spendData != null
-        ? '₹${spendData.dailySafeLimit.toStringAsFixed(0)}'
-        : '₹1,200';
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: AppDecorations.heroPrimaryGradient,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Top Badges Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  borderRadius: AppRadius.radiusFull,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 7,
-                      height: 7,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF34D399),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    const Text(
-                      'Daily Life OS Active',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.16),
-                  borderRadius: AppRadius.radiusFull,
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.3),
-                    width: 0.8,
-                  ),
-                ),
-                child: Text(
-                  momentumLabel,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Middle: Text Info & Momentum Score Ring
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Time, Money & Mind in Sync',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '${state.completedHabits} routines completed • $pendingTimeline tasks pending',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    // Visual Progress Track
-                    ClipRRect(
-                      borderRadius: AppRadius.radiusFull,
-                      child: LinearProgressIndicator(
-                        value: totalGoals > 0 ? (completedGoals / totalGoals) : 0.0,
-                        minHeight: 5,
-                        backgroundColor: Colors.white.withValues(alpha: 0.2),
-                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-
-              // Circular Momentum Score Ring
-              SizedBox(
-                width: 68,
-                height: 68,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: 68,
-                      height: 68,
-                      child: CircularProgressIndicator(
-                        value: totalGoals > 0 ? (completedGoals / totalGoals) : 0.0,
-                        strokeWidth: 6.5,
-                        strokeCap: StrokeCap.round,
-                        backgroundColor: Colors.white.withValues(alpha: 0.22),
-                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    ),
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '$momentumScore%',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        Text(
-                          'MOMENTUM',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.82),
-                            fontSize: 7.5,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.6,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          // Bottom: Live Daily Glance Stats Bar
-          Container(
-            margin: const EdgeInsets.only(top: 18),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.16),
-              borderRadius: AppRadius.radiusLg,
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.12),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildGlanceMetric(
-                  icon: Icons.repeat_rounded,
-                  value: '${state.completedHabits}/${state.habits.length}',
-                  label: 'Habits Done',
-                ),
-                Container(
-                  height: 26,
-                  width: 1,
-                  color: Colors.white.withValues(alpha: 0.18),
-                ),
-                _buildGlanceMetric(
-                  icon: Icons.checklist_rounded,
-                  value: '$pendingTimeline left',
-                  label: 'Tasks Pending',
-                ),
-                Container(
-                  height: 26,
-                  width: 1,
-                  color: Colors.white.withValues(alpha: 0.18),
-                ),
-                _buildGlanceMetric(
-                  icon: Icons.shield_rounded,
-                  value: safeSpendText,
-                  label: 'Safe Spend',
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGlanceMetric({
-    required IconData icon,
-    required String value,
-    required String label,
-  }) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 16, color: Colors.white.withValues(alpha: 0.85)),
-        const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12.5,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            Text(
-              label,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.75),
-                fontSize: 10,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  String _greeting() {
+  static String _greeting() {
     final hour = DateTime.now().hour;
     if (hour < 12) return 'Morning';
     if (hour < 17) return 'Afternoon';
     return 'Evening';
   }
 
-  IconData _greetingIcon() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return Icons.wb_sunny_rounded;
-    if (hour < 17) return Icons.wb_cloudy_rounded;
-    return Icons.nightlight_round;
+  static FeatureStatus _statusOf(TodayHubState state) {
+    if (state is TodayHubLoaded) return FeatureStatus.content;
+    if (state is TodayHubError) return FeatureStatus.error;
+    return FeatureStatus.loading;
   }
-}
-
-// ── Habit bubble (BLoC-aware) ─────────────────────────────────────────────────
-class _HabitBubble extends StatelessWidget {
-  final HabitEntity habit;
-  const _HabitBubble({required this.habit});
 
   @override
   Widget build(BuildContext context) {
-    return HabitBubbleWidget(
-      title: habit.title,
-      icon: habit.icon,
-      streakDays: habit.streakDays,
-      isDone: habit.isDoneToday,
-      tintColor: habit.color,
-      onTap: () => context.read<TodayHubBloc>().add(ToggleHabit(habit.id)),
+    final palette = context.palette;
+
+    return BlocBuilder<TodayHubBloc, TodayHubState>(
+      builder: (context, state) {
+        final loaded = state is TodayHubLoaded ? state : null;
+
+        return FeatureScaffold(
+          title: 'Good ${_greeting()}, Aarav',
+          subtitle: DateFormat('EEEE, d MMMM').format(DateTime.now()),
+          leading: Container(
+            width: 40,
+            height: 40,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: palette.isDark
+                  ? AppColors.darkPrimaryContainer
+                  : AppColors.primaryContainer,
+            ),
+            child: Text(
+              'A',
+              style: context.text.titleMedium?.copyWith(
+                color: palette.isDark
+                    ? AppColors.primaryLight
+                    : AppColors.primaryDark,
+              ),
+            ),
+          ),
+          actionsEndPadding: AppSpacing.pageGutter,
+          actions: [
+            FeatureIconButton(
+              icon: Icons.graphic_eq_rounded,
+              tooltip: StringConstants.playBriefing,
+              color: AppColors.primary,
+              onPressed: () => AudioBriefingSheet.show(
+                context,
+                userName: 'Aarav',
+                habits: loaded?.habits,
+                timelineItems: loaded?.timelineItems,
+              ),
+            ),
+          ],
+          status: _statusOf(state),
+          errorMessage: state is TodayHubError ? state.message : null,
+          onRetry: () => context.read<TodayHubBloc>().add(const LoadTodayHub()),
+          loading: const _TodayLoadingView(),
+          builder: (_) => _TodayContent(state: loaded!),
+        );
+      },
     );
   }
 }
 
-// ── Timeline tile (BLoC-aware) ────────────────────────────────────────────────
-class _TimelineTile extends StatelessWidget {
-  final TimelineItemEntity item;
-  final bool isDark;
-  const _TimelineTile({required this.item, required this.isDark});
+// ── Loading skeleton mirroring the real layout ───────────────────────────────
+class _TodayLoadingView extends StatelessWidget {
+  const _TodayLoadingView();
 
   @override
   Widget build(BuildContext context) {
-    final color = item.color;
-    final isDone = item.isDone;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
-        borderRadius: AppRadius.radiusLg,
-        border: Border.all(
-          color: isDone
-              ? color.withValues(alpha: 0.3)
-              : (isDark ? AppColors.darkDivider : AppColors.divider),
-        ),
+    return ListView(
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.pageGutter,
+        AppSpacing.sm,
+        AppSpacing.pageGutter,
+        AppSpacing.xl,
       ),
-      child: Row(
-        children: [
-          // Time badge (fixed width so every title starts on the same line)
-          Container(
-            width: 72,
-            alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(vertical: 5),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: AppRadius.radiusSm,
+      children: [
+        const AppShimmerLoader.card(height: 168),
+        AppSpacing.gapH16,
+        const AppShimmerLoader.card(height: 116),
+        AppSpacing.gapH24,
+        const AppShimmerLoader(width: 140, height: 16),
+        AppSpacing.gapH8,
+        const AppShimmerLoader.card(height: 200),
+        AppSpacing.gapH24,
+        const AppShimmerLoader(width: 120, height: 16),
+        AppSpacing.gapH8,
+        const AppShimmerLoader.card(height: 240),
+      ],
+    );
+  }
+}
+
+// ── Loaded content ───────────────────────────────────────────────────────────
+class _TodayContent extends StatelessWidget {
+  final TodayHubLoaded state;
+
+  const _TodayContent({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final spendFuture = sl.isRegistered<GetDailySpendSnapshotUseCase>()
+        ? sl<GetDailySpendSnapshotUseCase>()()
+        : null;
+
+    return FutureBuilder<DailySpendSnapshot>(
+      future: spendFuture,
+      builder: (context, snapshot) {
+        final spend = snapshot.data;
+        final pendingTasks = state.timelineItems.where((t) => !t.isDone).length;
+
+        return ListView(
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.pageGutter,
+            AppSpacing.sm,
+            AppSpacing.pageGutter,
+            _kFloatingBarClearance,
+          ),
+          children: [
+            // 1. Daily progress overview
+            _OverviewCard(state: state, spend: spend),
+            AppSpacing.gapH16,
+
+            // 2. Safe-to-spend
+            SafeSpendMeterWidget(
+              spentToday: spend?.spentToday ?? 450,
+              dailySafeLimit: spend?.dailySafeLimit ?? 1200,
+              daysRemaining: spend?.daysRemaining ?? 12,
+              monthlyBudget: spend?.monthlyBudget ?? 35000,
+              onLogExpense: () async {
+                await QuickCaptureSheet.show(
+                  context,
+                  mode: QuickCaptureMode.text,
+                );
+                if (context.mounted) {
+                  context.read<TodayHubBloc>().add(const LoadTodayHub());
+                }
+              },
             ),
-            child: Text(
-              item.time,
-              style: TextStyle(
-                fontSize: 11,
+            AppSpacing.gapH24,
+
+            // 3. Habits & routines - cohesive grouped card
+            FeatureSectionHeader(
+              title: StringConstants.habitsAndRoutines,
+              trailingText:
+                  '${state.completedHabits} of ${state.habits.length} done',
+            ),
+            AppSpacing.gapH8,
+            if (state.habits.isEmpty)
+              FeatureCard(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.xl,
+                ),
+                child: Center(
+                  child: Text('No habits yet', style: context.text.bodySmall),
+                ),
+              )
+            else
+              FeatureCard(
+                padding: EdgeInsets.zero,
+                child: Column(
+                  children: [
+                    _HabitTopProgressBar(
+                      done: state.completedHabits,
+                      total: state.habits.length,
+                    ),
+                    for (var i = 0; i < state.habits.length; i++) ...[
+                      if (i > 0) const Divider(height: 1, indent: 54),
+                      HabitBubbleWidget(
+                        title: state.habits[i].title,
+                        icon: state.habits[i].icon,
+                        streakDays: state.habits[i].streakDays,
+                        isDone: state.habits[i].isDoneToday,
+                        tintColor: state.habits[i].color,
+                        onTap: () => context.read<TodayHubBloc>().add(
+                          ToggleHabit(state.habits[i].id),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            AppSpacing.gapH24,
+            // 4. Timeline
+            FeatureSectionHeader(
+              title: StringConstants.timelineFeed,
+              trailingText: pendingTasks == 0
+                  ? 'All done'
+                  : '$pendingTasks remaining',
+            ),
+            AppSpacing.gapH8,
+            _TimelineCard(items: state.timelineItems),
+            AppSpacing.gapH24,
+
+            // 5. Evening wrap-up
+            const _EveningWrapUpCard(),
+          ],
+        );
+      },
+    );
+  }
+}
+
+// ── Overview card: ring + summary + three metrics ────────────────────────────
+class _OverviewCard extends StatelessWidget {
+  final TodayHubLoaded state;
+  final DailySpendSnapshot? spend;
+
+  const _OverviewCard({required this.state, required this.spend});
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.text;
+    final palette = context.palette;
+
+    final totalHabits = state.habits.length;
+    final doneHabits = state.completedHabits;
+    final totalTasks = state.timelineItems.length;
+    final doneTasks = state.timelineItems.where((t) => t.isDone).length;
+    final pendingTasks = totalTasks - doneTasks;
+
+    final total = totalHabits + totalTasks;
+    final done = doneHabits + doneTasks;
+    final progress = total > 0 ? done / total : 0.0;
+    final score = (progress * 100).round();
+
+    final (String label, IconData statusIcon, Color tone) = switch (score) {
+      100 => ('Perfect day', Icons.stars_rounded, AppColors.success),
+      >= 65 => ('High momentum', Icons.bolt_rounded, AppColors.success),
+      >= 35 => ('On track', Icons.trending_up_rounded, AppColors.primary),
+      > 0 => (
+        'Building pace',
+        Icons.directions_run_rounded,
+        AppColors.moduleTime,
+      ),
+      _ => ('Ready to start', Icons.wb_sunny_outlined, palette.caption),
+    };
+
+    return FeatureCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              // Progress ring
+              SizedBox(
+                width: 62,
+                height: 62,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox.expand(
+                      child: CircularProgressIndicator(
+                        value: progress,
+                        strokeWidth: 5.5,
+                        strokeCap: StrokeCap.round,
+                        backgroundColor: palette.isDark
+                            ? Colors.white.withValues(alpha: 0.08)
+                            : palette.surfaceMuted,
+                        valueColor: AlwaysStoppedAnimation(
+                          score == 100 ? AppColors.success : AppColors.primary,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '$score%',
+                      style: text.titleMedium?.copyWith(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: palette.heading,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              AppSpacing.gapW16,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: tone.withValues(
+                          alpha: palette.isDark ? 0.20 : 0.10,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(statusIcon, size: 12, color: tone),
+                          const SizedBox(width: 4),
+                          Text(
+                            label,
+                            style: text.labelSmall?.copyWith(
+                              color: tone,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      'Daily Progress',
+                      style: text.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16.5,
+                        color: palette.heading,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$done of $total daily goals completed',
+                      style: text.bodySmall?.copyWith(
+                        color: palette.caption,
+                        fontSize: 12.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          AppSpacing.gapH16,
+          Row(
+            children: [
+              _GlanceCapsule(
+                dotColor: AppColors.success,
+                label: 'Habits Done',
+                value: '$doneHabits/$totalHabits',
+              ),
+              const SizedBox(width: 8),
+              _GlanceCapsule(
+                dotColor: AppColors.moduleTime,
+                label: 'Tasks Pending',
+                value: '$pendingTasks',
+              ),
+              const SizedBox(width: 8),
+              _GlanceCapsule(
+                dotColor: AppColors.moduleMoney,
+                label: 'Safe Spend',
+                value: CurrencyUtils.format(spend?.dailySafeLimit ?? 1200),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GlanceCapsule extends StatelessWidget {
+  final Color dotColor;
+  final String label;
+  final String value;
+
+  const _GlanceCapsule({
+    required this.dotColor,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.text;
+    final palette = context.palette;
+    final isDark = palette.isDark;
+
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.04)
+              : palette.surfaceMuted.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: palette.border.withValues(alpha: isDark ? 0.35 : 0.6),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: text.titleMedium?.copyWith(
+                fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: color,
+                color: palette.heading,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
-          ),
-          const SizedBox(width: 12),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: dotColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: text.labelSmall?.copyWith(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: palette.caption,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-          // Title & Category
+// ── Habit progress top line ──────────────────────────────────────────────────
+class _HabitTopProgressBar extends StatelessWidget {
+  final int done;
+  final int total;
+
+  const _HabitTopProgressBar({required this.done, required this.total});
+
+  @override
+  Widget build(BuildContext context) {
+    if (total == 0) return const SizedBox.shrink();
+    final progress = done / total;
+    final palette = context.palette;
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      child: LinearProgressIndicator(
+        value: progress,
+        minHeight: 3,
+        backgroundColor: palette.surfaceMuted,
+        valueColor: AlwaysStoppedAnimation(
+          done == total ? AppColors.success : AppColors.primary,
+        ),
+      ),
+    );
+  }
+}
+
+// ── Timeline: one grouped card with inset dividers ───────────────────────────
+class _TimelineCard extends StatelessWidget {
+  final List<TimelineItemEntity> items;
+
+  const _TimelineCard({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    if (items.isEmpty) {
+      return FeatureCard(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.xl,
+        ),
+        child: Center(
+          child: Text('Nothing scheduled today', style: context.text.bodySmall),
+        ),
+      );
+    }
+
+    return FeatureCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          for (var i = 0; i < items.length; i++) ...[
+            if (i > 0) const Divider(height: 1, indent: 50),
+            _TimelineRow(item: items[i]),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _TimelineRow extends StatelessWidget {
+  final TimelineItemEntity item;
+
+  const _TimelineRow({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.text;
+    final palette = context.palette;
+    final isDone = item.isDone;
+    void toggle() =>
+        context.read<TodayHubBloc>().add(ToggleTimelineItem(item.id));
+
+    return InkWell(
+      onTap: toggle,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          AppSpacing.sm,
+          AppSpacing.xs,
+          AppSpacing.sm,
+        ),
+        child: Row(
+          children: [
+            // Check circle
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isDone ? AppColors.success : Colors.transparent,
+                border: Border.all(
+                  color: isDone ? AppColors.success : palette.border,
+                  width: 1.5,
+                ),
+              ),
+              child: isDone
+                  ? const Icon(
+                      Icons.check_rounded,
+                      size: 14,
+                      color: Colors.white,
+                    )
+                  : null,
+            ),
+            AppSpacing.gapW12,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: text.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: isDone ? palette.caption : palette.heading,
+                      decoration: isDone ? TextDecoration.lineThrough : null,
+                      decorationColor: palette.caption,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: item.color,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          '${item.time}  ·  ${item.category}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: text.labelMedium?.copyWith(
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            TextButton(
+              onPressed: toggle,
+              style: TextButton.styleFrom(
+                foregroundColor: isDone ? palette.caption : AppColors.primary,
+                minimumSize: const Size(0, 32),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                textStyle: text.labelLarge?.copyWith(fontSize: 13),
+              ),
+              child: Text(isDone ? 'Undo' : item.action),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Evening wrap-up ──────────────────────────────────────────────────────────
+class _EveningWrapUpCard extends StatelessWidget {
+  const _EveningWrapUpCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.text;
+
+    return FeatureCard(
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.moduleVault.withValues(alpha: 0.12),
+              borderRadius: AppRadius.radiusMd,
+            ),
+            child: const Icon(
+              Icons.nightlight_round,
+              size: 20,
+              color: AppColors.moduleVault,
+            ),
+          ),
+          AppSpacing.gapW12,
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.title,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: isDark
-                        ? AppColors.darkTextHeading
-                        : AppColors.textHeading,
-                    decoration: isDone ? TextDecoration.lineThrough : null,
-                  ),
+                  StringConstants.eveningWrapUpTitle,
+                  style: text.titleSmall,
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  item.category,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: isDark
-                        ? AppColors.darkTextCaption
-                        : AppColors.textCaption,
-                  ),
+                  StringConstants.eveningWrapUpSubtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.bodySmall,
                 ),
               ],
             ),
           ),
-
-          // Action button
+          AppSpacing.gapW8,
           TextButton(
-            onPressed: () =>
-                context.read<TodayHubBloc>().add(ToggleTimelineItem(item.id)),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: Text(
-              isDone ? 'Undo' : item.action,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: isDone ? AppColors.textCaption : color,
+            onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Evening Wrap-Up opens automatically at 9:30 PM.',
+                ),
+                behavior: SnackBarBehavior.floating,
               ),
             ),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.moduleVault,
+              minimumSize: const Size(0, 32),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              textStyle: text.labelLarge?.copyWith(fontSize: 13),
+            ),
+            child: const Text('Review'),
           ),
         ],
       ),

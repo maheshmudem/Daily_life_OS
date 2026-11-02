@@ -7,12 +7,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
+import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/app_text_styles.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/widgets/app_dropdown_menu.dart';
-import '../../../../core/widgets/app_shimmer_loader.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
+import '../../../../core/widgets/feature_scaffold.dart';
 import '../../../../core/widgets/quick_capture_sheet.dart';
 import '../../../../di/injection_container.dart';
 import '../../domain/entities/note_entity.dart';
@@ -162,30 +164,25 @@ class _NotesViewState extends State<_NotesView> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.darkScaffoldBackground
-          : AppColors.scaffoldBackground,
-      appBar: AppBar(
-        toolbarHeight: 48,
-        titleSpacing: 16,
-        title: const Text(
-          StringConstants.navNotes,
-          style: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.3,
-          ),
-        ),
+    return BlocBuilder<NotesBloc, NotesState>(
+      builder: (context, state) => FeatureScaffold(
+        title: StringConstants.navNotes,
+        accentColor: AppColors.moduleNotes,
+        actionsEndPadding: AppSpacing.pageGutter,
+        status: switch (state) {
+          NotesLoaded() => FeatureStatus.content,
+          NotesError() => FeatureStatus.error,
+          _ => FeatureStatus.loading,
+        },
+        errorMessage: state is NotesError ? state.message : null,
+        onRetry: () => context.read<NotesBloc>().add(const LoadNotes()),
+        loading: const FeatureLoadingView(blockHeights: [72, 40, 96, 96, 96]),
+        builder: (_) => _buildContent(context, state as NotesLoaded, isDark),
         actions: [
-          IconButton(
+          FeatureIconButton(
             tooltip: 'Camera OCR Scan',
-            visualDensity: VisualDensity.compact,
-            icon: Icon(
-              Icons.document_scanner_rounded,
-              size: 18,
-              color: isDark ? AppColors.darkTextBody : AppColors.textBody,
-            ),
+            icon: Icons.document_scanner_outlined,
+            color: context.palette.icon,
             onPressed: () async {
               await QuickCaptureSheet.show(
                 context,
@@ -196,14 +193,11 @@ class _NotesViewState extends State<_NotesView> {
               }
             },
           ),
-          IconButton(
+          const SizedBox(width: 8),
+          FeatureIconButton(
             tooltip: 'Voice Note',
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(
-              Icons.mic_rounded,
-              size: 18,
-              color: AppColors.voiceWaveform,
-            ),
+            icon: Icons.mic_none_rounded,
+            color: AppColors.voiceWaveform,
             onPressed: () async {
               await QuickCaptureSheet.show(
                 context,
@@ -214,93 +208,14 @@ class _NotesViewState extends State<_NotesView> {
               }
             },
           ),
-          Padding(
-            padding: const EdgeInsets.only(right: 14, left: 4),
-            child: Center(
-              child: InkWell(
-                onTap: () => _showNoteEditor(context),
-                borderRadius: AppRadius.radiusSm,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.moduleNotes,
-                    borderRadius: AppRadius.radiusSm,
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.add_rounded, size: 15, color: Colors.white),
-                      SizedBox(width: 4),
-                      Text(
-                        'New Note',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+          const SizedBox(width: 8),
+          FeatureHeaderButton(
+            icon: Icons.add_rounded,
+            label: 'New Note',
+            color: AppColors.moduleNotes,
+            onPressed: () => _showNoteEditor(context),
           ),
         ],
-      ),
-      body: BlocBuilder<NotesBloc, NotesState>(
-        builder: (context, state) {
-          if (state is NotesLoading || state is NotesInitial) {
-            return ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              children: const [
-                AppShimmerLoader.card(height: 68),
-                SizedBox(height: 10),
-                AppShimmerLoader.card(height: 38),
-                SizedBox(height: 12),
-                AppShimmerLoader.card(height: 88),
-                SizedBox(height: 8),
-                AppShimmerLoader.card(height: 88),
-              ],
-            );
-          }
-          if (state is NotesError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.error_outline_rounded,
-                      color: AppColors.error,
-                      size: 36,
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Error: ${state.message}',
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.bodySmall,
-                    ),
-                    const SizedBox(height: 12),
-                    FilledButton.icon(
-                      onPressed: () =>
-                          context.read<NotesBloc>().add(const LoadNotes()),
-                      icon: const Icon(Icons.refresh_rounded, size: 16),
-                      label: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-          if (state is NotesLoaded) {
-            return _buildContent(context, state, isDark);
-          }
-          return const SizedBox.shrink();
-        },
       ),
     );
   }

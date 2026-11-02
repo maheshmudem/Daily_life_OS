@@ -7,7 +7,6 @@ class IoTtsService implements AppTtsService {
   bool _isSpeaking = false;
   bool _isPaused = false;
   String _lastText = '';
-  double _lastRate = 1.0;
   void Function()? _onStart;
   void Function()? _onComplete;
   void Function(String msg)? _onError;
@@ -110,7 +109,6 @@ class IoTtsService implements AppTtsService {
   @override
   Future<void> speak(String text, {double rate = 1.0}) async {
     _lastText = text;
-    _lastRate = rate;
     try {
       if (_flutterTts != null) {
         await _flutterTts!.setPitch(1.18);
@@ -167,7 +165,6 @@ class IoTtsService implements AppTtsService {
 
   @override
   Future<void> setRate(double rate) async {
-    _lastRate = rate;
     try {
       if (_flutterTts != null) {
         await _flutterTts!.setSpeechRate(0.46 * rate);

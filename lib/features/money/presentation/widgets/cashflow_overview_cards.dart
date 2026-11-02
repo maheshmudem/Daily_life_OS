@@ -61,15 +61,20 @@ class _IncomeMiniCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            CurrencyUtils.format(insights.periodIncome, decimals: 2),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
-              fontFeatures: const [FontFeature.tabularFigures()],
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              CurrencyUtils.format(insights.periodIncome, decimals: 2),
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.textPrimary,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -155,15 +160,18 @@ class _NetCashflowMiniCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            CurrencyUtils.signed(net, isCredit: isPositive, decimals: 2),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: isPositive ? AppColors.success : AppColors.error,
-              fontFeatures: const [FontFeature.tabularFigures()],
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              CurrencyUtils.signed(net, isCredit: isPositive, decimals: 2),
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: isPositive ? AppColors.success : AppColors.error,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
             ),
           ),
           const SizedBox(height: 12),

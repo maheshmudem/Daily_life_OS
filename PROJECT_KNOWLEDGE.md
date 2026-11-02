@@ -76,7 +76,7 @@ modules that talk to each other, and privacy.
 | Env config | `flutter_dotenv` | `.env` keys: `API_BASE_URL`, `APP_ENV`, `APP_NAME` |
 | Networking (unused) | `dio` | Ready but not used by any feature |
 | Functional types (unused) | `dartz`, `equatable` | `equatable` is used; `dartz` `Either` is not |
-| Misc | `intl`, `image_picker`, `device_info_plus`, `permission_handler`, `app_settings`, `path_provider` | |
+| Misc | `intl`, `image_picker`, `permission_handler`, `path_provider`, `flutter_tts` | |
 | Testing | `flutter_test`, `bloc_test`, `mocktail` | |
 | Lint | `flutter_lints ^6.0.0` | `analysis_options.yaml` uses defaults |
 | Font | DMSans (variable) | `assets/fonts/` |
@@ -409,9 +409,12 @@ Tap habit bubble → ToggleHabit(id) → flip isDoneToday, streak ±1 → reload
 Tap timeline tile → ToggleTimelineItem(id) → flip isDone → reload timeline only
 ```
 
-**UI pieces:** greeting header, "Play briefing" → `AudioBriefingSheet` (UI only, no TTS),
-`SafeSpendMeterWidget` (⚠️ **hardcoded values**: spent 450, limit 1200, 12 days, 35000 budget),
-habit strip (`HabitBubbleWidget`), timeline tiles.
+**UI pieces:** greeting header, "Play briefing" → `AudioBriefingSheet` (TTS powered with fallback),
+`_OverviewCard` (`Daily Progress` ring + tabular percentage + 3 live glance capsules for habits, tasks, and safe spend),
+`SafeSpendMeterWidget` (dynamic snapshot via `GetDailySpendSnapshotUseCase`),
+habit grouped card (`HabitBubbleWidget` rows with tactile check indicators, squircle icons, titles, and streak pills),
+timeline grouped card (`_TimelineCard` with inset dividers), and evening wrap-up card.
+Standard 8pt/16pt/24pt grid rhythm: `AppSpacing.sm` top clearance, `gapH16` between hero cards, `gapH24` before section headers, `gapH8` between header and grouped card.
 
 ---
 
@@ -509,9 +512,8 @@ dailySafeSpend = max(0, monthlyBudget − fixedBills − totalSpent) / max(1, da
 - `getRecentTransactions(limit: 30)` is ordered by date, newest first.
 - `getIous()` returns **unsettled** only. `settleIou` sets `isSettled = true`.
 
-**Page:** 3 tabs: *Expenses · Subscriptions · Lend & Borrow (IOU)*. The UI dispatches
-`ToggleAutoKill` and `SettleIou`. ⚠️ `AddTransaction`, `AddIou` and `UpdateBudget` exist in the
-Bloc but **no UI dispatches them yet**. "Auto-kill" is just a flag; nothing cancels anything.
+**Page:** Shell hosts 4 tabs: *Overview · Activity · Budgets · Insights*.
+All filters and temporal controls (`MonthSelectorChip`, `All time` filter chip, `PeriodSelectorBar`) are located directly in the body screen underneath the app bar rather than occupying the app bar actions. This keeps AppBars lightweight, spacious, and uncluttered, leaving actions dedicated solely to core modal utilities (Settings, Quick Capture, Budget Tips). Subviews and category filters scroll fluidly in responsive horizontal control strips.
 
 ---
 
@@ -604,6 +606,17 @@ Full design spec: `SECURITY_ARCHITECTURE.md`.
 ## 12. Shared Core Code
 
 ### `core/widgets/`
+
+**`FeatureScaffold` (`feature_scaffold.dart`) is the standard shell for every top-level screen**
+(Today, Planner, Money ×4, Notes, Vault). It provides the app bar (20px gutter, 20/700 title or 19/700 when subtitle is present,
+68px height with subtitle, 56px standard, optional subtitle / leading / `titleTrailing` badge / actions / `bottom` tab bar, `onBack` →
+back button with tooltip `'Back'`), page background, and a cross-fading
+`FeatureStatus { loading, error, empty, content }` switch with default skeleton, error + retry
+and empty views. `builder` only runs in the `content` state. Map Bloc state → status in the page
+(e.g. `moneyFeatureStatus()` in `money_shell_scope.dart`). The same file also has
+`FeatureStateView`, `FeatureLoadingView`, `FeatureErrorView`, `FeatureSectionHeader`,
+`FeatureCard`, `FeatureHeaderButton` (accent pill: 36px height, radius 10) and `FeatureIconButton` (36×36 squircle, radius 10, customizable `backgroundColor` / `borderColor` for outlined or accent filled action buttons across Today, Notes, Planner, Vault, and Money).
+
 | Widget | Purpose |
 |---|---|
 | `AppButton`, `AppTextField`, `SearchBarWidget`, `ChipInputWidget` | Basic inputs |
@@ -646,6 +659,11 @@ Failures: `ServerFailure`, `CacheFailure`, `NetworkFailure`, `ValidationFailure`
 - `app_text_styles.dart`, `app_spacing.dart`, `app_radius.dart`, `app_decorations.dart`
   (e.g. `floatingBar`), `app_theme.dart` (`lightTheme`, `darkTheme`).
 - Font: **DMSans**. Theme follows the system (light/dark).
+- **Typography:** one scale in `app_text_styles.dart` (24 / 20 / 18 / 17 / 15 / 14 / 16-14-13 body /
+  12 caption / 11 overline). `AppTextStyles.textTheme(brightness)` feeds both themes, so Material
+  widgets render the same sizes in light and dark mode. The `AppTextStyles.*` constants carry
+  light-mode colours; **new code should use `context.text.*`** and **`context.palette.*`**
+  (`theme_context.dart`) instead of `isDark ? AppColors.darkX : AppColors.x` ternaries.
 - Pages commonly check `Theme.of(context).brightness == Brightness.dark` and pass an `isDark` flag into widgets.
 - **Layout conventions:**
   - Every page (Money included) uses a **20px horizontal gutter** (`AppSpacing.pageGutter`). AppBar

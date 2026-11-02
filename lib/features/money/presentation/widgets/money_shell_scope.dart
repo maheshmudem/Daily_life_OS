@@ -1,4 +1,13 @@
 import 'package:flutter/widgets.dart';
+import '../../../../core/widgets/feature_scaffold.dart';
+import '../bloc/money_state.dart';
+
+/// Maps a [MoneyState] onto the shared [FeatureScaffold] lifecycle.
+FeatureStatus moneyFeatureStatus(MoneyState state) {
+  if (state is MoneyLoaded) return FeatureStatus.content;
+  if (state is MoneyError) return FeatureStatus.error;
+  return FeatureStatus.loading;
+}
 
 /// Money bottom-bar tab indexes (the centre "+ Add" button is an action, not a tab).
 class MoneyTab {

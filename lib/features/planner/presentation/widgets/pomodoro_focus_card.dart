@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
-import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/app_text_styles.dart';
 
 class PomodoroFocusCard extends StatelessWidget {
@@ -75,15 +74,15 @@ class PomodoroFocusCard extends StatelessWidget {
               : const Color(0xFF0284C7));
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: heroGradient,
-        borderRadius: AppRadius.radiusXl,
+        borderRadius: AppRadius.radiusLg,
         boxShadow: [
           BoxShadow(
-            color: shadowColor.withValues(alpha: 0.3),
-            blurRadius: 22,
-            offset: const Offset(0, 8),
+            color: shadowColor.withValues(alpha: 0.22),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -94,19 +93,16 @@ class PomodoroFocusCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.22),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: AppRadius.radiusFull,
                 ),
                 child: Text(
                   modeLabel,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 11,
+                    fontSize: 10,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.5,
                   ),
@@ -118,7 +114,7 @@ class PomodoroFocusCard extends StatelessWidget {
                     'Round $currentRound/$totalRounds',
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 12,
+                      fontSize: 11.5,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -127,9 +123,9 @@ class PomodoroFocusCard extends StatelessWidget {
                     children: List.generate(
                       totalRounds,
                       (i) => Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 2),
-                        width: 7,
-                        height: 7,
+                        margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                        width: 6,
+                        height: 6,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: i < currentRound
@@ -143,19 +139,20 @@ class PomodoroFocusCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
-          // Circular Progress Timer
+          // Proportional Circular Progress Timer
           SizedBox(
-            width: 190,
-            height: 190,
+            width: 146,
+            height: 146,
             child: Stack(
               fit: StackFit.expand,
               children: [
                 CircularProgressIndicator(
                   value: timerProgress,
-                  strokeWidth: 8,
-                  backgroundColor: Colors.white.withValues(alpha: 0.25),
+                  strokeWidth: 7,
+                  strokeCap: StrokeCap.round,
+                  backgroundColor: Colors.white.withValues(alpha: 0.22),
                   valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
                 Center(
@@ -166,7 +163,7 @@ class PomodoroFocusCard extends StatelessWidget {
                         formattedTime,
                         style: AppTextStyles.timerHero.copyWith(
                           color: Colors.white,
-                          fontSize: 42,
+                          fontSize: 34,
                           letterSpacing: -1,
                         ),
                       ),
@@ -178,8 +175,8 @@ class PomodoroFocusCard extends StatelessWidget {
                                   : 'Breathe and relax...')
                             : 'Ready to start',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.8),
-                          fontSize: 12,
+                          color: Colors.white.withValues(alpha: 0.85),
+                          fontSize: 11,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -189,49 +186,52 @@ class PomodoroFocusCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
 
           // Linked Task Capsule
           GestureDetector(
             onTap: onChangeTask,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.18),
+                color: Colors.black.withValues(alpha: 0.16),
                 borderRadius: AppRadius.radiusFull,
-                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.18),
+                  width: 0.8,
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(
                     Icons.track_changes_rounded,
-                    size: 14,
+                    size: 13,
                     color: Colors.white70,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   Flexible(
                     child: Text(
                       'Focusing on: "$linkedTask"',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 12,
+                        fontSize: 11.5,
                         fontWeight: FontWeight.w600,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 5),
                   const Icon(
                     Icons.edit_rounded,
-                    size: 13,
+                    size: 12,
                     color: Colors.white70,
                   ),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 14),
 
           // Timer Action Controls
           Row(
@@ -244,12 +244,14 @@ class PomodoroFocusCard extends StatelessWidget {
                 style: IconButton.styleFrom(
                   backgroundColor: Colors.white.withValues(alpha: 0.2),
                   foregroundColor: Colors.white,
-                  fixedSize: const Size.square(48),
+                  fixedSize: const Size.square(38),
+                  minimumSize: const Size.square(38),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   padding: EdgeInsets.zero,
                 ),
-                icon: const Icon(Icons.refresh_rounded, size: 20),
+                icon: const Icon(Icons.refresh_rounded, size: 18),
               ),
-              AppSpacing.gapW16,
+              const SizedBox(width: 12),
 
               // Main Start/Pause Button
               ElevatedButton.icon(
@@ -257,11 +259,13 @@ class PomodoroFocusCard extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: buttonColor,
+                  minimumSize: const Size(0, 38),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 28,
-                    vertical: 14,
+                    horizontal: 20,
+                    vertical: 8,
                   ),
-                  shape: RoundedRectangleBorder(
+                  shape: const RoundedRectangleBorder(
                     borderRadius: AppRadius.radiusFull,
                   ),
                   elevation: 0,
@@ -270,17 +274,17 @@ class PomodoroFocusCard extends StatelessWidget {
                   isTimerRunning
                       ? Icons.pause_rounded
                       : Icons.play_arrow_rounded,
-                  size: 24,
+                  size: 20,
                 ),
                 label: Text(
                   isTimerRunning ? 'Pause' : 'Start Focus',
                   style: const TextStyle(
                     fontWeight: FontWeight.w800,
-                    fontSize: 15,
+                    fontSize: 13.5,
                   ),
                 ),
               ),
-              AppSpacing.gapW16,
+              const SizedBox(width: 12),
 
               // Skip Session Button
               IconButton.filledTonal(
@@ -289,10 +293,12 @@ class PomodoroFocusCard extends StatelessWidget {
                 style: IconButton.styleFrom(
                   backgroundColor: Colors.white.withValues(alpha: 0.2),
                   foregroundColor: Colors.white,
-                  fixedSize: const Size.square(48),
+                  fixedSize: const Size.square(38),
+                  minimumSize: const Size.square(38),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   padding: EdgeInsets.zero,
                 ),
-                icon: const Icon(Icons.skip_next_rounded, size: 20),
+                icon: const Icon(Icons.skip_next_rounded, size: 18),
               ),
             ],
           ),

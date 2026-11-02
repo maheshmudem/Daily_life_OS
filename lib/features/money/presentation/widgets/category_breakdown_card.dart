@@ -107,32 +107,41 @@ class _CategoryBreakdownRow extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: CurrencyUtils.format(budget.spent, decimals: 2),
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w700,
-                            color: budget.isOverBudget
-                                ? AppColors.error
-                                : (isDark
-                                      ? AppColors.darkTextPrimary
-                                      : AppColors.textPrimary),
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                          ),
-                        ),
-                        if (budget.hasLimit)
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Text.rich(
+                      TextSpan(
+                        children: [
                           TextSpan(
-                            text:
-                                ' / ${CurrencyUtils.format(budget.monthlyLimit)}',
+                            text: CurrencyUtils.format(
+                              budget.spent,
+                              decimals: 2,
+                            ),
                             style: TextStyle(
-                              fontSize: 11.5,
-                              color: captionColor,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w700,
+                              color: budget.isOverBudget
+                                  ? AppColors.error
+                                  : (isDark
+                                        ? AppColors.darkTextPrimary
+                                        : AppColors.textPrimary),
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
                             ),
                           ),
-                      ],
+                          if (budget.hasLimit)
+                            TextSpan(
+                              text:
+                                  ' / ${CurrencyUtils.format(budget.monthlyLimit)}',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: captionColor,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -474,15 +483,20 @@ class _KpiTile extends StatelessWidget {
             child: Icon(icon, size: 17, color: color),
           ),
           const SizedBox(height: 6),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTextStyles.titleSmall.copyWith(
-              fontSize: 15,
-              color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
-              fontFeatures: const [FontFeature.tabularFigures()],
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: AppTextStyles.titleSmall.copyWith(
+                fontSize: 15,
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
             ),
           ),
           const SizedBox(height: 2),

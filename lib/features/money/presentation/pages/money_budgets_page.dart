@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/theme/app_colors.dart';
+import '../../../../config/theme/app_spacing.dart';
+import '../../../../config/theme/theme_context.dart';
+import '../../../../core/widgets/feature_scaffold.dart';
 import '../../../../config/theme/app_decorations.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_text_styles.dart';
@@ -38,43 +41,25 @@ class _MoneyBudgetsPageState extends State<MoneyBudgetsPage> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.darkScaffoldBackground
-          : AppColors.scaffoldBackground,
-      appBar: AppBar(
-        leading: IconButton(
-          tooltip: 'Back',
-          icon: const Icon(Icons.arrow_back_rounded, size: 20),
-          onPressed: () => MoneyShellScope.handleBack(context),
-        ),
-        titleSpacing: 0,
-        title: const Text(
-          StringConstants.budgetManager,
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-        ),
+    return BlocBuilder<MoneyBloc, MoneyState>(
+      builder: (context, moneyState) => FeatureScaffold(
+        title: StringConstants.budgetManager,
+        onBack: () => MoneyShellScope.handleBack(context),
+        accentColor: AppColors.moduleMoney,
+        actionsEndPadding: AppSpacing.pageGutter,
         actions: [
-          BlocBuilder<MoneyBloc, MoneyState>(
-            builder: (context, state) {
-              if (state is! MoneyLoaded) return const SizedBox.shrink();
-              return MonthSelectorChip(
-                selectedMonth: state.selectedMonth,
-                onChanged: (m) => context.read<MoneyBloc>().add(ChangeMonth(m)),
-              );
-            },
-          ),
-          IconButton(
+          FeatureIconButton(
             tooltip: StringConstants.budgetTips,
-            icon: const Icon(Icons.lightbulb_outline_rounded, size: 20),
+            icon: Icons.lightbulb_outline_rounded,
             onPressed: () => _showBudgetTipsDialog(context),
           ),
         ],
-      ),
-      body: BlocBuilder<MoneyBloc, MoneyState>(
-        builder: (context, state) {
-          if (state is! MoneyLoaded) {
-            return const Center(child: CircularProgressIndicator());
-          }
+        status: moneyFeatureStatus(moneyState),
+        errorMessage: moneyState is MoneyError ? moneyState.message : null,
+        onRetry: () => context.read<MoneyBloc>().add(const LoadMoney()),
+        loading: const FeatureLoadingView(blockHeights: [40, 160, 88, 220]),
+        builder: (context) {
+          final state = moneyState as MoneyLoaded;
           final period = state.selectedPeriod;
           final budgets = state.categoryBudgets;
           final totalLimit = budgets.fold<double>(
@@ -96,7 +81,27 @@ class _MoneyBudgetsPageState extends State<MoneyBudgetsPage> {
           return ListView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
             children: [
-              // 1. Multi-period switcher (Weekly · Monthly · 6 Months · Yearly)
+              // 1. Period header with month selector
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Budget Period',
+                    style: context.text.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: context.palette.heading,
+                    ),
+                  ),
+                  MonthSelectorChip(
+                    selectedMonth: state.selectedMonth,
+                    onChanged: (m) =>
+                        context.read<MoneyBloc>().add(ChangeMonth(m)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              // 2. Multi-period switcher (Weekly · Monthly · 6 Months · Yearly)
               PeriodSelectorBar(
                 selected: period,
                 onChanged: (p) =>
@@ -632,108 +637,63 @@ class _CategoryBudgetCard extends StatelessWidget {
                 Row(
                   children: [
                     Container(
-                      width: 38,
-                      height: 38,
+                      width: 36,
+                      height: 36,
                       decoration: BoxDecoration(
                         color: cat.color.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(11),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(cat.icon, size: 19, color: cat.color),
+                      child: Icon(cat.icon, size: 18, color: cat.color),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            cat.label,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w600,
-                              color: isDark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              Container(
-                                width: 6,
-                                height: 6,
-                                decoration: BoxDecoration(
-                                  color: statusColor,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 5),
-                              Flexible(
-                                child: Text(
-                                  budget.statusLabel,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: statusColor,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                      child: Text(
+                        cat.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: isDark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.textPrimary,
+                        ),
                       ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text.rich(
-                          TextSpan(
-                            children: [
+                    const SizedBox(width: 8),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: CurrencyUtils.format(budget.spent),
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                color: budget.isOverBudget
+                                    ? AppColors.error
+                                    : (isDark
+                                          ? AppColors.darkTextPrimary
+                                          : AppColors.textPrimary),
+                                fontWeight: FontWeight.w700,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
+                            ),
+                            if (budget.hasLimit)
                               TextSpan(
-                                text: CurrencyUtils.format(budget.spent),
+                                text:
+                                    ' / ${CurrencyUtils.format(budget.monthlyLimit)}',
                                 style: TextStyle(
-                                  fontSize: 13.5,
-                                  color: budget.isOverBudget
-                                      ? AppColors.error
-                                      : (isDark
-                                            ? AppColors.darkTextPrimary
-                                            : AppColors.textPrimary),
-                                  fontWeight: FontWeight.w700,
-                                  fontFeatures: const [
-                                    FontFeature.tabularFigures(),
-                                  ],
+                                  fontSize: 11.5,
+                                  color: captionColor,
                                 ),
                               ),
-                              if (budget.hasLimit)
-                                TextSpan(
-                                  text:
-                                      ' / ${CurrencyUtils.format(budget.monthlyLimit)}',
-                                  style: TextStyle(
-                                    fontSize: 11.5,
-                                    color: captionColor,
-                                  ),
-                                ),
-                            ],
-                          ),
+                          ],
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          !budget.hasLimit
-                              ? StringConstants.tapToEdit
-                              : budget.isOverBudget
-                              ? '-${CurrencyUtils.format(budget.overBy)} over'
-                              : '${CurrencyUtils.format(budget.remaining)} left',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: budget.isOverBudget
-                                ? AppColors.error
-                                : captionColor,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                     const SizedBox(width: 6),
                     Icon(Icons.edit_outlined, size: 15, color: captionColor),
@@ -744,12 +704,48 @@ class _CategoryBudgetCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: budget.progress,
-                    minHeight: 6,
+                    minHeight: 5,
                     backgroundColor: isDark
                         ? AppColors.darkSurfaceMuted
                         : AppColors.surfaceElevated,
                     valueColor: AlwaysStoppedAnimation<Color>(barColor),
                   ),
+                ),
+                const SizedBox(height: 7),
+                Row(
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: statusColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      budget.statusLabel,
+                      style: TextStyle(
+                        color: statusColor,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      !budget.hasLimit
+                          ? StringConstants.tapToEdit
+                          : budget.isOverBudget
+                          ? '-${CurrencyUtils.format(budget.overBy)} over'
+                          : '${CurrencyUtils.format(budget.remaining)} left',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: budget.isOverBudget
+                            ? AppColors.error
+                            : captionColor,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

@@ -562,15 +562,20 @@ class _PlanBucketTile extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2),
-          Text(
-            amount,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
-              fontFeatures: const [FontFeature.tabularFigures()],
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              amount,
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.textPrimary,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
             ),
           ),
         ],
@@ -1087,27 +1092,33 @@ class _ReportMetricTile extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 2),
-        Text(
-          value,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 12.5,
-            fontWeight: FontWeight.w800,
-            color: color,
-            fontFeatures: const [FontFeature.tabularFigures()],
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            value,
+            maxLines: 1,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w800,
+              color: color,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
           ),
         ),
         const SizedBox(height: 1),
-        Text(
-          subtitle,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 9.5,
-            color: isDark
-                ? AppColors.darkTextSecondary
-                : AppColors.textSecondary,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            subtitle,
+            maxLines: 1,
+            style: TextStyle(
+              fontSize: 9.5,
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.textSecondary,
+            ),
           ),
         ),
       ],

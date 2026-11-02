@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../config/theme/app_colors.dart';
-import '../../config/theme/app_radius.dart';
+import '../../config/theme/app_spacing.dart';
+import '../../config/theme/theme_context.dart';
 
-/// Interactive one-tap habit bubble with streak badge and smooth completion state.
+/// Best-in-class habit row designed for unified grouped cards.
+///
+/// Features:
+/// - Tactile circular check indicator on the left
+/// - Vibrant squircle tinted icon
+/// - Title with strike-through and soft dimming on completion
+/// - Subtitle status ('Completed today' or 'Tap to mark done')
+/// - Compact streak pill with flame icon and tabular figures
 class HabitBubbleWidget extends StatelessWidget {
   final String title;
   final IconData icon;
@@ -23,122 +32,163 @@ class HabitBubbleWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final palette = context.palette;
+    final text = context.text;
 
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 240),
-        curve: Curves.easeOutCubic,
-        width: 104,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        decoration: BoxDecoration(
-          color: isDone
-              ? tintColor.withValues(alpha: isDark ? 0.22 : 0.12)
-              : (isDark
-                    ? AppColors.darkCardBackground
-                    : AppColors.cardBackground),
-          borderRadius: AppRadius.radiusLg,
-          border: Border.all(
-            color: isDone
-                ? tintColor.withValues(alpha: 0.6)
-                : (isDark ? AppColors.darkDivider : AppColors.divider),
-            width: isDone ? 1.5 : 1,
-          ),
-          boxShadow: isDone
-              ? [
-                  BoxShadow(
-                    color: tintColor.withValues(alpha: 0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : null,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Icon Bubble with Status Indicator
-            Stack(
-              clipBehavior: Clip.none,
+    return Semantics(
+      button: true,
+      toggled: isDone,
+      label:
+          '$title, $streakDays day streak, ${isDone ? "completed" : "pending"}',
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: () {
+            HapticFeedback.selectionClick();
+            onTap();
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: 10,
+            ),
+            child: Row(
               children: [
-                CircleAvatar(
-                  radius: 17,
-                  backgroundColor: isDone
-                      ? tintColor
-                      : tintColor.withValues(alpha: isDark ? 0.2 : 0.12),
-                  child: Icon(
-                    isDone ? Icons.check_rounded : icon,
-                    size: 18,
-                    color: isDone ? Colors.white : tintColor,
+                // 1. Tactile check circle
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutCubic,
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isDone ? AppColors.success : Colors.transparent,
+                    border: Border.all(
+                      color: isDone ? AppColors.success : palette.border,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: isDone
+                      ? const Icon(
+                          Icons.check_rounded,
+                          size: 14,
+                          color: Colors.white,
+                        )
+                      : null,
+                ),
+                const SizedBox(width: AppSpacing.md),
+
+                // 2. Tinted squircle icon badge
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: tintColor.withValues(
+                      alpha: palette.isDark ? 0.22 : 0.12,
+                    ),
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: Icon(icon, size: 16, color: tintColor),
+                ),
+                const SizedBox(width: AppSpacing.sm + 4),
+
+                // 3. Title + helper subtitle
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: text.titleSmall?.copyWith(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: isDone ? palette.caption : palette.heading,
+                          decoration: isDone
+                              ? TextDecoration.lineThrough
+                              : null,
+                          decorationColor: palette.caption,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        isDone ? 'Completed today' : 'Tap to mark done',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: text.labelSmall?.copyWith(
+                          fontSize: 11,
+                          fontWeight: isDone
+                              ? FontWeight.w600
+                              : FontWeight.w400,
+                          color: isDone ? AppColors.success : palette.caption,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                if (isDone)
-                  Positioned(
-                    top: -2,
-                    right: -2,
-                    child: Container(
-                      width: 10,
-                      height: 10,
-                      decoration: const BoxDecoration(
-                        color: AppColors.accent,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
+                const SizedBox(width: AppSpacing.sm),
+
+                // 4. Streak badge
+                _StreakBadge(days: streakDays),
               ],
             ),
-            const SizedBox(height: 6),
-
-            // Habit Name
-            Text(
-              title,
-              maxLines: 1,
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isDone ? FontWeight.w700 : FontWeight.w600,
-                color: isDone
-                    ? (isDark
-                          ? AppColors.darkTextHeading
-                          : AppColors.textHeading)
-                    : (isDark ? AppColors.darkTextBody : AppColors.textBody),
-                decoration: isDone ? TextDecoration.lineThrough : null,
-              ),
-            ),
-            const SizedBox(height: 4),
-
-            // Streak Badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.darkSurfaceSecondary
-                    : AppColors.surfaceSecondary,
-                borderRadius: AppRadius.radiusSm,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('🔥', style: TextStyle(fontSize: 10)),
-                  const SizedBox(width: 2),
-                  Text(
-                    '${streakDays}d',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: isDark
-                          ? AppColors.darkTextCaption
-                          : AppColors.textCaption,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
+      ),
+    );
+  }
+}
+
+class _StreakBadge extends StatelessWidget {
+  final int days;
+
+  const _StreakBadge({required this.days});
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    final active = days > 0;
+    const flameColor = AppColors.focusPomodoro;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: active
+            ? flameColor.withValues(alpha: palette.isDark ? 0.18 : 0.10)
+            : palette.surfaceMuted,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.local_fire_department_rounded,
+            size: 13,
+            color: active ? flameColor : palette.caption,
+          ),
+          const SizedBox(width: 3),
+          Text(
+            '$days',
+            style: context.text.labelMedium?.copyWith(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              color: active ? flameColor : palette.caption,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+          const SizedBox(width: 2),
+          Text(
+            'd',
+            style: context.text.labelSmall?.copyWith(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w600,
+              color: active ? flameColor : palette.caption,
+            ),
+          ),
+        ],
       ),
     );
   }

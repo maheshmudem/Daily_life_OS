@@ -84,7 +84,7 @@ void main() {
     expect(find.text(StringConstants.quickType), findsOneWidget);
 
     // 3. Verify Today Hub Header & Audio Briefing Pill
-    expect(find.text(StringConstants.playBriefing), findsOneWidget);
+    expect(find.byTooltip(StringConstants.playBriefing), findsOneWidget);
     expect(find.textContaining('Aarav'), findsOneWidget);
     expect(find.text(StringConstants.habitsAndRoutines), findsOneWidget);
 

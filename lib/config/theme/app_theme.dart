@@ -129,19 +129,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
 
-      textTheme: const TextTheme(
-        displayLarge: AppTextStyles.displayLarge,
-        displayMedium: AppTextStyles.displayMedium,
-        headlineLarge: AppTextStyles.headingLarge,
-        headlineMedium: AppTextStyles.headingMedium,
-        headlineSmall: AppTextStyles.headingSmall,
-        titleLarge: AppTextStyles.titleLarge,
-        titleMedium: AppTextStyles.titleMedium,
-        bodyLarge: AppTextStyles.bodyLarge,
-        bodyMedium: AppTextStyles.bodyMedium,
-        bodySmall: AppTextStyles.bodySmall,
-        labelLarge: AppTextStyles.label,
-      ),
+      textTheme: AppTextStyles.textTheme(Brightness.light),
     );
   }
 
@@ -209,6 +197,38 @@ class AppTheme {
           textStyle: AppTextStyles.buttonText,
         ),
       ),
+
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.primaryLight,
+          textStyle: AppTextStyles.bodyMedium.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: AppColors.darkCardBackground,
+        selectedItemColor: AppColors.primaryLight,
+        unselectedItemColor: AppColors.darkTextCaption,
+        selectedLabelStyle: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelStyle: TextStyle(fontSize: 11),
+        type: BottomNavigationBarType.fixed,
+        elevation: 8,
+      ),
+
+      chipTheme: ChipThemeData(
+        backgroundColor: AppColors.darkSurfaceSecondary,
+        labelStyle: AppTextStyles.bodySmall.copyWith(
+          color: AppColors.darkTextBody,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+
+      textTheme: AppTextStyles.textTheme(Brightness.dark),
 
       dividerTheme: const DividerThemeData(
         color: AppColors.darkDivider,
