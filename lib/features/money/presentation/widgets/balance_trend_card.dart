@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_text_styles.dart';
@@ -8,13 +9,17 @@ import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../domain/entities/money_insights.dart';
 
-/// Matches the clean reference layout (`HomeChartWidget` + `BalanceDisplayWidget`
-/// + `ActionButtonsWidget` from `docs/expensetracker-main`):
-/// 1. Full-width 14-day curved LineChart with gradient fill & end-dot
-/// 2. Centered "Main Account" pill + status dot + change row
-/// 3. Centered integer/decimal split balance (`RichText`)
-/// 4. Compact 3-button action bar (`Add`, `Reports`, and `Income` icon button)
-class BalanceTrendCard extends StatelessWidget {
+/// Executive Fintech Wealth & Balance Hero Card inspired by Copilot Money,
+/// Monarch Money, and Revolut:
+/// 1. Ambient header glow + "Main Account" status pill + Net Worth pill +
+///    1-tap Balance Privacy Mask toggle (`••••••`)
+/// 2. Tabular integer/decimal split balance with interactive chart-scrubbing readout
+/// 3. Full-width 14-day curved LineChart with emerald/indigo gradient fill
+/// 4. Unified 2x2 Bento Cashflow Grid (`Salary / Income`, `Total Spent`,
+///    `Net Saved`, `Can Spend (Month)`)
+/// 5. Sleek Fintech Quick-Action Dock (`Add`, `Salary / Income`, `Lend / Borrow`,
+///    `AI Check`, `Reports`)
+class BalanceTrendCard extends StatefulWidget {
   final MoneyInsights insights;
   final VoidCallback onAddExpense;
   final VoidCallback onAddIncome;
@@ -33,12 +38,29 @@ class BalanceTrendCard extends StatelessWidget {
   });
 
   @override
+  State<BalanceTrendCard> createState() => _BalanceTrendCardState();
+}
+
+class _BalanceTrendCardState extends State<BalanceTrendCard> {
+  bool _hideBalance = false;
+  int? _touchedDayIndex;
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final insights = widget.insights;
     final isPositive = insights.balanceChange >= 0;
-    final changeColor = isPositive ? AppColors.success : AppColors.error;
+    final changeColor = isPositive ? AppColors.moduleMoney : AppColors.error;
 
-    final formatted = CurrencyUtils.format(insights.balance, decimals: 2);
+    final points = insights.balanceTrend;
+    final activeBalance =
+        (_touchedDayIndex != null &&
+            _touchedDayIndex! >= 0 &&
+            _touchedDayIndex! < points.length)
+        ? points[_touchedDayIndex!]
+        : insights.balance;
+
+    final formatted = CurrencyUtils.format(activeBalance, decimals: 2);
     final dotIndex = formatted.lastIndexOf('.');
     final wholePart = dotIndex != -1
         ? formatted.substring(0, dotIndex)
@@ -46,309 +68,482 @@ class BalanceTrendCard extends StatelessWidget {
     final decimalPart = dotIndex != -1 ? formatted.substring(dotIndex) : '.00';
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : AppColors.surface,
-        borderRadius: AppRadius.borderLg,
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.border,
+          color: isDark
+              ? AppColors.moduleMoney.withValues(alpha: 0.24)
+              : AppColors.border,
         ),
         boxShadow: isDark
             ? null
             : [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
+                  color: AppColors.primary.withValues(alpha: 0.05),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
                 ),
               ],
       ),
-      child: Column(
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
         children: [
-          // Top Row: Main Account Pill + Net Worth Pill
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
+          // Subtle ambient top-right radial glow for executive fintech depth
+          Positioned(
+            top: -45,
+            right: -35,
+            child: IgnorePointer(
+              child: Container(
+                width: 150,
+                height: 150,
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.darkSurfaceMuted
-                      : AppColors.surfaceElevated,
-                  borderRadius: AppRadius.radiusFull,
-                  border: Border.all(
-                    color: isDark ? AppColors.darkBorder : AppColors.border,
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.moduleMoney.withValues(
+                        alpha: isDark ? 0.16 : 0.10,
+                      ),
+                      AppColors.moduleMoney.withValues(alpha: 0.0),
+                    ],
                   ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+              ),
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 15, 16, 16),
+            child: Column(
+              children: [
+                // 1. Top Row: Main Account Pill + Net Worth Pill + Privacy Toggle
+                Row(
                   children: [
                     Container(
-                      width: 7,
-                      height: 7,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4.5,
+                      ),
                       decoration: BoxDecoration(
-                        color: changeColor,
-                        shape: BoxShape.circle,
+                        color: isDark
+                            ? AppColors.darkSurfaceMuted
+                            : AppColors.surfaceElevated,
+                        borderRadius: AppRadius.radiusFull,
+                        border: Border.all(
+                          color: isDark
+                              ? AppColors.darkBorder
+                              : AppColors.border,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: BoxDecoration(
+                              color: changeColor,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: changeColor.withValues(alpha: 0.45),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            StringConstants.mainAccount,
+                            style: AppTextStyles.labelSmall.copyWith(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: isDark
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      StringConstants.mainAccount,
-                      style: AppTextStyles.labelSmall.copyWith(
-                        fontSize: 11.5,
-                        color: isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.textSecondary,
+                    const Spacer(),
+                    if (insights.totalAssets > 0) ...[
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 9,
+                            vertical: 4.5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.moduleMoney.withValues(
+                              alpha: 0.12,
+                            ),
+                            borderRadius: AppRadius.radiusFull,
+                          ),
+                          child: Text(
+                            _hideBalance
+                                ? 'Net Worth ••••'
+                                : 'Net Worth ${CurrencyUtils.compact(insights.netWorth)}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.moduleMoney,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                    ],
+                    Tooltip(
+                      message: _hideBalance ? 'Show balance' : 'Hide balance',
+                      child: InkWell(
+                        key: const ValueKey('toggle_balance_privacy'),
+                        borderRadius: AppRadius.radiusFull,
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setState(() => _hideBalance = !_hideBalance);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? AppColors.darkSurfaceMuted
+                                : AppColors.surfaceElevated,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isDark
+                                  ? AppColors.darkBorder
+                                  : AppColors.border,
+                            ),
+                          ),
+                          child: Icon(
+                            _hideBalance
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            size: 14,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.textSecondary,
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ),
-              if (insights.totalAssets > 0)
-                Flexible(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 9,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.10),
-                      borderRadius: AppRadius.radiusFull,
-                    ),
-                    child: Text(
-                      'Net Worth ${CurrencyUtils.compact(insights.netWorth)}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
+                const SizedBox(height: 12),
+
+                // 2. Total Balance label + Main Balance Display
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      StringConstants.totalBalance,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.4,
+                        color: isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.textMuted,
                       ),
                     ),
+                    if (_touchedDayIndex != null && points.isNotEmpty) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 1.5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          'Day ${_touchedDayIndex! + 1}/${points.length}',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 3),
+
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: _hideBalance
+                      ? Text(
+                          '${CurrencyUtils.symbol} ••••••',
+                          key: const ValueKey('masked_balance'),
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.5,
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.textPrimary,
+                          ),
+                        )
+                      : FittedBox(
+                          key: ValueKey('visible_balance_$wholePart'),
+                          fit: BoxFit.scaleDown,
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: wholePart,
+                                  style: TextStyle(
+                                    fontSize: 35,
+                                    fontWeight: FontWeight.w800,
+                                    color: isDark
+                                        ? AppColors.darkTextPrimary
+                                        : AppColors.textPrimary,
+                                    letterSpacing: -1.1,
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: decimalPart,
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark
+                                        ? AppColors.darkTextSecondary
+                                        : AppColors.textSecondary,
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                ),
+                const SizedBox(height: 5),
+
+                // Centered 14-day change row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      isPositive
+                          ? Icons.trending_up_rounded
+                          : Icons.trending_down_rounded,
+                      color: changeColor,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      _hideBalance
+                          ? '••••'
+                          : CurrencyUtils.signed(
+                              insights.balanceChange,
+                              isCredit: isPositive,
+                              decimals: 2,
+                            ),
+                      style: AppTextStyles.captionBold.copyWith(
+                        color: changeColor,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: changeColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '${isPositive ? '▲' : '▼'} ${insights.balanceChangePercent.abs().toStringAsFixed(1)}% (14d)',
+                        style: AppTextStyles.captionBold.copyWith(
+                          color: changeColor,
+                          fontSize: 10.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+
+                // 3. 14-day running balance LineChart with touch scrubbing
+                SizedBox(
+                  height: 100,
+                  child: _BalanceLineChart(
+                    points: insights.balanceTrend,
+                    onTouchIndexChanged: (idx) {
+                      if (_touchedDayIndex != idx) {
+                        setState(() => _touchedDayIndex = idx);
+                      }
+                    },
                   ),
                 ),
-            ],
-          ),
-          const SizedBox(height: 10),
+                const SizedBox(height: 14),
 
-          // Total Balance label + Main Balance Display
-          Text(
-            StringConstants.totalBalance,
-            style: TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.3,
-              color: isDark ? AppColors.darkTextMuted : AppColors.textMuted,
-            ),
-          ),
-          const SizedBox(height: 2),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: wholePart,
-                    style: TextStyle(
-                      fontSize: 34,
-                      fontWeight: FontWeight.w800,
-                      color: isDark
-                          ? AppColors.darkTextPrimary
-                          : AppColors.textPrimary,
-                      letterSpacing: -1.1,
-                      fontFeatures: const [FontFeature.tabularFigures()],
+                // 4. Unified 2x2 Bento Cashflow Grid
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppColors.darkSurfaceMuted.withValues(alpha: 0.65)
+                        : AppColors.surfaceElevated,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isDark ? AppColors.darkBorder : AppColors.border,
                     ),
                   ),
-                  TextSpan(
-                    text: decimalPart,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500,
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.textSecondary,
-                      fontFeatures: const [FontFeature.tabularFigures()],
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _SnapshotMetricTile(
+                              label: 'Salary / Income',
+                              value: _hideBalance
+                                  ? '•••••'
+                                  : CurrencyUtils.format(insights.monthIncome),
+                              subtitle: insights.monthIncome > 0
+                                  ? 'Earned this month'
+                                  : 'Tap to add income',
+                              color: AppColors.success,
+                              icon: Icons.south_west_rounded,
+                              isDark: isDark,
+                              onTap: widget.onAddIncome,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _SnapshotMetricTile(
+                              label: 'Total Spent',
+                              value: _hideBalance
+                                  ? '•••••'
+                                  : CurrencyUtils.format(insights.monthExpense),
+                              subtitle: insights.totalLimit > 0
+                                  ? '${insights.spendPercent.round()}% of budget used'
+                                  : 'Tap to add expense',
+                              color: AppColors.error,
+                              icon: Icons.north_east_rounded,
+                              isDark: isDark,
+                              onTap: widget.onAddExpense,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _SnapshotMetricTile(
+                              label: 'Net Saved',
+                              value: _hideBalance
+                                  ? '•••••'
+                                  : CurrencyUtils.format(insights.actualSaved),
+                              subtitle:
+                                  '${insights.savingsRatePercent.clamp(0, 100).round()}% savings rate',
+                              color: AppColors.primary,
+                              icon: Icons.savings_outlined,
+                              isDark: isDark,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _SnapshotMetricTile(
+                              label: 'Can Spend (Month)',
+                              value: _hideBalance
+                                  ? '•••••'
+                                  : CurrencyUtils.format(
+                                      insights.canSpendThisMonth,
+                                    ),
+                              subtitle:
+                                  '${insights.daysRemainingInMonth} days remaining',
+                              color: AppColors.moduleTime,
+                              icon: Icons.account_balance_wallet_outlined,
+                              isDark: isDark,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+
+                // 5. Modern Fintech Quick-Action Dock
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _DockActionTile(
+                        icon: Icons.add_rounded,
+                        label: StringConstants.moneyNavAdd,
+                        accentColor: AppColors.moduleMoney,
+                        isFilled: true,
+                        isDark: isDark,
+                        onTap: widget.onAddExpense,
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: _DockActionTile(
+                        icon: Icons.south_west_rounded,
+                        label: 'Salary / Income',
+                        accentColor: AppColors.success,
+                        isFilled: true,
+                        isDark: isDark,
+                        onTap: widget.onAddIncome,
+                      ),
+                    ),
+                    if (widget.onOpenIou != null) ...[
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: _DockActionTile(
+                          icon: Icons.swap_horiz_rounded,
+                          label: 'Lend / Borrow',
+                          accentColor: AppColors.moduleTime,
+                          isFilled: false,
+                          isDark: isDark,
+                          onTap: widget.onOpenIou!,
+                        ),
+                      ),
+                    ],
+                    if (widget.onOpenAiSimulator != null) ...[
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: _DockActionTile(
+                          icon: Icons.auto_awesome_rounded,
+                          label: 'AI Check',
+                          accentColor: AppColors.primary,
+                          isFilled: false,
+                          isDark: isDark,
+                          onTap: widget.onOpenAiSimulator!,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: _DockActionTile(
+                        icon: Icons.bar_chart_rounded,
+                        label: StringConstants.reports,
+                        accentColor: AppColors.moduleNotes,
+                        isFilled: false,
+                        isDark: isDark,
+                        onTap: widget.onOpenInsights,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 4),
-
-          // Centered 14-day change row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                isPositive
-                    ? Icons.arrow_upward_rounded
-                    : Icons.arrow_downward_rounded,
-                color: changeColor,
-                size: 13,
-              ),
-              const SizedBox(width: 2),
-              Text(
-                CurrencyUtils.signed(
-                  insights.balanceChange,
-                  isCredit: isPositive,
-                  decimals: 2,
-                ),
-                style: AppTextStyles.captionBold.copyWith(
-                  color: changeColor,
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: changeColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                child: Text(
-                  '${isPositive ? '▲' : '▼'} ${insights.balanceChangePercent.abs().toStringAsFixed(1)}% (14d)',
-                  style: AppTextStyles.captionBold.copyWith(
-                    color: changeColor,
-                    fontSize: 10.5,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          // 14-day running balance LineChart
-          SizedBox(
-            height: 105,
-            child: _BalanceLineChart(points: insights.balanceTrend),
-          ),
-          const SizedBox(height: 12),
-
-          // Classic 2x2 Monthly Executive Summary Grid (Zero Overflows, Tappable)
-          Row(
-            children: [
-              Expanded(
-                child: _SnapshotMetricTile(
-                  label: 'Salary / Income',
-                  value: CurrencyUtils.format(insights.monthIncome),
-                  subtitle: insights.monthIncome > 0
-                      ? 'Earned this month'
-                      : 'Tap to add income',
-                  color: AppColors.success,
-                  icon: Icons.south_west_rounded,
-                  isDark: isDark,
-                  onTap: onAddIncome,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _SnapshotMetricTile(
-                  label: 'Total Spent',
-                  value: CurrencyUtils.format(insights.monthExpense),
-                  subtitle: insights.totalLimit > 0
-                      ? '${insights.spendPercent.round()}% of budget used'
-                      : 'Tap to add expense',
-                  color: AppColors.error,
-                  icon: Icons.north_east_rounded,
-                  isDark: isDark,
-                  onTap: onAddExpense,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: _SnapshotMetricTile(
-                  label: 'Net Saved',
-                  value: CurrencyUtils.format(insights.actualSaved),
-                  subtitle:
-                      '${insights.savingsRatePercent.clamp(0, 100).round()}% savings rate',
-                  color: AppColors.primary,
-                  icon: Icons.savings_outlined,
-                  isDark: isDark,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _SnapshotMetricTile(
-                  label: 'Can Spend (Month)',
-                  value: CurrencyUtils.format(insights.canSpendThisMonth),
-                  subtitle: '${insights.daysRemainingInMonth} days remaining',
-                  color: AppColors.moduleTime,
-                  icon: Icons.account_balance_wallet_outlined,
-                  isDark: isDark,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Primary Action Row: + Add Expense  |  + Add Salary / Income
-          Row(
-            children: [
-              Expanded(
-                child: _ActionButton(
-                  icon: Icons.add_rounded,
-                  label: StringConstants.moneyNavAdd,
-                  isPrimary: true,
-                  accentColor: AppColors.primary,
-                  onTap: onAddExpense,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _ActionButton(
-                  icon: Icons.south_west_rounded,
-                  label: 'Salary / Income',
-                  isPrimary: true,
-                  accentColor: AppColors.success,
-                  onTap: onAddIncome,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-
-          // Secondary Quick Tools Strip: Lend / Borrow  |  AI Check  |  Reports
-          Row(
-            children: [
-              if (onOpenIou != null) ...[
-                Expanded(
-                  child: _ActionButton(
-                    icon: Icons.swap_horiz_rounded,
-                    label: 'Lend / Borrow',
-                    isPrimary: false,
-                    onTap: onOpenIou!,
-                  ),
-                ),
-                const SizedBox(width: 8),
-              ],
-              if (onOpenAiSimulator != null) ...[
-                Expanded(
-                  child: _ActionButton(
-                    icon: Icons.auto_awesome_rounded,
-                    label: 'AI Check',
-                    isPrimary: false,
-                    onTap: onOpenAiSimulator!,
-                  ),
-                ),
-                const SizedBox(width: 8),
-              ],
-              Expanded(
-                child: _ActionButton(
-                  icon: Icons.bar_chart_rounded,
-                  label: StringConstants.reports,
-                  isPrimary: false,
-                  onTap: onOpenInsights,
-                ),
-              ),
-            ],
           ),
         ],
       ),
@@ -377,80 +572,83 @@ class _SnapshotMetricTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: isDark
-              ? AppColors.darkSurfaceMuted
-              : AppColors.surfaceElevated,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isDark ? AppColors.darkBorder : AppColors.border,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(11),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkSurface : AppColors.surface,
+            borderRadius: BorderRadius.circular(11),
+            border: Border.all(
+              color: isDark
+                  ? AppColors.darkBorder.withValues(alpha: 0.7)
+                  : AppColors.border.withValues(alpha: 0.8),
+            ),
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 22,
-                  height: 22,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 22,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Icon(icon, size: 13, color: color),
                   ),
-                  child: Icon(icon, size: 13, color: color),
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.textSecondary,
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.textSecondary,
+                      ),
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  value,
+                  maxLines: 1,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.textPrimary,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                value,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
                 maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.textPrimary,
-                  fontFeatures: const [FontFeature.tabularFigures()],
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: color,
                 ),
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: color,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -459,8 +657,9 @@ class _SnapshotMetricTile extends StatelessWidget {
 
 class _BalanceLineChart extends StatelessWidget {
   final List<double> points;
+  final ValueChanged<int?>? onTouchIndexChanged;
 
-  const _BalanceLineChart({required this.points});
+  const _BalanceLineChart({required this.points, this.onTouchIndexChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -483,6 +682,17 @@ class _BalanceLineChart extends StatelessWidget {
         borderData: FlBorderData(show: false),
         lineTouchData: LineTouchData(
           handleBuiltInTouches: true,
+          touchCallback: (event, response) {
+            if (onTouchIndexChanged == null) return;
+            if (!event.isInterestedForInteractions ||
+                response == null ||
+                response.lineBarSpots == null ||
+                response.lineBarSpots!.isEmpty) {
+              onTouchIndexChanged!(null);
+              return;
+            }
+            onTouchIndexChanged!(response.lineBarSpots!.first.spotIndex);
+          },
           touchTooltipData: LineTouchTooltipData(
             getTooltipItems: (touchedSpots) => touchedSpots
                 .map(
@@ -499,8 +709,10 @@ class _BalanceLineChart extends StatelessWidget {
             spots: spots,
             isCurved: true,
             curveSmoothness: 0.35,
-            color: AppColors.primary,
-            barWidth: 2.5,
+            gradient: const LinearGradient(
+              colors: [AppColors.primary, AppColors.moduleMoney],
+            ),
+            barWidth: 2.8,
             isStrokeCapRound: true,
             dotData: FlDotData(
               show: true,
@@ -508,7 +720,7 @@ class _BalanceLineChart extends StatelessWidget {
               getDotPainter: (spot, percent, barData, index) =>
                   FlDotCirclePainter(
                     radius: 5,
-                    color: AppColors.primary,
+                    color: AppColors.moduleMoney,
                     strokeWidth: 2.5,
                     strokeColor: Colors.white,
                   ),
@@ -519,7 +731,8 @@ class _BalanceLineChart extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  AppColors.primary.withValues(alpha: 0.22),
+                  AppColors.moduleMoney.withValues(alpha: 0.22),
+                  AppColors.primary.withValues(alpha: 0.04),
                   AppColors.primary.withValues(alpha: 0.0),
                 ],
               ),
@@ -531,95 +744,94 @@ class _BalanceLineChart extends StatelessWidget {
   }
 }
 
-class _ActionButton extends StatefulWidget {
+class _DockActionTile extends StatefulWidget {
   final IconData icon;
   final String label;
-  final bool isPrimary;
   final Color accentColor;
+  final bool isFilled;
+  final bool isDark;
   final VoidCallback onTap;
 
-  const _ActionButton({
+  const _DockActionTile({
     required this.icon,
     required this.label,
-    required this.isPrimary,
-    this.accentColor = AppColors.primary,
+    required this.accentColor,
+    required this.isFilled,
+    required this.isDark,
     required this.onTap,
   });
 
   @override
-  State<_ActionButton> createState() => _ActionButtonState();
+  State<_DockActionTile> createState() => _DockActionTileState();
 }
 
-class _ActionButtonState extends State<_ActionButton> {
+class _DockActionTileState extends State<_DockActionTile> {
   bool _pressed = false;
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTapDown: (_) => setState(() => _pressed = true),
       onTapUp: (_) {
         setState(() => _pressed = false);
+        HapticFeedback.selectionClick();
         widget.onTap();
       },
       onTapCancel: () => setState(() => _pressed = false),
       child: AnimatedScale(
-        scale: _pressed ? 0.96 : 1.0,
-        duration: const Duration(milliseconds: 100),
-        child: Container(
-          height: 42,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          decoration: BoxDecoration(
-            color: widget.isPrimary
-                ? widget.accentColor
-                : (isDark ? AppColors.darkSurface : AppColors.surface),
-            borderRadius: BorderRadius.circular(12),
-            border: widget.isPrimary
-                ? null
-                : Border.all(
-                    color: isDark ? AppColors.darkBorder : AppColors.border,
-                  ),
-            boxShadow: [
-              BoxShadow(
-                color: widget.isPrimary
-                    ? widget.accentColor.withValues(alpha: 0.22)
-                    : Colors.black.withValues(alpha: 0.03),
-                blurRadius: 10,
-                offset: const Offset(0, 3),
+        scale: _pressed ? 0.93 : 1.0,
+        duration: const Duration(milliseconds: 110),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 44,
+              height: 40,
+              decoration: BoxDecoration(
+                color: widget.isFilled
+                    ? widget.accentColor
+                    : widget.accentColor.withValues(
+                        alpha: widget.isDark ? 0.16 : 0.10,
+                      ),
+                borderRadius: BorderRadius.circular(13),
+                border: widget.isFilled
+                    ? null
+                    : Border.all(
+                        color: widget.accentColor.withValues(alpha: 0.28),
+                      ),
+                boxShadow: widget.isFilled
+                    ? [
+                        BoxShadow(
+                          color: widget.accentColor.withValues(alpha: 0.25),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ]
+                    : null,
               ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
+              child: Icon(
                 widget.icon,
-                color: widget.isPrimary
-                    ? Colors.white
-                    : (isDark
-                          ? AppColors.darkTextPrimary
-                          : AppColors.textPrimary),
-                size: 16,
+                size: 19,
+                color: widget.isFilled ? Colors.white : widget.accentColor,
               ),
-              const SizedBox(width: 5),
-              Flexible(
-                child: Text(
-                  widget.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: widget.isPrimary
-                        ? Colors.white
-                        : (isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.textPrimary),
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12.5,
-                  ),
+            ),
+            const SizedBox(height: 5),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                widget.label,
+                maxLines: 1,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w600,
+                  color: widget.isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.textPrimary,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

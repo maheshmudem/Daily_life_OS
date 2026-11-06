@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import '../../../../config/theme/app_decorations.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../core/utils/currency_utils.dart';
+import '../../../../core/widgets/expandable_text_widget.dart';
 import '../../domain/entities/transaction_entity.dart';
 
 /// Compact Safe-to-Spend Today & Daily/Weekly Budget card formatted via
-/// [CurrencyUtils] with live today-spend progress, daily budget alerts,
+/// [CurrencyUtils] with live animated today-spend progress, daily budget alerts,
 /// 7-day budget cap, and quick edit / salary-plan triggers.
 class SafeToSpendHeroCard extends StatelessWidget {
   final BudgetEntity budget;
@@ -39,9 +40,9 @@ class SafeToSpendHeroCard extends StatelessWidget {
     final leftThisMonth = budget.remainingSpendable;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: AppDecorations.heroMoneyGradient.copyWith(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -49,8 +50,19 @@ class SafeToSpendHeroCard extends StatelessWidget {
           // Header Row (Zero Overflow)
           Row(
             children: [
-              const Icon(Icons.shield_outlined, color: Colors.white, size: 15),
-              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.shield_outlined,
+                  color: Colors.white,
+                  size: 14,
+                ),
+              ),
+              const SizedBox(width: 7),
               const Expanded(
                 child: Text(
                   'SAFE-TO-SPEND TODAY',
@@ -60,7 +72,7 @@ class SafeToSpendHeroCard extends StatelessWidget {
                     color: Colors.white,
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
+                    letterSpacing: 0.6,
                   ),
                 ),
               ),
@@ -70,8 +82,8 @@ class SafeToSpendHeroCard extends StatelessWidget {
                   borderRadius: AppRadius.radiusFull,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3.5,
+                      horizontal: 9,
+                      vertical: 4,
                     ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.22),
@@ -85,7 +97,7 @@ class SafeToSpendHeroCard extends StatelessWidget {
                           size: 11,
                           color: Colors.white,
                         ),
-                        SizedBox(width: 3),
+                        SizedBox(width: 4),
                         Text(
                           'Set Plan',
                           style: TextStyle(
@@ -101,12 +113,9 @@ class SafeToSpendHeroCard extends StatelessWidget {
                 const SizedBox(width: 5),
               ],
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 7,
-                  vertical: 3.5,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: Colors.white.withValues(alpha: 0.18),
                   borderRadius: AppRadius.radiusFull,
                 ),
                 child: Text(
@@ -124,7 +133,7 @@ class SafeToSpendHeroCard extends StatelessWidget {
                   onTap: onEditBudget,
                   borderRadius: AppRadius.radiusFull,
                   child: Container(
-                    padding: const EdgeInsets.all(4.5),
+                    padding: const EdgeInsets.all(5),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
@@ -139,9 +148,9 @@ class SafeToSpendHeroCard extends StatelessWidget {
               ],
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 11),
 
-          // Main Can-Spend-Today Headline + Daily Allowance Cap (Spacious 2-Column Row)
+          // Main Can-Spend-Today Headline + Daily Allowance Cap
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -160,9 +169,9 @@ class SafeToSpendHeroCard extends StatelessWidget {
                         maxLines: 1,
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 26,
+                          fontSize: 28,
                           fontWeight: FontWeight.w800,
-                          letterSpacing: -0.6,
+                          letterSpacing: -0.7,
                           fontFeatures: [FontFeature.tabularFigures()],
                         ),
                       ),
@@ -191,10 +200,10 @@ class SafeToSpendHeroCard extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: isOverDaily
-                      ? Colors.redAccent.withValues(alpha: 0.32)
+                      ? Colors.redAccent.withValues(alpha: 0.34)
                       : isNearDaily
-                      ? Colors.amber.withValues(alpha: 0.28)
-                      : Colors.black.withValues(alpha: 0.16),
+                      ? Colors.amber.withValues(alpha: 0.30)
+                      : Colors.black.withValues(alpha: 0.18),
                   borderRadius: AppRadius.radiusFull,
                 ),
                 child: Text(
@@ -210,45 +219,54 @@ class SafeToSpendHeroCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 9),
 
-          // Daily Spend Progress Bar
-          ClipRRect(
-            borderRadius: AppRadius.radiusFull,
-            child: LinearProgressIndicator(
-              value: dailyProgress,
-              minHeight: 5,
-              backgroundColor: Colors.white.withValues(alpha: 0.22),
-              valueColor: AlwaysStoppedAnimation<Color>(
-                isOverDaily
-                    ? Colors.redAccent.shade100
-                    : isNearDaily
-                    ? Colors.amberAccent
-                    : Colors.white,
+          // Animated Daily Spend Progress Bar
+          TweenAnimationBuilder<double>(
+            tween: Tween<double>(begin: 0, end: dailyProgress),
+            duration: const Duration(milliseconds: 650),
+            curve: Curves.easeOutCubic,
+            builder: (context, animVal, _) => ClipRRect(
+              borderRadius: AppRadius.radiusFull,
+              child: LinearProgressIndicator(
+                value: animVal,
+                minHeight: 5.5,
+                backgroundColor: Colors.white.withValues(alpha: 0.22),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  isOverDaily
+                      ? Colors.redAccent.shade100
+                      : isNearDaily
+                      ? Colors.amberAccent
+                      : Colors.white,
+                ),
               ),
             ),
           ),
 
-          // Inline Daily Budget Alert when near or over limit
+          // Inline Daily Budget Alert when near or over limit (Expandable)
           if (isOverDaily || isNearDaily) ...[
-            const SizedBox(height: 7),
+            const SizedBox(height: 8),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  isOverDaily
-                      ? Icons.warning_amber_rounded
-                      : Icons.notifications_active_outlined,
-                  size: 13,
-                  color: Colors.white,
+                Padding(
+                  padding: const EdgeInsets.only(top: 1),
+                  child: Icon(
+                    isOverDaily
+                        ? Icons.warning_amber_rounded
+                        : Icons.notifications_active_outlined,
+                    size: 13,
+                    color: Colors.white,
+                  ),
                 ),
                 const SizedBox(width: 5),
                 Expanded(
-                  child: Text(
-                    isOverDaily
-                        ? 'Daily budget exceeded (${CurrencyUtils.format(spentToday)} spent today). Pause non-essential spend.'
-                        : 'Approaching daily limit (${(dailyProgress * 100).round()}% used today).',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  child: ExpandableTextWidget(
+                    text: isOverDaily
+                        ? 'Daily budget exceeded (${CurrencyUtils.format(spentToday)} spent today). Pause non-essential spend tomorrow to rebalance.'
+                        : 'Approaching daily limit (${(dailyProgress * 100).round()}% used today). Keep remaining spend light.',
+                    collapsedMaxLines: 1,
+                    toggleColor: Colors.white,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 10.5,
@@ -260,14 +278,15 @@ class SafeToSpendHeroCard extends StatelessWidget {
             ),
           ],
 
-          const SizedBox(height: 10),
+          const SizedBox(height: 11),
 
           // Spacious 2x2 Spendable Runway Grid (Today Spent · Week Left / Month Left · Fixed Bills)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.14),
+              color: Colors.black.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
             ),
             child: Column(
               children: [
@@ -289,7 +308,7 @@ class SafeToSpendHeroCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                Divider(height: 1, color: Colors.white.withValues(alpha: 0.15)),
+                Divider(height: 1, color: Colors.white.withValues(alpha: 0.14)),
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -334,7 +353,7 @@ class SafeToSpendHeroCard extends StatelessWidget {
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w700,
-              fontSize: 12,
+              fontSize: 12.5,
               fontFeatures: [FontFeature.tabularFigures()],
             ),
           ),

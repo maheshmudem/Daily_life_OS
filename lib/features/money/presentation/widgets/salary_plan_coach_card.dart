@@ -5,6 +5,7 @@ import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
+import '../../../../core/widgets/expandable_text_widget.dart';
 import '../../domain/entities/money_category.dart';
 import '../../domain/entities/money_insights.dart';
 import '../bloc/money_bloc.dart';
@@ -22,6 +23,7 @@ class SalaryPlanAllocatorCard extends StatefulWidget {
   final double initialSalary;
   final double initialFixedBills;
   final bool isDark;
+  final bool initiallyShowInputs;
   final ValueChanged<BudgetPlanPreset> onSelectPreset;
   final void Function(double salary, double fixedBills, bool logSalaryIncome)
   onApplyPlan;
@@ -33,6 +35,7 @@ class SalaryPlanAllocatorCard extends StatefulWidget {
     required this.initialSalary,
     required this.initialFixedBills,
     required this.isDark,
+    this.initiallyShowInputs = false,
     required this.onSelectPreset,
     required this.onApplyPlan,
   });
@@ -45,7 +48,7 @@ class SalaryPlanAllocatorCard extends StatefulWidget {
 class _SalaryPlanAllocatorCardState extends State<SalaryPlanAllocatorCard> {
   late final TextEditingController _salaryCtrl;
   late final TextEditingController _billsCtrl;
-  bool _showSalaryInputs = true;
+  late bool _showSalaryInputs;
   bool _logAsIncome = false;
 
   static const List<double> _quickSalaries = [
@@ -59,6 +62,7 @@ class _SalaryPlanAllocatorCardState extends State<SalaryPlanAllocatorCard> {
   @override
   void initState() {
     super.initState();
+    _showSalaryInputs = widget.initiallyShowInputs;
     final baseSalary = widget.initialSalary > 0
         ? widget.initialSalary
         : 50000.0;
@@ -629,7 +633,7 @@ class _MiniPlanMetric extends StatelessWidget {
 /// 2. Where money is spent most (top category leaks + % of budget).
 /// 3. How much savings the user is achieving (actual vs target savings + rate).
 /// 4. Concrete, personalized AI recommendations + 1-tap Auto-Rebalance & Affordability Simulator.
-class BudgetExpenseReportCard extends StatelessWidget {
+class BudgetExpenseReportCard extends StatefulWidget {
   final MoneyLoaded state;
   final double spentToday;
   final VoidCallback? onOpenSalaryPlan;
@@ -642,8 +646,129 @@ class BudgetExpenseReportCard extends StatelessWidget {
   });
 
   @override
+  State<BudgetExpenseReportCard> createState() =>
+      _BudgetExpenseReportCardState();
+
+  static void _rebalanceOverCategories(
+    BuildContext context,
+    MoneyLoaded state,
+  ) {
+    final bloc = context.read<MoneyBloc>();
+    final multiplier = state.selectedPeriod.monthMultiplier;
+    for (final catBudget in state.categoryBudgets.where(
+      (b) => b.isOverBudget,
+    )) {
+      // Round up to nearest 500 with a 10% buffer so the category is back on track
+      final neededPeriodLimit = (catBudget.spent * 1.10 / 500).ceil() * 500.0;
+      final monthlyLimit = (neededPeriodLimit / multiplier).roundToDouble();
+      bloc.add(SetCategoryLimit(catBudget.category, monthlyLimit));
+    }
+    SnackbarUtils.showSuccess(
+      context,
+      'AI rebalanced over-limit categories with a 10% safety buffer!',
+    );
+  }
+
+  static List<_CoachSuggestion> _buildActionableSuggestions({
+    required MoneyLoaded state,
+    required double spentToday,
+    required double dailyAllowance,
+    required double effectiveIncome,
+    required double actualSaved,
+    required double targetSavings,
+  }) {
+    final tips = <_CoachSuggestion>[];
+    final dailyLimit = dailyAllowance > 0
+        ? dailyAllowance
+        : state.budget.dailySafeSpend;
+
+    // 1. Daily budget alert or daily buffer suggestion
+    if (dailyLimit > 0 && spentToday > dailyLimit) {
+      tips.add(
+        _CoachSuggestion(
+          icon: Icons.warning_amber_rounded,
+          color: AppColors.error,
+          title:
+              'Daily Alert: Over today\'s limit by ${CurrencyUtils.format(spentToday - dailyLimit)}',
+          body:
+              'Try a zero-spend day tomorrow to bring your 7-day average back under ${CurrencyUtils.format(dailyLimit)}/day.',
+        ),
+      );
+    } else if (dailyLimit > 0) {
+      final dailyBuffer = (dailyLimit * 0.15).roundToDouble();
+      tips.add(
+        _CoachSuggestion(
+          icon: Icons.shield_outlined,
+          color: AppColors.success,
+          title:
+              'Daily Rule: Save ${CurrencyUtils.format(dailyBuffer)}/day from your daily cap',
+          body:
+              'Spending ${CurrencyUtils.format(dailyLimit - dailyBuffer)} instead of ${CurrencyUtils.format(dailyLimit)}/day adds ${CurrencyUtils.format(dailyBuffer * 30)}/mo (${CurrencyUtils.compact(dailyBuffer * 365)}/yr) to savings.',
+        ),
+      );
+    }
+
+    // 2. Top non-bill spending category optimization
+    final nonBillTop = state.insights.categorySpend
+        .where((c) => c.category.key != MoneyCategory.bills.key)
+        .firstOrNull;
+    if (nonBillTop != null && nonBillTop.amount > 0) {
+      final trim15 = (nonBillTop.amount * 0.15).roundToDouble();
+      tips.add(
+        _CoachSuggestion(
+          icon: Icons.trending_down_rounded,
+          color: AppColors.moduleTime,
+          title:
+              'Trim ${nonBillTop.category.label} by 15% (+${CurrencyUtils.format(trim15)} saved)',
+          body:
+              '${nonBillTop.category.label} is your biggest flexible expense (${CurrencyUtils.format(nonBillTop.amount)}). Cutting 15% saves ${CurrencyUtils.compact(trim15 * 12)}/year.',
+        ),
+      );
+    }
+
+    // 3. Subscriptions / Auto-Kill suggestion or Savings gap suggestion
+    final unkilledSubs = state.subscriptions
+        .where((s) => !s.autoKillEnabled)
+        .toList();
+    if (unkilledSubs.isNotEmpty) {
+      final subTotal = unkilledSubs.fold<double>(0, (s, e) => s + e.amount);
+      tips.add(
+        _CoachSuggestion(
+          icon: Icons.autorenew_rounded,
+          color: AppColors.primary,
+          title:
+              'Audit ${unkilledSubs.length} subscription(s) (${CurrencyUtils.format(subTotal)}/mo)',
+          body:
+              'Enable Auto-Kill on unused renewals to save up to ${CurrencyUtils.format(subTotal * 12)}/year automatically.',
+        ),
+      );
+    } else if (actualSaved < targetSavings) {
+      final gap = targetSavings - actualSaved;
+      tips.add(
+        _CoachSuggestion(
+          icon: Icons.savings_outlined,
+          color: AppColors.primary,
+          title:
+              'Pay Yourself First: Auto-transfer ${CurrencyUtils.format(targetSavings)}',
+          body:
+              'Move 20% of your salary to Savings on payday to close the ${CurrencyUtils.format(gap)} savings gap.',
+        ),
+      );
+    }
+
+    return tips;
+  }
+}
+
+class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
+  bool _showDetails = false;
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final state = widget.state;
+    final spentToday = widget.spentToday;
+    final onOpenSalaryPlan = widget.onOpenSalaryPlan;
     final insights = state.insights;
     final period = state.selectedPeriod;
     final effectiveIncome = insights.periodIncome > 0
@@ -662,7 +787,7 @@ class BudgetExpenseReportCard extends StatelessWidget {
         .where((b) => b.isOverBudget)
         .toList();
     final dailyAllowance = state.budget.dailyAllowanceForToday(spentToday);
-    final suggestions = _buildActionableSuggestions(
+    final suggestions = BudgetExpenseReportCard._buildActionableSuggestions(
       state: state,
       spentToday: spentToday,
       dailyAllowance: dailyAllowance,
@@ -845,7 +970,7 @@ class BudgetExpenseReportCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
 
-          // AI End-of-Month Forecast Strip
+          // AI End-of-Month Forecast Strip (with ExpandableTextWidget)
           if (insights.aiForecastSummary.isNotEmpty) ...[
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -902,8 +1027,9 @@ class BudgetExpenseReportCard extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 2),
-                        Text(
-                          insights.aiForecastSummary,
+                        ExpandableTextWidget(
+                          text: insights.aiForecastSummary,
+                          collapsedMaxLines: 2,
                           style: TextStyle(
                             fontSize: 10.5,
                             height: 1.3,
@@ -921,7 +1047,7 @@ class BudgetExpenseReportCard extends StatelessWidget {
             const SizedBox(height: 10),
           ],
 
-          // 1. How Much Savings I Am Doing
+          // 1. How Much Savings I Am Doing (Always visible 3-metric Bento row)
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
@@ -984,286 +1110,264 @@ class BudgetExpenseReportCard extends StatelessWidget {
             ),
           ),
 
-          // 2. Where You Are Spending Money Most
-          if (topCategories.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(
-              'WHERE YOU SPEND THE MOST',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.5,
-                color: isDark ? AppColors.darkTextMuted : AppColors.textMuted,
-              ),
-            ),
-            const SizedBox(height: 6),
-            ...topCategories.map((cs) {
-              final catBudget = state.categoryBudgets
-                  .where((b) => b.category == cs.category.key)
-                  .firstOrNull;
-              final pctOfTotal = (cs.share * 100).round();
-              final isOver = catBudget?.isOverBudget ?? false;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Row(
-                  children: [
-                    Icon(cs.category.icon, size: 15, color: cs.category.color),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        cs.category.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                    if (isOver && catBudget != null)
-                      Container(
-                        margin: const EdgeInsets.only(right: 6),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 1.5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.error.withValues(alpha: 0.12),
-                          borderRadius: AppRadius.radiusXs,
-                        ),
-                        child: Text(
-                          'Over by ${CurrencyUtils.format(catBudget.spent - catBudget.monthlyLimit)}',
-                          style: const TextStyle(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.error,
-                          ),
-                        ),
-                      ),
-                    Text(
-                      '${CurrencyUtils.format(cs.amount)} ($pctOfTotal%)',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w700,
-                        color: isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.textPrimary,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-          ],
+          const SizedBox(height: 8),
 
-          // 3. How to Improve Budget & Save Money
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'AI RECOMMENDATIONS & ACTIONS',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
-                  color: isDark ? AppColors.darkTextMuted : AppColors.textMuted,
-                ),
-              ),
-              if (overCategories.isNotEmpty)
-                InkWell(
-                  onTap: () => _rebalanceOverCategories(context, state),
-                  borderRadius: AppRadius.radiusFull,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2.5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.error.withValues(alpha: 0.12),
-                      borderRadius: AppRadius.radiusFull,
-                    ),
-                    child: Text(
-                      'Auto-Fix ${overCategories.length} Over Limit',
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.error,
-                      ),
+          // Progressive Disclosure Toggle for Category Leaks & AI Action Plan
+          InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: () => setState(() => _showDetails = !_showDetails),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    _showDetails
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    _showDetails
+                        ? 'Show less'
+                        : 'Show AI Action Plan (${suggestions.length} tips)',
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
                     ),
                   ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          ...suggestions.map(
-            (tip) => Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: tip.color.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: tip.color.withValues(alpha: 0.22)),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(tip.icon, size: 15, color: tip.color),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            tip.title,
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w700,
-                              color: isDark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 1),
-                          Text(
-                            tip.body,
-                            style: TextStyle(
-                              fontSize: 11,
-                              height: 1.3,
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
+                  if (overCategories.isNotEmpty && !_showDetails) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 1.5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.error.withValues(alpha: 0.12),
+                        borderRadius: AppRadius.radiusFull,
+                      ),
+                      child: Text(
+                        '${overCategories.length} Over Limit',
+                        style: const TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.error,
+                        ),
                       ),
                     ),
                   ],
-                ),
+                ],
               ),
             ),
+          ),
+
+          // Collapsible Details: Where You Spend Most + AI Recommendations
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.topCenter,
+            child: !_showDetails
+                ? const SizedBox.shrink()
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (topCategories.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          'WHERE YOU SPEND THE MOST',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                            color: isDark
+                                ? AppColors.darkTextMuted
+                                : AppColors.textMuted,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        ...topCategories.map((cs) {
+                          final catBudget = state.categoryBudgets
+                              .where((b) => b.category == cs.category.key)
+                              .firstOrNull;
+                          final pctOfTotal = (cs.share * 100).round();
+                          final isOver = catBudget?.isOverBudget ?? false;
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 6),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  cs.category.icon,
+                                  size: 15,
+                                  color: cs.category.color,
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    cs.category.label,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDark
+                                          ? AppColors.darkTextPrimary
+                                          : AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ),
+                                if (isOver && catBudget != null)
+                                  Container(
+                                    margin: const EdgeInsets.only(right: 6),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 1.5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.error.withValues(
+                                        alpha: 0.12,
+                                      ),
+                                      borderRadius: AppRadius.radiusXs,
+                                    ),
+                                    child: Text(
+                                      'Over by ${CurrencyUtils.format(catBudget.spent - catBudget.monthlyLimit)}',
+                                      style: const TextStyle(
+                                        fontSize: 9.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.error,
+                                      ),
+                                    ),
+                                  ),
+                                Text(
+                                  '${CurrencyUtils.format(cs.amount)} ($pctOfTotal%)',
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: isDark
+                                        ? AppColors.darkTextPrimary
+                                        : AppColors.textPrimary,
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
+                      ],
+
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'AI RECOMMENDATIONS & ACTIONS',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.5,
+                              color: isDark
+                                  ? AppColors.darkTextMuted
+                                  : AppColors.textMuted,
+                            ),
+                          ),
+                          if (overCategories.isNotEmpty)
+                            InkWell(
+                              onTap: () =>
+                                  BudgetExpenseReportCard._rebalanceOverCategories(
+                                    context,
+                                    state,
+                                  ),
+                              borderRadius: AppRadius.radiusFull,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2.5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.error.withValues(
+                                    alpha: 0.12,
+                                  ),
+                                  borderRadius: AppRadius.radiusFull,
+                                ),
+                                child: Text(
+                                  'Auto-Fix ${overCategories.length} Over Limit',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.error,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      ...suggestions.map(
+                        (tip) => Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: tip.color.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: tip.color.withValues(alpha: 0.22),
+                              ),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(tip.icon, size: 15, color: tip.color),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        tip.title,
+                                        style: TextStyle(
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.w700,
+                                          color: isDark
+                                              ? AppColors.darkTextPrimary
+                                              : AppColors.textPrimary,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      ExpandableTextWidget(
+                                        text: tip.body,
+                                        collapsedMaxLines: 2,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          height: 1.3,
+                                          color: isDark
+                                              ? AppColors.darkTextSecondary
+                                              : AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
           ),
         ],
       ),
     );
-  }
-
-  static void _rebalanceOverCategories(
-    BuildContext context,
-    MoneyLoaded state,
-  ) {
-    final bloc = context.read<MoneyBloc>();
-    final multiplier = state.selectedPeriod.monthMultiplier;
-    for (final catBudget in state.categoryBudgets.where(
-      (b) => b.isOverBudget,
-    )) {
-      // Round up to nearest 500 with a 10% buffer so the category is back on track
-      final neededPeriodLimit = (catBudget.spent * 1.10 / 500).ceil() * 500.0;
-      final monthlyLimit = (neededPeriodLimit / multiplier).roundToDouble();
-      bloc.add(SetCategoryLimit(catBudget.category, monthlyLimit));
-    }
-    SnackbarUtils.showSuccess(
-      context,
-      'AI rebalanced over-limit categories with a 10% safety buffer!',
-    );
-  }
-
-  static List<_CoachSuggestion> _buildActionableSuggestions({
-    required MoneyLoaded state,
-    required double spentToday,
-    required double dailyAllowance,
-    required double effectiveIncome,
-    required double actualSaved,
-    required double targetSavings,
-  }) {
-    final tips = <_CoachSuggestion>[];
-    final dailyLimit = dailyAllowance > 0
-        ? dailyAllowance
-        : state.budget.dailySafeSpend;
-
-    // 1. Daily budget alert or daily buffer suggestion
-    if (dailyLimit > 0 && spentToday > dailyLimit) {
-      tips.add(
-        _CoachSuggestion(
-          icon: Icons.warning_amber_rounded,
-          color: AppColors.error,
-          title:
-              'Daily Alert: Over today\'s limit by ${CurrencyUtils.format(spentToday - dailyLimit)}',
-          body:
-              'Try a zero-spend day tomorrow to bring your 7-day average back under ${CurrencyUtils.format(dailyLimit)}/day.',
-        ),
-      );
-    } else if (dailyLimit > 0) {
-      final dailyBuffer = (dailyLimit * 0.15).roundToDouble();
-      tips.add(
-        _CoachSuggestion(
-          icon: Icons.shield_outlined,
-          color: AppColors.success,
-          title:
-              'Daily Rule: Save ${CurrencyUtils.format(dailyBuffer)}/day from your daily cap',
-          body:
-              'Spending ${CurrencyUtils.format(dailyLimit - dailyBuffer)} instead of ${CurrencyUtils.format(dailyLimit)}/day adds ${CurrencyUtils.format(dailyBuffer * 30)}/mo (${CurrencyUtils.compact(dailyBuffer * 365)}/yr) to savings.',
-        ),
-      );
-    }
-
-    // 2. Top non-bill spending category optimization
-    final nonBillTop = state.insights.categorySpend
-        .where((c) => c.category.key != MoneyCategory.bills.key)
-        .firstOrNull;
-    if (nonBillTop != null && nonBillTop.amount > 0) {
-      final trim15 = (nonBillTop.amount * 0.15).roundToDouble();
-      tips.add(
-        _CoachSuggestion(
-          icon: Icons.trending_down_rounded,
-          color: AppColors.moduleTime,
-          title:
-              'Trim ${nonBillTop.category.label} by 15% (+${CurrencyUtils.format(trim15)} saved)',
-          body:
-              '${nonBillTop.category.label} is your biggest flexible expense (${CurrencyUtils.format(nonBillTop.amount)}). Cutting 15% saves ${CurrencyUtils.compact(trim15 * 12)}/year.',
-        ),
-      );
-    }
-
-    // 3. Subscriptions / Auto-Kill suggestion or Savings gap suggestion
-    final unkilledSubs = state.subscriptions
-        .where((s) => !s.autoKillEnabled)
-        .toList();
-    if (unkilledSubs.isNotEmpty) {
-      final subTotal = unkilledSubs.fold<double>(0, (s, e) => s + e.amount);
-      tips.add(
-        _CoachSuggestion(
-          icon: Icons.autorenew_rounded,
-          color: AppColors.primary,
-          title:
-              'Audit ${unkilledSubs.length} subscription(s) (${CurrencyUtils.format(subTotal)}/mo)',
-          body:
-              'Enable Auto-Kill on unused renewals to save up to ${CurrencyUtils.format(subTotal * 12)}/year automatically.',
-        ),
-      );
-    } else if (actualSaved < targetSavings) {
-      final gap = targetSavings - actualSaved;
-      tips.add(
-        _CoachSuggestion(
-          icon: Icons.savings_outlined,
-          color: AppColors.primary,
-          title:
-              'Pay Yourself First: Auto-transfer ${CurrencyUtils.format(targetSavings)}',
-          body:
-              'Move 20% of your salary to Savings on payday to close the ${CurrencyUtils.format(gap)} savings gap.',
-        ),
-      );
-    }
-
-    return tips;
   }
 }
 
@@ -1411,6 +1515,7 @@ class _SalaryPlanSetupSheetState extends State<SalaryPlanSetupSheet> {
               initialSalary: baseSalary,
               initialFixedBills: state.budget.fixedBills,
               isDark: isDark,
+              initiallyShowInputs: true,
               onSelectPreset: (p) => setState(() => _preset = p),
               onApplyPlan: (salary, fixedBills, logSalaryIncome) {
                 final bloc = context.read<MoneyBloc>();

@@ -67,6 +67,18 @@ void main() {
       expect(find.text('Total Balance'), findsOneWidget);
       expect(find.text('Subscriptions'), findsOneWidget);
 
+      // Test Balance Privacy Mask Toggle on BalanceTrendCard
+      final privacyToggle = find.byKey(
+        const ValueKey('toggle_balance_privacy'),
+      );
+      expect(privacyToggle, findsOneWidget);
+      await tester.tap(privacyToggle);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('masked_balance')), findsOneWidget);
+      await tester.tap(privacyToggle);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('masked_balance')), findsNothing);
+
       // Switch to Budgets tab on Money bottom bar
       await tester.tap(
         find.descendant(

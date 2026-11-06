@@ -20,9 +20,9 @@ import '../widgets/month_picker_sheet.dart';
 import '../widgets/transaction_tile.dart';
 
 /// Money Tab 1 — Activity:
-/// Clean, grouped transaction history matching `docs/expensetracker-main/lib/screens/transactions_screen.dart`
-/// with search, type & category filters, day-grouped cards with indented dividers,
-/// tap-to-edit, and swipe-to-delete with confirmation.
+/// Clean, grouped transaction history with search, type & category filters,
+/// cashflow ratio bar, day-grouped cards with daily net totals, indented
+/// dividers, tap-to-edit, and swipe-to-delete with confirmation.
 class MoneyActivityPage extends StatefulWidget {
   const MoneyActivityPage({super.key});
 
@@ -64,7 +64,14 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
         title: StringConstants.moneyNavActivity,
         onBack: () => MoneyShellScope.handleBack(context),
         accentColor: AppColors.moduleMoney,
-        actions: const [],
+        actionsEndPadding: AppSpacing.pageGutter,
+        actions: [
+          FeatureIconButton(
+            tooltip: StringConstants.addExpense,
+            icon: Icons.add_rounded,
+            onPressed: () => AddTransactionSheet.show(context),
+          ),
+        ],
         status: moneyFeatureStatus(moneyState),
         errorMessage: moneyState is MoneyError ? moneyState.message : null,
         onRetry: () => context.read<MoneyBloc>().add(const LoadMoney()),
@@ -78,6 +85,10 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
           final totalOut = filtered
               .where((t) => t.isExpense)
               .fold<double>(0, (s, t) => s + t.amount);
+          final totalVolume = totalIn + totalOut;
+          final inShare = totalVolume > 0
+              ? (totalIn / totalVolume).clamp(0.0, 1.0)
+              : 0.5;
 
           // Group by calendar day
           final grouped = <DateTime, List<TransactionEntity>>{};
@@ -182,52 +193,91 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
               ),
               const SizedBox(height: 6),
 
-              // Summary strip
+              // Cashflow Summary Card with Visual Income-vs-Expense Bar
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
                   vertical: 4,
                 ),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 9,
-                  ),
+                  padding: const EdgeInsets.fromLTRB(14, 11, 14, 11),
                   decoration: BoxDecoration(
                     color: isDark ? AppColors.darkSurface : AppColors.surface,
-                    borderRadius: AppRadius.borderMd,
+                    borderRadius: AppRadius.borderLg,
                     border: Border.all(
                       color: isDark ? AppColors.darkBorder : AppColors.border,
                     ),
                   ),
-                  child: Row(
+                  child: Column(
                     children: [
-                      Expanded(
-                        child: _SummaryPair(
-                          label: StringConstants.income,
-                          value: '+${CurrencyUtils.format(totalIn)}',
-                          color: AppColors.success,
-                        ),
-                      ),
-                      Expanded(
-                        child: _SummaryPair(
-                          label: StringConstants.expenses,
-                          value: '-${CurrencyUtils.format(totalOut)}',
-                          color: AppColors.error,
-                        ),
-                      ),
-                      Expanded(
-                        child: _SummaryPair(
-                          label: StringConstants.netCashflow,
-                          value: CurrencyUtils.signed(
-                            totalIn - totalOut,
-                            isCredit: totalIn >= totalOut,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _SummaryPair(
+                              label: StringConstants.income,
+                              value: '+${CurrencyUtils.format(totalIn)}',
+                              color: AppColors.success,
+                            ),
                           ),
-                          color: totalIn >= totalOut
-                              ? AppColors.primary
-                              : AppColors.error,
-                        ),
+                          Container(
+                            width: 1,
+                            height: 26,
+                            color: isDark
+                                ? AppColors.darkBorder
+                                : AppColors.border,
+                          ),
+                          Expanded(
+                            child: _SummaryPair(
+                              label: StringConstants.expenses,
+                              value: '-${CurrencyUtils.format(totalOut)}',
+                              color: AppColors.error,
+                            ),
+                          ),
+                          Container(
+                            width: 1,
+                            height: 26,
+                            color: isDark
+                                ? AppColors.darkBorder
+                                : AppColors.border,
+                          ),
+                          Expanded(
+                            child: _SummaryPair(
+                              label: StringConstants.netCashflow,
+                              value: CurrencyUtils.signed(
+                                totalIn - totalOut,
+                                isCredit: totalIn >= totalOut,
+                              ),
+                              color: totalIn >= totalOut
+                                  ? AppColors.primary
+                                  : AppColors.error,
+                            ),
+                          ),
+                        ],
                       ),
+                      if (totalVolume > 0) ...[
+                        const SizedBox(height: 9),
+                        ClipRRect(
+                          borderRadius: AppRadius.radiusFull,
+                          child: SizedBox(
+                            height: 5,
+                            child: Row(
+                              children: [
+                                Flexible(
+                                  flex: (inShare * 1000).round().clamp(1, 999),
+                                  child: Container(color: AppColors.success),
+                                ),
+                                Flexible(
+                                  flex: ((1.0 - inShare) * 1000).round().clamp(
+                                    1,
+                                    999,
+                                  ),
+                                  child: Container(color: AppColors.error),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -258,23 +308,57 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
                         itemBuilder: (context, dayIdx) {
                           final day = days[dayIdx];
                           final items = grouped[day]!;
+                          final dayNet = items.fold<double>(
+                            0,
+                            (sum, t) =>
+                                sum + (t.isIncome ? t.amount : -t.amount),
+                          );
+                          final isDayPositive = dayNet >= 0;
+
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Padding(
                                 padding: const EdgeInsets.only(
-                                  top: 10,
+                                  top: 12,
                                   bottom: 6,
+                                  left: 2,
+                                  right: 2,
                                 ),
-                                child: Text(
-                                  AppDateUtils.formatDayHeader(day),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: isDark
-                                        ? AppColors.darkTextMuted
-                                        : AppColors.textMuted,
-                                  ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      AppDateUtils.formatDayHeader(day),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: isDark
+                                            ? AppColors.darkTextSecondary
+                                            : AppColors.textSecondary,
+                                      ),
+                                    ),
+                                    Text(
+                                      CurrencyUtils.signed(
+                                        dayNet.abs(),
+                                        isCredit: isDayPositive,
+                                        decimals: 2,
+                                      ),
+                                      style: TextStyle(
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: isDayPositive
+                                            ? AppColors.success
+                                            : (isDark
+                                                  ? AppColors.darkTextMuted
+                                                  : AppColors.textMuted),
+                                        fontFeatures: const [
+                                          FontFeature.tabularFigures(),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                               Container(
@@ -296,7 +380,7 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
                                       if (i > 0)
                                         Divider(
                                           height: 1,
-                                          indent: 68,
+                                          indent: 70,
                                           color: isDark
                                               ? AppColors.darkBorder
                                               : AppColors.border,
@@ -400,6 +484,7 @@ class _SummaryPair extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 10.5,
+            fontWeight: FontWeight.w500,
             color: isDark ? AppColors.darkTextMuted : AppColors.textMuted,
           ),
         ),
@@ -410,8 +495,8 @@ class _SummaryPair extends StatelessWidget {
             value,
             maxLines: 1,
             style: TextStyle(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w700,
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
               color: color,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
