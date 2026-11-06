@@ -95,10 +95,35 @@ class BudgetEntity extends Equatable {
     required this.totalSpent,
   });
 
+  /// Days remaining in the current month (inclusive of today, minimum 1).
   int get daysRemaining {
     final now = DateTime.now();
     final lastDay = DateTime(now.year, now.month + 1, 0);
-    return lastDay.day - now.day;
+    return (lastDay.day - now.day + 1).clamp(1, 31);
+  }
+
+  /// Remaining spendable pool for the rest of the month after fixed bills and expenses.
+  double get remainingSpendable {
+    final available = monthlyBudget - fixedBills - totalSpent;
+    return available > 0 ? available : 0.0;
+  }
+
+  /// Remaining total budget (`monthlyBudget - totalSpent`).
+  double get remainingTotalBudget {
+    final available = monthlyBudget - totalSpent;
+    return available > 0 ? available : 0.0;
+  }
+
+  /// Daily safe allowance at the start of today (before subtracting [spentToday]),
+  /// preventing double-subtraction of today's expenses.
+  double dailyAllowanceForToday(double spentToday) {
+    final days = daysRemaining > 0 ? daysRemaining : 1;
+    final spentBeforeToday = (totalSpent - spentToday).clamp(
+      0.0,
+      double.infinity,
+    );
+    final availableAtStartOfDay = monthlyBudget - fixedBills - spentBeforeToday;
+    return availableAtStartOfDay > 0 ? availableAtStartOfDay / days : 0.0;
   }
 
   double get dailySafeSpend {

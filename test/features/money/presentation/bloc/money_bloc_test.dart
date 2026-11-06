@@ -5,6 +5,7 @@ import 'package:daily_life_os/features/money/data/datasources/money_local_dataso
 import 'package:daily_life_os/features/money/data/repositories/money_repository_impl.dart';
 import 'package:daily_life_os/features/money/domain/entities/money_category.dart';
 import 'package:daily_life_os/features/money/domain/entities/money_insights.dart';
+import 'package:daily_life_os/features/money/domain/entities/subscription_entity.dart';
 import 'package:daily_life_os/features/money/domain/usecases/get_transactions_and_budget_usecase.dart';
 import 'package:daily_life_os/features/money/domain/usecases/manage_budgets_and_accounts_usecase.dart';
 import 'package:daily_life_os/features/money/domain/usecases/manage_subscriptions_and_ious_usecase.dart';
@@ -121,6 +122,23 @@ void main() {
 
       loaded = bloc.state as MoneyLoaded;
       expect(loaded.insights.totalAssets, 2500);
+      expect(loaded.insights.netWorth, 6650); // 4150 balance + 2500 assets
+      expect(loaded.insights.actualSaved, 4150); // 5000 income - 850 expense
+      expect(loaded.insights.savingsRatePercent, closeTo(83.0, 0.1));
+      expect(loaded.insights.spentToday, 850);
+      expect(loaded.insights.aiHealthScore, greaterThan(0));
+      expect(loaded.insights.aiInsights, isNotEmpty);
+
+      // Verify dailyAllowanceForToday does not double-subtract today's spend
+      final startOfDayAllowance = loaded.budget.dailyAllowanceForToday(850);
+      expect(
+        startOfDayAllowance,
+        closeTo(
+          (loaded.budget.monthlyBudget - loaded.budget.fixedBills) /
+              loaded.budget.daysRemaining,
+          0.01,
+        ),
+      );
     },
   );
 
@@ -174,6 +192,31 @@ void main() {
         (s, b) => s + b.monthlyLimit,
       );
       expect(weeklyTotal, closeTo(monthlyTotalAllocated * 0.25, 1));
+
+      // Add an IOU with a due date and verify parsing
+      final due = DateTime(2026, 11, 20);
+      bloc.add(
+        AddIou(
+          person: 'Rahul Sharma',
+          amount: 2000,
+          type: 'lent',
+          note: IouEntity.formatNoteWithDueDate('Trip split', due),
+        ),
+      );
+      await pumpEventQueue();
+      loaded = bloc.state as MoneyLoaded;
+      expect(loaded.ious.single.cleanNote, 'Trip split');
+      expect(loaded.ious.single.dueDate, due);
+
+      // Reset all Money data to start fresh
+      bloc.add(const ResetAllMoneyData());
+      await pumpEventQueue();
+      loaded = bloc.state as MoneyLoaded;
+      expect(loaded.allTransactions, isEmpty);
+      expect(loaded.ious, isEmpty);
+      expect(loaded.subscriptions, isEmpty);
+      expect(loaded.accounts, isEmpty);
+      expect(loaded.budget.monthlyBudget, 0);
     },
   );
 }

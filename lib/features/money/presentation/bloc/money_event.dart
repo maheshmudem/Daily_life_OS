@@ -221,3 +221,9 @@ class UpdateMoneySettings extends MoneyEvent {
     moneyLockEnabled,
   ];
 }
+
+/// Clears all transactions, subscriptions, IOUs, accounts, and resets budget
+/// limits to 0 so the user can start fresh with their own data.
+class ResetAllMoneyData extends MoneyEvent {
+  const ResetAllMoneyData();
+}

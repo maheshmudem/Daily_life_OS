@@ -168,6 +168,35 @@ class CategorySpend extends Equatable {
   List<Object?> get props => [category, amount, share];
 }
 
+/// Actionable AI-generated financial insight or recommendation.
+class AiFinancialInsight extends Equatable {
+  final String id;
+  final String title;
+  final String description;
+  final String impactLabel;
+  final String severity; // 'positive' | 'warning' | 'critical' | 'info'
+  final String? categoryKey;
+
+  const AiFinancialInsight({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.impactLabel,
+    this.severity = 'info',
+    this.categoryKey,
+  });
+
+  @override
+  List<Object?> get props => [
+    id,
+    title,
+    description,
+    impactLabel,
+    severity,
+    categoryKey,
+  ];
+}
+
 /// All derived analytics for the Money module (computed, never stored).
 class MoneyInsights extends Equatable {
   final DateTime month;
@@ -226,6 +255,21 @@ class MoneyInsights extends Equatable {
   final double totalAssets;
   final Map<String, double> assetsByType;
 
+  // ── Smart Spendable & AI Forecast Metrics ───────────────────────────────
+  final double spentToday;
+  final double dailySafeAllowance;
+  final double canSpendToday;
+  final double canSpendThisWeek;
+  final double canSpendThisMonth;
+  final double actualSaved;
+  final double savingsRatePercent;
+  final double projectedMonthSpend;
+  final double projectedMonthSavings;
+  final int daysRemainingInMonth;
+  final int aiHealthScore;
+  final String aiForecastSummary;
+  final List<AiFinancialInsight> aiInsights;
+
   const MoneyInsights({
     required this.month,
     this.period = MoneyPeriod.monthly,
@@ -263,7 +307,23 @@ class MoneyInsights extends Equatable {
     required this.nearLimitCount,
     required this.totalAssets,
     required this.assetsByType,
+    this.spentToday = 0,
+    this.dailySafeAllowance = 0,
+    this.canSpendToday = 0,
+    this.canSpendThisWeek = 0,
+    this.canSpendThisMonth = 0,
+    this.actualSaved = 0,
+    this.savingsRatePercent = 0,
+    this.projectedMonthSpend = 0,
+    this.projectedMonthSavings = 0,
+    this.daysRemainingInMonth = 1,
+    this.aiHealthScore = 85,
+    this.aiForecastSummary = '',
+    this.aiInsights = const [],
   });
+
+  /// Total Net Worth combining account assets and net cashflow balance.
+  double get netWorth => totalAssets + balance;
 
   double get monthNet => monthIncome - monthExpense;
   double get periodNet => periodIncome - periodExpense;

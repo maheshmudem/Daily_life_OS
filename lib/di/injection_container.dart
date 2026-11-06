@@ -8,6 +8,7 @@ import '../features/today_hub/data/repositories/today_hub_repository_impl.dart';
 import '../features/today_hub/domain/repositories/today_hub_repository.dart';
 import '../features/today_hub/domain/usecases/get_habits_usecase.dart';
 import '../features/today_hub/domain/usecases/get_today_timeline_usecase.dart';
+import '../features/today_hub/domain/usecases/manage_habits_usecase.dart';
 import '../features/today_hub/domain/usecases/toggle_habit_usecase.dart';
 import '../features/today_hub/domain/usecases/toggle_timeline_item_usecase.dart';
 import '../features/today_hub/presentation/bloc/today_hub_bloc.dart';
@@ -119,11 +120,27 @@ Future<void> initDependencies({
   // Today Hub
   sl.registerLazySingleton(() => GetHabitsUseCase(sl<TodayHubRepository>()));
   sl.registerLazySingleton(() => ToggleHabitUseCase(sl<TodayHubRepository>()));
+  sl.registerLazySingleton(() => AddHabitUseCase(sl<TodayHubRepository>()));
+  sl.registerLazySingleton(() => UpdateHabitUseCase(sl<TodayHubRepository>()));
+  sl.registerLazySingleton(() => DeleteHabitUseCase(sl<TodayHubRepository>()));
+  sl.registerLazySingleton(() => SkipHabitUseCase(sl<TodayHubRepository>()));
+  sl.registerLazySingleton(
+    () => ToggleHabitDateUseCase(sl<TodayHubRepository>()),
+  );
   sl.registerLazySingleton(
     () => GetTodayTimelineUseCase(sl<TodayHubRepository>()),
   );
   sl.registerLazySingleton(
     () => ToggleTimelineItemUseCase(sl<TodayHubRepository>()),
+  );
+  sl.registerLazySingleton(
+    () => AddTimelineItemUseCase(sl<TodayHubRepository>()),
+  );
+  sl.registerLazySingleton(
+    () => UpdateTimelineItemUseCase(sl<TodayHubRepository>()),
+  );
+  sl.registerLazySingleton(
+    () => DeleteTimelineItemUseCase(sl<TodayHubRepository>()),
   );
 
   // Money
@@ -222,6 +239,15 @@ Future<void> initDependencies({
       toggleHabitUseCase: sl<ToggleHabitUseCase>(),
       getTodayTimelineUseCase: sl<GetTodayTimelineUseCase>(),
       toggleTimelineItemUseCase: sl<ToggleTimelineItemUseCase>(),
+      addHabitUseCase: sl<AddHabitUseCase>(),
+      updateHabitUseCase: sl<UpdateHabitUseCase>(),
+      deleteHabitUseCase: sl<DeleteHabitUseCase>(),
+      skipHabitUseCase: sl<SkipHabitUseCase>(),
+      toggleHabitDateUseCase: sl<ToggleHabitDateUseCase>(),
+      addTimelineItemUseCase: sl<AddTimelineItemUseCase>(),
+      updateTimelineItemUseCase: sl<UpdateTimelineItemUseCase>(),
+      deleteTimelineItemUseCase: sl<DeleteTimelineItemUseCase>(),
+      notificationService: sl<NotificationService>(),
     ),
   );
 

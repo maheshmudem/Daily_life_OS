@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_spacing.dart';
 
-/// Focus / Break / Long-break segmented control. Shares its geometry with
-/// the Reminders status segments (44px tall, 12px radius).
+/// Focus / Break / Long-break / Flow Stopwatch segmented control.
 class PomodoroModeSelector extends StatelessWidget {
   final int selectedIndex;
   final int workMinutes;
@@ -11,6 +10,7 @@ class PomodoroModeSelector extends StatelessWidget {
   final int longBreakMinutes;
   final ValueChanged<int> onModeSelected;
   final bool isDark;
+  final bool showStopwatch;
 
   const PomodoroModeSelector({
     super.key,
@@ -20,18 +20,19 @@ class PomodoroModeSelector extends StatelessWidget {
     required this.longBreakMinutes,
     required this.onModeSelected,
     required this.isDark,
+    this.showStopwatch = true,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 36,
+      height: 38,
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: isDark
             ? AppColors.darkSurfaceSecondary
             : AppColors.surfaceSecondary,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(11),
         border: Border.all(
           color: isDark ? AppColors.darkDivider : AppColors.divider,
           width: 0.8,
@@ -50,6 +51,8 @@ class PomodoroModeSelector extends StatelessWidget {
             Icons.weekend_rounded,
             'Long (${longBreakMinutes}m)',
           ),
+          if (showStopwatch)
+            _buildSegment(3, Icons.all_inclusive_rounded, 'Flow ⏱'),
         ],
       ),
     );
@@ -57,9 +60,23 @@ class PomodoroModeSelector extends StatelessWidget {
 
   Widget _buildSegment(int index, IconData icon, String label) {
     final isSelected = selectedIndex == index;
-    final activeColor = index == 0
-        ? AppColors.moduleTime
-        : (index == 1 ? AppColors.success : AppColors.moduleNotes);
+    final Color activeColor;
+    switch (index) {
+      case 1:
+        activeColor = AppColors.success;
+        break;
+      case 2:
+        activeColor = AppColors.moduleNotes;
+        break;
+      case 3:
+        activeColor = AppColors.moduleVault;
+        break;
+      case 0:
+      default:
+        activeColor = AppColors.moduleTime;
+        break;
+    }
+
     final color = isSelected
         ? activeColor
         : (isDark ? AppColors.darkTextCaption : AppColors.textCaption);
@@ -69,20 +86,27 @@ class PomodoroModeSelector extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: () => onModeSelected(index),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
           alignment: Alignment.center,
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
           decoration: BoxDecoration(
             color: isSelected
                 ? (isDark ? AppColors.darkCardBackground : Colors.white)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(7),
+            borderRadius: BorderRadius.circular(8),
+            border: isSelected
+                ? Border.all(
+                    color: activeColor.withValues(alpha: isDark ? 0.35 : 0.22),
+                    width: 0.85,
+                  )
+                : null,
             boxShadow: isSelected && !isDark
                 ? [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
+                      color: activeColor.withValues(alpha: 0.12),
+                      blurRadius: 6,
+                      offset: const Offset(0, 1.5),
                     ),
                   ]
                 : null,
@@ -92,12 +116,12 @@ class PomodoroModeSelector extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, size: 14, color: color),
-                const SizedBox(width: 4),
+                Icon(icon, size: 13.5, color: color),
+                const SizedBox(width: 3.5),
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11.5,
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                     color: isSelected
                         ? (isDark

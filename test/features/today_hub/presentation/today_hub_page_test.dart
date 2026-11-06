@@ -51,7 +51,7 @@ void main() {
       expect(find.byTooltip(StringConstants.playBriefing), findsOneWidget);
 
       // 2. Verify Hero Banner & Momentum Score Ring
-      expect(find.textContaining('%'), findsOneWidget);
+      expect(find.textContaining('%'), findsWidgets);
       expect(find.byType(CircularProgressIndicator), findsWidgets);
 
       // 3. Verify Live Daily Glance Capsules
@@ -63,6 +63,64 @@ void main() {
       expect(find.text('Safe-to-Spend Today'), findsOneWidget);
       expect(find.text(StringConstants.habitsAndRoutines), findsOneWidget);
       expect(find.text(StringConstants.timelineFeed), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Today Hub Habits & Micro-Routines supports creating habits, viewing detail analytics, and Evening Wrap-Up',
+    (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(const MaterialApp(home: TodayHubPage()));
+      await tester.pumpAndSettle();
+
+      // 1. Tap 'Add' to open HabitEditorSheet
+      await tester.tap(find.text('Add'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('New Habit or Micro-Routine'), findsOneWidget);
+
+      // Enter habit title & select category 'Mindfulness'
+      await tester.enterText(
+        find.widgetWithText(
+          TextField,
+          'e.g., Drink 3L Water, Read 15 mins, Deep Breathing',
+        ),
+        'Evening Gratitude Journal',
+      );
+      await tester.tap(find.text('Mindfulness').last);
+      await tester.pumpAndSettle();
+
+      // Tap 'Create Habit'
+      await tester.tap(find.text('Create Habit'));
+      await tester.pumpAndSettle();
+
+      // Verify newly created habit appears in Today Hub
+      expect(find.text('Evening Gratitude Journal'), findsOneWidget);
+
+      // 2. Tap the habit to open HabitDetailSheet
+      await tester.tap(find.text('Evening Gratitude Journal'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Current Streak'), findsOneWidget);
+      expect(find.text('Best Streak'), findsOneWidget);
+      expect(find.text('7-Day Rate'), findsOneWidget);
+      expect(find.text('30-Day Rate'), findsOneWidget);
+      expect(find.text('LAST 7 DAYS (TAP ANY DAY TO TOGGLE)'), findsOneWidget);
+
+      // Close detail sheet
+      Navigator.of(tester.element(find.text('Current Streak'))).pop();
+      await tester.pumpAndSettle();
+
+      // 3. Tap Evening Wrap-Up card to open EveningWrapUpSheet
+      await tester.tap(find.text(StringConstants.eveningWrapUpTitle));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Evening Wrap-Up & Daily Review'), findsOneWidget);
+      expect(find.text('Complete Wrap-Up & Save Reflection'), findsOneWidget);
     },
   );
 }

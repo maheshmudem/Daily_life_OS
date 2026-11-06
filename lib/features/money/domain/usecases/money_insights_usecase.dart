@@ -282,6 +282,127 @@ class ComputeMoneyInsightsUseCase {
     }
     final totalAssets = accounts.fold<double>(0, (sum, a) => sum + a.balance);
 
+    // ── Smart Spendable, Savings & AI Forecast Metrics ────────────────────
+    final spentToday = _sum(
+      transactions.where(
+        (t) => t.isExpense && AppDateUtils.isSameDay(t.dateTime, clock),
+      ),
+    );
+    final totalDaysInMonth = AppDateUtils.daysInMonth(selected);
+    final daysRemainingInMonth = isCurrentMonth
+        ? (totalDaysInMonth - clock.day + 1).clamp(1, 31)
+        : (isFutureMonth ? totalDaysInMonth : 1);
+
+    final monthlyBaseBudget = fallbackMonthlyBudget > 0
+        ? fallbackMonthlyBudget
+        : (totalLimit > 0 ? totalLimit / period.monthMultiplier : 40000.0);
+    final spentBeforeToday = (monthExpense - spentToday).clamp(
+      0.0,
+      double.infinity,
+    );
+    final poolAtStartOfToday = (monthlyBaseBudget - spentBeforeToday).clamp(
+      0.0,
+      double.infinity,
+    );
+    final dailySafeAllowance = daysRemainingInMonth > 0
+        ? poolAtStartOfToday / daysRemainingInMonth
+        : 0.0;
+    final canSpendToday = (dailySafeAllowance - spentToday).clamp(
+      0.0,
+      double.infinity,
+    );
+
+    // Weekly spend in the current ISO week (Mon..Sun)
+    final startOfWeek = today.subtract(Duration(days: today.weekday - 1));
+    final endOfWeek = startOfWeek.add(const Duration(days: 7));
+    final isoWeekSpend = _sum(
+      transactions.where(
+        (t) =>
+            t.isExpense &&
+            !t.dateTime.isBefore(startOfWeek) &&
+            t.dateTime.isBefore(endOfWeek),
+      ),
+    );
+    final weeklyBudgetCap = monthlyBaseBudget / 4.0;
+    final canSpendThisWeek = (weeklyBudgetCap - isoWeekSpend).clamp(
+      0.0,
+      double.infinity,
+    );
+    final canSpendThisMonth = (monthlyBaseBudget - monthExpense).clamp(
+      0.0,
+      double.infinity,
+    );
+
+    // True Savings = Income − Expense (or vs Budget if no income logged yet)
+    final effectiveMonthlyIncome = monthIncome > 0
+        ? monthIncome
+        : monthlyBaseBudget;
+    final actualSaved = (effectiveMonthlyIncome - monthExpense).clamp(
+      0.0,
+      double.infinity,
+    );
+    final savingsRatePercent = effectiveMonthlyIncome > 0
+        ? ((effectiveMonthlyIncome - monthExpense) /
+                  effectiveMonthlyIncome *
+                  100)
+              .clamp(-100.0, 100.0)
+        : 0.0;
+
+    // Pace-adjusted End-of-Month Forecast
+    final monthDaysElapsed = isCurrentMonth
+        ? clock.day.clamp(1, totalDaysInMonth)
+        : totalDaysInMonth;
+    final dailyBurnRate = monthExpense / monthDaysElapsed;
+    final projectedMonthSpend = isCurrentMonth
+        ? (monthExpense + dailyBurnRate * (totalDaysInMonth - clock.day))
+              .roundToDouble()
+        : monthExpense;
+    final projectedMonthSavings =
+        (effectiveMonthlyIncome - projectedMonthSpend);
+
+    // Composite AI Financial Health Score (0..100)
+    final adherencePoints = (budgetScore * 0.40).round(); // max 40
+    final savingsPoints = ((savingsRatePercent.clamp(0.0, 25.0) / 20.0) * 30.0)
+        .round()
+        .clamp(0, 30); // max 30
+    final paceRatio = monthlyBaseBudget > 0
+        ? projectedMonthSpend / monthlyBaseBudget
+        : 0.5;
+    final pacePoints = paceRatio <= 0.85
+        ? 20
+        : paceRatio <= 1.0
+        ? 14
+        : paceRatio <= 1.15
+        ? 7
+        : 0; // max 20
+    final bufferPoints = overBudgetCount == 0
+        ? 10
+        : (10 - overBudgetCount * 3).clamp(0, 10);
+    final aiHealthScore =
+        (adherencePoints + savingsPoints + pacePoints + bufferPoints).clamp(
+          0,
+          100,
+        );
+
+    final aiForecastSummary = _buildAiForecastSummary(
+      projectedMonthSpend: projectedMonthSpend,
+      monthlyBaseBudget: monthlyBaseBudget,
+      projectedMonthSavings: projectedMonthSavings,
+      dailySafeAllowance: dailySafeAllowance,
+      daysRemainingInMonth: daysRemainingInMonth,
+    );
+
+    final aiInsights = _buildAiInsights(
+      categorySpend: categorySpend,
+      categoryBudgets: categoryBudgets,
+      previousMonthTx: previousMonthTx,
+      spentToday: spentToday,
+      dailySafeAllowance: dailySafeAllowance,
+      projectedMonthSpend: projectedMonthSpend,
+      monthlyBaseBudget: monthlyBaseBudget,
+      savingsRatePercent: savingsRatePercent,
+    );
+
     return MoneyInsights(
       month: selected,
       period: period,
@@ -319,7 +440,148 @@ class ComputeMoneyInsightsUseCase {
       nearLimitCount: nearLimitCount,
       totalAssets: totalAssets,
       assetsByType: assetsByType,
+      spentToday: spentToday,
+      dailySafeAllowance: dailySafeAllowance,
+      canSpendToday: canSpendToday,
+      canSpendThisWeek: canSpendThisWeek,
+      canSpendThisMonth: canSpendThisMonth,
+      actualSaved: actualSaved,
+      savingsRatePercent: savingsRatePercent,
+      projectedMonthSpend: projectedMonthSpend,
+      projectedMonthSavings: projectedMonthSavings,
+      daysRemainingInMonth: daysRemainingInMonth,
+      aiHealthScore: aiHealthScore,
+      aiForecastSummary: aiForecastSummary,
+      aiInsights: aiInsights,
     );
+  }
+
+  static String _buildAiForecastSummary({
+    required double projectedMonthSpend,
+    required double monthlyBaseBudget,
+    required double projectedMonthSavings,
+    required double dailySafeAllowance,
+    required int daysRemainingInMonth,
+  }) {
+    if (monthlyBaseBudget <= 0) {
+      return 'Set a monthly budget or salary plan to unlock AI spend forecasting.';
+    }
+    if (projectedMonthSpend > monthlyBaseBudget) {
+      final overrun = (projectedMonthSpend - monthlyBaseBudget).round();
+      return 'At your current pace, month-end spend is projected to exceed budget by $overrun. Keep daily spend under ${dailySafeAllowance.round()}/day for the next $daysRemainingInMonth days.';
+    }
+    final headroom = (monthlyBaseBudget - projectedMonthSpend).round();
+    return 'On track to finish $headroom under budget with ${projectedMonthSavings > 0 ? projectedMonthSavings.round() : 0} in projected savings ($daysRemainingInMonth days left).';
+  }
+
+  static List<AiFinancialInsight> _buildAiInsights({
+    required List<CategorySpend> categorySpend,
+    required List<CategoryBudgetEntity> categoryBudgets,
+    required List<TransactionEntity> previousMonthTx,
+    required double spentToday,
+    required double dailySafeAllowance,
+    required double projectedMonthSpend,
+    required double monthlyBaseBudget,
+    required double savingsRatePercent,
+  }) {
+    final list = <AiFinancialInsight>[];
+
+    // 1. Today's velocity insight
+    if (dailySafeAllowance > 0 && spentToday > dailySafeAllowance) {
+      final over = (spentToday - dailySafeAllowance).round();
+      list.add(
+        AiFinancialInsight(
+          id: 'daily_over',
+          title: 'Today\'s Safe Limit Exceeded',
+          description:
+              'You spent ${spentToday.round()} today vs your ${dailySafeAllowance.round()} daily allowance. Aim for a low-spend day tomorrow.',
+          impactLabel: 'Over by $over',
+          severity: 'warning',
+        ),
+      );
+    } else if (dailySafeAllowance > 0) {
+      final remainingToday = (dailySafeAllowance - spentToday)
+          .clamp(0, double.infinity)
+          .round();
+      list.add(
+        AiFinancialInsight(
+          id: 'daily_safe',
+          title: 'Daily Pace Is Healthy',
+          description:
+              'You still have $remainingToday safe to spend today without affecting your month-end savings goal.',
+          impactLabel: '$remainingToday left today',
+          severity: 'positive',
+        ),
+      );
+    }
+
+    // 2. Category anomaly vs previous month or budget limit
+    final prevByCat = <String, double>{};
+    for (final tx in previousMonthTx.where((t) => t.isExpense)) {
+      final key = tx.categoryInfo.key;
+      prevByCat[key] = (prevByCat[key] ?? 0) + tx.amount;
+    }
+
+    final overCat = categoryBudgets.where((b) => b.isOverBudget).firstOrNull;
+    if (overCat != null) {
+      final overAmt = (overCat.spent - overCat.monthlyLimit).round();
+      list.add(
+        AiFinancialInsight(
+          id: 'cat_over_${overCat.category}',
+          title: '${overCat.categoryInfo.label} Is Over Budget',
+          description:
+              'Rebalance $overAmt from under-utilized categories or pause ${overCat.categoryInfo.label} purchases this week.',
+          impactLabel: '+$overAmt over',
+          severity: 'critical',
+          categoryKey: overCat.category,
+        ),
+      );
+    } else if (categorySpend.isNotEmpty) {
+      final topFlex = categorySpend
+          .where((c) => c.category.key != MoneyCategory.bills.key)
+          .firstOrNull;
+      if (topFlex != null && topFlex.amount > 0) {
+        final save15 = (topFlex.amount * 0.15).round();
+        list.add(
+          AiFinancialInsight(
+            id: 'trim_${topFlex.category.key}',
+            title: 'Smart Save in ${topFlex.category.label}',
+            description:
+                '${topFlex.category.label} is ${(topFlex.share * 100).round()}% of your spend. Trimming 15% unlocks $save15/month (${save15 * 12}/year).',
+            impactLabel: 'Save +$save15/mo',
+            severity: 'info',
+            categoryKey: topFlex.category.key,
+          ),
+        );
+      }
+    }
+
+    // 3. Savings rate coaching
+    if (savingsRatePercent >= 20) {
+      list.add(
+        AiFinancialInsight(
+          id: 'savings_goal_met',
+          title: 'Strong ${savingsRatePercent.round()}% Savings Rate',
+          description:
+              'You are beating the 20% benchmark. Consider sweeping surplus cash into your Investment account.',
+          impactLabel: '${savingsRatePercent.round()}% Saved',
+          severity: 'positive',
+        ),
+      );
+    } else {
+      list.add(
+        AiFinancialInsight(
+          id: 'savings_boost',
+          title: 'Boost Monthly Savings Toward 20%',
+          description:
+              'Current savings rate is ${savingsRatePercent.clamp(0, 100).round()}%. Apply the 50/30/20 Smart Plan to automate your 20% savings bucket.',
+          impactLabel: 'Target 20%',
+          severity: 'info',
+        ),
+      );
+    }
+
+    return list;
   }
 
   static ({

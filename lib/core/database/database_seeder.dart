@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:flutter/material.dart' hide Table;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../database/app_database.dart';
 import '../../config/theme/app_colors.dart';
 
@@ -469,5 +470,28 @@ class DatabaseSeeder {
         ]);
       });
     }
+  }
+
+  /// Clears pre-seeded Money demo records once on real app startup so the user
+  /// begins with a clean, fresh Money workspace ready for their own entries.
+  static Future<void> clearMoneyDemoDataOnce(AppDatabase db) async {
+    final prefs = await SharedPreferences.getInstance();
+    const flagKey = 'money_started_fresh_v2';
+    if (prefs.getBool(flagKey) == true) return;
+
+    await db.delete(db.transactions).go();
+    await db.delete(db.subscriptions).go();
+    await db.delete(db.iouEntries).go();
+    await db.delete(db.moneyAccounts).go();
+    await db
+        .update(db.categoryBudgets)
+        .write(const CategoryBudgetsCompanion(monthlyLimit: Value(0)));
+    await (db.update(db.budgetSettings)..where((t) => t.id.equals(1))).write(
+      const BudgetSettingsCompanion(
+        monthlyBudget: Value(0),
+        fixedBills: Value(0),
+      ),
+    );
+    await prefs.setBool(flagKey, true);
   }
 }

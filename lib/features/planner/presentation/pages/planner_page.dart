@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,6 +12,7 @@ import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/notifications/notification_service.dart';
+import '../../../../core/services/tts/tts_service.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_shimmer_loader.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
@@ -18,6 +20,7 @@ import '../../../../core/widgets/feature_scaffold.dart';
 import '../../../../di/injection_container.dart';
 import '../../domain/entities/countdown_item_entity.dart';
 import '../../domain/entities/planner_item_entity.dart';
+import '../../domain/entities/pomodoro_entities.dart';
 import '../../../../core/widgets/app_dropdown_menu.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../data/models/countdown_item_model.dart';
@@ -27,10 +30,12 @@ import '../bloc/planner_bloc.dart';
 import '../widgets/countdown_card.dart';
 import '../widgets/countdown_sheet.dart';
 import '../widgets/planner_item_card.dart';
+import '../widgets/pomodoro_analytics_card.dart';
 import '../widgets/pomodoro_custom_duration_sheet.dart';
 import '../widgets/pomodoro_focus_card.dart';
 import '../widgets/pomodoro_linked_task_sheet.dart';
 import '../widgets/pomodoro_mode_selector.dart';
+import '../widgets/pomodoro_zen_screen.dart';
 import '../widgets/set_reminder_card.dart';
 import '../widgets/set_reminder_sheet.dart';
 
@@ -59,19 +64,39 @@ class _PlannerViewState extends State<_PlannerView>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  // ── Pomodoro Focus Timer State ───────────────────────────────────────────
-  int _focusModeIndex = 0; // 0 = Work, 1 = Short Break, 2 = Long Break
+  // ── Pomodoro Focus Timer State (Persisted in SharedPreferences) ──────────
+  static const _pomodoroSettingsPrefKey = 'planner_pomodoro_settings_v2';
+  static const _pomodoroSessionsPrefKey = 'planner_pomodoro_sessions_v2';
+  static const _pomodoroDistractionsPrefKey =
+      'planner_pomodoro_distractions_v2';
+
+  int _focusModeIndex =
+      0; // 0 = Work, 1 = Short Break, 2 = Long Break, 3 = Stopwatch Flow
   int _workMinutes = 25;
   int _shortBreakMinutes = 5;
   int _longBreakMinutes = 15;
+  int _totalRounds = 4;
+  int _dailyGoalSessions = 4;
+  bool _autoStartBreaks = false;
+  bool _autoStartWork = false;
+  bool _strictMode = false;
+  bool _voiceCoach = false;
+  double _ambienceVolume = 0.75;
+  String _focusCategory = 'Deep Work';
+  int _estimatedPomodoros = 4;
+  int _completedTaskPomodoros = 2;
+  int? _linkedTaskId;
   late int _secondsRemaining;
+  late int _sessionInitialTotalSeconds;
   bool _isTimerRunning = false;
   Timer? _timer;
   int _currentRound = 1;
-  static const int _totalRounds = 4;
-  int _completedSessionsToday = 3;
   String _linkedTask = 'Finalize Daily Life OS PRD';
   String _selectedAmbience = 'Mute';
+
+  late List<FocusSessionEntity> _focusSessions =
+      FocusSessionEntity.defaultSeedSessions();
+  List<FocusDistractionItem> _distractions = [];
 
   static const List<Map<String, dynamic>> _ambienceOptions = [
     {'name': 'Mute', 'icon': Icons.volume_off_rounded},
@@ -80,6 +105,8 @@ class _PlannerViewState extends State<_PlannerView>
     {'name': 'Waves', 'icon': Icons.waves_rounded},
     {'name': 'Forest', 'icon': Icons.forest_rounded},
     {'name': 'White Noise', 'icon': Icons.air_rounded},
+    {'name': '40Hz Gamma', 'icon': Icons.graphic_eq_rounded},
+    {'name': 'Fireplace', 'icon': Icons.local_fire_department_rounded},
   ];
 
   // ── Countdowns State (Persisted in SharedPreferences) ─────────────────────
@@ -199,11 +226,13 @@ class _PlannerViewState extends State<_PlannerView>
   void initState() {
     super.initState();
     _secondsRemaining = _workMinutes * 60;
+    _sessionInitialTotalSeconds = _secondsRemaining;
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
       if (mounted) setState(() {});
     });
     _loadCountdowns();
+    _loadPomodoroState();
   }
 
   @override
@@ -213,6 +242,120 @@ class _PlannerViewState extends State<_PlannerView>
     _searchController.dispose();
     _tabController.dispose();
     super.dispose();
+  }
+
+  // ── Pomodoro Persistence (Settings, Sessions, Distractions) ──────────────
+  Future<void> _loadPomodoroState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final rawSettings = prefs.getString(_pomodoroSettingsPrefKey);
+      if (rawSettings != null && rawSettings.isNotEmpty) {
+        final cfg = PomodoroSettingsEntity.fromJson(
+          jsonDecode(rawSettings) as Map<String, dynamic>,
+        );
+        if (mounted) {
+          setState(() {
+            _workMinutes = cfg.workMinutes;
+            _shortBreakMinutes = cfg.shortBreakMinutes;
+            _longBreakMinutes = cfg.longBreakMinutes;
+            _totalRounds = cfg.totalRounds;
+            _dailyGoalSessions = cfg.dailyGoalSessions;
+            _autoStartBreaks = cfg.autoStartBreaks;
+            _autoStartWork = cfg.autoStartWork;
+            _strictMode = cfg.strictMode;
+            _voiceCoach = cfg.voiceCoach;
+            _selectedAmbience = cfg.selectedAmbience;
+            _ambienceVolume = cfg.ambienceVolume;
+            _focusCategory = cfg.focusCategory;
+            _estimatedPomodoros = cfg.estimatedPomodoros;
+            _completedTaskPomodoros = cfg.completedTaskPomodoros;
+            _linkedTask = cfg.linkedTask;
+            _linkedTaskId = cfg.linkedTaskId;
+            if (!_isTimerRunning && _focusModeIndex != 3) {
+              _secondsRemaining = _currentTotalSeconds;
+              _sessionInitialTotalSeconds = _secondsRemaining;
+            }
+          });
+        }
+      }
+
+      final rawSessions = prefs.getString(_pomodoroSessionsPrefKey);
+      if (rawSessions != null && rawSessions.isNotEmpty) {
+        final List<dynamic> decoded = jsonDecode(rawSessions);
+        if (mounted) {
+          setState(() {
+            _focusSessions = decoded
+                .map(
+                  (e) => FocusSessionEntity.fromJson(e as Map<String, dynamic>),
+                )
+                .toList();
+          });
+        }
+      }
+
+      final rawDistractions = prefs.getString(_pomodoroDistractionsPrefKey);
+      if (rawDistractions != null && rawDistractions.isNotEmpty) {
+        final List<dynamic> decoded = jsonDecode(rawDistractions);
+        if (mounted) {
+          setState(() {
+            _distractions = decoded
+                .map(
+                  (e) =>
+                      FocusDistractionItem.fromJson(e as Map<String, dynamic>),
+                )
+                .toList();
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _savePomodoroSettings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cfg = PomodoroSettingsEntity(
+        workMinutes: _workMinutes,
+        shortBreakMinutes: _shortBreakMinutes,
+        longBreakMinutes: _longBreakMinutes,
+        totalRounds: _totalRounds,
+        dailyGoalSessions: _dailyGoalSessions,
+        autoStartBreaks: _autoStartBreaks,
+        autoStartWork: _autoStartWork,
+        strictMode: _strictMode,
+        voiceCoach: _voiceCoach,
+        selectedAmbience: _selectedAmbience,
+        ambienceVolume: _ambienceVolume,
+        focusCategory: _focusCategory,
+        estimatedPomodoros: _estimatedPomodoros,
+        completedTaskPomodoros: _completedTaskPomodoros,
+        linkedTask: _linkedTask,
+        linkedTaskId: _linkedTaskId,
+      );
+      await prefs.setString(_pomodoroSettingsPrefKey, jsonEncode(cfg.toJson()));
+    } catch (_) {}
+  }
+
+  Future<void> _saveFocusSessions() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final list = _focusSessions.map((s) => s.toJson()).toList();
+      await prefs.setString(_pomodoroSessionsPrefKey, jsonEncode(list));
+    } catch (_) {}
+  }
+
+  Future<void> _saveDistractions() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final list = _distractions.map((d) => d.toJson()).toList();
+      await prefs.setString(_pomodoroDistractionsPrefKey, jsonEncode(list));
+    } catch (_) {}
+  }
+
+  void _speakCoachCue(String message) {
+    if (!_voiceCoach) return;
+    try {
+      getAppTtsService().speak(message);
+    } catch (_) {}
   }
 
   // ── Countdowns Persistence ───────────────────────────────────────────────
@@ -251,6 +394,8 @@ class _PlannerViewState extends State<_PlannerView>
         return _shortBreakMinutes * 60;
       case 2:
         return _longBreakMinutes * 60;
+      case 3:
+        return 3600; // 60-minute cycle visual ring for Flow Stopwatch
       case 0:
       default:
         return _workMinutes * 60;
@@ -258,18 +403,47 @@ class _PlannerViewState extends State<_PlannerView>
   }
 
   double get _timerProgress {
-    final total = _currentTotalSeconds;
-    if (total <= 0) return 0.0;
-    return (total - _secondsRemaining) / total;
+    if (_focusModeIndex == 3) {
+      return (_secondsRemaining % 3600) / 3600.0;
+    }
+    final total = math.max(1, _sessionInitialTotalSeconds);
+    return ((total - _secondsRemaining) / total).clamp(0.0, 1.0);
   }
 
-  void _switchFocusMode(int modeIndex) {
+  Future<void> _switchFocusMode(int modeIndex) async {
     if (_focusModeIndex == modeIndex) return;
+    if (_strictMode && _isTimerRunning && _focusModeIndex == 0) {
+      final confirmed = await ConfirmationDialog.show(
+        context,
+        title: 'Strict Focus Mode Active',
+        message:
+            'You are in the middle of an active focus sprint. Abandon this sprint and switch modes?',
+        confirmLabel: 'Switch Mode',
+        isDestructive: true,
+      );
+      if (confirmed != true) return;
+    }
     _timer?.cancel();
     setState(() {
       _focusModeIndex = modeIndex;
       _isTimerRunning = false;
-      _secondsRemaining = _currentTotalSeconds;
+      _secondsRemaining = modeIndex == 3 ? 0 : _currentTotalSeconds;
+      _sessionInitialTotalSeconds = _currentTotalSeconds;
+    });
+  }
+
+  void _startTimerLoop() {
+    _timer?.cancel();
+    setState(() => _isTimerRunning = true);
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_focusModeIndex == 3) {
+        setState(() => _secondsRemaining++);
+      } else if (_secondsRemaining > 0) {
+        setState(() => _secondsRemaining--);
+      } else {
+        _timer?.cancel();
+        _onTimerCompleted();
+      }
     });
   }
 
@@ -278,23 +452,89 @@ class _PlannerViewState extends State<_PlannerView>
       _timer?.cancel();
       setState(() => _isTimerRunning = false);
     } else {
-      setState(() => _isTimerRunning = true);
-      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        if (_secondsRemaining > 0) {
-          setState(() => _secondsRemaining--);
-        } else {
-          _timer?.cancel();
-          _onTimerCompleted();
-        }
-      });
+      _startTimerLoop();
+      _speakCoachCue(
+        _focusModeIndex == 0
+            ? 'Starting deep work sprint on $_linkedTask.'
+            : (_focusModeIndex == 3
+                  ? 'Flow stopwatch started.'
+                  : 'Break timer started. Relax and recharge.'),
+      );
     }
   }
 
-  void _onTimerCompleted() {
+  void _addMinutesToTimer(int minutesToAdd) {
+    if (_focusModeIndex == 3) return;
+    setState(() {
+      _secondsRemaining += minutesToAdd * 60;
+      _sessionInitialTotalSeconds = math.max(
+        _sessionInitialTotalSeconds,
+        _secondsRemaining,
+      );
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Added +${minutesToAdd}m to current timer'),
+        duration: const Duration(seconds: 1),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _finishStopwatchSession() {
+    _timer?.cancel();
+    final elapsedMins = math.max(1, (_secondsRemaining / 60).round());
+    final newSession = FocusSessionEntity(
+      id: 'flow_${DateTime.now().millisecondsSinceEpoch}',
+      taskTitle: _linkedTask,
+      linkedTaskId: _linkedTaskId,
+      category: _focusCategory,
+      durationMinutes: elapsedMins,
+      completedAt: DateTime.now(),
+      isStopwatch: true,
+      notes: 'Flowtime open-ended sprint',
+      focusRating: 5,
+    );
     setState(() {
       _isTimerRunning = false;
-      if (_focusModeIndex == 0) {
-        _completedSessionsToday++;
+      _secondsRemaining = 0;
+      _focusSessions.insert(0, newSession);
+      _completedTaskPomodoros++;
+    });
+    _saveFocusSessions();
+    _savePomodoroSettings();
+    SnackbarUtils.showSuccess(
+      context,
+      'Logged ${elapsedMins}m Flow session on "$_linkedTask"!',
+    );
+  }
+
+  void _onTimerCompleted() {
+    final completedWorkSprint = _focusModeIndex == 0;
+    if (completedWorkSprint) {
+      final sprintMinutes = math.max(
+        1,
+        (_sessionInitialTotalSeconds / 60).round(),
+      );
+      final newSession = FocusSessionEntity(
+        id: 'pomo_${DateTime.now().millisecondsSinceEpoch}',
+        taskTitle: _linkedTask,
+        linkedTaskId: _linkedTaskId,
+        category: _focusCategory,
+        durationMinutes: sprintMinutes,
+        completedAt: DateTime.now(),
+        notes: 'Round $_currentRound/$_totalRounds sprint',
+        focusRating: 5,
+      );
+      _focusSessions.insert(0, newSession);
+      _completedTaskPomodoros++;
+      _saveFocusSessions();
+      _savePomodoroSettings();
+    }
+
+    setState(() {
+      _isTimerRunning = false;
+      if (completedWorkSprint) {
         if (_currentRound >= _totalRounds) {
           _currentRound = 1;
           _focusModeIndex = 2; // Long Break
@@ -308,6 +548,7 @@ class _PlannerViewState extends State<_PlannerView>
         _focusModeIndex = 0; // Back to Work
         _secondsRemaining = _workMinutes * 60;
       }
+      _sessionInitialTotalSeconds = _secondsRemaining;
     });
 
     // Trigger local mobile notification for focus transition
@@ -324,6 +565,19 @@ class _PlannerViewState extends State<_PlannerView>
       );
     } catch (_) {}
 
+    _speakCoachCue(
+      _focusModeIndex == 0
+          ? 'Break complete. Ready for your next focus sprint?'
+          : 'Focus sprint complete. Great work! Time for a recharge break.',
+    );
+
+    // Auto-start next phase if enabled
+    if (completedWorkSprint && _autoStartBreaks) {
+      _startTimerLoop();
+    } else if (!completedWorkSprint && _autoStartWork) {
+      _startTimerLoop();
+    }
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -339,15 +593,38 @@ class _PlannerViewState extends State<_PlannerView>
     }
   }
 
-  void _resetTimer() {
+  Future<void> _resetTimer() async {
+    if (_strictMode && _isTimerRunning && _focusModeIndex == 0) {
+      final confirmed = await ConfirmationDialog.show(
+        context,
+        title: 'Reset Active Sprint?',
+        message:
+            'Strict Focus Mode is enabled. Are you sure you want to reset your current progress?',
+        confirmLabel: 'Reset Timer',
+        isDestructive: true,
+      );
+      if (confirmed != true) return;
+    }
     _timer?.cancel();
     setState(() {
       _isTimerRunning = false;
-      _secondsRemaining = _currentTotalSeconds;
+      _secondsRemaining = _focusModeIndex == 3 ? 0 : _currentTotalSeconds;
+      _sessionInitialTotalSeconds = _currentTotalSeconds;
     });
   }
 
-  void _skipSession() {
+  Future<void> _skipSession() async {
+    if (_strictMode && _isTimerRunning && _focusModeIndex == 0) {
+      final confirmed = await ConfirmationDialog.show(
+        context,
+        title: 'Skip Active Sprint?',
+        message:
+            'Strict Focus Mode is enabled. Skipping now will not log this session.',
+        confirmLabel: 'Skip Anyway',
+        isDestructive: true,
+      );
+      if (confirmed != true) return;
+    }
     _timer?.cancel();
     setState(() {
       _isTimerRunning = false;
@@ -358,6 +635,7 @@ class _PlannerViewState extends State<_PlannerView>
         _focusModeIndex = 0;
       }
       _secondsRemaining = _currentTotalSeconds;
+      _sessionInitialTotalSeconds = _currentTotalSeconds;
     });
   }
 
@@ -2171,104 +2449,414 @@ class _PlannerViewState extends State<_PlannerView>
   Widget _buildFocusTimerTab(BuildContext context, bool isDark) {
     const gutter = EdgeInsets.symmetric(horizontal: AppSpacing.pageGutter);
 
-    return ListView(
-      padding: const EdgeInsets.only(top: 6, bottom: 88),
-      children: [
-        Padding(
-          padding: gutter,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              PomodoroModeSelector(
-                selectedIndex: _focusModeIndex,
-                workMinutes: _workMinutes,
-                shortBreakMinutes: _shortBreakMinutes,
-                longBreakMinutes: _longBreakMinutes,
-                onModeSelected: _switchFocusMode,
-                isDark: isDark,
+    return BlocBuilder<PlannerBloc, PlannerState>(
+      builder: (context, state) {
+        final allItems = state is PlannerLoaded
+            ? state.items
+            : <PlannerItemEntity>[];
+        PlannerItemEntity? linkedItem;
+        if (_linkedTaskId != null) {
+          for (final it in allItems) {
+            if (it.id == _linkedTaskId) {
+              linkedItem = it;
+              break;
+            }
+          }
+        }
+        if (linkedItem == null) {
+          for (final it in allItems) {
+            if (it.title.toLowerCase() == _linkedTask.toLowerCase()) {
+              linkedItem = it;
+              break;
+            }
+          }
+        }
+
+        return ListView(
+          padding: const EdgeInsets.only(top: 6, bottom: 88),
+          children: [
+            Padding(
+              padding: gutter,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  PomodoroModeSelector(
+                    selectedIndex: _focusModeIndex,
+                    workMinutes: _workMinutes,
+                    shortBreakMinutes: _shortBreakMinutes,
+                    longBreakMinutes: _longBreakMinutes,
+                    onModeSelected: _switchFocusMode,
+                    isDark: isDark,
+                  ),
+                  const SizedBox(height: 10),
+                  PomodoroFocusCard(
+                    focusModeIndex: _focusModeIndex,
+                    currentRound: _currentRound,
+                    totalRounds: _totalRounds,
+                    timerProgress: _timerProgress,
+                    formattedTime: _formatTimer(_secondsRemaining),
+                    isTimerRunning: _isTimerRunning,
+                    linkedTask: _linkedTask,
+                    focusCategory: _focusCategory,
+                    estimatedPomodoros: _estimatedPomodoros,
+                    completedTaskPomodoros: _completedTaskPomodoros,
+                    strictMode: _strictMode,
+                    selectedAmbience: _selectedAmbience,
+                    linkedPlannerItem: linkedItem,
+                    onToggleTimer: _toggleTimer,
+                    onResetTimer: _resetTimer,
+                    onSkipSession: _skipSession,
+                    onChangeTask: () => _openLinkedTaskSheet(context, isDark),
+                    onAddMinutes: _addMinutesToTimer,
+                    onFinishStopwatch: _finishStopwatchSession,
+                    onOpenZenMode: () =>
+                        _openZenFocusScreen(context, linkedItem),
+                    onToggleSubtask: linkedItem == null
+                        ? null
+                        : (sub) => _toggleLinkedSubtask(linkedItem!, sub),
+                    onMarkTaskDone: linkedItem == null
+                        ? null
+                        : () => _markLinkedTaskDone(linkedItem!),
+                  ),
+                  _buildFocusSectionHeader(
+                    'Focus Presets & Custom Time',
+                    isDark,
+                    action: _buildHeaderAction(
+                      label: 'Custom',
+                      color: AppColors.moduleTime,
+                      onTap: () => _openCustomDurationSheet(context, isDark),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 10),
-              PomodoroFocusCard(
-                focusModeIndex: _focusModeIndex,
-                currentRound: _currentRound,
-                totalRounds: _totalRounds,
-                timerProgress: _timerProgress,
-                formattedTime: _formatTimer(_secondsRemaining),
-                isTimerRunning: _isTimerRunning,
-                linkedTask: _linkedTask,
-                onToggleTimer: _toggleTimer,
-                onResetTimer: _resetTimer,
-                onSkipSession: _skipSession,
-                onChangeTask: () => _openLinkedTaskSheet(context, isDark),
-              ),
-              _buildFocusSectionHeader(
-                'Focus Presets & Custom Time',
+            ),
+            _buildChipStrip(
+              children: [
+                for (final preset in const [
+                  ('15m Sprint', 15),
+                  ('25m Classic', 25),
+                  ('45m Deep Work', 45),
+                  ('60m Ultra Focus', 60),
+                  ('90m Flow Block', 90),
+                ])
+                  _buildSelectableChip(
+                    label: preset.$1,
+                    isSelected:
+                        _focusModeIndex == 0 && _workMinutes == preset.$2,
+                    isDark: isDark,
+                    onTap: () {
+                      _timer?.cancel();
+                      setState(() {
+                        _workMinutes = preset.$2;
+                        _focusModeIndex = 0;
+                        _secondsRemaining = preset.$2 * 60;
+                        _sessionInitialTotalSeconds = _secondsRemaining;
+                        _isTimerRunning = false;
+                      });
+                      _savePomodoroSettings();
+                    },
+                  ),
+              ],
+            ),
+            Padding(
+              padding: gutter,
+              child: _buildFocusSectionHeader(
+                'Focus Ambience & Sounds',
                 isDark,
-                action: _buildHeaderAction(
-                  label: 'Custom',
-                  color: AppColors.moduleTime,
-                  onTap: () => _openCustomDurationSheet(context, isDark),
+                action: _selectedAmbience != 'Mute'
+                    ? Text(
+                        '${(_ambienceVolume * 100).round()}% Vol',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.moduleTime,
+                        ),
+                      )
+                    : null,
+              ),
+            ),
+            _buildChipStrip(
+              children: _ambienceOptions.map((opt) {
+                final name = opt['name'] as String;
+                return _buildSelectableChip(
+                  label: name,
+                  icon: opt['icon'] as IconData,
+                  isSelected: _selectedAmbience == name,
+                  isDark: isDark,
+                  onTap: () {
+                    setState(() => _selectedAmbience = name);
+                    _savePomodoroSettings();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          name == 'Mute'
+                              ? 'Ambience sound muted'
+                              : 'Ambience set to $name',
+                        ),
+                        duration: const Duration(seconds: 1),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                );
+              }).toList(),
+            ),
+            if (_selectedAmbience != 'Mute')
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.pageGutter,
+                  6,
+                  AppSpacing.pageGutter,
+                  0,
+                ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppColors.darkCardBackground
+                        : AppColors.cardBackground,
+                    borderRadius: AppRadius.radiusSm,
+                    border: Border.all(
+                      color: isDark ? AppColors.darkDivider : AppColors.divider,
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.graphic_eq_rounded,
+                        size: 16,
+                        color: AppColors.moduleTime,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _selectedAmbience,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color: isDark
+                              ? AppColors.darkTextHeading
+                              : AppColors.textHeading,
+                        ),
+                      ),
+                      Expanded(
+                        child: SliderTheme(
+                          data: SliderTheme.of(context).copyWith(
+                            activeTrackColor: AppColors.moduleTime,
+                            inactiveTrackColor: AppColors.moduleTime.withValues(
+                              alpha: 0.2,
+                            ),
+                            thumbColor: AppColors.moduleTime,
+                            trackHeight: 3,
+                          ),
+                          child: Slider(
+                            value: _ambienceVolume,
+                            onChanged: (val) {
+                              setState(() => _ambienceVolume = val);
+                              _savePomodoroSettings();
+                            },
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          setState(() => _selectedAmbience = 'Mute');
+                          _savePomodoroSettings();
+                        },
+                        visualDensity: VisualDensity.compact,
+                        constraints: const BoxConstraints(
+                          minWidth: 26,
+                          minHeight: 26,
+                        ),
+                        padding: EdgeInsets.zero,
+                        tooltip: 'Mute Ambience',
+                        icon: Icon(
+                          Icons.volume_off_rounded,
+                          size: 15,
+                          color: isDark
+                              ? AppColors.darkTextCaption
+                              : AppColors.textCaption,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ],
-          ),
-        ),
-        _buildChipStrip(
-          children: [
-            for (final preset in const [
-              ('15m Sprint', 15),
-              ('25m Classic', 25),
-              ('45m Deep Work', 45),
-              ('60m Ultra Focus', 60),
-            ])
-              _buildSelectableChip(
-                label: preset.$1,
-                isSelected: _focusModeIndex == 0 && _workMinutes == preset.$2,
+            const SizedBox(height: 12),
+            Padding(
+              padding: gutter,
+              child: PomodoroAnalyticsDashboard(
+                sessions: _focusSessions,
+                distractions: _distractions,
+                dailyGoalSessions: _dailyGoalSessions,
+                workMinutes: _workMinutes,
                 isDark: isDark,
-                onTap: () {
-                  _timer?.cancel();
+                onOpenManualLog: () => _openManualSessionSheet(context, isDark),
+                onDeleteSession: (id) {
                   setState(() {
-                    _workMinutes = preset.$2;
-                    _focusModeIndex = 0;
-                    _secondsRemaining = preset.$2 * 60;
-                    _isTimerRunning = false;
+                    _focusSessions.removeWhere((s) => s.id == id);
                   });
+                  _saveFocusSessions();
+                },
+                onAddDistraction: _addDistractionNote,
+                onConvertDistractionToTask: (item) =>
+                    _convertDistractionToPlanner(context, item),
+                onDeleteDistraction: (id) {
+                  setState(() {
+                    _distractions.removeWhere((d) => d.id == id);
+                  });
+                  _saveDistractions();
                 },
               ),
+            ),
           ],
-        ),
-        Padding(
-          padding: gutter,
-          child: _buildFocusSectionHeader('Focus Ambience & Sounds', isDark),
-        ),
-        _buildChipStrip(
-          children: _ambienceOptions.map((opt) {
-            final name = opt['name'] as String;
-            return _buildSelectableChip(
-              label: name,
-              icon: opt['icon'] as IconData,
-              isSelected: _selectedAmbience == name,
-              isDark: isDark,
-              onTap: () {
-                setState(() => _selectedAmbience = name);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      name == 'Mute'
-                          ? 'Ambience sound muted'
-                          : 'Ambience set to $name',
-                    ),
-                    duration: const Duration(seconds: 1),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              },
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: 12),
-        Padding(padding: gutter, child: _buildDailyFocusCard(isDark)),
-      ],
+        );
+      },
+    );
+  }
+
+  void _toggleLinkedSubtask(PlannerItemEntity item, ChecklistItem target) {
+    final updated = item.checklist
+        .map((c) => c.id == target.id ? c.copyWith(isDone: !c.isDone) : c)
+        .toList();
+    context.read<PlannerBloc>().add(
+      UpdatePlannerItem(
+        id: item.id,
+        title: item.title,
+        date: item.date,
+        startTime: item.startTime,
+        endTime: item.endTime,
+        category: item.category,
+        colorValue: item.colorValue,
+        iconCodePoint: item.iconCodePoint,
+        repeatType: item.repeatType,
+        repeatDays: item.repeatDays,
+        endDate: item.endDate,
+        priority: item.priority,
+        reminderOffsetMinutes: item.reminderOffsetMinutes,
+        checklist: updated,
+        notes: item.notes,
+      ),
+    );
+  }
+
+  void _markLinkedTaskDone(PlannerItemEntity item) {
+    context.read<PlannerBloc>().add(
+      TogglePlannerItem(item.id, targetDate: 'all'),
+    );
+    SnackbarUtils.showSuccess(
+      context,
+      'Completed linked task "${item.title}"! 🎯',
+    );
+  }
+
+  void _addDistractionNote(String text) {
+    final item = FocusDistractionItem(
+      id: 'dist_${DateTime.now().millisecondsSinceEpoch}',
+      text: text,
+      createdAt: DateTime.now(),
+    );
+    setState(() {
+      _distractions.insert(0, item);
+    });
+    _saveDistractions();
+  }
+
+  void _convertDistractionToPlanner(
+    BuildContext context,
+    FocusDistractionItem item,
+  ) {
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    context.read<PlannerBloc>().add(
+      AddPlannerItem(
+        title: item.text,
+        date: today,
+        startTime: '05:00 PM',
+        category: 'Personal',
+        colorValue: AppColors.moduleTime.toARGB32(),
+        iconCodePoint: Icons.lightbulb_outline_rounded.codePoint,
+        notes: 'Captured from Pomodoro Distraction Pad',
+      ),
+    );
+    setState(() {
+      final idx = _distractions.indexWhere((d) => d.id == item.id);
+      if (idx != -1) {
+        _distractions[idx] = item.copyWith(addedToPlanner: true);
+      }
+    });
+    _saveDistractions();
+    SnackbarUtils.showSuccess(
+      context,
+      'Added "${item.text}" to today\'s Planner!',
+    );
+  }
+
+  void _openManualSessionSheet(BuildContext context, bool isDark) {
+    PomodoroManualSessionSheet.show(
+      context,
+      initialTask: _linkedTask,
+      initialCategory: _focusCategory,
+      initialDuration: _workMinutes,
+      isDark: isDark,
+      onSave: (newSession) {
+        setState(() {
+          _focusSessions.insert(0, newSession);
+          _completedTaskPomodoros++;
+        });
+        _saveFocusSessions();
+        _savePomodoroSettings();
+        SnackbarUtils.showSuccess(
+          context,
+          'Logged ${newSession.durationMinutes}m focus session!',
+        );
+      },
+    );
+  }
+
+  void _openZenFocusScreen(
+    BuildContext context,
+    PlannerItemEntity? linkedItem,
+  ) {
+    _timer?.cancel();
+    PomodoroZenScreen.show(
+      context,
+      focusModeIndex: _focusModeIndex,
+      currentRound: _currentRound,
+      totalRounds: _totalRounds,
+      secondsRemaining: _secondsRemaining,
+      totalModeSeconds: _sessionInitialTotalSeconds,
+      isRunning: _isTimerRunning,
+      linkedTask: _linkedTask,
+      focusCategory: _focusCategory,
+      selectedAmbience: _selectedAmbience,
+      ambienceVolume: _ambienceVolume,
+      linkedPlannerItem: linkedItem,
+      ambienceOptions: _ambienceOptions,
+      onToggleSubtask: linkedItem == null
+          ? null
+          : (sub) => _toggleLinkedSubtask(linkedItem, sub),
+      onCaptureDistraction: _addDistractionNote,
+      onAmbienceChanged: (amb) {
+        setState(() => _selectedAmbience = amb);
+        _savePomodoroSettings();
+      },
+      onVolumeChanged: (vol) {
+        setState(() => _ambienceVolume = vol);
+        _savePomodoroSettings();
+      },
+      onSyncBack: (remaining, running) {
+        if (!mounted) return;
+        setState(() {
+          _secondsRemaining = remaining;
+          _isTimerRunning = running;
+        });
+        if (running) {
+          _startTimerLoop();
+        }
+      },
     );
   }
 
@@ -2372,113 +2960,18 @@ class _PlannerViewState extends State<_PlannerView>
     );
   }
 
-  Widget _buildDailyFocusCard(bool isDark) {
-    final dividerColor = isDark ? AppColors.darkDivider : AppColors.divider;
-    Widget divider() => Container(width: 1, height: 24, color: dividerColor);
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
-        borderRadius: AppRadius.radiusMd,
-        border: Border.all(color: dividerColor, width: 0.85),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 22,
-                height: 22,
-                decoration: BoxDecoration(
-                  color: AppColors.focusPomodoro.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Icon(
-                  Icons.local_fire_department_rounded,
-                  color: AppColors.focusPomodoro,
-                  size: 13.5,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Daily Focus Activity',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.1,
-                    color: isDark
-                        ? AppColors.darkTextHeading
-                        : AppColors.textHeading,
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.darkScaffoldBackground
-                      : AppColors.scaffoldBackground,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: dividerColor, width: 0.8),
-                ),
-                child: Text(
-                  'Goal: 4 sessions',
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
-                    color: isDark
-                        ? AppColors.darkTextCaption
-                        : AppColors.textCaption,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatColumn(
-                  '$_completedSessionsToday',
-                  'Sessions',
-                  AppColors.moduleTime,
-                  isDark,
-                ),
-              ),
-              divider(),
-              Expanded(
-                child: _buildStatColumn(
-                  '${_completedSessionsToday * _workMinutes}m',
-                  'Focused',
-                  AppColors.success,
-                  isDark,
-                ),
-              ),
-              divider(),
-              Expanded(
-                child: _buildStatColumn(
-                  '4 days',
-                  'Streak',
-                  AppColors.focusPomodoro,
-                  isDark,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   void _openCustomDurationSheet(BuildContext context, bool isDark) {
     PomodoroCustomDurationSheet.show(
       context,
       workMinutes: _workMinutes,
       shortBreakMinutes: _shortBreakMinutes,
       longBreakMinutes: _longBreakMinutes,
+      totalRounds: _totalRounds,
+      dailyGoalSessions: _dailyGoalSessions,
+      autoStartBreaks: _autoStartBreaks,
+      autoStartWork: _autoStartWork,
+      strictMode: _strictMode,
+      voiceCoach: _voiceCoach,
       isDark: isDark,
       onSave: (w, s, l) {
         _timer?.cancel();
@@ -2487,14 +2980,30 @@ class _PlannerViewState extends State<_PlannerView>
           _shortBreakMinutes = s;
           _longBreakMinutes = l;
           _isTimerRunning = false;
-          _secondsRemaining = _currentTotalSeconds;
+          if (_focusModeIndex != 3) {
+            _secondsRemaining = _currentTotalSeconds;
+            _sessionInitialTotalSeconds = _secondsRemaining;
+          }
         });
+        _savePomodoroSettings();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Pomodoro durations updated!'),
             behavior: SnackBarBehavior.floating,
           ),
         );
+      },
+      onSaveAdvanced: (cfg) {
+        setState(() {
+          _totalRounds = cfg.totalRounds;
+          if (_currentRound > _totalRounds) _currentRound = 1;
+          _dailyGoalSessions = cfg.dailyGoalSessions;
+          _autoStartBreaks = cfg.autoStartBreaks;
+          _autoStartWork = cfg.autoStartWork;
+          _strictMode = cfg.strictMode;
+          _voiceCoach = cfg.voiceCoach;
+        });
+        _savePomodoroSettings();
       },
     );
   }
@@ -2506,41 +3015,24 @@ class _PlannerViewState extends State<_PlannerView>
     PomodoroLinkedTaskSheet.show(
       context,
       currentTask: _linkedTask,
+      currentLinkedTaskId: _linkedTaskId,
+      currentCategory: _focusCategory,
+      currentEstimatedPomodoros: _estimatedPomodoros,
       todayTasks: items,
       isDark: isDark,
       onTaskSelected: (task) => setState(() => _linkedTask = task),
-    );
-  }
-
-  Widget _buildStatColumn(
-    String value,
-    String label,
-    Color color,
-    bool isDark,
-  ) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 16,
-            height: 1.15,
-            fontWeight: FontWeight.w700,
-            fontFeatures: const [FontFeature.tabularFigures()],
-            color: color,
-          ),
-        ),
-        const SizedBox(height: 1),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-            color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
-          ),
-        ),
-      ],
+      onTaskDetailsSelected: (details) {
+        setState(() {
+          if (details.title != _linkedTask) {
+            _completedTaskPomodoros = 0;
+          }
+          _linkedTask = details.title;
+          _linkedTaskId = details.linkedTaskId;
+          _focusCategory = details.category;
+          _estimatedPomodoros = details.estimatedPomodoros;
+        });
+        _savePomodoroSettings();
+      },
     );
   }
 

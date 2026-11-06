@@ -624,10 +624,11 @@ class _MiniPlanMetric extends StatelessWidget {
   }
 }
 
-/// Comprehensive Budget & Expense Report card showing:
-/// 1. Where money is spent most (top category leaks + % of budget).
-/// 2. How much savings the user is achieving (actual vs target savings + rate).
-/// 3. Concrete, personalized suggestions on how to improve the budget & save more.
+/// Comprehensive AI-Powered Budget, Forecast & Savings Coach card showing:
+/// 1. AI Financial Health Score & End-of-Month Spend Forecast.
+/// 2. Where money is spent most (top category leaks + % of budget).
+/// 3. How much savings the user is achieving (actual vs target savings + rate).
+/// 4. Concrete, personalized AI recommendations + 1-tap Auto-Rebalance & Affordability Simulator.
 class BudgetExpenseReportCard extends StatelessWidget {
   final MoneyLoaded state;
   final double spentToday;
@@ -660,13 +661,22 @@ class BudgetExpenseReportCard extends StatelessWidget {
     final overCategories = state.categoryBudgets
         .where((b) => b.isOverBudget)
         .toList();
+    final dailyAllowance = state.budget.dailyAllowanceForToday(spentToday);
     final suggestions = _buildActionableSuggestions(
       state: state,
       spentToday: spentToday,
+      dailyAllowance: dailyAllowance,
       effectiveIncome: effectiveIncome,
       actualSaved: actualSaved,
       targetSavings: targetSavings,
     );
+
+    final score = insights.aiHealthScore;
+    final scoreColor = score >= 75
+        ? AppColors.success
+        : score >= 50
+        ? AppColors.warning
+        : AppColors.error;
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -680,7 +690,7 @@ class BudgetExpenseReportCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
+          // Header: AI Financial Coach + Score Pill (Spacious, Zero Crowding)
           Row(
             children: [
               Container(
@@ -691,7 +701,7 @@ class BudgetExpenseReportCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
-                  Icons.insights_rounded,
+                  Icons.auto_awesome_rounded,
                   size: 16,
                   color: AppColors.primary,
                 ),
@@ -702,7 +712,9 @@ class BudgetExpenseReportCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Budget & Savings Report (${period.label})',
+                      'AI Coach & Savings Report (${period.label})',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w700,
@@ -712,7 +724,9 @@ class BudgetExpenseReportCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Where you spend most · Savings · How to improve',
+                      'Spend forecast · Savings rate · Smart optimizations',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 10.5,
                         color: isDark
@@ -723,34 +737,189 @@ class BudgetExpenseReportCard extends StatelessWidget {
                   ],
                 ),
               ),
+              const SizedBox(width: 6),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color:
-                      (insights.budgetScore >= 75
-                              ? AppColors.success
-                              : insights.budgetScore >= 50
-                              ? AppColors.warning
-                              : AppColors.error)
-                          .withValues(alpha: 0.12),
+                  color: scoreColor.withValues(alpha: 0.12),
                   borderRadius: AppRadius.radiusFull,
                 ),
                 child: Text(
-                  'Score ${insights.budgetScore}/100',
+                  'AI $score/100',
                   style: TextStyle(
                     fontSize: 10.5,
                     fontWeight: FontWeight.w700,
-                    color: insights.budgetScore >= 75
-                        ? AppColors.success
-                        : insights.budgetScore >= 50
-                        ? AppColors.warning
-                        : AppColors.error,
+                    color: scoreColor,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
+
+          // Quick AI Action Bar: Can I Afford a Purchase? | Set Salary & Plan
+          Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: () => AiAffordabilitySheet.show(context, state: state),
+                  borderRadius: BorderRadius.circular(9),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(9),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.25),
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.calculate_outlined,
+                          size: 14,
+                          color: AppColors.primary,
+                        ),
+                        SizedBox(width: 5),
+                        Flexible(
+                          child: Text(
+                            'Can I Afford This? (AI Check)',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              if (onOpenSalaryPlan != null) ...[
+                const SizedBox(width: 8),
+                InkWell(
+                  onTap: onOpenSalaryPlan,
+                  borderRadius: BorderRadius.circular(9),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(9),
+                      border: Border.all(
+                        color: AppColors.success.withValues(alpha: 0.25),
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.payments_outlined,
+                          size: 14,
+                          color: AppColors.success,
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          'Salary Plan',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.success,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // AI End-of-Month Forecast Strip
+          if (insights.aiForecastSummary.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(
+                  alpha: isDark ? 0.14 : 0.06,
+                ),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(top: 1),
+                    child: Icon(
+                      Icons.psychology_alt_rounded,
+                      size: 15,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'AI Month-End Forecast',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: isDark
+                                    ? AppColors.darkTextPrimary
+                                    : AppColors.textPrimary,
+                              ),
+                            ),
+                            Text(
+                              'Est. ${CurrencyUtils.format(insights.projectedMonthSpend)}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color:
+                                    insights.projectedMonthSpend >
+                                        state.budget.monthlyBudget
+                                    ? AppColors.warning
+                                    : AppColors.success,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          insights.aiForecastSummary,
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            height: 1.3,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
 
           // 1. How Much Savings I Am Doing
           Container(
@@ -803,8 +972,8 @@ class BudgetExpenseReportCard extends StatelessWidget {
                       label: 'Daily Avg Spend',
                       value: CurrencyUtils.format(insights.avgPerDay),
                       subtitle:
-                          'Safe: ${CurrencyUtils.format(state.budget.dailySafeSpend)}/d',
-                      color: insights.avgPerDay > state.budget.dailySafeSpend
+                          'Safe: ${CurrencyUtils.format(dailyAllowance)}/d',
+                      color: insights.avgPerDay > dailyAllowance
                           ? AppColors.warning
                           : AppColors.moduleTime,
                       isDark: isDark,
@@ -897,7 +1066,7 @@ class BudgetExpenseReportCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'HOW TO IMPROVE & SAVE MORE',
+                'AI RECOMMENDATIONS & ACTIONS',
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
@@ -906,12 +1075,26 @@ class BudgetExpenseReportCard extends StatelessWidget {
                 ),
               ),
               if (overCategories.isNotEmpty)
-                Text(
-                  '${overCategories.length} over limit',
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.error,
+                InkWell(
+                  onTap: () => _rebalanceOverCategories(context, state),
+                  borderRadius: AppRadius.radiusFull,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2.5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.12),
+                      borderRadius: AppRadius.radiusFull,
+                    ),
+                    child: Text(
+                      'Auto-Fix ${overCategories.length} Over Limit',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.error,
+                      ),
+                    ),
                   ),
                 ),
             ],
@@ -973,15 +1156,38 @@ class BudgetExpenseReportCard extends StatelessWidget {
     );
   }
 
+  static void _rebalanceOverCategories(
+    BuildContext context,
+    MoneyLoaded state,
+  ) {
+    final bloc = context.read<MoneyBloc>();
+    final multiplier = state.selectedPeriod.monthMultiplier;
+    for (final catBudget in state.categoryBudgets.where(
+      (b) => b.isOverBudget,
+    )) {
+      // Round up to nearest 500 with a 10% buffer so the category is back on track
+      final neededPeriodLimit = (catBudget.spent * 1.10 / 500).ceil() * 500.0;
+      final monthlyLimit = (neededPeriodLimit / multiplier).roundToDouble();
+      bloc.add(SetCategoryLimit(catBudget.category, monthlyLimit));
+    }
+    SnackbarUtils.showSuccess(
+      context,
+      'AI rebalanced over-limit categories with a 10% safety buffer!',
+    );
+  }
+
   static List<_CoachSuggestion> _buildActionableSuggestions({
     required MoneyLoaded state,
     required double spentToday,
+    required double dailyAllowance,
     required double effectiveIncome,
     required double actualSaved,
     required double targetSavings,
   }) {
     final tips = <_CoachSuggestion>[];
-    final dailyLimit = state.budget.dailySafeSpend;
+    final dailyLimit = dailyAllowance > 0
+        ? dailyAllowance
+        : state.budget.dailySafeSpend;
 
     // 1. Daily budget alert or daily buffer suggestion
     if (dailyLimit > 0 && spentToday > dailyLimit) {
@@ -1233,6 +1439,556 @@ class _SalaryPlanSetupSheetState extends State<SalaryPlanSetupSheet> {
                   'Salary plan (${_preset.title}) applied!',
                 );
               },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Interactive AI Purchase Affordability & What-If Simulator Sheet.
+///
+/// Evaluates any planned purchase against:
+/// 1. Today's Safe-to-Spend allowance
+/// 2. Selected Category Budget limit
+/// 3. Remaining Monthly Budget & Savings Goal
+/// And provides a clear verdict (`Safe to Buy`, `Stretch`, or `Delay Purchase`)
+/// with a 1-tap option to log the expense.
+class AiAffordabilitySheet extends StatefulWidget {
+  final MoneyLoaded state;
+
+  const AiAffordabilitySheet({super.key, required this.state});
+
+  static Future<void> show(BuildContext context, {required MoneyLoaded state}) {
+    final bloc = context.read<MoneyBloc>();
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => BlocProvider.value(
+        value: bloc,
+        child: AiAffordabilitySheet(state: state),
+      ),
+    );
+  }
+
+  @override
+  State<AiAffordabilitySheet> createState() => _AiAffordabilitySheetState();
+}
+
+class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
+  static const List<double> _quickAmounts = [500, 1500, 3000, 5000, 10000];
+  late final TextEditingController _amountCtrl;
+  late final TextEditingController _itemCtrl;
+  String _categoryKey = MoneyCategory.shopping.key;
+
+  @override
+  void initState() {
+    super.initState();
+    _amountCtrl = TextEditingController(text: '1500');
+    _itemCtrl = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _amountCtrl.dispose();
+    _itemCtrl.dispose();
+    super.dispose();
+  }
+
+  double get _purchaseAmount {
+    final v = double.tryParse(_amountCtrl.text.replaceAll(',', '').trim());
+    return (v != null && v > 0) ? v : 0.0;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final state = widget.state;
+    final insights = state.insights;
+    final amount = _purchaseAmount;
+    final cat = MoneyCategory.resolve(_categoryKey);
+    final catBudget = state.categoryBudgets
+        .where((b) => b.category == _categoryKey)
+        .firstOrNull;
+
+    final dailyCap = state.budget.dailyAllowanceForToday(insights.spentToday);
+    final leftTodayBefore = (dailyCap - insights.spentToday).clamp(
+      0.0,
+      double.infinity,
+    );
+    final leftTodayAfter = leftTodayBefore - amount;
+
+    final catLimit = catBudget?.monthlyLimit ?? 0.0;
+    final catSpentBefore = catBudget?.spent ?? 0.0;
+    final catSpentAfter = catSpentBefore + amount;
+    final catOverAfter = catLimit > 0 && catSpentAfter > catLimit;
+
+    final monthRemainingBefore = state.budget.remainingSpendable;
+    final monthRemainingAfter = monthRemainingBefore - amount;
+    final daysLeft = state.budget.daysRemaining;
+    final newDailyAllowance = daysLeft > 1
+        ? ((monthRemainingBefore - amount).clamp(0.0, double.infinity) /
+              (daysLeft - 1))
+        : 0.0;
+
+    // Determine AI Verdict
+    final bool fitsToday = amount <= leftTodayBefore && !catOverAfter;
+    final bool fitsMonth = amount <= monthRemainingBefore && !catOverAfter;
+
+    final Color verdictColor = fitsToday
+        ? AppColors.success
+        : fitsMonth
+        ? AppColors.warning
+        : AppColors.error;
+    final IconData verdictIcon = fitsToday
+        ? Icons.verified_rounded
+        : fitsMonth
+        ? Icons.info_outline_rounded
+        : Icons.gpp_bad_outlined;
+    final String verdictTitle = fitsToday
+        ? 'Safe to Buy Today'
+        : fitsMonth
+        ? 'Moderate Stretch — Fits Monthly Budget'
+        : 'High Impact — Consider Delaying';
+
+    final String verdictBody;
+    if (fitsToday) {
+      verdictBody =
+          'This purchase fits comfortably inside today\'s safe allowance (${CurrencyUtils.format(leftTodayBefore)}) and leaves ${CurrencyUtils.format(leftTodayAfter.clamp(0, double.infinity))} for today.';
+    } else if (fitsMonth) {
+      final waitDays = dailyCap > 0 ? (amount / dailyCap).ceil() : 2;
+      verdictBody =
+          'Exceeds today\'s safe cap by ${CurrencyUtils.format((amount - leftTodayBefore).clamp(0, double.infinity))}, but fits your monthly budget. Your daily safe spend for the next ${daysLeft - 1} days will adjust to ${CurrencyUtils.format(newDailyAllowance)}/day (or wait $waitDays low-spend days).';
+    } else {
+      final overAmt = catOverAfter
+          ? (catSpentAfter - catLimit)
+          : (amount - monthRemainingBefore).clamp(0.0, double.infinity);
+      verdictBody =
+          'Pushes your ${catOverAfter ? '${cat.label} budget' : 'monthly spendable pool'} over limit by ${CurrencyUtils.format(overAmt)}. AI recommends waiting or rebalancing your budget first.';
+    }
+
+    return Container(
+      padding: EdgeInsets.only(
+        left: 18,
+        right: 18,
+        top: 12,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : AppColors.surface,
+        borderRadius: AppRadius.topXl,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkBorder : AppColors.border,
+                  borderRadius: AppRadius.radiusFull,
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.auto_awesome_rounded,
+                    color: AppColors.primary,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'AI Purchase Affordability Check',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: isDark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        'Simulate impact on today\'s safe spend, category & savings',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isDark
+                              ? AppColors.darkTextMuted
+                              : AppColors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close_rounded, size: 20),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Amount + Item Name Inputs
+            Row(
+              children: [
+                Expanded(
+                  flex: 5,
+                  child: _CompactAmountField(
+                    controller: _amountCtrl,
+                    label: 'Planned Purchase Amount',
+                    isDark: isDark,
+                    onChanged: (_) => setState(() {}),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 6,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Item / Merchant (Optional)',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: isDark
+                              ? AppColors.darkTextMuted
+                              : AppColors.textMuted,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      SizedBox(
+                        height: 34,
+                        child: TextField(
+                          controller: _itemCtrl,
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.textPrimary,
+                          ),
+                          decoration: InputDecoration(
+                            isDense: true,
+                            hintText: 'e.g. Headphones, Dinner',
+                            hintStyle: TextStyle(
+                              fontSize: 11.5,
+                              color: isDark
+                                  ? AppColors.darkTextMuted
+                                  : AppColors.textMuted,
+                            ),
+                            filled: true,
+                            fillColor: isDark
+                                ? AppColors.darkSurface
+                                : Colors.white,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 7,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                color: isDark
+                                    ? AppColors.darkBorder
+                                    : AppColors.border,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                color: isDark
+                                    ? AppColors.darkBorder
+                                    : AppColors.border,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+
+            // Quick Amount Chips
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: _quickAmounts.map((presetAmt) {
+                  final selected = (amount - presetAmt).abs() < 1;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: GestureDetector(
+                      onTap: () => setState(
+                        () => _amountCtrl.text = presetAmt.toStringAsFixed(0),
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: selected
+                              ? AppColors.primary
+                              : (isDark
+                                    ? AppColors.darkSurfaceMuted
+                                    : AppColors.surfaceElevated),
+                          borderRadius: AppRadius.radiusFull,
+                        ),
+                        child: Text(
+                          CurrencyUtils.format(presetAmt),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: selected
+                                ? Colors.white
+                                : (isDark
+                                      ? AppColors.darkTextSecondary
+                                      : AppColors.textSecondary),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            // Category Selector Strip
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: MoneyCategory.expenseCategories.map((c) {
+                  final selected = c.key == _categoryKey;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: GestureDetector(
+                      onTap: () => setState(() => _categoryKey = c.key),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: selected
+                              ? c.color.withValues(alpha: 0.16)
+                              : (isDark
+                                    ? AppColors.darkSurfaceMuted
+                                    : AppColors.surfaceElevated),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: selected ? c.color : Colors.transparent,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(c.icon, size: 13, color: c.color),
+                            const SizedBox(width: 4),
+                            Text(
+                              c.label,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: selected
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                                color: selected
+                                    ? c.color
+                                    : (isDark
+                                          ? AppColors.darkTextSecondary
+                                          : AppColors.textSecondary),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // AI Verdict Banner
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: verdictColor.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: verdictColor.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(verdictIcon, color: verdictColor, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          verdictTitle,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: verdictColor,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          verdictBody,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            height: 1.35,
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Before vs After Impact Strip
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.darkSurfaceMuted
+                    : AppColors.surfaceElevated,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _ReportMetricTile(
+                      label: 'Today Left After',
+                      value: CurrencyUtils.format(
+                        leftTodayAfter.clamp(0, double.infinity),
+                      ),
+                      subtitle: 'Was ${CurrencyUtils.format(leftTodayBefore)}',
+                      color: leftTodayAfter >= 0
+                          ? AppColors.success
+                          : AppColors.error,
+                      isDark: isDark,
+                    ),
+                  ),
+                  Container(
+                    width: 1,
+                    height: 30,
+                    color: isDark ? AppColors.darkBorder : AppColors.border,
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: _ReportMetricTile(
+                        label: '${cat.label} After',
+                        value: CurrencyUtils.format(catSpentAfter),
+                        subtitle: catLimit > 0
+                            ? 'of ${CurrencyUtils.format(catLimit)}'
+                            : 'No limit set',
+                        color: catOverAfter
+                            ? AppColors.error
+                            : AppColors.primary,
+                        isDark: isDark,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: 1,
+                    height: 30,
+                    color: isDark ? AppColors.darkBorder : AppColors.border,
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: _ReportMetricTile(
+                        label: 'Month Left After',
+                        value: CurrencyUtils.format(
+                          monthRemainingAfter.clamp(0, double.infinity),
+                        ),
+                        subtitle:
+                            '${CurrencyUtils.format(newDailyAllowance)}/d next',
+                        color: monthRemainingAfter >= 0
+                            ? AppColors.moduleTime
+                            : AppColors.error,
+                        isDark: isDark,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // Action Buttons: Close or Log Expense Now
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Close'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 2,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                    ),
+                    onPressed: amount <= 0
+                        ? null
+                        : () {
+                            final title = _itemCtrl.text.trim().isNotEmpty
+                                ? _itemCtrl.text.trim()
+                                : cat.label;
+                            context.read<MoneyBloc>().add(
+                              AddTransaction(
+                                title: title,
+                                category: cat.key,
+                                amount: amount,
+                                mode: 'UPI',
+                                iconCodePoint: cat.icon.codePoint,
+                                type: 'expense',
+                              ),
+                            );
+                            Navigator.of(context).pop();
+                            SnackbarUtils.showSuccess(
+                              context,
+                              'Logged ${CurrencyUtils.format(amount)} in ${cat.label}',
+                            );
+                          },
+                    icon: const Icon(Icons.check_circle_outline, size: 17),
+                    label: Text('Log ${CurrencyUtils.format(amount)} Expense'),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

@@ -67,9 +67,116 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   late DateTime _selectedDate;
   bool _isSubmitting = false;
   bool _isCategoryGrid = false;
+  bool _aiAutoCategorized = false;
 
   bool get _isEditing => widget.existing != null;
   bool get _isIncome => _type == 'income';
+
+  static MoneyCategory? _inferCategoryFromTitle(
+    String rawTitle, {
+    required bool isIncome,
+  }) {
+    final q = rawTitle.toLowerCase().trim();
+    if (q.length < 3) return null;
+    if (isIncome) {
+      if (q.contains('salary') ||
+          q.contains('paycheck') ||
+          q.contains('stipend')) {
+        return MoneyCategory.salary;
+      }
+      if (q.contains('freelance') ||
+          q.contains('client') ||
+          q.contains('invoice') ||
+          q.contains('project')) {
+        return MoneyCategory.business;
+      }
+      if (q.contains('dividend') ||
+          q.contains('interest') ||
+          q.contains('stock') ||
+          q.contains('mutual')) {
+        return MoneyCategory.investmentReturn;
+      }
+      if (q.contains('gift') ||
+          q.contains('cashback') ||
+          q.contains('refund')) {
+        return MoneyCategory.gift;
+      }
+      return null;
+    }
+
+    if (q.contains('swiggy') ||
+        q.contains('zomato') ||
+        q.contains('coffee') ||
+        q.contains('cafe') ||
+        q.contains('dinner') ||
+        q.contains('lunch') ||
+        q.contains('breakfast') ||
+        q.contains('grocery') ||
+        q.contains('blinkit') ||
+        q.contains('zepto') ||
+        q.contains('restaurant')) {
+      return MoneyCategory.food;
+    }
+    if (q.contains('uber') ||
+        q.contains('ola') ||
+        q.contains('rapido') ||
+        q.contains('metro') ||
+        q.contains('petrol') ||
+        q.contains('fuel') ||
+        q.contains('cab') ||
+        q.contains('auto') ||
+        q.contains('parking')) {
+      return MoneyCategory.transport;
+    }
+    if (q.contains('amazon') ||
+        q.contains('flipkart') ||
+        q.contains('myntra') ||
+        q.contains('clothes') ||
+        q.contains('shoes') ||
+        q.contains('headphone') ||
+        q.contains('mall')) {
+      return MoneyCategory.shopping;
+    }
+    if (q.contains('rent') ||
+        q.contains('electric') ||
+        q.contains('wifi') ||
+        q.contains('broadband') ||
+        q.contains('airtel') ||
+        q.contains('jio') ||
+        q.contains('water') ||
+        q.contains('gas') ||
+        q.contains('emi')) {
+      return MoneyCategory.bills;
+    }
+    if (q.contains('netflix') ||
+        q.contains('spotify') ||
+        q.contains('movie') ||
+        q.contains('pvr') ||
+        q.contains('inox') ||
+        q.contains('game') ||
+        q.contains('youtube')) {
+      return MoneyCategory.entertainment;
+    }
+    if (q.contains('pharmacy') ||
+        q.contains('apollo') ||
+        q.contains('doctor') ||
+        q.contains('hospital') ||
+        q.contains('medicine') ||
+        q.contains('gym') ||
+        q.contains('cult')) {
+      return MoneyCategory.health;
+    }
+    if (q.contains('flight') ||
+        q.contains('indigo') ||
+        q.contains('hotel') ||
+        q.contains('airbnb') ||
+        q.contains('irctc') ||
+        q.contains('train') ||
+        q.contains('trip')) {
+      return MoneyCategory.travel;
+    }
+    return null;
+  }
 
   List<MoneyCategory> get _categories => _isIncome
       ? MoneyCategory.incomeCategories
@@ -566,8 +673,10 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                       categories: _categories,
                       selectedKey: _selectedCategoryKey,
                       isGrid: _isCategoryGrid,
-                      onSelect: (c) =>
-                          setState(() => _selectedCategoryKey = c.key),
+                      onSelect: (c) => setState(() {
+                        _selectedCategoryKey = c.key;
+                        _aiAutoCategorized = false;
+                      }),
                     ),
                     const SizedBox(height: 18),
 
@@ -611,9 +720,23 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Merchant / Payee
+                          // Merchant / Payee (with AI smart auto-categorization)
                           TextFormField(
                             controller: _titleCtrl,
+                            onChanged: (val) {
+                              final inferred = _inferCategoryFromTitle(
+                                val,
+                                isIncome: _isIncome,
+                              );
+                              if (inferred != null &&
+                                  (_selectedCategoryKey.isEmpty ||
+                                      _aiAutoCategorized)) {
+                                setState(() {
+                                  _selectedCategoryKey = inferred.key;
+                                  _aiAutoCategorized = true;
+                                });
+                              }
+                            },
                             validator: (v) => Validators.validateRequired(
                               v,
                               _isIncome

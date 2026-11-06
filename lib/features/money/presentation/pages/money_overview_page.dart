@@ -6,6 +6,7 @@ import '../../../../config/theme/app_spacing.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/utils/date_utils.dart';
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../core/widgets/feature_scaffold.dart';
 import '../../../../core/widgets/quick_capture_sheet.dart';
 import '../../domain/entities/money_category.dart';
@@ -50,6 +51,12 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
         accentColor: AppColors.moduleMoney,
         actionsEndPadding: AppSpacing.pageGutter,
         actions: [
+          FeatureIconButton(
+            tooltip: 'Clear Data & Start Fresh',
+            icon: Icons.restart_alt_rounded,
+            onPressed: () => _confirmResetMoneyData(context),
+          ),
+          const SizedBox(width: 8),
           FeatureIconButton(
             tooltip: StringConstants.quickCaptureTitle,
             icon: Icons.bolt_rounded,
@@ -310,7 +317,13 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
     final spentToday = _computeSpentToday(state);
 
     return [
-      // 1. Balance & 14-day Trend LineChart + centered balance + 3 action buttons
+      // 0. Guided Setup Banner when starting fresh (no salary/budget or transactions yet)
+      if (state.transactions.isEmpty && state.budget.monthlyBudget <= 0) ...[
+        _buildGuidedSetupCard(context, state, isDark),
+        const SizedBox(height: 14),
+      ],
+
+      // 1. Balance & 14-day Trend LineChart + 2x2 snapshot + action buttons
       BalanceTrendCard(
         insights: state.insights,
         onAddExpense: () =>
@@ -318,6 +331,9 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
         onAddIncome: () =>
             AddTransactionSheet.show(context, initialType: 'income'),
         onOpenInsights: () => scope?.selectTab(MoneyTab.insights),
+        onOpenAiSimulator: () =>
+            AiAffordabilitySheet.show(context, state: state),
+        onOpenIou: () => IouSheet.show(context),
       ),
       const SizedBox(height: 14),
 
@@ -333,7 +349,11 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
       ),
       const SizedBox(height: 12),
 
-      // 3. Budget & Savings Report (Where you spend most, Savings, How to improve)
+      // 3. Pending Lend & Borrow (To Collect / To Pay) & Due Reminders Card
+      _buildPendingIouAndAlertsCard(context, state, isDark),
+      const SizedBox(height: 12),
+
+      // 4. Budget & Savings Report (Where you spend most, Savings, How to improve)
       BudgetExpenseReportCard(
         state: state,
         spentToday: spentToday,
@@ -445,6 +465,587 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
         ),
       ),
     ];
+  }
+
+  Future<void> _confirmResetMoneyData(BuildContext context) async {
+    final bloc = context.read<MoneyBloc>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dCtx) => AlertDialog(
+        title: const Text('Clear Money Data & Start Fresh?'),
+        content: const Text(
+          'This will clear all existing transactions, lent/borrowed entries, subscriptions, and accounts so you can enter your own fresh salary, expenses, and reminders.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dCtx).pop(false),
+            child: const Text(StringConstants.cancel),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.of(dCtx).pop(true),
+            child: const Text('Clear & Start Fresh'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && context.mounted) {
+      bloc.add(const ResetAllMoneyData());
+      SnackbarUtils.showSuccess(
+        context,
+        'Money workspace cleared! Start by adding your Salary or Budget Plan.',
+      );
+    }
+  }
+
+  Widget _buildGuidedSetupCard(
+    BuildContext context,
+    MoneyLoaded state,
+    bool isDark,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : AppColors.surface,
+        borderRadius: AppRadius.borderLg,
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.rocket_launch_rounded,
+                  size: 16,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Start Fresh: 3 Simple Steps',
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w800,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      'Set up your monthly income, budget, expenses & reminders',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildSetupStepTile(
+            step: '1',
+            title: 'Add Monthly Salary or Income',
+            subtitle: 'Record your salary or incoming money first',
+            buttonLabel: '+ Salary',
+            color: AppColors.success,
+            isDark: isDark,
+            onTap: () => AddTransactionSheet.show(
+              context,
+              initialType: 'income',
+              initialCategory: MoneyCategory.salary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          _buildSetupStepTile(
+            step: '2',
+            title: 'Set Smart Budget & Fixed Bills',
+            subtitle: 'Auto-calculate your daily & weekly safe spend',
+            buttonLabel: 'Set Plan',
+            color: AppColors.primary,
+            isDark: isDark,
+            onTap: () => SalaryPlanSetupSheet.show(context, state: state),
+          ),
+          const SizedBox(height: 8),
+          _buildSetupStepTile(
+            step: '3',
+            title: 'Track Lent / Borrowed Money & Reminders',
+            subtitle: 'Log money given to collect back or borrowed to pay',
+            buttonLabel: '+ Lend/Borrow',
+            color: AppColors.moduleTime,
+            isDark: isDark,
+            onTap: () => IouSheet.showAddDialog(context, initialType: 'lent'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSetupStepTile({
+    required String step,
+    required String title,
+    required String subtitle,
+    required String buttonLabel,
+    required Color color,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurfaceMuted : AppColors.surfaceElevated,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 22,
+            height: 22,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.16),
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              step,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: color,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    color: isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.textMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                buttonLabel,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPendingIouAndAlertsCard(
+    BuildContext context,
+    MoneyLoaded state,
+    bool isDark,
+  ) {
+    final activeIous = state.ious.where((i) => !i.isSettled).toList();
+    final lentIous = activeIous.where((i) => i.isLent).toList();
+    final borrowedIous = activeIous.where((i) => !i.isLent).toList();
+    final totalLent = lentIous.fold<double>(0, (s, i) => s + i.amount);
+    final totalBorrowed = borrowedIous.fold<double>(0, (s, i) => s + i.amount);
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : AppColors.surface,
+        borderRadius: AppRadius.borderLg,
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.border,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: AppColors.moduleTime.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.swap_horiz_rounded,
+                  size: 16,
+                  color: AppColors.moduleTime,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Pending Lend & Borrow Reminders',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      'Track money given (to collect) & borrowed (to pay)',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        color: isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              InkWell(
+                onTap: () => IouSheet.show(context),
+                borderRadius: BorderRadius.circular(8),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                  child: Text(
+                    'Manage',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Summary Row: To Collect vs To Pay Back
+          Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: () =>
+                      IouSheet.showAddDialog(context, initialType: 'lent'),
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.moduleMoney.withValues(alpha: 0.09),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: AppColors.moduleMoney.withValues(alpha: 0.25),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Flexible(
+                              child: Text(
+                                'To Collect (Lent)',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.moduleMoney,
+                                ),
+                              ),
+                            ),
+                            const Icon(
+                              Icons.add_circle_outline_rounded,
+                              size: 14,
+                              color: AppColors.moduleMoney,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 3),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            CurrencyUtils.format(totalLent),
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: isDark
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          '${lentIous.length} pending • Tap + to add',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: InkWell(
+                  onTap: () =>
+                      IouSheet.showAddDialog(context, initialType: 'borrowed'),
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.09),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: AppColors.error.withValues(alpha: 0.25),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Flexible(
+                              child: Text(
+                                'To Pay (Borrowed)',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.error,
+                                ),
+                              ),
+                            ),
+                            const Icon(
+                              Icons.add_circle_outline_rounded,
+                              size: 14,
+                              color: AppColors.error,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 3),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            CurrencyUtils.format(totalBorrowed),
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: isDark
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          '${borrowedIous.length} pending • Tap + to add',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // Active Pending IOUs List (up to 3 right on Overview with Settle & Due Alert)
+          if (activeIous.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            ...activeIous.take(3).map((iou) {
+              final color = iou.isLent
+                  ? AppColors.moduleMoney
+                  : AppColors.error;
+              final dueBadge = iou.dueBadgeLabel;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppColors.darkSurfaceMuted
+                        : AppColors.surfaceElevated,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        iou.isLent
+                            ? Icons.call_made_rounded
+                            : Icons.call_received_rounded,
+                        size: 15,
+                        color: color,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              iou.isLent
+                                  ? 'Collect from ${iou.person}'
+                                  : 'Pay back ${iou.person}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: isDark
+                                    ? AppColors.darkTextPrimary
+                                    : AppColors.textPrimary,
+                              ),
+                            ),
+                            Text(
+                              dueBadge != null
+                                  ? '$dueBadge • ${iou.cleanNote}'
+                                  : iou.cleanNote,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                color: iou.isOverdue
+                                    ? AppColors.error
+                                    : (isDark
+                                          ? AppColors.darkTextSecondary
+                                          : AppColors.textSecondary),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        CurrencyUtils.format(iou.amount),
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w800,
+                          color: color,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      InkWell(
+                        onTap: () {
+                          context.read<MoneyBloc>().add(SettleIou(iou.id));
+                          SnackbarUtils.showSuccess(
+                            context,
+                            iou.isLent
+                                ? 'Marked ${CurrencyUtils.format(iou.amount)} collected from ${iou.person}!'
+                                : 'Marked ${CurrencyUtils.format(iou.amount)} paid to ${iou.person}!',
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(6),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 3.5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.14),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            iou.isLent ? 'Collected' : 'Paid',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: color,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ],
+        ],
+      ),
+    );
   }
 
   Widget _buildCategoryPills(BuildContext context, bool isDark) {

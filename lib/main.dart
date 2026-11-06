@@ -31,10 +31,11 @@ void main() async {
     debugPrint('Notification service initialization notice/error: $e\n$stack');
   }
 
-  // Seed database with demo data on first launch
+  // Seed database with demo data on first launch, then ensure Money starts fresh
   try {
     final db = sl<AppDatabase>();
     await DatabaseSeeder.seedIfEmpty(db);
+    await DatabaseSeeder.clearMoneyDemoDataOnce(db);
   } catch (e, stack) {
     debugPrint('Database seeding notice/error: $e\n$stack');
   }

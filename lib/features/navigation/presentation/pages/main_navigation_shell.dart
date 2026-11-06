@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../config/theme/app_colors.dart';
-import '../../../../config/theme/app_decorations.dart';
-import '../../../../core/constants/string_constants.dart';
+import '../../../../core/widgets/floating_quick_ball.dart';
 import '../../../../core/widgets/quick_capture_sheet.dart';
 import '../../../today_hub/presentation/pages/today_hub_page.dart';
 import '../../../planner/presentation/pages/planner_page.dart';
@@ -21,8 +21,35 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
   int _currentIndex = 0;
   int _previousNonMoneyIndex = 0;
+  int _captureRefreshGeneration = 0;
 
   bool get _isInMoneyMode => _currentIndex == _moneyTabIndex;
+
+  Future<void> _openQuickCapture(
+    BuildContext context,
+    QuickCaptureMode mode,
+  ) async {
+    HapticFeedback.selectionClick();
+    final result = await QuickCaptureSheet.show(context, mode: mode);
+    if (!mounted) return;
+    setState(() => _captureRefreshGeneration++);
+    if (result != null && context.mounted) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Saved: ${result.summary}'),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.fromLTRB(20, 0, 20, 74),
+          duration: const Duration(seconds: 3),
+          action: SnackBarAction(
+            label: 'View',
+            textColor: AppColors.voiceWaveform,
+            onPressed: () => _selectMainTab(result.targetTabIndex),
+          ),
+        ),
+      );
+    }
+  }
 
   void _selectMainTab(int index) {
     setState(() {
@@ -44,10 +71,13 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final pages = <Widget>[
-      const TodayHubPage(),
-      const PlannerPage(),
-      MoneyManagerPage(onExitMoney: _exitMoneyMode),
-      const NotesPage(),
+      TodayHubPage(key: ValueKey('today_$_captureRefreshGeneration')),
+      PlannerPage(key: ValueKey('planner_$_captureRefreshGeneration')),
+      MoneyManagerPage(
+        key: ValueKey('money_$_captureRefreshGeneration'),
+        onExitMoney: _exitMoneyMode,
+      ),
+      NotesPage(key: ValueKey('notes_$_captureRefreshGeneration')),
       const VaultPage(),
     ];
 
@@ -59,14 +89,13 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         children: [
           IndexedStack(index: _currentIndex, children: pages),
 
-          // Persistent Floating Quick-Capture Bar (hidden while inside Money
-          // so only Money's dedicated navigation bar is shown)
+          // Movable, minimizable Floating Quick-Capture Ball & Capsule
+          // (hidden while inside Money so only Money's dedicated nav is shown)
           if (!_isInMoneyMode)
-            Positioned(
-              left: 20,
-              right: 20,
-              bottom: 12,
-              child: _buildFloatingQuickCaptureBar(context, isDark),
+            Positioned.fill(
+              child: FloatingQuickBall(
+                onSelectMode: (mode) => _openQuickCapture(context, mode),
+              ),
             ),
         ],
       ),
@@ -132,97 +161,6 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 ],
               ),
             ),
-    );
-  }
-
-  Widget _buildFloatingQuickCaptureBar(BuildContext context, bool isDark) {
-    return Container(
-      height: 52,
-      decoration: AppDecorations.floatingBar,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Hold to Speak (Voice)
-          GestureDetector(
-            onTap: () =>
-                QuickCaptureSheet.show(context, mode: QuickCaptureMode.voice),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: AppColors.voiceWaveform.withValues(alpha: 0.22),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.mic_rounded,
-                    color: AppColors.voiceWaveform,
-                    size: 18,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  StringConstants.holdToSpeak,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Divider
-          Container(
-            width: 1,
-            height: 20,
-            color: Colors.white.withValues(alpha: 0.15),
-          ),
-
-          // Quick Type Button
-          GestureDetector(
-            onTap: () =>
-                QuickCaptureSheet.show(context, mode: QuickCaptureMode.text),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.keyboard_rounded, color: Colors.white70, size: 18),
-                SizedBox(width: 6),
-                Text(
-                  StringConstants.quickType,
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Divider
-          Container(
-            width: 1,
-            height: 20,
-            color: Colors.white.withValues(alpha: 0.15),
-          ),
-
-          // Scan Bill / OCR
-          IconButton(
-            tooltip: StringConstants.scanText,
-            icon: const Icon(
-              Icons.document_scanner_rounded,
-              color: AppColors.moduleMoneyLight,
-              size: 20,
-            ),
-            onPressed: () =>
-                QuickCaptureSheet.show(context, mode: QuickCaptureMode.scan),
-          ),
-        ],
-      ),
     );
   }
 

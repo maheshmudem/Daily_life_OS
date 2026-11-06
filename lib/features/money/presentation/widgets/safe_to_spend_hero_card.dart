@@ -25,7 +25,8 @@ class SafeToSpendHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dailyLimit = budget.dailySafeSpend;
+    // Use dailyAllowanceForToday so today's expenses are NOT subtracted twice!
+    final dailyLimit = budget.dailyAllowanceForToday(spentToday);
     final leftToday = dailyLimit - spentToday;
     final isOverDaily = dailyLimit > 0 && spentToday > dailyLimit;
     final isNearDaily =
@@ -33,7 +34,9 @@ class SafeToSpendHeroCard extends StatelessWidget {
     final dailyProgress = dailyLimit > 0
         ? (spentToday / dailyLimit).clamp(0.0, 1.0)
         : 0.0;
-    final weeklyLimit = dailyLimit * 7;
+    final weeklyCap = dailyLimit * 7;
+    final leftThisWeek = (weeklyCap - weeklySpend).clamp(0.0, double.infinity);
+    final leftThisMonth = budget.remainingSpendable;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
@@ -43,29 +46,32 @@ class SafeToSpendHeroCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Row
+          // Header Row (Zero Overflow)
           Row(
             children: [
               const Icon(Icons.shield_outlined, color: Colors.white, size: 15),
               const SizedBox(width: 6),
-              const Text(
-                'SAFE-TO-SPEND TODAY',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.5,
+              const Expanded(
+                child: Text(
+                  'SAFE-TO-SPEND TODAY',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
+                  ),
                 ),
               ),
-              const Spacer(),
               if (onOpenSalaryPlan != null) ...[
                 InkWell(
                   onTap: onOpenSalaryPlan,
                   borderRadius: AppRadius.radiusFull,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 7,
-                      vertical: 3,
+                      horizontal: 8,
+                      vertical: 3.5,
                     ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.22),
@@ -81,7 +87,7 @@ class SafeToSpendHeroCard extends StatelessWidget {
                         ),
                         SizedBox(width: 3),
                         Text(
-                          'Plan',
+                          'Set Plan',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 10,
@@ -95,7 +101,10 @@ class SafeToSpendHeroCard extends StatelessWidget {
                 const SizedBox(width: 5),
               ],
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 7,
+                  vertical: 3.5,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: AppRadius.radiusFull,
@@ -115,7 +124,7 @@ class SafeToSpendHeroCard extends StatelessWidget {
                   onTap: onEditBudget,
                   borderRadius: AppRadius.radiusFull,
                   child: Container(
-                    padding: const EdgeInsets.all(4),
+                    padding: const EdgeInsets.all(4.5),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
@@ -130,35 +139,56 @@ class SafeToSpendHeroCard extends StatelessWidget {
               ],
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
 
-          // Main Daily Limit + Today's Remaining Status
+          // Main Can-Spend-Today Headline + Daily Allowance Cap (Spacious 2-Column Row)
           Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                CurrencyUtils.format(dailyLimit),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.6,
-                  fontFeatures: [FontFeature.tabularFigures()],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        CurrencyUtils.format(
+                          leftToday.clamp(0, double.infinity),
+                        ),
+                        maxLines: 1,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.6,
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      budget.monthlyBudget <= 0
+                          ? 'Tap "Set Plan" to set monthly salary/budget'
+                          : 'Available out of ${CurrencyUtils.format(dailyLimit)}/day cap',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 6),
-              const Text(
-                '/ day budget',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const Spacer(),
+              const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 9,
+                  vertical: 4.5,
+                ),
                 decoration: BoxDecoration(
                   color: isOverDaily
                       ? Colors.redAccent.withValues(alpha: 0.32)
@@ -170,7 +200,7 @@ class SafeToSpendHeroCard extends StatelessWidget {
                 child: Text(
                   isOverDaily
                       ? 'Over by ${CurrencyUtils.format(spentToday - dailyLimit)}'
-                      : '${CurrencyUtils.format(leftToday.clamp(0, double.infinity))} left today',
+                      : '${((1.0 - dailyProgress) * 100).round()}% safe',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 10.5,
@@ -232,38 +262,51 @@ class SafeToSpendHeroCard extends StatelessWidget {
 
           const SizedBox(height: 10),
 
-          // 4-Metric Summary Strip (Spent Today, 7-Day Budget, Bills, Monthly Budget)
+          // Spacious 2x2 Spendable Runway Grid (Today Spent · Week Left / Month Left · Fixed Bills)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Row(
+            child: Column(
               children: [
-                Expanded(
-                  child: _buildMetricStat(
-                    'Today Spent',
-                    CurrencyUtils.format(spentToday),
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildMetricStat(
+                        'Spent Today',
+                        CurrencyUtils.format(spentToday),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildMetricStat(
+                        'Can Spend This Week',
+                        CurrencyUtils.format(leftThisWeek),
+                      ),
+                    ),
+                  ],
                 ),
-                Expanded(
-                  child: _buildMetricStat(
-                    '7-Day Cap',
-                    CurrencyUtils.format(weeklyLimit),
-                  ),
-                ),
-                Expanded(
-                  child: _buildMetricStat(
-                    'Fixed Bills',
-                    CurrencyUtils.format(budget.fixedBills),
-                  ),
-                ),
-                Expanded(
-                  child: _buildMetricStat(
-                    'Month Cap',
-                    CurrencyUtils.format(budget.monthlyBudget),
-                  ),
+                const SizedBox(height: 8),
+                Divider(height: 1, color: Colors.white.withValues(alpha: 0.15)),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildMetricStat(
+                        'Can Spend This Month',
+                        CurrencyUtils.format(leftThisMonth),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildMetricStat(
+                        'Fixed Monthly Bills',
+                        CurrencyUtils.format(budget.fixedBills),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

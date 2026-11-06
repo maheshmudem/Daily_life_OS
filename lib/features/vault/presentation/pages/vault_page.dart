@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
@@ -10,6 +12,7 @@ import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/widgets/app_shimmer_loader.dart';
+import '../../../../core/widgets/confirmation_dialog.dart';
 import '../../../../core/widgets/feature_scaffold.dart';
 import '../../../../di/injection_container.dart';
 import '../../domain/entities/vault_item_entity.dart';
@@ -51,18 +54,171 @@ class _VaultViewState extends State<_VaultView>
   String _documentSearchQuery = '';
   String _selectedDocumentCategory = 'All';
 
-  // Track revealed password IDs and user-added items in session
+  // Track revealed password IDs and persisted user-added/modified items
+  static const _prefsCustomPasswordsKey = 'vault_custom_passwords_v1';
+  static const _prefsCustomDocumentsKey = 'vault_custom_documents_v1';
+  static const _prefsCustomSecretsKey = 'vault_custom_secrets_v1';
+  static const _prefsDeletedPasswordIdsKey = 'vault_deleted_password_ids_v1';
+  static const _prefsDeletedDocumentIdsKey = 'vault_deleted_document_ids_v1';
+
   final Set<int> _revealedPasswordIds = {};
   final List<VaultPasswordEntity> _customPasswords = [];
   final List<VaultDocumentEntity> _customDocuments = [];
   final Map<int, String> _customSecrets = {};
+  final Set<int> _deletedPasswordIds = {};
+  final Set<int> _deletedDocumentIds = {};
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _tabController = TabController(length: 2, vsync: this);
+    _loadPersistedVaultData();
     _checkSecurity();
+  }
+
+  Future<void> _loadPersistedVaultData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final rawPw = prefs.getString(_prefsCustomPasswordsKey);
+      final rawDocs = prefs.getString(_prefsCustomDocumentsKey);
+      final rawSecrets = prefs.getString(_prefsCustomSecretsKey);
+      final delPw = prefs.getStringList(_prefsDeletedPasswordIdsKey);
+      final delDocs = prefs.getStringList(_prefsDeletedDocumentIdsKey);
+
+      if (!mounted) return;
+      setState(() {
+        if (rawPw != null && rawPw.isNotEmpty) {
+          final list = jsonDecode(rawPw) as List<dynamic>;
+          _customPasswords
+            ..clear()
+            ..addAll(
+              list.map((m) {
+                final map = m as Map<String, dynamic>;
+                return VaultPasswordEntity(
+                  id: map['id'] as int,
+                  title: map['title'] as String,
+                  username: map['username'] as String,
+                  category: map['category'] as String,
+                  iconCodePoint: map['iconCodePoint'] as int,
+                );
+              }),
+            );
+        }
+        if (rawDocs != null && rawDocs.isNotEmpty) {
+          final list = jsonDecode(rawDocs) as List<dynamic>;
+          _customDocuments
+            ..clear()
+            ..addAll(
+              list.map((m) {
+                final map = m as Map<String, dynamic>;
+                return VaultDocumentEntity(
+                  id: map['id'] as int,
+                  title: map['title'] as String,
+                  category: map['category'] as String,
+                  expiry: map['expiry'] as String,
+                  isExpiringSoon: (map['isExpiringSoon'] as bool?) ?? false,
+                  hasReminder: (map['hasReminder'] as bool?) ?? true,
+                  iconCodePoint: map['iconCodePoint'] as int,
+                );
+              }),
+            );
+        }
+        if (rawSecrets != null && rawSecrets.isNotEmpty) {
+          final map = jsonDecode(rawSecrets) as Map<String, dynamic>;
+          _customSecrets
+            ..clear()
+            ..addAll({
+              for (final entry in map.entries)
+                int.parse(entry.key): entry.value as String,
+            });
+        }
+        if (delPw != null) {
+          _deletedPasswordIds
+            ..clear()
+            ..addAll(delPw.map(int.tryParse).whereType<int>());
+        }
+        if (delDocs != null) {
+          _deletedDocumentIds
+            ..clear()
+            ..addAll(delDocs.map(int.tryParse).whereType<int>());
+        }
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _persistVaultData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        _prefsCustomPasswordsKey,
+        jsonEncode(
+          _customPasswords
+              .map(
+                (p) => {
+                  'id': p.id,
+                  'title': p.title,
+                  'username': p.username,
+                  'category': p.category,
+                  'iconCodePoint': p.iconCodePoint,
+                },
+              )
+              .toList(),
+        ),
+      );
+      await prefs.setString(
+        _prefsCustomDocumentsKey,
+        jsonEncode(
+          _customDocuments
+              .map(
+                (d) => {
+                  'id': d.id,
+                  'title': d.title,
+                  'category': d.category,
+                  'expiry': d.expiry,
+                  'isExpiringSoon': d.isExpiringSoon,
+                  'hasReminder': d.hasReminder,
+                  'iconCodePoint': d.iconCodePoint,
+                },
+              )
+              .toList(),
+        ),
+      );
+      await prefs.setString(
+        _prefsCustomSecretsKey,
+        jsonEncode({
+          for (final e in _customSecrets.entries) e.key.toString(): e.value,
+        }),
+      );
+      await prefs.setStringList(
+        _prefsDeletedPasswordIdsKey,
+        _deletedPasswordIds.map((e) => e.toString()).toList(),
+      );
+      await prefs.setStringList(
+        _prefsDeletedDocumentIdsKey,
+        _deletedDocumentIds.map((e) => e.toString()).toList(),
+      );
+    } catch (_) {}
+  }
+
+  List<VaultPasswordEntity> _mergedPasswords(List<VaultPasswordEntity> base) {
+    final customIds = _customPasswords.map((p) => p.id).toSet();
+    return [
+      ..._customPasswords.where((p) => !_deletedPasswordIds.contains(p.id)),
+      ...base.where(
+        (p) => !customIds.contains(p.id) && !_deletedPasswordIds.contains(p.id),
+      ),
+    ];
+  }
+
+  List<VaultDocumentEntity> _mergedDocuments(List<VaultDocumentEntity> base) {
+    final customIds = _customDocuments.map((d) => d.id).toSet();
+    return [
+      ..._customDocuments.where((d) => !_deletedDocumentIds.contains(d.id)),
+      ...base.where(
+        (d) => !customIds.contains(d.id) && !_deletedDocumentIds.contains(d.id),
+      ),
+    ];
   }
 
   Future<void> _checkSecurity() async {
@@ -421,15 +577,15 @@ class _VaultViewState extends State<_VaultView>
                   children: [
                     _buildPasswordsTab(
                       context,
-                      [..._customPasswords, ...state.passwords],
-                      [..._customDocuments, ...state.documents],
+                      _mergedPasswords(state.passwords),
+                      _mergedDocuments(state.documents),
                       isDark,
                       isDecoy,
                     ),
                     _buildDocumentsTab(
                       context,
-                      [..._customDocuments, ...state.documents],
-                      [..._customPasswords, ...state.passwords],
+                      _mergedDocuments(state.documents),
+                      _mergedPasswords(state.passwords),
                       isDark,
                       isDecoy,
                     ),
@@ -1823,6 +1979,33 @@ class _VaultViewState extends State<_VaultView>
                       ],
                     ),
                   ),
+                  IconButton(
+                    tooltip: 'Delete Login',
+                    onPressed: () async {
+                      final nav = Navigator.of(ctx);
+                      final confirmed = await ConfirmationDialog.show(
+                        ctx,
+                        title: 'Delete Login?',
+                        message:
+                            'Are you sure you want to remove "${item.title}" from your encrypted Vault?',
+                        confirmLabel: 'Delete',
+                      );
+                      if (confirmed == true && mounted) {
+                        nav.pop();
+                        setState(() {
+                          _customPasswords.removeWhere((p) => p.id == item.id);
+                          _deletedPasswordIds.add(item.id);
+                          _customSecrets.remove(item.id);
+                        });
+                        _persistVaultData();
+                      }
+                    },
+                    icon: const Icon(
+                      Icons.delete_outline_rounded,
+                      color: AppColors.error,
+                      size: 20,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 14),
@@ -1927,6 +2110,32 @@ class _VaultViewState extends State<_VaultView>
                           ),
                         ),
                       ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Delete Document',
+                    onPressed: () async {
+                      final nav = Navigator.of(ctx);
+                      final confirmed = await ConfirmationDialog.show(
+                        ctx,
+                        title: 'Delete Warranty / Document?',
+                        message:
+                            'Are you sure you want to delete "${doc.title}" from Warranty Locker?',
+                        confirmLabel: 'Delete',
+                      );
+                      if (confirmed == true && mounted) {
+                        nav.pop();
+                        setState(() {
+                          _customDocuments.removeWhere((d) => d.id == doc.id);
+                          _deletedDocumentIds.add(doc.id);
+                        });
+                        _persistVaultData();
+                      }
+                    },
+                    icon: const Icon(
+                      Icons.delete_outline_rounded,
+                      color: AppColors.error,
+                      size: 20,
                     ),
                   ),
                 ],
@@ -2153,6 +2362,7 @@ class _VaultViewState extends State<_VaultView>
                             }
                           }
                         });
+                        _persistVaultData();
                         Navigator.pop(ctx);
                       },
                       child: const Text('Save to Encrypted Vault'),

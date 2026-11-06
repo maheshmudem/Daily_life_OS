@@ -4,6 +4,7 @@ import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/app_text_styles.dart';
 import '../../../../core/widgets/app_dropdown_menu.dart';
+import '../../../../core/widgets/expandable_text_widget.dart';
 import '../../domain/entities/planner_item_entity.dart';
 
 /// Reminder card used in the Planner list.
@@ -100,10 +101,11 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
                       _buildMeta(item),
                       if (item.notes.isNotEmpty) ...[
                         const SizedBox(height: 6),
-                        Text(
-                          item.notes,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                        ExpandableTextWidget(
+                          text: item.notes,
+                          collapsedMaxLines: 2,
+                          characterThreshold: 65,
+                          toggleColor: AppColors.moduleTime,
                           style: TextStyle(
                             fontSize: 12,
                             height: 1.35,
@@ -122,13 +124,17 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
             ],
           ),
 
-          if (_isExpanded && item.checklist.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.only(left: _contentInset),
-              child: _buildChecklist(item),
-            ),
-          ],
+          AnimatedSize(
+            duration: const Duration(milliseconds: 240),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.topCenter,
+            child: (_isExpanded && item.checklist.isNotEmpty)
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 8, left: _contentInset),
+                    child: _buildChecklist(item),
+                  )
+                : const SizedBox.shrink(),
+          ),
 
           const SizedBox(height: 8),
           Divider(height: 1, thickness: 0.8, color: _dividerColor),
@@ -190,10 +196,11 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-          child: Text(
-            item.title,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+          child: ExpandableTextWidget(
+            text: item.title,
+            collapsedMaxLines: 2,
+            characterThreshold: 60,
+            toggleColor: AppColors.moduleTime,
             style: TextStyle(
               fontSize: 13.5,
               height: _titleLineHeight / 13.5,

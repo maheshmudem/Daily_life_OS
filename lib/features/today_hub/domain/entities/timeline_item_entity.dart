@@ -28,6 +28,40 @@ class TimelineItemEntity extends Equatable {
   IconData get icon => IconData(iconCodePoint, fontFamily: 'MaterialIcons');
   Color get color => Color(colorValue);
 
+  TimelineItemEntity copyWith({
+    int? id,
+    String? time,
+    String? title,
+    String? category,
+    int? colorValue,
+    int? iconCodePoint,
+    bool? isDone,
+    String? action,
+    String? date,
+  }) {
+    return TimelineItemEntity(
+      id: id ?? this.id,
+      time: time ?? this.time,
+      title: title ?? this.title,
+      category: category ?? this.category,
+      colorValue: colorValue ?? this.colorValue,
+      iconCodePoint: iconCodePoint ?? this.iconCodePoint,
+      isDone: isDone ?? this.isDone,
+      action: action ?? this.action,
+      date: date ?? this.date,
+    );
+  }
+
   @override
-  List<Object?> get props => [id, isDone];
+  List<Object?> get props => [
+    id,
+    time,
+    title,
+    category,
+    colorValue,
+    iconCodePoint,
+    isDone,
+    action,
+    date,
+  ];
 }

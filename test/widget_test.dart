@@ -79,9 +79,20 @@ void main() {
       findsOneWidget,
     );
 
-    // 2. Verify Persistent Floating Quick-Capture Bar exists
+    // 2. Verify Floating Quick Ball exists in minimized state, expands on tap,
+    //    and minimizes back cleanly
+    final quickBallFinder = find.byKey(const ValueKey('quick_capture_ball'));
+    expect(quickBallFinder, findsOneWidget);
+
+    await tester.tap(quickBallFinder);
+    await tester.pumpAndSettle();
+
     expect(find.text(StringConstants.holdToSpeak), findsOneWidget);
     expect(find.text(StringConstants.quickType), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('minimize_quick_ball')));
+    await tester.pumpAndSettle();
+    expect(find.text(StringConstants.holdToSpeak), findsNothing);
 
     // 3. Verify Today Hub Header & Audio Briefing Pill
     expect(find.byTooltip(StringConstants.playBriefing), findsOneWidget);
@@ -425,6 +436,74 @@ void main() {
         notificationService.scheduledNotifications.any(
           (n) => n.title.contains('Graduation Ceremony'),
         ),
+        isTrue,
+      );
+    },
+  );
+
+  testWidgets(
+    'Floating Quick Ball moves anywhere, expands/minimizes, and captures items into DB',
+    (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(const DailyLifeOSApp());
+      await tester.pumpAndSettle();
+
+      final quickBallFinder = find.byKey(const ValueKey('quick_capture_ball'));
+      expect(quickBallFinder, findsOneWidget);
+
+      // 0. Drag the Quick Ball to a new position on screen and verify it moves
+      final initialCenter = tester.getCenter(quickBallFinder);
+      await tester.drag(quickBallFinder, const Offset(-140, -220));
+      await tester.pumpAndSettle();
+      final movedCenter = tester.getCenter(quickBallFinder);
+      expect(movedCenter.dx, lessThan(initialCenter.dx));
+      expect(movedCenter.dy, lessThan(initialCenter.dy));
+
+      // 1. Tap Quick Ball to expand, then tap 'Hold to Speak' to open Voice Capture mode
+      await tester.tap(quickBallFinder);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(StringConstants.holdToSpeak));
+      await tester.pumpAndSettle();
+
+      expect(find.text(StringConstants.quickCaptureTitle), findsOneWidget);
+      expect(find.textContaining('Listening...'), findsOneWidget);
+
+      // Tap a spoken voice sample phrase to transcribe & parse as Reminder
+      await tester.tap(find.text('🎙️ "Call bank tomorrow at 5 PM urgent"'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Log to Planner / Reminder (Instant)'), findsOneWidget);
+
+      // Save the captured voice reminder
+      await tester.tap(find.text('Log to Planner / Reminder (Instant)'));
+      await tester.pumpAndSettle();
+
+      // 2. Tap Quick Ball to expand again, then tap 'Scan' to open Camera OCR & Bill Grabber mode
+      await tester.tap(quickBallFinder);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip(StringConstants.scanText));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Camera OCR Text & Bill Grabber'), findsOneWidget);
+      expect(find.text('Log to Money / Expense (Instant)'), findsOneWidget);
+
+      // Select 'Grocery Receipt' OCR preset and log it
+      await tester.tap(find.text('Grocery Receipt'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Log to Money / Expense (Instant)'));
+      await tester.pumpAndSettle();
+
+      // Verify transaction was saved in the database
+      final allTx = await db.select(db.transactions).get();
+      expect(
+        allTx.any((t) => t.title.contains('FreshMart Grocery Store')),
         isTrue,
       );
     },

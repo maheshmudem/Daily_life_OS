@@ -248,9 +248,7 @@ UI code also calls `sl<NotificationService>()` and, in Notes, `sl<AppDatabase>()
     | 3 | Notes | `NotesPage` | `moduleNotes` (sky) |
     | 4 | Vault | `VaultPage` | `moduleVault` (violet) |
 
-  - **Floating Quick-Capture Bar** (positioned 74px above the bottom nav) with 3 actions that open
-    `QuickCaptureSheet.show(context, mode: …)` with `voice`, `text` or `scan`.
-    ⚠️ The sheet is **UI only**: submitting shows a SnackBar and saves nothing.
+  - **Movable, Minimizable Floating Quick-Capture Ball (`FloatingQuickBall`)** (persists 2D screen coordinates in `SharedPreferences` and smoothly morphs between a 54×54 compact Quick Ball and the expanded 3-action capsule: `Hold to Speak`, `Quick Type`, `Scan`, plus a `Minimize` button). Tapping any action opens `QuickCaptureSheet.show(context, mode: …)` with smart NLP intent detection and real Drift SQLite persistence across Money, Planner, Today Habits, and Notes.
 
 ---
 
@@ -395,18 +393,21 @@ Blocs never touch notifications.
 
 | Layer | Items |
 |---|---|
-| Entities | `HabitEntity` (`icon`, `color`, `copyWith`), `TimelineItemEntity` |
-| Use cases | `GetHabitsUseCase`, `ToggleHabitUseCase`, `GetTodayTimelineUseCase`, `ToggleTimelineItemUseCase` |
-| Bloc events | `LoadTodayHub`, `ToggleHabit(id)`, `ToggleTimelineItem(id)` |
-| State | `TodayHubLoaded{habits, timelineItems}` + `completedHabits` getter |
+| Entities | `HabitEntity` (`icon`, `color`, `description`, `category`, `scheduleType`, `repeatDays`, `reminderEnabled`, `reminderTime`, `isSkippedToday`, `completedDates`, `skippedDates`, `bestStreak`, `weeklyCompletionRate`, `monthlyCompletionRate`, `copyWith`), `TimelineItemEntity` (`copyWith`) |
+| Use cases | `GetHabitsUseCase`, `ToggleHabitUseCase`, `AddHabitUseCase`, `UpdateHabitUseCase`, `DeleteHabitUseCase`, `SkipHabitUseCase`, `ToggleHabitDateUseCase`, `GetTodayTimelineUseCase`, `ToggleTimelineItemUseCase`, `AddTimelineItemUseCase`, `UpdateTimelineItemUseCase`, `DeleteTimelineItemUseCase` |
+| Bloc events | `LoadTodayHub`, `ToggleHabit(id)`, `SkipHabit(id)`, `ToggleHabitDate(id, isoDate)`, `AddHabit(habit)`, `UpdateHabit(habit)`, `DeleteHabit(id)`, `SelectHabitCategory(category)`, `ToggleTimelineItem(id)`, `AddTimelineItem(item)`, `UpdateTimelineItem(item)`, `DeleteTimelineItem(id)` |
+| State | `TodayHubLoaded{habits, timelineItems, selectedHabitCategory}` + `completedHabits`, `skippedHabits`, `longestActiveStreak`, `overallWeeklyConsistency`, `availableCategories`, `filteredHabits` getters |
+| Sheets | `HabitEditorSheet`, `HabitDetailSheet`, `ManageHabitsSheet`, `TimelineEditorSheet`, `EveningWrapUpSheet` |
 
 **Flow:**
 ```
 TodayHubPage → sl<TodayHubBloc>()..add(LoadTodayHub)
-  → getHabits() + getTodayTimeline()   (timeline WHERE date == today ORDER BY time)
+  → getHabits() (merges db.habits + habit_details SQLite table, auto-resets isDoneToday across day boundaries) + getTodayTimeline()
   → TodayHubLoaded
-Tap habit bubble → ToggleHabit(id) → flip isDoneToday, streak ±1 → reload habits only
-Tap timeline tile → ToggleTimelineItem(id) → flip isDone → reload timeline only
+Tap habit check circle → ToggleHabit(id) → flip isDoneToday, update completedDates & bestStreak, streak ±1
+Tap habit row → HabitDetailSheet → 7-day interactive date toggles, 30-day heatmap, skip today, reminder toggle, edit, delete with confirmation
+Tap Manage / Add → ManageHabitsSheet / HabitEditorSheet → full CRUD + local notification scheduling via NotificationService
+Tap Evening Wrap-Up → EveningWrapUpSheet → review pending habits/tasks + save daily reflection to Notes DB
 ```
 
 **UI pieces:** greeting header, "Play briefing" → `AudioBriefingSheet` (TTS powered with fallback),
@@ -475,12 +476,10 @@ Standard 8pt/16pt/24pt grid rhythm: `AppSpacing.sm` top clearance, `gapH16` betw
    - `PlannerItemCard`: toggle, checklist toggles (via `UpdatePlannerItem`), delete (cancel notification,
      then `DeletePlannerItem`), snooze (15 min / 1 h / tomorrow → schedules a notification only),
      duplicate, push to tomorrow, mark all done, clear completed (with `ConfirmationDialog`), quick templates.
-2. **Focus (Pomodoro) tab**: everything is **local widget state**, not in the Bloc or DB:
-   - Modes: Work 25 / Short break 5 / Long break 15 (customisable via `PomodoroCustomDurationSheet`),
-     4 rounds, `Timer.periodic(1s)`.
-   - On completion: instant notification on the `focus` channel, then moves to the next mode/round.
-   - `PomodoroLinkedTaskSheet` picks a planner item as the linked task. Ambience chips are UI only.
-   - `_completedSessionsToday` starts at a hardcoded 3.
+2. **Focus (Pomodoro) tab**: persisted via **SharedPreferences** (`PomodoroSettingsEntity`, `FocusSessionEntity`, `FocusDistractionItem` in `pomodoro_entities.dart`):
+   - Modes: Work 25 / Short break 5 / Long break 15 / Flowtime Stopwatch (`Flow ⏱`), customisable via `PomodoroCustomDurationSheet` (including rounds, daily goal, auto-start breaks/work, strict focus mode, and TTS voice coach cues).
+   - `PomodoroFocusCard` renders a custom radial 60-tick dial (`_FocusDialPainter`) with breathing aura animation, `+1m`/`+5m` quick boosts, Full-Screen `PomodoroZenScreen`, and live Planner subtask checklist toggling & task completion.
+   - `PomodoroAnalyticsDashboard` provides a Daily Focus Goal ring, 7-day interactive Focus Trend bar chart, category distribution bar, Distraction Blocker ("Brain Dump") pad with 1-tap conversion to Planner tasks, manual session logger, and recent session history.
 3. **Countdowns tab**
    - List stored in **SharedPreferences** (`planner_saved_countdowns`). There are default examples
      if nothing is saved.
@@ -628,9 +627,11 @@ and empty views. `builder` only runs in the `content` state. Map Bloc state → 
 | `AppEmptyState`, `AppErrorWidget` | Empty and error states |
 | `PaginatedListView` | Infinite-scroll list |
 | `NetworkAwareWidget` | Online/offline wrapper (unused while there's no network) |
-| `QuickCaptureSheet.show(mode)` | Voice/Type/Scan capture (UI only) |
+| `FloatingQuickBall` | Movable, minimizable 54×54 AssistiveTouch / Dynamic Island Quick Ball that morphs smoothly into the Quick-Capture capsule with zero lag (`ValueNotifier<Offset>` + `RepaintBoundary`) and zero pixel break (`ClipRRect` + `OverflowBox`) |
+| `QuickCaptureSheet.show(mode)` | Zero-friction Voice / Quick Type / OCR Scan capture with smart NLP intent detection, editable parameters, and real DB persistence across Money, Planner, Today Habits, and Notes |
 | `AudioBriefingSheet.show` | "Play my day" (UI only) |
-| `HabitBubbleWidget`, `SafeSpendMeterWidget` | Today Hub building blocks |
+| `HabitBubbleWidget`, `SafeSpendMeterWidget` | Today Hub building blocks (with animated progress, budget breakdown toggle, and expandable habit descriptions) |
+| `ExpandableTextWidget` | Reusable multi-line text widget with smooth `AnimatedSize` "Show more / Show less" toggle for long titles, notes, and insights |
 
 ### `core/utils/`
 `date_utils.dart`, `validators.dart`, `snackbar_utils.dart`.
@@ -765,11 +766,11 @@ flutter test
 | Today timeline | ✅ Real (DB, seeded only; no UI to add items) |
 | Safe-spend meter on Today | 🟡 Hardcoded numbers |
 | Audio briefing / TTS | 🟡 UI only |
-| Quick-Capture voice/type/scan | 🟡 UI only, nothing saved |
+| Quick-Capture voice/type/scan | ✅ Real (NLP intent detection + editable Expense, Reminder, Habit, and Note DB persistence + View navigation) |
 | Planner reminders CRUD + recurrence + checklist | ✅ Real (DB) |
 | Planner notifications | ✅ Real (local notifications) |
 | Snooze | 🟡 Schedules a notification; doesn't change the item |
-| Pomodoro | 🟡 Works, but state is in memory only (lost on restart); ambience is UI only |
+| Pomodoro | ✅ Real (SharedPreferences settings, session log, 7-day chart, Zen mode, subtask sync, distraction pad) |
 | Countdowns | ✅ Real (SharedPreferences + notifications) |
 | Money: list, budget, subscriptions, IOUs | ✅ Real reads; toggle auto-kill / settle IOU are real |
 | Money: add expense / add IOU / edit budget | 🔴 Bloc ready, **no UI wired** |

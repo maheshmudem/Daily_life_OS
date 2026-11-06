@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../domain/entities/category_budget_entity.dart';
 import '../../domain/entities/money_account_entity.dart';
+import '../../domain/entities/money_category.dart';
 import '../../domain/entities/money_insights.dart';
 import '../../domain/usecases/get_transactions_and_budget_usecase.dart';
 import '../../domain/usecases/manage_budgets_and_accounts_usecase.dart';
@@ -103,6 +104,7 @@ class MoneyBloc extends Bloc<MoneyEvent, MoneyState> {
     on<DeleteSubscription>(_onDeleteSubscription);
     on<DeleteIou>(_onDeleteIou);
     on<UpdateMoneySettings>(_onUpdateMoneySettings);
+    on<ResetAllMoneyData>(_onResetAllMoneyData);
   }
 
   static DateTime _monthOf(DateTime date) => DateTime(date.year, date.month, 1);
@@ -410,5 +412,33 @@ class MoneyBloc extends Bloc<MoneyEvent, MoneyState> {
         moneyLockEnabled: event.moneyLockEnabled,
       ),
     );
+  }
+
+  Future<void> _onResetAllMoneyData(
+    ResetAllMoneyData event,
+    Emitter<MoneyState> emit,
+  ) async {
+    await _mutate(emit, () async {
+      final allTx = await getAllTransactionsUseCase();
+      for (final tx in allTx) {
+        await deleteTransactionUseCase(tx.id);
+      }
+      final subs = await getSubscriptionsUseCase();
+      for (final sub in subs) {
+        await deleteSubscriptionUseCase(sub.id);
+      }
+      final ious = await getIousUseCase();
+      for (final iou in ious) {
+        await deleteIouUseCase(iou.id);
+      }
+      final accounts = await getAccountsUseCase();
+      for (final acc in accounts) {
+        await deleteAccountUseCase(acc.id);
+      }
+      for (final cat in MoneyCategory.expenseCategories) {
+        await setCategoryLimitUseCase(cat.key, 0);
+      }
+      await updateBudgetUseCase(0, 0);
+    });
   }
 }

@@ -87,11 +87,17 @@ class MoneyLocalDataSourceImpl implements MoneyLocalDataSource {
 
     final now = DateTime.now();
     final monthStart = DateTime(now.year, now.month, 1).toIso8601String();
+    final nextMonthStart = DateTime(
+      now.year,
+      now.month + 1,
+      1,
+    ).toIso8601String();
     final allTx =
         await (_db.select(_db.transactions)..where(
               (t) =>
                   t.type.equals('expense') &
-                  t.date.isBiggerOrEqualValue(monthStart),
+                  t.date.isBiggerOrEqualValue(monthStart) &
+                  t.date.isSmallerThanValue(nextMonthStart),
             ))
             .get();
     final totalSpent = allTx.fold<double>(0, (sum, t) => sum + t.amount);

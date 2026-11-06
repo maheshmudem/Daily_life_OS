@@ -5,8 +5,10 @@ import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_text_styles.dart';
 import '../../../../core/constants/string_constants.dart';
+import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/utils/date_utils.dart';
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../di/injection_container.dart';
 import '../../../security/domain/repositories/security_repository.dart';
@@ -481,12 +483,22 @@ class IouSheet extends StatelessWidget {
     );
   }
 
-  static Future<void> _showAddIouDialog(BuildContext context) async {
+  static Future<void> showAddDialog(
+    BuildContext context, {
+    String initialType = 'lent',
+  }) => _showAddIouDialog(context, initialType: initialType);
+
+  static Future<void> _showAddIouDialog(
+    BuildContext context, {
+    String initialType = 'lent',
+  }) async {
     final bloc = context.read<MoneyBloc>();
     final personCtrl = TextEditingController();
     final amountCtrl = TextEditingController();
     final noteCtrl = TextEditingController();
-    String type = 'lent';
+    String type = initialType;
+    DateTime? dueDate = DateTime.now().add(const Duration(days: 7));
+    bool enableReminder = true;
     final formKey = GlobalKey<FormState>();
 
     await showDialog<void>(
@@ -494,30 +506,41 @@ class IouSheet extends StatelessWidget {
       builder: (dialogCtx) => StatefulBuilder(
         builder: (ctx, setState) {
           final isDark = Theme.of(ctx).brightness == Brightness.dark;
+          final isLent = type == 'lent';
           return AlertDialog(
             backgroundColor: isDark
                 ? AppColors.darkCardBackground
                 : AppColors.cardBackground,
             shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusXl),
-            title: const Text(StringConstants.addIou),
+            title: Text(
+              isLent
+                  ? 'Lent Money (To Collect)'
+                  : 'Borrowed Money (To Pay Back)',
+            ),
             content: Form(
               key: formKey,
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Wrap(
-                      spacing: 8,
+                    Row(
                       children: [
-                        ChoiceChip(
-                          label: const Text(StringConstants.lent),
-                          selected: type == 'lent',
-                          onSelected: (_) => setState(() => type = 'lent'),
+                        Expanded(
+                          child: ChoiceChip(
+                            label: const Text('I Lent (Collect)'),
+                            selected: type == 'lent',
+                            onSelected: (_) => setState(() => type = 'lent'),
+                          ),
                         ),
-                        ChoiceChip(
-                          label: const Text(StringConstants.borrowed),
-                          selected: type == 'borrowed',
-                          onSelected: (_) => setState(() => type = 'borrowed'),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ChoiceChip(
+                            label: const Text('I Borrowed (Pay)'),
+                            selected: type == 'borrowed',
+                            onSelected: (_) =>
+                                setState(() => type = 'borrowed'),
+                          ),
                         ),
                       ],
                     ),
@@ -528,8 +551,10 @@ class IouSheet extends StatelessWidget {
                         v,
                         StringConstants.personLabel,
                       ),
-                      decoration: const InputDecoration(
-                        labelText: StringConstants.personLabel,
+                      decoration: InputDecoration(
+                        labelText: isLent
+                            ? 'Who did you give money to?'
+                            : 'Who did you borrow from?',
                         hintText: 'e.g. David Kumar',
                       ),
                     ),
@@ -550,8 +575,59 @@ class IouSheet extends StatelessWidget {
                       controller: noteCtrl,
                       decoration: const InputDecoration(
                         labelText: StringConstants.noteLabel,
-                        hintText: 'e.g. Dinner split bill',
+                        hintText: 'e.g. Dinner split bill / Emergency',
                       ),
+                    ),
+                    const SizedBox(height: 12),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(
+                        Icons.event_available_rounded,
+                        color: isLent ? AppColors.moduleMoney : AppColors.error,
+                      ),
+                      title: Text(
+                        isLent ? 'Collection Due Date' : 'Repayment Due Date',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      subtitle: Text(
+                        dueDate != null
+                            ? AppDateUtils.formatDate(dueDate!)
+                            : 'No due date set',
+                      ),
+                      trailing: TextButton(
+                        onPressed: () async {
+                          final now = DateTime.now();
+                          final picked = await showDatePicker(
+                            context: ctx,
+                            initialDate:
+                                dueDate ?? now.add(const Duration(days: 7)),
+                            firstDate: now.subtract(const Duration(days: 30)),
+                            lastDate: now.add(const Duration(days: 730)),
+                          );
+                          if (picked != null) {
+                            setState(() => dueDate = picked);
+                          }
+                        },
+                        child: const Text('Pick Date'),
+                      ),
+                    ),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        isLent
+                            ? 'Remind me to collect money'
+                            : 'Remind me to pay back',
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      value: enableReminder,
+                      activeThumbColor: AppColors.moduleMoney,
+                      onChanged: (v) => setState(() => enableReminder = v),
                     ),
                   ],
                 ),
@@ -567,17 +643,52 @@ class IouSheet extends StatelessWidget {
                   backgroundColor: AppColors.moduleMoney,
                   foregroundColor: Colors.white,
                 ),
-                onPressed: () {
+                onPressed: () async {
                   if (!(formKey.currentState?.validate() ?? false)) return;
+                  final person = personCtrl.text.trim();
+                  final amount = double.parse(amountCtrl.text.trim());
+                  final formattedNote = IouEntity.formatNoteWithDueDate(
+                    noteCtrl.text.trim(),
+                    dueDate,
+                  );
                   bloc.add(
                     AddIou(
-                      person: personCtrl.text.trim(),
-                      amount: double.parse(amountCtrl.text.trim()),
+                      person: person,
+                      amount: amount,
                       type: type,
-                      note: noteCtrl.text.trim(),
+                      note: formattedNote,
                     ),
                   );
-                  Navigator.of(dialogCtx).pop();
+                  if (enableReminder &&
+                      dueDate != null &&
+                      sl.isRegistered<NotificationService>()) {
+                    try {
+                      final scheduled = DateTime(
+                        dueDate!.year,
+                        dueDate!.month,
+                        dueDate!.day,
+                        10,
+                        0,
+                      );
+                      if (scheduled.isAfter(DateTime.now())) {
+                        await sl<NotificationService>().scheduleNotification(
+                          id: person.hashCode.abs() % 90000 + 10000,
+                          title: isLent
+                              ? 'Collect ${CurrencyUtils.format(amount)} from $person'
+                              : 'Pay ${CurrencyUtils.format(amount)} to $person',
+                          body: noteCtrl.text.trim().isNotEmpty
+                              ? noteCtrl.text.trim()
+                              : (isLent
+                                    ? 'Reminder: Lent money collection is due today.'
+                                    : 'Reminder: Borrowed money repayment is due today.'),
+                          scheduledDate: scheduled,
+                        );
+                      }
+                    } catch (_) {}
+                  }
+                  if (dialogCtx.mounted) {
+                    Navigator.of(dialogCtx).pop();
+                  }
                 },
                 child: const Text(StringConstants.save),
               ),
@@ -599,15 +710,112 @@ class IouContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final totalToCollect = ious
+        .where((i) => i.isLent && !i.isSettled)
+        .fold<double>(0, (s, i) => s + i.amount);
+    final totalToPay = ious
+        .where((i) => !i.isLent && !i.isSettled)
+        .fold<double>(0, (s, i) => s + i.amount);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Summary Strip: To Collect (Lent) vs To Pay Back (Borrowed)
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.moduleMoney.withValues(alpha: 0.10),
+                  borderRadius: AppRadius.radiusMd,
+                  border: Border.all(
+                    color: AppColors.moduleMoney.withValues(alpha: 0.25),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'TO COLLECT (YOU LENT)',
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.4,
+                        color: AppColors.moduleMoney,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        CurrencyUtils.format(totalToCollect),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: isDark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withValues(alpha: 0.10),
+                  borderRadius: AppRadius.radiusMd,
+                  border: Border.all(
+                    color: AppColors.error.withValues(alpha: 0.25),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'TO PAY BACK (BORROWED)',
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.4,
+                        color: AppColors.error,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        CurrencyUtils.format(totalToPay),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: isDark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
         if (ious.isEmpty)
           Center(
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 28),
+              padding: const EdgeInsets.symmetric(vertical: 24),
               child: Text(
-                'No active IOUs.',
+                'No active IOUs. Tap + Add IOU to record lent or borrowed money.',
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   color: isDark
                       ? AppColors.darkTextCaption
@@ -619,16 +827,19 @@ class IouContent extends StatelessWidget {
         else
           ...ious.map((iou) {
             final color = iou.isLent ? AppColors.moduleMoney : AppColors.error;
+            final dueBadge = iou.dueBadgeLabel;
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: isDark
                     ? AppColors.darkCardBackground
                     : AppColors.cardBackground,
                 borderRadius: AppRadius.radiusLg,
                 border: Border.all(
-                  color: isDark ? AppColors.darkDivider : AppColors.divider,
+                  color: iou.isOverdue
+                      ? AppColors.error.withValues(alpha: 0.5)
+                      : (isDark ? AppColors.darkDivider : AppColors.divider),
                 ),
               ),
               child: Row(
@@ -644,20 +855,25 @@ class IouContent extends StatelessWidget {
                       size: 20,
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           iou.person,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 14,
                           ),
                         ),
+                        const SizedBox(height: 2),
                         Text(
-                          '${iou.typeLabel} • ${iou.note}',
+                          '${iou.typeLabel} • ${iou.cleanNote}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 12,
                             color: isDark
@@ -665,9 +881,37 @@ class IouContent extends StatelessWidget {
                                 : AppColors.textCaption,
                           ),
                         ),
+                        if (dueBadge != null) ...[
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color:
+                                  (iou.isOverdue
+                                          ? AppColors.error
+                                          : AppColors.warning)
+                                      .withValues(alpha: 0.14),
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            child: Text(
+                              '⏰ $dueBadge',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w700,
+                                color: iou.isOverdue
+                                    ? AppColors.error
+                                    : AppColors.warning,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
+                  const SizedBox(width: 8),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
@@ -679,18 +923,54 @@ class IouContent extends StatelessWidget {
                           color: color,
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      GestureDetector(
-                        onTap: () =>
-                            context.read<MoneyBloc>().add(SettleIou(iou.id)),
-                        child: const Text(
-                          StringConstants.settle,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w700,
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          GestureDetector(
+                            onTap: () async {
+                              if (sl.isRegistered<NotificationService>()) {
+                                try {
+                                  await sl<NotificationService>()
+                                      .showInstantNotification(
+                                        id: iou.id + 40000,
+                                        title: iou.isLent
+                                            ? 'Reminder: Collect ${CurrencyUtils.format(iou.amount)} from ${iou.person}'
+                                            : 'Reminder: Pay ${CurrencyUtils.format(iou.amount)} to ${iou.person}',
+                                        body: iou.cleanNote,
+                                      );
+                                } catch (_) {}
+                              }
+                              if (context.mounted) {
+                                SnackbarUtils.showSuccess(
+                                  context,
+                                  'Reminder alert set for ${iou.person}!',
+                                );
+                              }
+                            },
+                            child: const Padding(
+                              padding: EdgeInsets.only(right: 8),
+                              child: Icon(
+                                Icons.notifications_active_outlined,
+                                size: 15,
+                                color: AppColors.warning,
+                              ),
+                            ),
                           ),
-                        ),
+                          GestureDetector(
+                            onTap: () => context.read<MoneyBloc>().add(
+                              SettleIou(iou.id),
+                            ),
+                            child: const Text(
+                              StringConstants.settle,
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -1188,6 +1468,73 @@ class MoneySettingsSheet extends StatelessWidget {
                     }
                   }
                   bloc.add(UpdateMoneySettings(moneyLockEnabled: v));
+                },
+              ),
+              const Divider(height: 24),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.restart_alt_rounded,
+                    color: AppColors.error,
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  'Clear All Money Data (Start Fresh)',
+                  style: AppTextStyles.titleSmall.copyWith(
+                    color: AppColors.error,
+                  ),
+                ),
+                subtitle: Text(
+                  'Removes all transactions, IOUs, subscriptions, accounts & resets budgets to 0.',
+                  style: AppTextStyles.caption.copyWith(
+                    color: isDark
+                        ? AppColors.darkTextCaption
+                        : AppColors.textCaption,
+                  ),
+                ),
+                onTap: () async {
+                  final bloc = context.read<MoneyBloc>();
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (dCtx) => AlertDialog(
+                      title: const Text('Start Fresh?'),
+                      content: const Text(
+                        'This will clear all existing Money transactions, lent/borrowed entries, subscriptions, accounts, and reset your budget to 0 so you can enter your own fresh data.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(dCtx).pop(false),
+                          child: const Text(StringConstants.cancel),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.error,
+                            foregroundColor: Colors.white,
+                          ),
+                          onPressed: () => Navigator.of(dCtx).pop(true),
+                          child: const Text('Clear & Start Fresh'),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirmed == true) {
+                    bloc.add(const ResetAllMoneyData());
+                    if (context.mounted) {
+                      Navigator.of(context).pop();
+                      SnackbarUtils.showSuccess(
+                        context,
+                        'All Money data cleared! Ready to start fresh.',
+                      );
+                    }
+                  }
                 },
               ),
             ],
