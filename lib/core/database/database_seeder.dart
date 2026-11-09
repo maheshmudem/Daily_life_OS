@@ -389,7 +389,15 @@ class DatabaseSeeder {
   /// Ensures `budgetSettings`, `categoryBudgets`, and `moneyAccounts` have
   /// baseline records even when upgrading from an older schema version.
   static Future<void> _ensureMoneyDefaults(AppDatabase db) async {
-    final settings = await db.select(db.budgetSettings).get();
+    final results = await Future.wait([
+      db.select(db.budgetSettings).get(),
+      db.select(db.categoryBudgets).get(),
+      db.select(db.moneyAccounts).get(),
+    ]);
+    final settings = results[0] as List<BudgetSetting>;
+    final existingCategoryBudgets = results[1] as List<CategoryBudget>;
+    final existingAccounts = results[2] as List<MoneyAccount>;
+
     if (settings.isEmpty) {
       await db
           .into(db.budgetSettings)
@@ -402,7 +410,6 @@ class DatabaseSeeder {
           );
     }
 
-    final existingCategoryBudgets = await db.select(db.categoryBudgets).get();
     if (existingCategoryBudgets.isEmpty) {
       await db.batch((batch) {
         batch.insertAll(db.categoryBudgets, [
@@ -442,7 +449,6 @@ class DatabaseSeeder {
       });
     }
 
-    final existingAccounts = await db.select(db.moneyAccounts).get();
     if (existingAccounts.isEmpty) {
       await db.batch((batch) {
         batch.insertAll(db.moneyAccounts, [

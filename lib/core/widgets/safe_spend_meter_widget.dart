@@ -71,11 +71,18 @@ class _SafeSpendMeterWidgetState extends State<SafeSpendMeterWidget> {
                       runSpacing: 4,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        Text('Safe-to-Spend Today', style: text.labelMedium),
+                        Text(
+                          'Safe-to-Spend Today',
+                          style: text.titleMedium?.copyWith(
+                            fontSize: 15.5,
+                            fontWeight: FontWeight.w700,
+                            color: palette.heading,
+                          ),
+                        ),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 7,
-                            vertical: 2,
+                            horizontal: 8,
+                            vertical: 2.5,
                           ),
                           decoration: BoxDecoration(
                             color: tone.withValues(alpha: 0.14),
@@ -86,7 +93,7 @@ class _SafeSpendMeterWidgetState extends State<SafeSpendMeterWidget> {
                             style: text.labelSmall?.copyWith(
                               color: tone,
                               fontWeight: FontWeight.w700,
-                              fontSize: 10,
+                              fontSize: 10.5,
                             ),
                           ),
                         ),

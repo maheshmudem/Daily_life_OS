@@ -194,9 +194,9 @@ class FeatureScaffold extends StatelessWidget {
                         title!,
                         maxLines: 1,
                         style: text.headlineMedium?.copyWith(
-                          fontSize: hasSubtitle ? 16.5 : 18.5,
+                          fontSize: hasSubtitle ? 18.0 : 20.0,
                           fontWeight: FontWeight.w700,
-                          letterSpacing: -0.3,
+                          letterSpacing: -0.35,
                           height: 1.2,
                           color: palette.heading,
                         ),
@@ -211,8 +211,8 @@ class FeatureScaffold extends StatelessWidget {
                         subtitle!,
                         maxLines: 1,
                         style: text.labelMedium?.copyWith(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w500,
+                          fontSize: 12.0,
+                          fontWeight: FontWeight.w600,
                           height: 1.2,
                           color: palette.caption,
                         ),
@@ -410,16 +410,20 @@ class FeatureSectionHeader extends StatelessWidget {
     final text = context.text;
     return Padding(
       padding: padding,
-      child: SizedBox(
-        height: 28,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 28),
         child: Row(
           children: [
             Expanded(
               child: Text(
                 title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: text.titleMedium,
+                softWrap: true,
+                style: text.titleMedium?.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.2,
+                  color: context.palette.heading,
+                ),
               ),
             ),
             if (actionLabel != null && onAction != null)

@@ -3,6 +3,7 @@ import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/app_text_styles.dart';
+import '../../../../core/widgets/expandable_text_widget.dart';
 import '../../domain/entities/countdown_item_entity.dart';
 
 /// Compact countdown card with full-width aligned divider and action footer.
@@ -88,13 +89,14 @@ class CountdownCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      item.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    ExpandableTextWidget(
+                      text: item.title,
+                      collapsedMaxLines: 2,
+                      characterThreshold: 45,
+                      toggleColor: color,
                       style: TextStyle(
-                        fontSize: 13.5,
-                        height: 1.25,
+                        fontSize: 15,
+                        height: 1.3,
                         fontWeight: FontWeight.w700,
                         color: headingColor,
                       ),
@@ -105,24 +107,28 @@ class CountdownCard extends StatelessWidget {
                       runSpacing: 3,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.calendar_today_rounded,
-                              size: 12,
-                              color: captionColor,
-                            ),
-                            const SizedBox(width: 3.5),
-                            Text(
-                              _formatDate(item.date),
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w500,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.calendar_today_rounded,
+                                size: 12,
                                 color: captionColor,
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 3.5),
+                              Text(
+                                _formatDate(item.date),
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w500,
+                                  color: captionColor,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         _Pill(label: item.category, color: color),
                       ],
@@ -173,10 +179,11 @@ class CountdownCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Expanded(
-                    child: Text(
-                      item.notes,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                    child: ExpandableTextWidget(
+                      text: item.notes,
+                      collapsedMaxLines: 2,
+                      characterThreshold: 70,
+                      toggleColor: AppColors.moduleNotes,
                       style: TextStyle(
                         fontSize: 11.5,
                         height: 1.35,
@@ -222,7 +229,10 @@ class CountdownCard extends StatelessWidget {
                     ),
                   ),
                   icon: const Icon(Icons.event_available_rounded, size: 14),
-                  label: const Text('Add to Planner'),
+                  label: const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text('Add to Planner'),
+                  ),
                 ),
               ),
               const SizedBox(width: 6),

@@ -283,10 +283,10 @@ class _EveningWrapUpSheetState extends State<EveningWrapUpSheet> {
                           Expanded(
                             child: Text(
                               h.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                              softWrap: true,
                               style: text.labelLarge?.copyWith(
-                                fontSize: 12.5,
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w600,
                                 color: palette.heading,
                               ),
                             ),
@@ -368,10 +368,10 @@ class _EveningWrapUpSheetState extends State<EveningWrapUpSheet> {
                           Expanded(
                             child: Text(
                               '${t.time} • ${t.title}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                              softWrap: true,
                               style: text.labelLarge?.copyWith(
-                                fontSize: 12.5,
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w600,
                                 color: palette.heading,
                               ),
                             ),

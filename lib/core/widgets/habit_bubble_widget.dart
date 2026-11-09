@@ -179,10 +179,10 @@ class HabitBubbleWidget extends StatelessWidget {
                         collapsedMaxLines: 2,
                         characterThreshold: 55,
                         toggleColor: tintColor,
-                        style: text.titleSmall?.copyWith(
-                          fontSize: 13.5,
+                        style: text.titleMedium?.copyWith(
+                          fontSize: 15,
                           height: 1.3,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                           color: isDone ? palette.caption : palette.heading,
                           decoration: isDone
                               ? TextDecoration.lineThrough
@@ -199,8 +199,8 @@ class HabitBubbleWidget extends StatelessWidget {
                           if (category != null && category!.isNotEmpty)
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 5.5,
-                                vertical: 1.5,
+                                horizontal: 6,
+                                vertical: 2,
                               ),
                               decoration: BoxDecoration(
                                 color: tintColor.withValues(
@@ -211,7 +211,7 @@ class HabitBubbleWidget extends StatelessWidget {
                               child: Text(
                                 category!,
                                 style: text.labelSmall?.copyWith(
-                                  fontSize: 9.5,
+                                  fontSize: 10.5,
                                   fontWeight: FontWeight.w700,
                                   color: tintColor,
                                 ),
@@ -220,10 +220,10 @@ class HabitBubbleWidget extends StatelessWidget {
                           Text(
                             statusText,
                             style: text.labelSmall?.copyWith(
-                              fontSize: 11,
+                              fontSize: 12,
                               fontWeight: isDone || isSkipped
                                   ? FontWeight.w600
-                                  : FontWeight.w400,
+                                  : FontWeight.w500,
                               color: isDone
                                   ? AppColors.success
                                   : isSkipped
@@ -239,16 +239,16 @@ class HabitBubbleWidget extends StatelessWidget {
                               children: [
                                 Icon(
                                   Icons.notifications_active_outlined,
-                                  size: 11,
+                                  size: 12,
                                   color: palette.caption,
                                 ),
                                 const SizedBox(width: 2),
                                 Text(
                                   reminderTime!,
                                   style: text.labelSmall?.copyWith(
-                                    fontSize: 10.5,
+                                    fontSize: 11.5,
                                     color: palette.caption,
-                                    fontWeight: FontWeight.w500,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ],
@@ -270,7 +270,7 @@ class HabitBubbleWidget extends StatelessWidget {
                           characterThreshold: 45,
                           toggleColor: tintColor,
                           style: text.bodySmall?.copyWith(
-                            fontSize: 11.5,
+                            fontSize: 12.5,
                             height: 1.35,
                             color: palette.caption,
                           ),

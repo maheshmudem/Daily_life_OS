@@ -27,10 +27,15 @@ class VaultBloc extends Bloc<VaultEvent, VaultState> {
     final prevDecoy = state is VaultLoaded
         ? (state as VaultLoaded).isDecoyMode
         : false;
-    emit(VaultLoading());
+    if (state is! VaultLoaded) {
+      emit(VaultLoading());
+    }
     try {
-      final passwords = await getVaultPasswordsUseCase();
-      final documents = await getVaultDocumentsUseCase();
+      final passwordsFuture = getVaultPasswordsUseCase();
+      final documentsFuture = getVaultDocumentsUseCase();
+      await Future.wait([passwordsFuture, documentsFuture]);
+      final passwords = await passwordsFuture;
+      final documents = await documentsFuture;
       emit(
         VaultLoaded(
           passwords: passwords,

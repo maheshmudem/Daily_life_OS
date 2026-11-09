@@ -65,13 +65,15 @@ class TransactionTile extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                transaction.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              ExpandableTextWidget(
+                text: transaction.title,
+                collapsedMaxLines: 2,
+                characterThreshold: 48,
+                toggleColor: tileColor,
                 style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                  height: 1.3,
+                  fontWeight: FontWeight.w700,
                   color: isDark
                       ? AppColors.darkTextPrimary
                       : AppColors.textPrimary,
@@ -81,11 +83,13 @@ class TransactionTile extends StatelessWidget {
               Row(
                 children: [
                   Flexible(
-                    child: Text(
-                      transaction.formattedDate,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 11.5, color: captionColor),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        transaction.formattedDate,
+                        style: TextStyle(fontSize: 11.5, color: captionColor),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 6),
@@ -133,45 +137,55 @@ class TransactionTile extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerRight,
-              child: Text(
-                isTransfer
-                    ? CurrencyUtils.format(transaction.amount, decimals: 2)
-                    : CurrencyUtils.signed(
-                        transaction.amount,
-                        isCredit: isIncome,
-                        decimals: 2,
-                      ),
-                style: TextStyle(
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.w700,
-                  color: amountColor,
-                  fontFeatures: const [FontFeature.tabularFigures()],
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 108),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerRight,
+                child: Text(
+                  isTransfer
+                      ? CurrencyUtils.format(transaction.amount, decimals: 2)
+                      : CurrencyUtils.signed(
+                          transaction.amount,
+                          isCredit: isIncome,
+                          decimals: 2,
+                        ),
+                  style: TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                    color: amountColor,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-              decoration: BoxDecoration(
-                color: badgeColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                badgeLabel,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: badgeColor,
+              const SizedBox(height: 4),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerRight,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: badgeColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    badgeLabel,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: badgeColor,
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );

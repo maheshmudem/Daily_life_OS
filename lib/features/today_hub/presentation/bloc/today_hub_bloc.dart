@@ -124,8 +124,12 @@ class TodayHubBloc extends Bloc<TodayHubEvent, TodayHubState> {
     String? categoryOverride,
   }) async {
     final currentCat = categoryOverride ?? _currentCategoryFilter;
-    final habits = await getHabitsUseCase();
-    final timeline = await getTodayTimelineUseCase();
+    final results = await Future.wait([
+      getHabitsUseCase(),
+      getTodayTimelineUseCase(),
+    ]);
+    final habits = results[0] as List<HabitEntity>;
+    final timeline = (results[1] as List).cast<dynamic>();
     final validCat =
         currentCat == 'All' ||
             habits.any(
@@ -136,7 +140,7 @@ class TodayHubBloc extends Bloc<TodayHubEvent, TodayHubState> {
     emit(
       TodayHubLoaded(
         habits: habits,
-        timelineItems: timeline,
+        timelineItems: List.from(timeline),
         selectedHabitCategory: validCat,
       ),
     );
@@ -158,6 +162,22 @@ class TodayHubBloc extends Bloc<TodayHubEvent, TodayHubState> {
     ToggleHabit event,
     Emitter<TodayHubState> emit,
   ) async {
+    final current = state;
+    if (current is TodayHubLoaded) {
+      final optimisticHabits = current.habits.map((h) {
+        if (h.id != event.id) return h;
+        final nextDone = !h.isDoneToday;
+        final nextStreak = nextDone
+            ? h.streakDays + 1
+            : (h.streakDays > 0 ? h.streakDays - 1 : 0);
+        return h.copyWith(
+          isDoneToday: nextDone,
+          isSkippedToday: nextDone ? false : h.isSkippedToday,
+          streakDays: nextStreak,
+        );
+      }).toList();
+      emit(current.copyWith(habits: optimisticHabits));
+    }
     try {
       await toggleHabitUseCase(event.id);
       await _emitFreshLoaded(emit);
@@ -246,6 +266,14 @@ class TodayHubBloc extends Bloc<TodayHubEvent, TodayHubState> {
     ToggleTimelineItem event,
     Emitter<TodayHubState> emit,
   ) async {
+    final current = state;
+    if (current is TodayHubLoaded) {
+      final optimisticTimeline = current.timelineItems.map((t) {
+        if (t.id != event.id) return t;
+        return t.copyWith(isDone: !t.isDone);
+      }).toList();
+      emit(current.copyWith(timelineItems: optimisticTimeline));
+    }
     try {
       await toggleTimelineItemUseCase(event.id);
       await _emitFreshLoaded(emit);

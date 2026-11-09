@@ -28,6 +28,7 @@ class MainNavigationShell extends StatefulWidget {
 
 class _MainNavigationShellState extends State<MainNavigationShell> {
   late final NavigationBloc _navigationBloc;
+  final Set<int> _visitedTabs = {0};
 
   @override
   void initState() {
@@ -79,6 +80,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           final gen = navState.captureRefreshGeneration;
           final currentIndex = navState.currentIndex;
           final isInMoneyMode = navState.isInMoneyMode;
+          _visitedTabs.add(currentIndex);
 
           final pages = <Widget>[
             TodayHubPage(
@@ -87,14 +89,22 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                   _navigationBloc.add(SelectNavigationTab(index)),
               onOpenQuickCapture: (mode) => _openQuickCapture(context, mode),
             ),
-            PlannerPage(key: ValueKey('planner_$gen')),
-            MoneyManagerPage(
-              key: ValueKey('money_$gen'),
-              onExitMoney: () =>
-                  _navigationBloc.add(const ExitMoneyNavigationMode()),
-            ),
-            NotesPage(key: ValueKey('notes_$gen')),
-            const VaultPage(),
+            _visitedTabs.contains(1)
+                ? PlannerPage(key: ValueKey('planner_$gen'))
+                : const SizedBox.shrink(),
+            _visitedTabs.contains(2)
+                ? MoneyManagerPage(
+                    key: ValueKey('money_$gen'),
+                    onExitMoney: () =>
+                        _navigationBloc.add(const ExitMoneyNavigationMode()),
+                  )
+                : const SizedBox.shrink(),
+            _visitedTabs.contains(3)
+                ? NotesPage(key: ValueKey('notes_$gen'))
+                : const SizedBox.shrink(),
+            _visitedTabs.contains(4)
+                ? const VaultPage()
+                : const SizedBox.shrink(),
           ];
 
           return Scaffold(
@@ -134,14 +144,27 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 ? null
                 : Container(
                     decoration: BoxDecoration(
+                      color: palette.card,
                       border: Border(top: BorderSide(color: palette.divider)),
+                      boxShadow: palette.isDark
+                          ? null
+                          : [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.04),
+                                blurRadius: 14,
+                                offset: const Offset(0, -3),
+                              ),
+                            ],
                     ),
                     child: BottomNavigationBar(
                       key: const ValueKey('main_bottom_nav_bar'),
                       currentIndex: currentIndex,
-                      onTap: (index) =>
-                          _navigationBloc.add(SelectNavigationTab(index)),
+                      onTap: (index) {
+                        unawaited(HapticFeedback.selectionClick());
+                        _navigationBloc.add(SelectNavigationTab(index));
+                      },
                       type: BottomNavigationBarType.fixed,
+                      elevation: 0,
                       backgroundColor: palette.card,
                       selectedItemColor: NavigationTabEntity.activeColorFor(
                         currentIndex,
@@ -153,15 +176,35 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                       unselectedLabelStyle: context.text.labelSmall?.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
-                      items: NavigationTabEntity.tabs
-                          .map(
-                            (tab) => BottomNavigationBarItem(
-                              icon: Icon(tab.icon),
-                              activeIcon: Icon(tab.activeIcon),
-                              label: tab.label,
+                      items: NavigationTabEntity.tabs.map((tab) {
+                        final activeColor = NavigationTabEntity.activeColorFor(
+                          tab.index,
+                        );
+                        return BottomNavigationBarItem(
+                          icon: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 2),
+                            child: Icon(tab.icon, size: 22),
+                          ),
+                          activeIcon: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            curve: Curves.easeOutCubic,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 4,
                             ),
-                          )
-                          .toList(),
+                            decoration: BoxDecoration(
+                              color: activeColor.withValues(alpha: 0.14),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Icon(
+                              tab.activeIcon,
+                              size: 22,
+                              color: activeColor,
+                            ),
+                          ),
+                          label: tab.label,
+                        );
+                      }).toList(),
                     ),
                   ),
           );

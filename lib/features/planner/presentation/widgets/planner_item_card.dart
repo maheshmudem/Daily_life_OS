@@ -205,9 +205,9 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
             characterThreshold: 60,
             toggleColor: AppColors.moduleTime,
             style: TextStyle(
-              fontSize: 13.5,
-              height: _titleLineHeight / 13.5,
-              fontWeight: FontWeight.w600,
+              fontSize: 15,
+              height: 1.3,
+              fontWeight: FontWeight.w700,
               color: item.isDone ? _captionColor : _headingColor,
               decoration: item.isDone ? TextDecoration.lineThrough : null,
               decorationColor: _captionColor,

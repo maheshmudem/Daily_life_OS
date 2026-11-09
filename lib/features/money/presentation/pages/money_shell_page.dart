@@ -27,25 +27,22 @@ class MoneyShellPage extends StatefulWidget {
 
 class _MoneyShellPageState extends State<MoneyShellPage>
     with WidgetsBindingObserver {
+  late final MoneyBloc _moneyBloc;
   int _currentTab = MoneyTab.overview;
+  final Set<int> _visitedTabs = {MoneyTab.overview};
   bool _isUnlocked = false;
-
-  static const List<Widget> _pages = [
-    MoneyOverviewPage(),
-    MoneyActivityPage(),
-    MoneyBudgetsPage(),
-    MoneyInsightsPage(),
-  ];
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _moneyBloc = sl<MoneyBloc>()..add(const LoadMoney());
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _moneyBloc.close();
     super.dispose();
   }
 
@@ -69,15 +66,32 @@ class _MoneyShellPageState extends State<MoneyShellPage>
 
   void _selectTab(int tab) {
     if (tab == _currentTab) return;
-    setState(() => _currentTab = tab);
+    setState(() {
+      _currentTab = tab;
+      _visitedTabs.add(tab);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    _visitedTabs.add(_currentTab);
 
-    return BlocProvider<MoneyBloc>(
-      create: (_) => sl<MoneyBloc>()..add(const LoadMoney()),
+    final pages = <Widget>[
+      const MoneyOverviewPage(),
+      _visitedTabs.contains(MoneyTab.activity)
+          ? const MoneyActivityPage()
+          : const SizedBox.shrink(),
+      _visitedTabs.contains(MoneyTab.budgets)
+          ? const MoneyBudgetsPage()
+          : const SizedBox.shrink(),
+      _visitedTabs.contains(MoneyTab.insights)
+          ? const MoneyInsightsPage()
+          : const SizedBox.shrink(),
+    ];
+
+    return BlocProvider<MoneyBloc>.value(
+      value: _moneyBloc,
       child: BlocConsumer<MoneyBloc, MoneyState>(
         listenWhen: (prev, curr) =>
             curr is MoneyLoaded &&
@@ -132,7 +146,7 @@ class _MoneyShellPageState extends State<MoneyShellPage>
                 backgroundColor: isDark
                     ? AppColors.darkScaffoldBackground
                     : AppColors.scaffoldBackground,
-                body: IndexedStack(index: _currentTab, children: _pages),
+                body: IndexedStack(index: _currentTab, children: pages),
                 bottomNavigationBar: MoneyBottomNavBar(
                   currentTab: _currentTab,
                   onSelectTab: _selectTab,

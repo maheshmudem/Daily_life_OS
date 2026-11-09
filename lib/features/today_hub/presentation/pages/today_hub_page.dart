@@ -12,6 +12,7 @@ import '../../../../core/widgets/app_shimmer_loader.dart';
 import '../../../../core/widgets/expandable_text_widget.dart';
 import '../../../../core/widgets/feature_scaffold.dart';
 import '../../../../core/widgets/habit_bubble_widget.dart';
+import '../../../../core/widgets/staggered_fade_slide.dart';
 import '../../../quick_capture/presentation/widgets/quick_capture_sheet.dart';
 import '../../../../core/widgets/safe_spend_meter_widget.dart';
 import '../../../../di/injection_container.dart';
@@ -280,32 +281,38 @@ class _TodayHubViewState extends State<_TodayHubView> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   // 1. Unified Momentum & Glance Card
-                                  _MomentumSummaryCard(
-                                    progress: progress,
-                                    habitsDone: habitsDone,
-                                    habitsTotal: habitsTotal,
-                                    pendingTasks: pendingTasks,
-                                    remainingSafe: remainingSafe,
-                                    longestStreak: loaded.longestActiveStreak,
-                                    nextPriorityTask: loaded.timelineItems
-                                        .where((t) => !t.isDone)
-                                        .firstOrNull,
+                                  StaggeredFadeSlide(
+                                    index: 0,
+                                    child: _MomentumSummaryCard(
+                                      progress: progress,
+                                      habitsDone: habitsDone,
+                                      habitsTotal: habitsTotal,
+                                      pendingTasks: pendingTasks,
+                                      remainingSafe: remainingSafe,
+                                      longestStreak: loaded.longestActiveStreak,
+                                      nextPriorityTask: loaded.timelineItems
+                                          .where((t) => !t.isDone)
+                                          .firstOrNull,
+                                    ),
                                   ),
                                   const SizedBox(height: AppSpacing.md),
 
                                   // 1.5. Interactive Today Audio Brief Section
                                   if (profile.showAudioBriefCard) ...[
-                                    _AudioBriefSectionCard(
-                                      habitsDone: habitsDone,
-                                      habitsTotal: habitsTotal,
-                                      pendingTasks: pendingTasks,
-                                      remainingSafe: remainingSafe,
-                                      onTap: () => _playAudioBriefing(
-                                        context,
-                                        profile: profile,
-                                        habits: loaded.habits,
-                                        timelineItems: loaded.timelineItems,
-                                        spendSnapshot: spend,
+                                    StaggeredFadeSlide(
+                                      index: 1,
+                                      child: _AudioBriefSectionCard(
+                                        habitsDone: habitsDone,
+                                        habitsTotal: habitsTotal,
+                                        pendingTasks: pendingTasks,
+                                        remainingSafe: remainingSafe,
+                                        onTap: () => _playAudioBriefing(
+                                          context,
+                                          profile: profile,
+                                          habits: loaded.habits,
+                                          timelineItems: loaded.timelineItems,
+                                          spendSnapshot: spend,
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(height: AppSpacing.md),
@@ -313,77 +320,96 @@ class _TodayHubViewState extends State<_TodayHubView> {
 
                                   // 2. Safe-to-Spend Meter
                                   if (profile.showSafeSpendCard) ...[
-                                    SafeSpendMeterWidget(
-                                      spentToday: spentToday,
-                                      dailySafeLimit: safeDailyLimit,
-                                      daysRemaining: daysRemaining,
-                                      monthlyBudget: monthlyBudget,
+                                    StaggeredFadeSlide(
+                                      index: 2,
+                                      child: SafeSpendMeterWidget(
+                                        spentToday: spentToday,
+                                        dailySafeLimit: safeDailyLimit,
+                                        daysRemaining: daysRemaining,
+                                        monthlyBudget: monthlyBudget,
+                                      ),
                                     ),
                                     AppSpacing.gapH12,
                                   ],
 
                                   // 2.5. Cross-Module Quick-Launch OS Dock
                                   if (profile.showQuickLaunchDock) ...[
-                                    OsQuickLaunchDock(
-                                      onOpenSpotlight: () =>
-                                          GlobalCommandPaletteSheet.show(
-                                            context,
-                                            onNavigateTab: (idx) => widget
-                                                .onNavigateToTab
-                                                ?.call(idx),
-                                            onOpenQuickCapture: (mode) {
-                                              if (widget.onOpenQuickCapture !=
-                                                  null) {
-                                                widget.onOpenQuickCapture!(
-                                                  mode,
-                                                );
-                                              } else {
-                                                QuickCaptureSheet.show(
-                                                  context,
-                                                  mode: mode,
-                                                );
-                                              }
-                                            },
-                                          ),
-                                      onNavigateTab: (idx) =>
-                                          widget.onNavigateToTab?.call(idx),
-                                      onQuickCapture: (mode) {
-                                        if (widget.onOpenQuickCapture != null) {
-                                          widget.onOpenQuickCapture!(mode);
-                                        } else {
-                                          QuickCaptureSheet.show(
-                                            context,
-                                            mode: mode,
-                                          );
-                                        }
-                                      },
+                                    StaggeredFadeSlide(
+                                      index: 3,
+                                      child: OsQuickLaunchDock(
+                                        onOpenSpotlight: () =>
+                                            GlobalCommandPaletteSheet.show(
+                                              context,
+                                              onNavigateTab: (idx) => widget
+                                                  .onNavigateToTab
+                                                  ?.call(idx),
+                                              onOpenQuickCapture: (mode) {
+                                                if (widget.onOpenQuickCapture !=
+                                                    null) {
+                                                  widget.onOpenQuickCapture!(
+                                                    mode,
+                                                  );
+                                                } else {
+                                                  QuickCaptureSheet.show(
+                                                    context,
+                                                    mode: mode,
+                                                  );
+                                                }
+                                              },
+                                            ),
+                                        onNavigateTab: (idx) =>
+                                            widget.onNavigateToTab?.call(idx),
+                                        onQuickCapture: (mode) {
+                                          if (widget.onOpenQuickCapture !=
+                                              null) {
+                                            widget.onOpenQuickCapture!(mode);
+                                          } else {
+                                            QuickCaptureSheet.show(
+                                              context,
+                                              mode: mode,
+                                            );
+                                          }
+                                        },
+                                      ),
                                     ),
                                     const SizedBox(height: AppSpacing.lg),
                                   ],
 
                                   // 3 & 4. Habits & Timeline (2-column on wide screens, stacked on mobile)
                                   if (isWide)
-                                    Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Expanded(child: habitsSection),
-                                        const SizedBox(width: AppSpacing.lg),
-                                        Expanded(child: timelineSection),
-                                      ],
+                                    StaggeredFadeSlide(
+                                      index: 4,
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(child: habitsSection),
+                                          const SizedBox(width: AppSpacing.lg),
+                                          Expanded(child: timelineSection),
+                                        ],
+                                      ),
                                     )
                                   else ...[
-                                    habitsSection,
+                                    StaggeredFadeSlide(
+                                      index: 4,
+                                      child: habitsSection,
+                                    ),
                                     const SizedBox(height: AppSpacing.lg),
-                                    timelineSection,
+                                    StaggeredFadeSlide(
+                                      index: 5,
+                                      child: timelineSection,
+                                    ),
                                   ],
                                   const SizedBox(height: AppSpacing.lg),
 
                                   // 5. Evening Wrap-Up Banner
                                   if (profile.showEveningWrapUpCard)
-                                    _EveningWrapUpCard(
-                                      spentToday: spentToday,
-                                      safeDailyLimit: safeDailyLimit,
+                                    StaggeredFadeSlide(
+                                      index: 6,
+                                      child: _EveningWrapUpCard(
+                                        spentToday: spentToday,
+                                        safeDailyLimit: safeDailyLimit,
+                                      ),
                                     ),
                                 ],
                               ),
@@ -441,17 +467,17 @@ class _HabitsSectionHeader extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 24,
-            height: 24,
+            width: 28,
+            height: 28,
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(
                 alpha: palette.isDark ? 0.22 : 0.12,
               ),
-              borderRadius: BorderRadius.circular(7),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(
               Icons.repeat_rounded,
-              size: 13.5,
+              size: 16,
               color: AppColors.primary,
             ),
           ),
@@ -459,44 +485,34 @@ class _HabitsSectionHeader extends StatelessWidget {
           Expanded(
             child: Text(
               StringConstants.habitsAndRoutines,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: text.titleSmall?.copyWith(
-                fontSize: 13.5,
+              softWrap: true,
+              style: text.titleMedium?.copyWith(
+                fontSize: 16,
                 fontWeight: FontWeight.w700,
+                letterSpacing: -0.2,
                 color: palette.heading,
               ),
             ),
           ),
-          _CountPill(
-            text: '$completedCount/$totalCount done',
-            color: AppColors.primary,
-          ),
           const SizedBox(width: 6),
-          InkWell(
-            onTap: onManageHabits,
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: palette.surfaceMuted,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: palette.border),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.tune_rounded, size: 12, color: palette.heading),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Manage',
-                    style: text.labelSmall?.copyWith(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: palette.heading,
-                    ),
-                  ),
-                ],
+          Tooltip(
+            message: 'Manage Habits & Routines',
+            child: InkWell(
+              onTap: onManageHabits,
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: palette.surfaceMuted,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: palette.border),
+                ),
+                child: Icon(
+                  Icons.tune_rounded,
+                  size: 14,
+                  color: palette.heading,
+                ),
               ),
             ),
           ),
@@ -505,7 +521,7 @@ class _HabitsSectionHeader extends StatelessWidget {
             onTap: onAddHabit,
             borderRadius: BorderRadius.circular(8),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
                 color: AppColors.primary,
                 borderRadius: BorderRadius.circular(8),
@@ -513,12 +529,12 @@ class _HabitsSectionHeader extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.add_rounded, size: 13, color: Colors.white),
-                  const SizedBox(width: 2),
+                  const Icon(Icons.add_rounded, size: 14, color: Colors.white),
+                  const SizedBox(width: 3),
                   Text(
                     'Add',
                     style: text.labelSmall?.copyWith(
-                      fontSize: 11,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
                     ),
@@ -593,23 +609,29 @@ class _HabitsManagementCardState extends State<_HabitsManagementCard> {
                   children: [
                     const Icon(
                       Icons.insights_rounded,
-                      size: 13,
+                      size: 14,
                       color: AppColors.primary,
                     ),
-                    const SizedBox(width: 5),
+                    const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        '$weeklyPct% 7-day consistency • Best active streak ${state.longestActiveStreak}d',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                        '$weeklyPct% 7-day consistency • Best streak ${state.longestActiveStreak}d',
+                        softWrap: true,
                         style: text.labelSmall?.copyWith(
-                          fontSize: 11,
+                          fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: palette.body,
                         ),
                       ),
                     ),
-                    if (state.skippedHabits > 0)
+                    const SizedBox(width: 6),
+                    _CountPill(
+                      text:
+                          '${state.completedHabits}/${state.habits.length} done',
+                      color: AppColors.primary,
+                    ),
+                    if (state.skippedHabits > 0) ...[
+                      const SizedBox(width: 4),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 6,
@@ -622,12 +644,13 @@ class _HabitsManagementCardState extends State<_HabitsManagementCard> {
                         child: Text(
                           '${state.skippedHabits} skipped',
                           style: text.labelSmall?.copyWith(
-                            fontSize: 9.5,
+                            fontSize: 10,
                             fontWeight: FontWeight.w700,
                             color: AppColors.warning,
                           ),
                         ),
                       ),
+                    ],
                   ],
                 ),
                 if (categories.length > 2) ...[
@@ -920,43 +943,54 @@ class _TimelineSectionHeader extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 24,
-            height: 24,
+            width: 28,
+            height: 28,
             decoration: BoxDecoration(
               color: AppColors.moduleTime.withValues(
                 alpha: palette.isDark ? 0.22 : 0.12,
               ),
-              borderRadius: BorderRadius.circular(7),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(
               Icons.bolt_rounded,
-              size: 13.5,
+              size: 16,
               color: AppColors.moduleTime,
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
-            child: Text(
-              StringConstants.timelineFeed,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: text.titleSmall?.copyWith(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w700,
-                color: palette.heading,
-              ),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Text(
+                  StringConstants.timelineFeed,
+                  softWrap: true,
+                  style: text.titleMedium?.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.2,
+                    color: palette.heading,
+                  ),
+                ),
+                _CountPill(
+                  text: pendingTasks == 0
+                      ? 'All done'
+                      : '$pendingTasks remaining',
+                  color: pendingTasks == 0
+                      ? AppColors.success
+                      : AppColors.moduleTime,
+                ),
+              ],
             ),
-          ),
-          _CountPill(
-            text: pendingTasks == 0 ? 'All done' : '$pendingTasks remaining',
-            color: pendingTasks == 0 ? AppColors.success : AppColors.moduleTime,
           ),
           const SizedBox(width: 6),
           InkWell(
             onTap: onAddTask,
             borderRadius: BorderRadius.circular(8),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
                 color: AppColors.moduleTime.withValues(
                   alpha: palette.isDark ? 0.22 : 0.12,
@@ -968,14 +1002,14 @@ class _TimelineSectionHeader extends StatelessWidget {
                 children: [
                   const Icon(
                     Icons.add_rounded,
-                    size: 13,
+                    size: 14,
                     color: AppColors.moduleTime,
                   ),
-                  const SizedBox(width: 2),
+                  const SizedBox(width: 3),
                   Text(
                     'Task',
                     style: text.labelSmall?.copyWith(
-                      fontSize: 11,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: AppColors.moduleTime,
                     ),
@@ -1170,21 +1204,21 @@ class _MomentumSummaryCard extends StatelessWidget {
                     const SizedBox(height: 5),
                     Text(
                       _getMotivationMessage(pct),
-                      style: text.bodyMedium?.copyWith(
-                        fontSize: 13,
+                      style: text.titleMedium?.copyWith(
+                        fontSize: 15,
                         fontWeight: FontWeight.w700,
                         color: palette.heading,
                         height: 1.25,
                       ),
                     ),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 4),
                     ExpandableTextWidget(
                       text: _getDetailedInsight(pct),
                       collapsedMaxLines: 1,
                       characterThreshold: 55,
                       toggleColor: AppColors.primary,
-                      style: text.labelSmall?.copyWith(
-                        fontSize: 11.5,
+                      style: text.bodySmall?.copyWith(
+                        fontSize: 12.5,
                         height: 1.35,
                         color: palette.caption,
                       ),
@@ -1235,7 +1269,7 @@ class _MomentumSummaryCard extends StatelessWidget {
                     icon: Icons.account_balance_wallet_rounded,
                     color: AppColors.moduleMoney,
                     label: 'Safe Spend',
-                    value: '₹${remainingSafe.toStringAsFixed(0)}',
+                    value: CurrencyUtils.format(remainingSafe, decimals: 0),
                   ),
                 ),
               ],
@@ -1525,7 +1559,7 @@ class _TimelineRowTile extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.sm + 4),
 
-              // 3. Full Title (with Show More if long) + Time/Category subtitle
+              // 3. Full Title (with Show More if long) + Time/Category/Action subtitle
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1535,10 +1569,10 @@ class _TimelineRowTile extends StatelessWidget {
                       collapsedMaxLines: 2,
                       characterThreshold: 50,
                       toggleColor: tint,
-                      style: text.titleSmall?.copyWith(
-                        fontSize: 13.5,
+                      style: text.titleMedium?.copyWith(
+                        fontSize: 15,
                         height: 1.3,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         color: item.isDone ? palette.caption : palette.heading,
                         decoration: item.isDone
                             ? TextDecoration.lineThrough
@@ -1546,65 +1580,65 @@ class _TimelineRowTile extends StatelessWidget {
                         decorationColor: palette.caption,
                       ),
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      '${item.time} • ${item.category}',
-                      style: text.labelSmall?.copyWith(
-                        fontSize: 11,
-                        color: palette.caption,
-                      ),
+                    const SizedBox(height: 5),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          '${item.time} • ${item.category}',
+                          style: text.labelSmall?.copyWith(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: palette.caption,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: item.isDone
+                                ? AppColors.success.withValues(
+                                    alpha: palette.isDark ? 0.18 : 0.10,
+                                  )
+                                : tint.withValues(
+                                    alpha: palette.isDark ? 0.18 : 0.10,
+                                  ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            item.isDone ? 'Completed' : item.action,
+                            style: text.labelSmall?.copyWith(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              color: item.isDone ? AppColors.success : tint,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: AppSpacing.xs),
+              const SizedBox(width: 2),
 
-              // 4. Status/Action Pill & Menu
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: item.isDone
-                            ? AppColors.success.withValues(
-                                alpha: palette.isDark ? 0.18 : 0.10,
-                              )
-                            : tint.withValues(
-                                alpha: palette.isDark ? 0.18 : 0.10,
-                              ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        item.isDone ? 'Completed' : item.action,
-                        style: text.labelSmall?.copyWith(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w700,
-                          color: item.isDone ? AppColors.success : tint,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 2),
-                    IconButton(
-                      tooltip: 'Edit Task',
-                      constraints: const BoxConstraints(
-                        minWidth: 28,
-                        minHeight: 28,
-                      ),
-                      padding: EdgeInsets.zero,
-                      onPressed: onEdit,
-                      icon: Icon(
-                        Icons.more_vert_rounded,
-                        size: 16,
-                        color: palette.caption,
-                      ),
-                    ),
-                  ],
+              // 4. Menu button
+              IconButton(
+                tooltip: 'Edit Task',
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                padding: EdgeInsets.zero,
+                visualDensity: VisualDensity.compact,
+                style: IconButton.styleFrom(
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                onPressed: onEdit,
+                icon: Icon(
+                  Icons.more_vert_rounded,
+                  size: 16,
+                  color: palette.caption,
                 ),
               ),
             ],
@@ -1672,8 +1706,8 @@ class _EveningWrapUpCard extends StatelessWidget {
               children: [
                 Text(
                   StringConstants.eveningWrapUpTitle,
-                  style: text.titleSmall?.copyWith(
-                    fontSize: 13.5,
+                  style: text.titleMedium?.copyWith(
+                    fontSize: 15.5,
                     fontWeight: FontWeight.w700,
                     color: palette.heading,
                   ),
@@ -1684,8 +1718,8 @@ class _EveningWrapUpCard extends StatelessWidget {
                   collapsedMaxLines: 2,
                   characterThreshold: 60,
                   toggleColor: AppColors.primary,
-                  style: text.labelSmall?.copyWith(
-                    fontSize: 11.5,
+                  style: text.bodySmall?.copyWith(
+                    fontSize: 12.5,
                     height: 1.35,
                     color: palette.caption,
                   ),
@@ -1762,21 +1796,20 @@ class _AudioBriefSectionCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Flexible(
-                      child: Text(
-                        StringConstants.audioBriefSectionTitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: text.titleSmall?.copyWith(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w700,
-                          color: palette.heading,
-                        ),
+                    Text(
+                      StringConstants.audioBriefSectionTitle,
+                      softWrap: true,
+                      style: text.titleMedium?.copyWith(
+                        fontSize: 15.5,
+                        fontWeight: FontWeight.w700,
+                        color: palette.heading,
                       ),
                     ),
-                    const SizedBox(width: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 7,
@@ -1803,10 +1836,10 @@ class _AudioBriefSectionCard extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   '$habitsDone/$habitsTotal habits • $pendingTasks tasks ahead • ${CurrencyUtils.format(remainingSafe)} safe spend',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: text.labelSmall?.copyWith(
-                    fontSize: 11.5,
+                  softWrap: true,
+                  style: text.bodySmall?.copyWith(
+                    fontSize: 12.5,
+                    height: 1.3,
                     color: palette.caption,
                   ),
                 ),
@@ -1814,30 +1847,36 @@ class _AudioBriefSectionCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.xs),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: const BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: AppRadius.radiusFull,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.play_arrow_rounded,
-                  size: 15,
-                  color: Colors.white,
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 112),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: const BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: AppRadius.radiusFull,
+              ),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.play_arrow_rounded,
+                      size: 15,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 3),
+                    Text(
+                      StringConstants.playBriefing,
+                      style: text.labelSmall?.copyWith(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 3),
-                Text(
-                  StringConstants.playBriefing,
-                  style: text.labelSmall?.copyWith(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ],

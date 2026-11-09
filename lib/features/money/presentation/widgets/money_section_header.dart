@@ -28,9 +28,11 @@ class MoneySectionHeader extends StatelessWidget {
           Expanded(
             child: Text(
               title,
+              softWrap: true,
               style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.2,
                 color: isDark
                     ? AppColors.darkTextPrimary
                     : AppColors.textPrimary,

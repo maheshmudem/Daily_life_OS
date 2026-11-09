@@ -182,16 +182,28 @@ class AppDatabase extends _$AppDatabase {
   /// across all schema versions so partial or interrupted SQLite migrations
   /// never fail with `duplicate column name` or `table already exists`.
   Future<void> _ensureSchemaIntegrity(Migrator m) async {
+    final existingTables = await _allExistingTableNames();
+    final tablesToInspect = <TableInfo<Table, Object?>>[];
+
     for (final table in allTables) {
-      final exists = await _tableExists(table.actualTableName);
-      if (!exists) {
+      if (!existingTables.contains(table.actualTableName.toLowerCase())) {
         try {
           await m.createTable(table);
         } catch (_) {}
-        continue;
+      } else {
+        tablesToInspect.add(table);
       }
+    }
 
-      final existingColumns = await _existingColumns(table.actualTableName);
+    if (tablesToInspect.isEmpty) return;
+
+    final columnSets = await Future.wait(
+      tablesToInspect.map((t) => _existingColumns(t.actualTableName)),
+    );
+
+    for (var i = 0; i < tablesToInspect.length; i++) {
+      final table = tablesToInspect[i];
+      final existingColumns = columnSets[i];
       for (final column in table.$columns) {
         if (!existingColumns.contains(column.$name.toLowerCase())) {
           try {
@@ -202,12 +214,11 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
-  Future<bool> _tableExists(String tableName) async {
+  Future<Set<String>> _allExistingTableNames() async {
     final rows = await customSelect(
-      "SELECT name FROM sqlite_master WHERE type = 'table' AND LOWER(name) = LOWER(?)",
-      variables: [Variable.withString(tableName)],
+      "SELECT LOWER(name) AS name FROM sqlite_master WHERE type = 'table'",
     ).get();
-    return rows.isNotEmpty;
+    return rows.map((row) => row.read<String>('name')).toSet();
   }
 
   Future<Set<String>> _existingColumns(String tableName) async {

@@ -1789,26 +1789,29 @@ class _PlannerViewState extends State<_PlannerView>
   }) {
     return Padding(
       padding: const EdgeInsets.only(top: 10, bottom: 6),
-      child: SizedBox(
-        height: 24,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 28),
         child: Row(
           children: [
-            Icon(icon, size: 15, color: color),
-            const SizedBox(width: 6),
-            Text(
-              title,
-              maxLines: 1,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: isDark
-                    ? AppColors.darkTextHeading
-                    : AppColors.textHeading,
+            Icon(icon, size: 17, color: color),
+            const SizedBox(width: 7),
+            Flexible(
+              child: Text(
+                title,
+                softWrap: true,
+                style: TextStyle(
+                  fontSize: 15.5,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.2,
+                  color: isDark
+                      ? AppColors.darkTextHeading
+                      : AppColors.textHeading,
+                ),
               ),
             ),
             const SizedBox(width: 6),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(6),
@@ -1816,7 +1819,7 @@ class _PlannerViewState extends State<_PlannerView>
               child: Text(
                 '$count',
                 style: TextStyle(
-                  fontSize: 10.5,
+                  fontSize: 11,
                   fontWeight: FontWeight.w700,
                   color: color,
                 ),

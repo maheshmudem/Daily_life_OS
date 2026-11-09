@@ -83,28 +83,32 @@ class _ExpandableTextWidgetState extends State<ExpandableTextWidget> {
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () => setState(() => _isExpanded = !_isExpanded),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          _isExpanded
-                              ? widget.collapseLabel
-                              : widget.expandLabel,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _isExpanded
+                                ? widget.collapseLabel
+                                : widget.expandLabel,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: accentColor,
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                          Icon(
+                            _isExpanded
+                                ? Icons.keyboard_arrow_up_rounded
+                                : Icons.keyboard_arrow_down_rounded,
+                            size: 14,
                             color: accentColor,
                           ),
-                        ),
-                        const SizedBox(width: 2),
-                        Icon(
-                          _isExpanded
-                              ? Icons.keyboard_arrow_up_rounded
-                              : Icons.keyboard_arrow_down_rounded,
-                          size: 14,
-                          color: accentColor,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),

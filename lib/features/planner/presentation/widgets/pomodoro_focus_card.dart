@@ -199,103 +199,135 @@ class _PomodoroFocusCardState extends State<PomodoroFocusCard>
       child: Column(
         children: [
           // 1. Top Bar: Mode Badge, Strict Lock, Round Indicators & Zen Mode Button
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: AppRadius.radiusFull,
-                ),
-                child: Text(
-                  modeLabel,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
-              if (widget.strictMode) ...[
-                const SizedBox(width: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.22),
-                    borderRadius: AppRadius.radiusFull,
-                  ),
-                  child: const Row(
+          SizedBox(
+            width: double.infinity,
+            child: Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.lock_rounded, size: 10, color: Colors.white),
-                      SizedBox(width: 3),
-                      Text(
-                        'STRICT',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.4,
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: AppRadius.radiusFull,
+                        ),
+                        child: Text(
+                          modeLabel,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5,
+                          ),
                         ),
                       ),
+                      if (widget.strictMode) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.22),
+                            borderRadius: AppRadius.radiusFull,
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.lock_rounded,
+                                size: 10,
+                                color: Colors.white,
+                              ),
+                              SizedBox(width: 3),
+                              Text(
+                                'STRICT',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.4,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Round ${widget.currentRound}/${widget.totalRounds}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: List.generate(
+                          widget.totalRounds,
+                          (i) => AnimatedContainer(
+                            duration: const Duration(milliseconds: 220),
+                            margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                            width: i + 1 == widget.currentRound ? 12 : 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              borderRadius: AppRadius.radiusFull,
+                              color: i < widget.currentRound
+                                  ? Colors.white
+                                  : Colors.white.withValues(alpha: 0.35),
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (widget.onOpenZenMode != null) ...[
+                        const SizedBox(width: 8),
+                        InkWell(
+                          onTap: widget.onOpenZenMode,
+                          borderRadius: AppRadius.radiusFull,
+                          child: Tooltip(
+                            message: 'Full-Screen Zen Focus',
+                            child: Container(
+                              padding: const EdgeInsets.all(5),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.18),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.fullscreen_rounded,
+                                size: 16,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
               ],
-              const Spacer(),
-              Text(
-                'Round ${widget.currentRound}/${widget.totalRounds}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Row(
-                children: List.generate(
-                  widget.totalRounds,
-                  (i) => AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
-                    margin: const EdgeInsets.symmetric(horizontal: 1.5),
-                    width: i + 1 == widget.currentRound ? 12 : 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      borderRadius: AppRadius.radiusFull,
-                      color: i < widget.currentRound
-                          ? Colors.white
-                          : Colors.white.withValues(alpha: 0.35),
-                    ),
-                  ),
-                ),
-              ),
-              if (widget.onOpenZenMode != null) ...[
-                const SizedBox(width: 8),
-                InkWell(
-                  onTap: widget.onOpenZenMode,
-                  borderRadius: AppRadius.radiusFull,
-                  child: Tooltip(
-                    message: 'Full-Screen Zen Focus',
-                    child: Container(
-                      padding: const EdgeInsets.all(5),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.18),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.fullscreen_rounded,
-                        size: 16,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ],
+            ),
           ),
           const SizedBox(height: 16),
 
@@ -722,73 +754,76 @@ class _PomodoroFocusCardState extends State<PomodoroFocusCard>
           const SizedBox(height: 14),
 
           // 5. Primary Timer Action Controls
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Reset Button
-              IconButton.filledTonal(
-                onPressed: widget.onResetTimer,
-                tooltip: 'Reset Timer',
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.white.withValues(alpha: 0.2),
-                  foregroundColor: Colors.white,
-                  fixedSize: const Size.square(38),
-                  minimumSize: const Size.square(38),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  padding: EdgeInsets.zero,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Reset Button
+                IconButton.filledTonal(
+                  onPressed: widget.onResetTimer,
+                  tooltip: 'Reset Timer',
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white.withValues(alpha: 0.2),
+                    foregroundColor: Colors.white,
+                    fixedSize: const Size.square(38),
+                    minimumSize: const Size.square(38),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    padding: EdgeInsets.zero,
+                  ),
+                  icon: const Icon(Icons.refresh_rounded, size: 18),
                 ),
-                icon: const Icon(Icons.refresh_rounded, size: 18),
-              ),
-              const SizedBox(width: 12),
+                const SizedBox(width: 12),
 
-              // Main Start/Pause Button
-              ElevatedButton.icon(
-                onPressed: widget.onToggleTimer,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: buttonColor,
-                  minimumSize: const Size(0, 40),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 22,
-                    vertical: 8,
+                // Main Start/Pause Button
+                ElevatedButton.icon(
+                  onPressed: widget.onToggleTimer,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: buttonColor,
+                    minimumSize: const Size(0, 40),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 22,
+                      vertical: 8,
+                    ),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: AppRadius.radiusFull,
+                    ),
+                    elevation: 0,
                   ),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: AppRadius.radiusFull,
+                  icon: Icon(
+                    widget.isTimerRunning
+                        ? Icons.pause_rounded
+                        : Icons.play_arrow_rounded,
+                    size: 20,
                   ),
-                  elevation: 0,
-                ),
-                icon: Icon(
-                  widget.isTimerRunning
-                      ? Icons.pause_rounded
-                      : Icons.play_arrow_rounded,
-                  size: 20,
-                ),
-                label: Text(
-                  widget.isTimerRunning ? 'Pause' : 'Start Focus',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 13.5,
+                  label: Text(
+                    widget.isTimerRunning ? 'Pause' : 'Start Focus',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13.5,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
+                const SizedBox(width: 12),
 
-              // Skip Session Button
-              IconButton.filledTonal(
-                onPressed: widget.onSkipSession,
-                tooltip: 'Skip Session',
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.white.withValues(alpha: 0.2),
-                  foregroundColor: Colors.white,
-                  fixedSize: const Size.square(38),
-                  minimumSize: const Size.square(38),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  padding: EdgeInsets.zero,
+                // Skip Session Button
+                IconButton.filledTonal(
+                  onPressed: widget.onSkipSession,
+                  tooltip: 'Skip Session',
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white.withValues(alpha: 0.2),
+                    foregroundColor: Colors.white,
+                    fixedSize: const Size.square(38),
+                    minimumSize: const Size.square(38),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    padding: EdgeInsets.zero,
+                  ),
+                  icon: const Icon(Icons.skip_next_rounded, size: 18),
                 ),
-                icon: const Icon(Icons.skip_next_rounded, size: 18),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),

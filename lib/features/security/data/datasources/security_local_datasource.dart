@@ -31,6 +31,7 @@ abstract class SecurityLocalDataSource {
 class SecurityLocalDataSourceImpl implements SecurityLocalDataSource {
   final FlutterSecureStorage _storage;
   final LocalAuthentication _localAuth;
+  SecurityConfigEntity? _cachedConfig;
 
   SecurityLocalDataSourceImpl({
     FlutterSecureStorage? storage,
@@ -66,14 +67,26 @@ class SecurityLocalDataSourceImpl implements SecurityLocalDataSource {
 
   @override
   Future<SecurityConfigEntity> getConfig() async {
-    final isSecEnabledStr = await _storage.read(key: _keySecurityEnabled);
-    final isBioEnabledStr = await _storage.read(key: _keyBiometricEnabled);
-    final modeStr = await _storage.read(key: _keyLockMode);
+    final cached = _cachedConfig;
+    if (cached != null) return cached;
 
-    final storedPin = await _storage.read(key: _keyPinHash);
-    final storedDecoyPin = await _storage.read(key: _keyDecoyPinHash);
-    final storedPattern = await _storage.read(key: _keyPatternHash);
-    final storedDecoyPattern = await _storage.read(key: _keyDecoyPatternHash);
+    final values = await Future.wait([
+      _storage.read(key: _keySecurityEnabled),
+      _storage.read(key: _keyBiometricEnabled),
+      _storage.read(key: _keyLockMode),
+      _storage.read(key: _keyPinHash),
+      _storage.read(key: _keyDecoyPinHash),
+      _storage.read(key: _keyPatternHash),
+      _storage.read(key: _keyDecoyPatternHash),
+    ]);
+
+    final isSecEnabledStr = values[0];
+    final isBioEnabledStr = values[1];
+    final modeStr = values[2];
+    final storedPin = values[3];
+    final storedDecoyPin = values[4];
+    final storedPattern = values[5];
+    final storedDecoyPattern = values[6];
 
     final hasPin = storedPin != null && storedPin.isNotEmpty;
     final hasPattern = storedPattern != null && storedPattern.isNotEmpty;
@@ -82,7 +95,7 @@ class SecurityLocalDataSourceImpl implements SecurityLocalDataSource {
     // Security is only enabled if the user explicitly set it AND configured a PIN or Pattern
     final isSecurityEnabled = isSecEnabledStr == 'true' && isConfigured;
 
-    return SecurityConfigEntity(
+    final config = SecurityConfigEntity(
       isSecurityEnabled: isSecurityEnabled,
       isBiometricEnabled: isBioEnabledStr == 'true',
       hasPin: hasPin,
@@ -94,6 +107,8 @@ class SecurityLocalDataSourceImpl implements SecurityLocalDataSource {
           ? SecurityLockMode.pattern
           : SecurityLockMode.pin,
     );
+    _cachedConfig = config;
+    return config;
   }
 
   @override
@@ -240,6 +255,7 @@ class SecurityLocalDataSourceImpl implements SecurityLocalDataSource {
 
   @override
   Future<void> setPin({required String pin, String? decoyPin}) async {
+    _cachedConfig = null;
     final salt = await _getOrCreateSalt();
     await _storage.write(key: _keyPinHash, value: _hash(salt, pin));
     await _storage.write(key: _keySecurityEnabled, value: 'true');
@@ -251,6 +267,7 @@ class SecurityLocalDataSourceImpl implements SecurityLocalDataSource {
 
   @override
   Future<void> setDecoyPin(String decoyPin) async {
+    _cachedConfig = null;
     final salt = await _getOrCreateSalt();
     await _storage.write(key: _keyDecoyPinHash, value: _hash(salt, decoyPin));
   }
@@ -260,6 +277,7 @@ class SecurityLocalDataSourceImpl implements SecurityLocalDataSource {
     required List<int> pattern,
     List<int>? decoyPattern,
   }) async {
+    _cachedConfig = null;
     final salt = await _getOrCreateSalt();
     await _storage.write(
       key: _keyPatternHash,
@@ -277,6 +295,7 @@ class SecurityLocalDataSourceImpl implements SecurityLocalDataSource {
 
   @override
   Future<void> setDecoyPattern(List<int> decoyPattern) async {
+    _cachedConfig = null;
     final salt = await _getOrCreateSalt();
     await _storage.write(
       key: _keyDecoyPatternHash,
@@ -286,16 +305,19 @@ class SecurityLocalDataSourceImpl implements SecurityLocalDataSource {
 
   @override
   Future<void> setBiometricsEnabled(bool enabled) async {
+    _cachedConfig = null;
     await _storage.write(key: _keyBiometricEnabled, value: enabled.toString());
   }
 
   @override
   Future<void> setSecurityEnabled(bool enabled) async {
+    _cachedConfig = null;
     await _storage.write(key: _keySecurityEnabled, value: enabled.toString());
   }
 
   @override
   Future<void> setLockMode(SecurityLockMode mode) async {
+    _cachedConfig = null;
     await _storage.write(
       key: _keyLockMode,
       value: mode == SecurityLockMode.pattern ? 'pattern' : 'pin',
@@ -304,13 +326,16 @@ class SecurityLocalDataSourceImpl implements SecurityLocalDataSource {
 
   @override
   Future<void> clearAllSecurity() async {
-    await _storage.delete(key: _keyPinHash);
-    await _storage.delete(key: _keyDecoyPinHash);
-    await _storage.delete(key: _keyPatternHash);
-    await _storage.delete(key: _keyDecoyPatternHash);
-    await _storage.delete(key: _keySecurityEnabled);
-    await _storage.delete(key: _keyBiometricEnabled);
-    await _storage.delete(key: _keyFailedAttempts);
-    await _storage.delete(key: _keyLockoutUntil);
+    _cachedConfig = null;
+    await Future.wait([
+      _storage.delete(key: _keyPinHash),
+      _storage.delete(key: _keyDecoyPinHash),
+      _storage.delete(key: _keyPatternHash),
+      _storage.delete(key: _keyDecoyPatternHash),
+      _storage.delete(key: _keySecurityEnabled),
+      _storage.delete(key: _keyBiometricEnabled),
+      _storage.delete(key: _keyFailedAttempts),
+      _storage.delete(key: _keyLockoutUntil),
+    ]);
   }
 }

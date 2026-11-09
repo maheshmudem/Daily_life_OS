@@ -123,4 +123,28 @@ void main() {
       expect(find.text('Complete Wrap-Up & Save Reflection'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'Analytics & Schedule (ManageHabitsSheet) renders full habit titles without overflow on 320px viewport',
+    (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(320, 2600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(const MaterialApp(home: TodayHubPage()));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+
+      // Tap 'Analytics & Schedule' chip to open ManageHabitsSheet
+      await tester.ensureVisible(find.text('Analytics & Schedule'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Analytics & Schedule'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+
+      expect(find.text('Habits & Micro-Routines Studio'), findsOneWidget);
+      expect(find.text('Analytics & 30d Log'), findsWidgets);
+    },
+  );
 }

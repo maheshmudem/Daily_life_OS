@@ -105,20 +105,21 @@ class _ManageHabitsSheetState extends State<ManageHabitsSheet> {
                     ),
                     const SizedBox(height: 12),
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          width: 36,
-                          height: 36,
+                          width: 38,
+                          height: 38,
                           decoration: BoxDecoration(
                             color: AppColors.primary.withValues(
                               alpha: palette.isDark ? 0.22 : 0.12,
                             ),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(11),
                           ),
                           child: const Icon(
                             Icons.repeat_rounded,
                             color: AppColors.primary,
-                            size: 19,
+                            size: 20,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -128,22 +129,27 @@ class _ManageHabitsSheetState extends State<ManageHabitsSheet> {
                             children: [
                               Text(
                                 'Habits & Micro-Routines Studio',
+                                softWrap: true,
                                 style: text.titleMedium?.copyWith(
+                                  fontSize: 16.5,
                                   fontWeight: FontWeight.w700,
                                   color: palette.heading,
                                 ),
                               ),
+                              const SizedBox(height: 2),
                               Text(
                                 '${habits.length} routines • $completedToday done • ${skippedToday > 0 ? "$skippedToday skipped • " : ""}$weeklyScore% 7d consistency',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                                softWrap: true,
                                 style: text.labelSmall?.copyWith(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
                                   color: palette.caption,
                                 ),
                               ),
                             ],
                           ),
                         ),
+                        const SizedBox(width: 8),
                         FilledButton.icon(
                           onPressed: () {
                             final bloc = context.read<TodayHubBloc>();
@@ -158,10 +164,11 @@ class _ManageHabitsSheetState extends State<ManageHabitsSheet> {
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
+                              horizontal: 11,
                               vertical: 8,
                             ),
                             minimumSize: const Size(0, 34),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
@@ -384,26 +391,37 @@ class _StudioMetric extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = context.palette;
     final text = context.text;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          value,
-          style: text.titleSmall?.copyWith(
-            fontWeight: FontWeight.w800,
-            color: color,
-            fontFeatures: const [FontFeature.tabularFigures()],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              style: text.titleSmall?.copyWith(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: color,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
           ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: text.labelSmall?.copyWith(
-            fontSize: 10,
-            color: palette.caption,
+          const SizedBox(height: 2),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              style: text.labelSmall?.copyWith(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: palette.caption,
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -421,7 +439,7 @@ class _ManageHabitCard extends StatelessWidget {
     final weeklyRate = (habit.weeklyCompletionRate * 100).round();
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: palette.surfaceMuted,
         borderRadius: BorderRadius.circular(14),
@@ -430,187 +448,312 @@ class _ManageHabitCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 1. Top Row: Check Circle + Icon Badge + Full Unclipped Title, Description & Metadata
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Complete toggle button
-              GestureDetector(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  context.read<TodayHubBloc>().add(ToggleHabit(habit.id));
-                },
-                child: Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: habit.isDoneToday
-                        ? AppColors.success
-                        : Colors.transparent,
-                    border: Border.all(
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: GestureDetector(
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    context.read<TodayHubBloc>().add(ToggleHabit(habit.id));
+                  },
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
                       color: habit.isDoneToday
                           ? AppColors.success
-                          : palette.border,
-                      width: 1.6,
+                          : Colors.transparent,
+                      border: Border.all(
+                        color: habit.isDoneToday
+                            ? AppColors.success
+                            : palette.border,
+                        width: 1.6,
+                      ),
                     ),
+                    child: habit.isDoneToday
+                        ? const Icon(
+                            Icons.check_rounded,
+                            size: 15,
+                            color: Colors.white,
+                          )
+                        : null,
                   ),
-                  child: habit.isDoneToday
-                      ? const Icon(
-                          Icons.check_rounded,
-                          size: 15,
-                          color: Colors.white,
-                        )
-                      : null,
                 ),
               ),
               const SizedBox(width: 10),
               Container(
-                width: 36,
-                height: 36,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
                   color: accent.withValues(alpha: palette.isDark ? 0.22 : 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(habit.icon, color: accent, size: 18),
+                child: Icon(habit.icon, color: accent, size: 19),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onTap: () => HabitDetailSheet.show(context, habit),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              habit.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: text.titleSmall?.copyWith(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w700,
-                                color: palette.heading,
-                              ),
-                            ),
+                      Text(
+                        habit.title,
+                        softWrap: true,
+                        style: text.titleMedium?.copyWith(
+                          fontSize: 15.5,
+                          fontWeight: FontWeight.w700,
+                          height: 1.25,
+                          color: habit.isDoneToday
+                              ? palette.caption
+                              : palette.heading,
+                          decoration: habit.isDoneToday
+                              ? TextDecoration.lineThrough
+                              : null,
+                          decorationColor: palette.caption,
+                        ),
+                      ),
+                      if (habit.description.trim().isNotEmpty) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          habit.description.trim(),
+                          softWrap: true,
+                          style: text.bodySmall?.copyWith(
+                            fontSize: 12.5,
+                            height: 1.3,
+                            color: palette.caption,
                           ),
-                          const SizedBox(width: 6),
+                        ),
+                      ],
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 1.5,
+                              horizontal: 7,
+                              vertical: 2,
                             ),
                             decoration: BoxDecoration(
                               color: accent.withValues(
                                 alpha: palette.isDark ? 0.18 : 0.10,
                               ),
-                              borderRadius: BorderRadius.circular(5),
+                              borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               habit.category,
                               style: text.labelSmall?.copyWith(
-                                fontSize: 9.5,
+                                fontSize: 10.5,
                                 fontWeight: FontWeight.w700,
                                 color: accent,
                               ),
                             ),
                           ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: palette.card,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: palette.border,
+                                width: 0.8,
+                              ),
+                            ),
+                            child: Text(
+                              habit.scheduleLabel,
+                              style: text.labelSmall?.copyWith(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: palette.body,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            '🔥 ${habit.streakDays}d streak • $weeklyRate% 7d',
+                            style: text.labelSmall?.copyWith(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: palette.caption,
+                            ),
+                          ),
                         ],
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${habit.scheduleLabel} • 🔥 ${habit.streakDays}d streak • $weeklyRate% 7d',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: text.labelSmall?.copyWith(
-                          fontSize: 11,
-                          color: palette.caption,
-                        ),
                       ),
                     ],
                   ),
                 ),
               ),
-              // Action buttons: Skip, Reminder, Edit, Delete
-              IconButton(
-                tooltip: habit.isSkippedToday ? 'Unskip Today' : 'Skip Today',
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                padding: EdgeInsets.zero,
-                onPressed: () {
-                  context.read<TodayHubBloc>().add(SkipHabit(habit.id));
-                },
-                icon: Icon(
-                  Icons.fast_forward_rounded,
-                  size: 17,
-                  color: habit.isSkippedToday
-                      ? AppColors.warning
-                      : palette.caption,
-                ),
-              ),
-              IconButton(
-                tooltip: habit.reminderEnabled
-                    ? 'Reminder: ${habit.reminderTime ?? "On"}'
-                    : 'Enable Reminder',
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                padding: EdgeInsets.zero,
-                onPressed: () {
-                  context.read<TodayHubBloc>().add(
-                    UpdateHabit(
-                      habit.copyWith(
-                        reminderEnabled: !habit.reminderEnabled,
-                        reminderTime: habit.reminderTime ?? '08:00 AM',
-                      ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Divider(height: 1, thickness: 0.8, color: palette.border),
+          const SizedBox(height: 8),
+
+          // 2. Bottom Action Bar: Analytics, Skip, Reminder, Edit, Delete (Zero Overflow)
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              InkWell(
+                onTap: () => HabitDetailSheet.show(context, habit),
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: accent.withValues(
+                      alpha: palette.isDark ? 0.18 : 0.10,
                     ),
-                  );
-                },
-                icon: Icon(
-                  habit.reminderEnabled
-                      ? Icons.notifications_active_rounded
-                      : Icons.notifications_none_rounded,
-                  size: 17,
-                  color: habit.reminderEnabled ? accent : palette.caption,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.insights_rounded, size: 14, color: accent),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Analytics & 30d Log',
+                          style: text.labelSmall?.copyWith(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            color: accent,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-              IconButton(
-                tooltip: 'Edit Habit',
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                padding: EdgeInsets.zero,
-                onPressed: () {
-                  final bloc = context.read<TodayHubBloc>();
-                  HabitEditorSheet.show(
-                    context,
-                    existing: habit,
-                    onSave: (updated) => bloc.add(UpdateHabit(updated)),
-                    onDelete: () => bloc.add(DeleteHabit(habit.id)),
-                  );
-                },
-                icon: Icon(
-                  Icons.edit_outlined,
-                  size: 17,
-                  color: palette.heading,
-                ),
-              ),
-              IconButton(
-                tooltip: 'Delete Habit',
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                padding: EdgeInsets.zero,
-                onPressed: () async {
-                  final bloc = context.read<TodayHubBloc>();
-                  final confirmed = await ConfirmationDialog.show(
-                    context,
-                    title: 'Delete Habit?',
-                    message:
-                        'Are you sure you want to delete "${habit.title}"?',
-                    confirmLabel: 'Delete',
-                  );
-                  if (confirmed == true && context.mounted) {
-                    bloc.add(DeleteHabit(habit.id));
-                  }
-                },
-                icon: const Icon(
-                  Icons.delete_outline_rounded,
-                  size: 17,
-                  color: AppColors.error,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    tooltip: habit.isSkippedToday
+                        ? 'Unskip Today'
+                        : 'Skip Today',
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
+                    style: IconButton.styleFrom(
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    padding: EdgeInsets.zero,
+                    onPressed: () {
+                      context.read<TodayHubBloc>().add(SkipHabit(habit.id));
+                    },
+                    icon: Icon(
+                      Icons.fast_forward_rounded,
+                      size: 18,
+                      color: habit.isSkippedToday
+                          ? AppColors.warning
+                          : palette.caption,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    tooltip: habit.reminderEnabled
+                        ? 'Reminder: ${habit.reminderTime ?? "On"}'
+                        : 'Enable Reminder',
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
+                    style: IconButton.styleFrom(
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    padding: EdgeInsets.zero,
+                    onPressed: () {
+                      context.read<TodayHubBloc>().add(
+                        UpdateHabit(
+                          habit.copyWith(
+                            reminderEnabled: !habit.reminderEnabled,
+                            reminderTime: habit.reminderTime ?? '08:00 AM',
+                          ),
+                        ),
+                      );
+                    },
+                    icon: Icon(
+                      habit.reminderEnabled
+                          ? Icons.notifications_active_rounded
+                          : Icons.notifications_none_rounded,
+                      size: 18,
+                      color: habit.reminderEnabled ? accent : palette.caption,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    tooltip: 'Edit Habit',
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
+                    style: IconButton.styleFrom(
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    padding: EdgeInsets.zero,
+                    onPressed: () {
+                      final bloc = context.read<TodayHubBloc>();
+                      HabitEditorSheet.show(
+                        context,
+                        existing: habit,
+                        onSave: (updated) => bloc.add(UpdateHabit(updated)),
+                        onDelete: () => bloc.add(DeleteHabit(habit.id)),
+                      );
+                    },
+                    icon: Icon(
+                      Icons.edit_outlined,
+                      size: 18,
+                      color: palette.heading,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    tooltip: 'Delete Habit',
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
+                    style: IconButton.styleFrom(
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    padding: EdgeInsets.zero,
+                    onPressed: () async {
+                      final bloc = context.read<TodayHubBloc>();
+                      final confirmed = await ConfirmationDialog.show(
+                        context,
+                        title: 'Delete Habit?',
+                        message:
+                            'Are you sure you want to delete "${habit.title}"?',
+                        confirmLabel: 'Delete',
+                      );
+                      if (confirmed == true && context.mounted) {
+                        bloc.add(DeleteHabit(habit.id));
+                      }
+                    },
+                    icon: const Icon(
+                      Icons.delete_outline_rounded,
+                      size: 18,
+                      color: AppColors.error,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

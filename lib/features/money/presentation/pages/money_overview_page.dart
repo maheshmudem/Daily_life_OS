@@ -679,8 +679,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
               children: [
                 Text(
                   title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  softWrap: true,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -691,8 +690,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                 ),
                 Text(
                   subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  softWrap: true,
                   style: TextStyle(
                     fontSize: 10.5,
                     color: isDark
@@ -773,22 +771,21 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                   children: [
                     Text(
                       'Pending Lend & Borrow Reminders',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      softWrap: true,
                       style: TextStyle(
-                        fontSize: 13.5,
+                        fontSize: 15,
                         fontWeight: FontWeight.w700,
                         color: isDark
                             ? AppColors.darkTextPrimary
                             : AppColors.textPrimary,
                       ),
                     ),
+                    const SizedBox(height: 2),
                     Text(
                       'Track money given (to collect) & borrowed (to pay)',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      softWrap: true,
                       style: TextStyle(
-                        fontSize: 10.5,
+                        fontSize: 11.5,
                         color: isDark
                             ? AppColors.darkTextMuted
                             : AppColors.textMuted,
@@ -859,14 +856,16 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Flexible(
-                              child: Text(
-                                'To Collect (Lent)',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.moduleMoney,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  'To Collect (Lent)',
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.moduleMoney,
+                                  ),
                                 ),
                               ),
                             ),
@@ -892,15 +891,17 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                             ),
                           ),
                         ),
-                        Text(
-                          '${lentIous.length} pending • Tap + to add',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 9.5,
-                            color: isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.textSecondary,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            '${lentIous.length} pending • Tap + to add',
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              color: isDark
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.textSecondary,
+                            ),
                           ),
                         ),
                       ],
@@ -933,14 +934,16 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Flexible(
-                              child: Text(
-                                'To Pay (Borrowed)',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.error,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  'To Pay (Borrowed)',
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.error,
+                                  ),
                                 ),
                               ),
                             ),
@@ -966,15 +969,17 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                             ),
                           ),
                         ),
-                        Text(
-                          '${borrowedIous.length} pending • Tap + to add',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 9.5,
-                            color: isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.textSecondary,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            '${borrowedIous.length} pending • Tap + to add',
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              color: isDark
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.textSecondary,
+                            ),
                           ),
                         ),
                       ],
@@ -1031,8 +1036,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                                     iou.isLent
                                         ? 'Collect from ${iou.person}'
                                         : 'Pay back ${iou.person}',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                                    softWrap: true,
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w700,
@@ -1253,7 +1257,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
         crossAxisCount: 2,
         mainAxisSpacing: 8,
         crossAxisSpacing: 8,
-        mainAxisExtent: 64,
+        mainAxisExtent: 70,
       ),
       itemBuilder: (context, index) {
         final item = items[index];
@@ -1286,16 +1290,18 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        item.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.textPrimary,
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          item.title,
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.textPrimary,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -1306,7 +1312,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                           item.subtitle,
                           maxLines: 1,
                           style: TextStyle(
-                            fontSize: 10.5,
+                            fontSize: 11.5,
                             color: isDark
                                 ? AppColors.darkTextMuted
                                 : AppColors.textMuted,

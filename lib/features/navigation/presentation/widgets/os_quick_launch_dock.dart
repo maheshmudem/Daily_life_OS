@@ -6,6 +6,7 @@ import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
+import '../../../../core/widgets/staggered_fade_slide.dart';
 import '../../../quick_capture/domain/entities/quick_capture_entities.dart';
 
 /// Cross-Module Quick-Launch OS Dock (Spotlight, Focus, Capture, Scratchpad).
@@ -103,42 +104,48 @@ class _OsDockPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = context.palette;
 
-    return InkWell(
-      borderRadius: AppRadius.borderMd,
+    return PressableScale(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.xs,
-          vertical: AppSpacing.xs,
-        ),
-        decoration: BoxDecoration(
-          color: palette.surfaceMuted,
-          borderRadius: AppRadius.borderMd,
-          border: Border.all(color: palette.border),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: AppSpacing.xl + AppSpacing.xxs,
-              height: AppSpacing.xl + AppSpacing.xxs,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.14),
-                borderRadius: AppRadius.borderSm,
+      child: InkWell(
+        borderRadius: AppRadius.borderMd,
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xs,
+            vertical: AppSpacing.xs,
+          ),
+          decoration: BoxDecoration(
+            color: palette.surfaceMuted,
+            borderRadius: AppRadius.borderMd,
+            border: Border.all(color: palette.border),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: AppSpacing.xl + AppSpacing.xxs,
+                height: AppSpacing.xl + AppSpacing.xxs,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.14),
+                  borderRadius: AppRadius.borderSm,
+                ),
+                child: Icon(icon, size: AppSpacing.md, color: color),
               ),
-              child: Icon(icon, size: AppSpacing.md, color: color),
-            ),
-            AppSpacing.gapH4,
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: context.text.labelSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: palette.heading,
+              AppSpacing.gapH4,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  style: context.text.labelMedium?.copyWith(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    color: palette.heading,
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

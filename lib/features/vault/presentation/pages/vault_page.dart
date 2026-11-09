@@ -673,22 +673,21 @@ class _VaultViewState extends State<_VaultView>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    Wrap(
+                      spacing: AppSpacing.xs,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        Flexible(
-                          child: Text(
-                            isDecoy
-                                ? 'Decoy Vault Active'
-                                : 'Zero-Knowledge Encrypted',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: context.text.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: palette.heading,
-                            ),
+                        Text(
+                          isDecoy
+                              ? 'Decoy Vault Active'
+                              : 'Zero-Knowledge Encrypted',
+                          softWrap: true,
+                          style: context.text.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: palette.heading,
                           ),
                         ),
-                        AppSpacing.gapW8,
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.xs,
@@ -719,8 +718,7 @@ class _VaultViewState extends State<_VaultView>
                       !_isSecurityEnabled
                           ? 'No PIN/Pattern lock set. Enable lock to protect keys.'
                           : 'Keys never leave this device. Encrypted at rest.',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      softWrap: true,
                       style: context.text.bodySmall?.copyWith(
                         color: palette.caption,
                       ),
@@ -897,21 +895,25 @@ class _VaultViewState extends State<_VaultView>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.text.labelSmall?.copyWith(
-                    color: palette.caption,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    label,
+                    style: context.text.labelSmall?.copyWith(
+                      color: palette.caption,
+                    ),
                   ),
                 ),
-                Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.text.labelMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: palette.heading,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    value,
+                    style: context.text.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: palette.heading,
+                    ),
                   ),
                 ),
               ],
@@ -1096,20 +1098,19 @@ class _VaultViewState extends State<_VaultView>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  Wrap(
+                    spacing: AppSpacing.xs,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      Flexible(
-                        child: Text(
-                          item.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: context.text.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: palette.heading,
-                          ),
+                      Text(
+                        item.title,
+                        softWrap: true,
+                        style: context.text.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: palette.heading,
                         ),
                       ),
-                      AppSpacing.gapW8,
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.xs,
@@ -1130,40 +1131,35 @@ class _VaultViewState extends State<_VaultView>
                     ],
                   ),
                   AppSpacing.gapH4,
-                  Row(
+                  Wrap(
+                    spacing: AppSpacing.xs,
+                    runSpacing: 2,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      Flexible(
-                        child: Text(
-                          item.username,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: context.text.bodySmall?.copyWith(
-                            color: palette.secondary,
-                          ),
+                      Text(
+                        item.username,
+                        softWrap: true,
+                        style: context.text.bodySmall?.copyWith(
+                          color: palette.secondary,
                         ),
                       ),
-                      AppSpacing.gapW8,
                       Text(
                         '•',
                         style: context.text.bodySmall?.copyWith(
                           color: palette.caption,
                         ),
                       ),
-                      AppSpacing.gapW8,
-                      Flexible(
-                        child: Text(
-                          isRevealed ? secret : '••••••••',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.monoCode.copyWith(
-                            fontSize: 12,
-                            fontWeight: isRevealed
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                            color: isRevealed
-                                ? AppColors.moduleVault
-                                : palette.caption,
-                          ),
+                      Text(
+                        isRevealed ? secret : '••••••••',
+                        softWrap: true,
+                        style: AppTextStyles.monoCode.copyWith(
+                          fontSize: 12,
+                          fontWeight: isRevealed
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          color: isRevealed
+                              ? AppColors.moduleVault
+                              : palette.caption,
                         ),
                       ),
                     ],
@@ -1317,14 +1313,16 @@ class _VaultViewState extends State<_VaultView>
                 child: Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        _generatedPreviewKey,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.captionBold.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: palette.heading,
-                          fontFeatures: const [FontFeature.tabularFigures()],
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          _generatedPreviewKey,
+                          style: AppTextStyles.captionBold.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: palette.heading,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
                         ),
                       ),
                     ),
@@ -1601,20 +1599,19 @@ class _VaultViewState extends State<_VaultView>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  Wrap(
+                    spacing: AppSpacing.xs,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      Flexible(
-                        child: Text(
-                          doc.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: context.text.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: palette.heading,
-                          ),
+                      Text(
+                        doc.title,
+                        softWrap: true,
+                        style: context.text.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: palette.heading,
                         ),
                       ),
-                      AppSpacing.gapW8,
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.xs,
@@ -1643,8 +1640,7 @@ class _VaultViewState extends State<_VaultView>
                   AppSpacing.gapH4,
                   Text(
                     '${doc.category} • ${doc.expiry}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    softWrap: true,
                     style: context.text.bodySmall?.copyWith(
                       color: isExpiringSoon
                           ? AppColors.warning

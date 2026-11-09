@@ -84,8 +84,6 @@ class MoneyLocalDataSourceImpl implements MoneyLocalDataSource {
 
   @override
   Future<BudgetModel> getBudget() async {
-    final settings = await _ensureSettings();
-
     final now = DateTime.now();
     final monthStart = DateTime(now.year, now.month, 1).toIso8601String();
     final nextMonthStart = DateTime(
@@ -93,14 +91,18 @@ class MoneyLocalDataSourceImpl implements MoneyLocalDataSource {
       now.month + 1,
       1,
     ).toIso8601String();
-    final allTx =
-        await (_db.select(_db.transactions)..where(
+    final settingsFuture = _ensureSettings();
+    final allTxFuture =
+        (_db.select(_db.transactions)..where(
               (t) =>
                   t.type.equals('expense') &
                   t.date.isBiggerOrEqualValue(monthStart) &
                   t.date.isSmallerThanValue(nextMonthStart),
             ))
             .get();
+    await Future.wait([settingsFuture, allTxFuture]);
+    final settings = await settingsFuture;
+    final allTx = await allTxFuture;
     final totalSpent = allTx.fold<double>(0, (sum, t) => sum + t.amount);
 
     return BudgetModel.fromValues(

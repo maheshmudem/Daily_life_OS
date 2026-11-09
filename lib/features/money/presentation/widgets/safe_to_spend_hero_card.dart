@@ -64,88 +64,105 @@ class SafeToSpendHeroCard extends StatelessWidget {
               ),
               const SizedBox(width: 7),
               const Expanded(
-                child: Text(
-                  'SAFE-TO-SPEND TODAY',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.6,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'SAFE-TO-SPEND TODAY',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.6,
+                    ),
                   ),
                 ),
               ),
-              if (onOpenSalaryPlan != null) ...[
-                InkWell(
-                  onTap: onOpenSalaryPlan,
-                  borderRadius: AppRadius.radiusFull,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 9,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.22),
-                      borderRadius: AppRadius.radiusFull,
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.auto_graph_rounded,
-                          size: 11,
-                          color: Colors.white,
+              const SizedBox(width: 6),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (onOpenSalaryPlan != null) ...[
+                        InkWell(
+                          onTap: onOpenSalaryPlan,
+                          borderRadius: AppRadius.radiusFull,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 9,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.22),
+                              borderRadius: AppRadius.radiusFull,
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.auto_graph_rounded,
+                                  size: 11,
+                                  color: Colors.white,
+                                ),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Set Plan',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                        SizedBox(width: 4),
-                        Text(
-                          'Set Plan',
-                          style: TextStyle(
+                        const SizedBox(width: 5),
+                      ],
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.18),
+                          borderRadius: AppRadius.radiusFull,
+                        ),
+                        child: Text(
+                          '${budget.daysRemaining}d left',
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
+                      ),
+                      if (onEditBudget != null) ...[
+                        const SizedBox(width: 5),
+                        InkWell(
+                          onTap: onEditBudget,
+                          borderRadius: AppRadius.radiusFull,
+                          child: Container(
+                            padding: const EdgeInsets.all(5),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.tune_rounded,
+                              size: 13,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
                       ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 5),
-              ],
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  borderRadius: AppRadius.radiusFull,
-                ),
-                child: Text(
-                  '${budget.daysRemaining}d left',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
+                    ],
                   ),
                 ),
               ),
-              if (onEditBudget != null) ...[
-                const SizedBox(width: 5),
-                InkWell(
-                  onTap: onEditBudget,
-                  borderRadius: AppRadius.radiusFull,
-                  child: Container(
-                    padding: const EdgeInsets.all(5),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.tune_rounded,
-                      size: 13,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
             ],
           ),
           const SizedBox(height: 11),
@@ -181,8 +198,7 @@ class SafeToSpendHeroCard extends StatelessWidget {
                       budget.monthlyBudget <= 0
                           ? 'Tap "Set Plan" to set monthly salary/budget'
                           : 'Available out of ${CurrencyUtils.format(dailyLimit)}/day cap',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      softWrap: true,
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 11,
@@ -339,10 +355,13 @@ class SafeToSpendHeroCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          maxLines: 1,
-          style: const TextStyle(color: Colors.white70, fontSize: 10),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            label,
+            style: const TextStyle(color: Colors.white70, fontSize: 10),
+          ),
         ),
         const SizedBox(height: 2),
         FittedBox(

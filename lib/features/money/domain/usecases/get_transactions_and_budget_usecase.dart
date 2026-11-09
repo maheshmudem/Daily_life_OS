@@ -57,13 +57,16 @@ class GetDailySpendSnapshotUseCase {
   const GetDailySpendSnapshotUseCase(this._repository);
 
   Future<DailySpendSnapshot> call() async {
-    final budget = await _repository.getBudget();
     final now = DateTime.now();
     final startOfDay = DateTime(now.year, now.month, now.day);
-    final today = await _repository.getTransactionsInRange(
+    final budgetFuture = _repository.getBudget();
+    final todayFuture = _repository.getTransactionsInRange(
       startOfDay,
       startOfDay.add(const Duration(days: 1)),
     );
+    await Future.wait([budgetFuture, todayFuture]);
+    final budget = await budgetFuture;
+    final today = await todayFuture;
     final spentToday = today
         .where((t) => t.isExpense)
         .fold<double>(0, (sum, t) => sum + t.amount);

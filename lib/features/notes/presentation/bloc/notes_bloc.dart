@@ -29,7 +29,9 @@ class NotesBloc extends Bloc<NotesEvent, NotesState> {
   }
 
   Future<void> _onLoad(LoadNotes event, Emitter<NotesState> emit) async {
-    emit(NotesLoading());
+    if (state is! NotesLoaded) {
+      emit(NotesLoading());
+    }
     try {
       final notes = await getNotesUseCase();
       emit(NotesLoaded(notes));

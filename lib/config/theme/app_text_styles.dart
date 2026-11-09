@@ -121,27 +121,28 @@ class AppTextStyles {
   // ==========================================
   static const TextStyle titleLarge = TextStyle(
     fontFamily: fontFamily,
-    fontSize: 17,
-    fontWeight: FontWeight.w600,
+    fontSize: 18,
+    fontWeight: FontWeight.w700,
     color: AppColors.textHeading,
-    letterSpacing: -0.2,
+    letterSpacing: -0.25,
     height: 1.3,
   );
 
   static const TextStyle titleMedium = TextStyle(
     fontFamily: fontFamily,
-    fontSize: 15,
-    fontWeight: FontWeight.w600,
+    fontSize: 16,
+    fontWeight: FontWeight.w700,
     color: AppColors.textHeading,
-    letterSpacing: -0.1,
+    letterSpacing: -0.2,
     height: 1.3,
   );
 
   static const TextStyle titleSmall = TextStyle(
     fontFamily: fontFamily,
-    fontSize: 14,
+    fontSize: 14.5,
     fontWeight: FontWeight.w600,
     color: AppColors.textHeading,
+    letterSpacing: -0.1,
     height: 1.3,
   );
 

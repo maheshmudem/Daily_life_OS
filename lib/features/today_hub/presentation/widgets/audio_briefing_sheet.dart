@@ -645,8 +645,7 @@ class _AudioBriefingSheetState extends State<AudioBriefingSheet> {
                     _activeSectionIndex == -1
                         ? '$_statusLabel • All Activities'
                         : '$_statusLabel • ${_sections[_activeSectionIndex].title}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    softWrap: true,
                     style: AppTextStyles.captionBold.copyWith(
                       color: _isPlaying ? accent : palette.caption,
                     ),
@@ -862,8 +861,9 @@ class _BriefingActivitySectionCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       section.title,
-                      style: text.titleSmall?.copyWith(
-                        fontSize: 13,
+                      softWrap: true,
+                      style: text.titleMedium?.copyWith(
+                        fontSize: 15,
                         fontWeight: FontWeight.w700,
                         color: palette.heading,
                       ),

@@ -122,7 +122,10 @@ class HabitDetailSheet extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 4,
+                            crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               Container(
                                 padding: const EdgeInsets.symmetric(
@@ -138,22 +141,19 @@ class HabitDetailSheet extends StatelessWidget {
                                 child: Text(
                                   habit.category,
                                   style: text.labelSmall?.copyWith(
-                                    fontSize: 10,
+                                    fontSize: 10.5,
                                     fontWeight: FontWeight.w700,
                                     color: accent,
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 6),
-                              Flexible(
-                                child: Text(
-                                  habit.scheduleLabel,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: text.labelSmall?.copyWith(
-                                    color: palette.caption,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              Text(
+                                habit.scheduleLabel,
+                                softWrap: true,
+                                style: text.labelSmall?.copyWith(
+                                  fontSize: 11.5,
+                                  color: palette.caption,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],
@@ -350,8 +350,11 @@ class HabitDetailSheet extends StatelessWidget {
                 const SizedBox(height: 18),
 
                 // 4. Interactive 7-Day Weekly Completion Tracker
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Text(
                       'LAST 7 DAYS (TAP ANY DAY TO TOGGLE)',
@@ -693,31 +696,36 @@ class _StatMiniTile extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, size: 13, color: color),
+              Icon(icon, size: 14, color: color),
               const SizedBox(width: 4),
               Expanded(
-                child: Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: text.titleSmall?.copyWith(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w800,
-                    color: palette.heading,
-                    fontFeatures: const [FontFeature.tabularFigures()],
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    value,
+                    style: text.titleSmall?.copyWith(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: palette.heading,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
                   ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 3),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: text.labelSmall?.copyWith(
-              fontSize: 9.5,
-              color: palette.caption,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              label,
+              style: text.labelSmall?.copyWith(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w600,
+                color: palette.caption,
+              ),
             ),
           ),
         ],

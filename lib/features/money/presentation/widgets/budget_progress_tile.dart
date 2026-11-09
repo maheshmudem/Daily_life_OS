@@ -51,8 +51,8 @@ class BudgetProgressTile extends StatelessWidget {
                       Text(
                         cat.label,
                         style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
                           color: isDark
                               ? AppColors.darkTextPrimary
                               : AppColors.textPrimary,
@@ -81,8 +81,7 @@ class BudgetProgressTile extends StatelessWidget {
                                   : budget.isNearLimit
                                   ? StringConstants.nearLimit
                                   : '${CurrencyUtils.format(budget.remaining, decimals: 0)} left',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                              softWrap: true,
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight:

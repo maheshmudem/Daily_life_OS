@@ -118,20 +118,42 @@ class MoneyBloc extends Bloc<MoneyEvent, MoneyState> {
   // ── Loading ─────────────────────────────────────────────────────────────
 
   Future<void> _onLoad(LoadMoney event, Emitter<MoneyState> emit) async {
-    emit(MoneyLoading());
+    if (state is! MoneyLoaded) {
+      emit(MoneyLoading());
+    }
     await _reload(emit);
   }
 
   Future<void> _reload(Emitter<MoneyState> emit) async {
     try {
-      final transactions = await getRecentTransactionsUseCase();
-      final budget = await getBudgetUseCase();
-      final subscriptions = await getSubscriptionsUseCase();
-      final ious = await getIousUseCase();
-      final allTransactions = await getAllTransactionsUseCase();
-      final limits = await getCategoryLimitsUseCase();
-      final accounts = await getAccountsUseCase();
-      final settings = await getMoneySettingsUseCase();
+      final txFuture = getRecentTransactionsUseCase();
+      final budgetFuture = getBudgetUseCase();
+      final subsFuture = getSubscriptionsUseCase();
+      final iousFuture = getIousUseCase();
+      final allTxFuture = getAllTransactionsUseCase();
+      final limitsFuture = getCategoryLimitsUseCase();
+      final accountsFuture = getAccountsUseCase();
+      final settingsFuture = getMoneySettingsUseCase();
+
+      await Future.wait([
+        txFuture,
+        budgetFuture,
+        subsFuture,
+        iousFuture,
+        allTxFuture,
+        limitsFuture,
+        accountsFuture,
+        settingsFuture,
+      ]);
+
+      final transactions = await txFuture;
+      final budget = await budgetFuture;
+      final subscriptions = await subsFuture;
+      final ious = await iousFuture;
+      final allTransactions = await allTxFuture;
+      final limits = await limitsFuture;
+      final accounts = await accountsFuture;
+      final settings = await settingsFuture;
 
       CurrencyUtils.setCurrency(settings.currencyCode);
 

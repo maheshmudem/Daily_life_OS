@@ -121,7 +121,12 @@ class TodayHubLocalDataSourceImpl implements TodayHubLocalDataSource {
   Future<List<HabitModel>> getHabits() async {
     await _ensureDetailsTable();
     final today = _todayIso;
-    var rows = await _db.select(_db.habits).get();
+    final initialFetch = await Future.wait([
+      _db.select(_db.habits).get(),
+      _fetchDetailsMap(),
+    ]);
+    var rows = initialFetch[0] as List<Habit>;
+    final detailsMap = initialFetch[1] as Map<int, QueryRow>;
 
     // Daily boundary reset: if a habit was marked done on an earlier date, reset isDoneToday for the new day
     bool didResetAny = false;
@@ -139,8 +144,6 @@ class TodayHubLocalDataSourceImpl implements TodayHubLocalDataSource {
     if (didResetAny) {
       rows = await _db.select(_db.habits).get();
     }
-
-    final detailsMap = await _fetchDetailsMap();
 
     return rows.map((row) {
       final detail = detailsMap[row.id];

@@ -881,10 +881,11 @@ class _NotesViewState extends State<_NotesView> {
                           ),
                           AppSpacing.gapW8,
                           Expanded(
-                            child: Text(
-                              note.title,
-                              maxLines: isCompactGrid ? 2 : 1,
-                              overflow: TextOverflow.ellipsis,
+                            child: ExpandableTextWidget(
+                              text: note.title,
+                              collapsedMaxLines: 2,
+                              characterThreshold: 45,
+                              toggleColor: noteColor,
                               style:
                                   (isCompactGrid
                                           ? context.text.titleSmall
@@ -935,9 +936,67 @@ class _NotesViewState extends State<_NotesView> {
                         ),
                       ],
 
-                      // Interactive Inline Checklists
+                      // Interactive Inline Checklists + Completion Progress Bar
                       if (checklistIndices.isNotEmpty) ...[
                         AppSpacing.gapH8,
+                        Builder(
+                          builder: (context) {
+                            final doneCount = checklistIndices.where((idx) {
+                              final raw = allLines[idx].trimLeft();
+                              return raw.startsWith('[x] ') ||
+                                  raw.startsWith('[X] ');
+                            }).length;
+                            final totalCount = checklistIndices.length;
+                            final pct = totalCount > 0
+                                ? (doneCount / totalCount).clamp(0.0, 1.0)
+                                : 0.0;
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 6),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: ClipRRect(
+                                      borderRadius: AppRadius.radiusFull,
+                                      child: TweenAnimationBuilder<double>(
+                                        tween: Tween<double>(
+                                          begin: 0,
+                                          end: pct,
+                                        ),
+                                        duration: const Duration(
+                                          milliseconds: 420,
+                                        ),
+                                        curve: Curves.easeOutCubic,
+                                        builder: (context, val, _) =>
+                                            LinearProgressIndicator(
+                                              value: val,
+                                              minHeight: 4,
+                                              backgroundColor:
+                                                  palette.surfaceMuted,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                    noteColor,
+                                                  ),
+                                            ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '$doneCount/$totalCount',
+                                    style: context.text.labelSmall?.copyWith(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: noteColor,
+                                      fontFeatures: const [
+                                        FontFeature.tabularFigures(),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
                         ...checklistIndices.take(isCompactGrid ? 3 : 4).map((
                           lineIdx,
                         ) {
@@ -959,23 +1018,26 @@ class _NotesViewState extends State<_NotesView> {
                                   vertical: AppSpacing.xxxs,
                                 ),
                                 child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Icon(
-                                      isChecked
-                                          ? Icons.check_circle_rounded
-                                          : Icons
-                                                .radio_button_unchecked_rounded,
-                                      size: AppSpacing.md,
-                                      color: isChecked
-                                          ? noteColor
-                                          : palette.caption,
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 1.5),
+                                      child: Icon(
+                                        isChecked
+                                            ? Icons.check_circle_rounded
+                                            : Icons
+                                                  .radio_button_unchecked_rounded,
+                                        size: AppSpacing.md,
+                                        color: isChecked
+                                            ? noteColor
+                                            : palette.caption,
+                                      ),
                                     ),
                                     AppSpacing.gapW8,
                                     Expanded(
                                       child: Text(
                                         itemText,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
+                                        softWrap: true,
                                         style: context.text.bodySmall?.copyWith(
                                           color: isChecked
                                               ? palette.caption
