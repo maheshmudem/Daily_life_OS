@@ -46,6 +46,9 @@ class FeatureScaffold extends StatelessWidget {
   /// When set, a back button is shown and this callback is invoked on tap.
   final VoidCallback? onBack;
 
+  /// Optional callback when tapping the title/leading area (e.g., to open Profile).
+  final VoidCallback? onTitleTap;
+
   /// App bar actions. The last action sits on the 20px page gutter.
   final List<Widget> actions;
 
@@ -94,6 +97,7 @@ class FeatureScaffold extends StatelessWidget {
     this.leading,
     this.titleTrailing,
     this.onBack,
+    this.onTitleTap,
     this.actions = const [],
     this.actionsEndPadding = AppSpacing.xs,
     this.bottom,
@@ -155,8 +159,10 @@ class FeatureScaffold extends StatelessWidget {
       elevation: 0,
       scrolledUnderElevation: 0,
       automaticallyImplyLeading: false,
-      toolbarHeight: hasSubtitle ? 68 : 56,
-      titleSpacing: onBack != null ? 0 : AppSpacing.pageGutter,
+      toolbarHeight: hasSubtitle ? 64 : 56,
+      titleSpacing: onBack != null
+          ? 0
+          : (leading != null ? AppSpacing.md : AppSpacing.pageGutter),
       actionsPadding: EdgeInsets.only(right: actionsEndPadding),
       leading: onBack == null
           ? null
@@ -171,38 +177,50 @@ class FeatureScaffold extends StatelessWidget {
             ),
       title: Row(
         children: [
-          if (leading != null) ...[leading!, AppSpacing.gapW12],
-          Flexible(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (title != null)
-                  Text(
-                    title!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: text.headlineMedium?.copyWith(
-                      fontSize: hasSubtitle ? 19 : 20,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.4,
-                      color: palette.heading,
+          if (leading != null) ...[leading!, const SizedBox(width: 10)],
+          Expanded(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onTitleTap,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (title != null)
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        title!,
+                        maxLines: 1,
+                        style: text.headlineMedium?.copyWith(
+                          fontSize: hasSubtitle ? 16.5 : 18.5,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.3,
+                          height: 1.2,
+                          color: palette.heading,
+                        ),
+                      ),
                     ),
-                  ),
-                if (hasSubtitle) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: text.labelMedium?.copyWith(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w500,
-                      color: palette.caption,
+                  if (hasSubtitle) ...[
+                    const SizedBox(height: 2),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        subtitle!,
+                        maxLines: 1,
+                        style: text.labelMedium?.copyWith(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w500,
+                          height: 1.2,
+                          color: palette.caption,
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
           if (titleTrailing != null) ...[AppSpacing.gapW8, titleTrailing!],
@@ -525,15 +543,15 @@ class FeatureIconButton extends StatelessWidget {
       tooltip: tooltip,
       onPressed: onPressed,
       style: IconButton.styleFrom(
-        fixedSize: const Size(36, 36),
-        minimumSize: const Size(36, 36),
+        fixedSize: const Size(34, 34),
+        minimumSize: const Size(34, 34),
         padding: EdgeInsets.zero,
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         backgroundColor: backgroundColor ?? palette.card,
         side: BorderSide(color: borderColor ?? palette.divider),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
-      icon: Icon(icon, size: 18, color: color ?? palette.heading),
+      icon: Icon(icon, size: 17, color: color ?? palette.heading),
     );
   }
 }

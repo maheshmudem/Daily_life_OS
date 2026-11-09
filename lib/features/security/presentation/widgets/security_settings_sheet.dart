@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
@@ -253,7 +254,7 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                           await widget.securityRepository.setSecurityEnabled(
                             false,
                           );
-                          _loadConfig();
+                          unawaited(_loadConfig());
                         },
                       );
                     }
@@ -270,7 +271,7 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                   isDark: isDark,
                   onChanged: (val) async {
                     await widget.securityRepository.setBiometricsEnabled(val);
-                    _loadConfig();
+                    unawaited(_loadConfig());
                   },
                 ),
                 const Divider(),
@@ -323,7 +324,7 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                     onChanged: (mode) async {
                       if (mode != null) {
                         await widget.securityRepository.setLockMode(mode);
-                        _loadConfig();
+                        unawaited(_loadConfig());
                       }
                     },
                   ),
@@ -451,7 +452,7 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                           'Enter your credentials to wipe all security locks from the vault.',
                       onVerified: () async {
                         await widget.securityRepository.clearAllSecurity();
-                        _loadConfig();
+                        unawaited(_loadConfig());
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
@@ -679,7 +680,7 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                 }
 
                 if (dlgContext.mounted) Navigator.pop(dlgContext);
-                _loadConfig();
+                unawaited(_loadConfig());
                 messenger.showSnackBar(
                   SnackBar(
                     content: Text(
@@ -756,7 +757,7 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                         );
                       }
                       if (dlgContext.mounted) Navigator.pop(dlgContext);
-                      _loadConfig();
+                      unawaited(_loadConfig());
                       messenger.showSnackBar(
                         SnackBar(
                           content: Text(

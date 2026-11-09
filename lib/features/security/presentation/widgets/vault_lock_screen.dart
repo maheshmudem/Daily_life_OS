@@ -1,17 +1,27 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
+import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/app_text_styles.dart';
+import '../../../../config/theme/theme_context.dart';
+import '../../../../core/constants/string_constants.dart';
+import '../../../../core/widgets/bloc_effect_listener.dart';
 import '../../domain/entities/security_config_entity.dart';
 import '../../domain/repositories/security_repository.dart';
+import '../bloc/security_bloc.dart';
 import 'pattern_lock_grid_widget.dart';
 import 'pin_dialpad_widget.dart';
 
+/// PIN / pattern / biometric lock screen.
+///
+/// All verification, lockout and decoy logic lives in [SecurityBloc]; this
+/// widget only renders state and forwards user input.
 class VaultLockScreen extends StatefulWidget {
   final SecurityRepository securityRepository;
-  final Function({required bool isDecoy}) onUnlock;
+  final void Function({required bool isDecoy}) onUnlock;
 
   const VaultLockScreen({
     super.key,
@@ -24,382 +34,198 @@ class VaultLockScreen extends StatefulWidget {
 }
 
 class _VaultLockScreenState extends State<VaultLockScreen> {
-  SecurityLockMode _currentMode = SecurityLockMode.pin;
-  SecurityConfigEntity? _config;
-  String _enteredPin = '';
-  bool _hasError = false;
-  String? _errorMessage;
-  bool _isChecking = false;
-  bool _biometricsAvailable = false;
-
-  Timer? _cooldownTimer;
-  int _lockoutSeconds = 0;
+  late final SecurityBloc _bloc;
 
   @override
   void initState() {
     super.initState();
-    _initSecurity();
+    _bloc = SecurityBloc.fromRepository(widget.securityRepository)
+      ..add(const LoadSecurityStatus());
   }
 
   @override
   void dispose() {
-    _cooldownTimer?.cancel();
+    _bloc.close();
     super.dispose();
   }
 
-  Future<void> _initSecurity() async {
-    final cfg = await widget.securityRepository.getConfig();
-    final bioAvail = await widget.securityRepository.isBiometricsAvailable();
-    final lockout = await widget.securityRepository.getLockoutUntil();
-
-    if (mounted) {
-      setState(() {
-        _config = cfg;
-        _currentMode = cfg.activeMode;
-        _biometricsAvailable = bioAvail && cfg.isBiometricEnabled;
-      });
-
-      if (lockout != null) {
-        _startLockoutTimer(lockout);
-      } else if (_biometricsAvailable) {
-        _handleBiometricUnlock();
-      }
-    }
-  }
-
-  void _startLockoutTimer(DateTime lockoutUntil) {
-    _cooldownTimer?.cancel();
-    final remaining = lockoutUntil.difference(DateTime.now()).inSeconds;
-    if (remaining <= 0) return;
-
-    setState(() {
-      _lockoutSeconds = remaining;
-      _hasError = true;
-      _errorMessage =
-          'Too many failed attempts. Locked for ${_lockoutSeconds}s';
-    });
-
-    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      if (_lockoutSeconds <= 1) {
-        timer.cancel();
-        setState(() {
-          _lockoutSeconds = 0;
-          _hasError = false;
-          _errorMessage = null;
-        });
-      } else {
-        setState(() {
-          _lockoutSeconds--;
-          _errorMessage =
-              'Too many failed attempts. Locked for ${_lockoutSeconds}s';
-        });
-      }
-    });
-  }
-
-  Future<void> _handleBiometricUnlock() async {
-    if (_lockoutSeconds > 0) return;
-    try {
-      final authenticated = await widget.securityRepository
-          .authenticateBiometrics(
-            reason: 'Scan your fingerprint to unlock Secure Vault',
-          );
-      if (authenticated && mounted) {
-        HapticFeedback.lightImpact();
-        widget.onUnlock(isDecoy: false);
-      }
-    } catch (_) {}
-  }
-
-  Future<void> _handlePinChanged(String pin) async {
-    if (_lockoutSeconds > 0) return;
-
-    setState(() {
-      _enteredPin = pin;
-      _hasError = false;
-      _errorMessage = null;
-    });
-
-    if (pin.length == 4 && !_isChecking) {
-      _isChecking = true;
-      final isDecoy = await widget.securityRepository.isDecoyPin(pin);
-      if (isDecoy) {
-        HapticFeedback.mediumImpact();
-        widget.onUnlock(isDecoy: true);
-        _isChecking = false;
-        return;
-      }
-
-      final isReal = await widget.securityRepository.verifyPin(pin);
-      if (isReal) {
-        HapticFeedback.lightImpact();
-        widget.onUnlock(isDecoy: false);
-      } else {
+  void _onEffect(BuildContext context, SecurityEffect effect) {
+    switch (effect) {
+      case SecurityUnlocked(:final isDecoy):
+        isDecoy ? HapticFeedback.mediumImpact() : HapticFeedback.lightImpact();
+        widget.onUnlock(isDecoy: isDecoy);
+      case SecurityAttemptRejected():
         HapticFeedback.heavyImpact();
-        final lockout = await widget.securityRepository.getLockoutUntil();
-        if (lockout != null) {
-          _startLockoutTimer(lockout);
-        } else {
-          final attempts = await widget.securityRepository.getFailedAttempts();
-          final remaining = 5 - attempts;
-          if (mounted) {
-            setState(() {
-              _hasError = true;
-              _errorMessage = remaining <= 2
-                  ? 'Incorrect PIN. $remaining attempt${remaining == 1 ? '' : 's'} remaining!'
-                  : 'Incorrect PIN. Try again.';
-              _enteredPin = '';
-            });
-          }
-        }
-      }
-      _isChecking = false;
     }
-  }
-
-  Future<void> _handlePatternComplete(List<int> pattern) async {
-    if (_lockoutSeconds > 0 || _isChecking) return;
-    _isChecking = true;
-
-    final isDecoy = await widget.securityRepository.isDecoyPattern(pattern);
-    if (isDecoy) {
-      HapticFeedback.mediumImpact();
-      widget.onUnlock(isDecoy: true);
-      _isChecking = false;
-      return;
-    }
-
-    final isReal = await widget.securityRepository.verifyPattern(pattern);
-    if (isReal) {
-      HapticFeedback.lightImpact();
-      widget.onUnlock(isDecoy: false);
-    } else {
-      HapticFeedback.heavyImpact();
-      final lockout = await widget.securityRepository.getLockoutUntil();
-      if (lockout != null) {
-        _startLockoutTimer(lockout);
-      } else {
-        final attempts = await widget.securityRepository.getFailedAttempts();
-        final remaining = 5 - attempts;
-        if (mounted) {
-          setState(() {
-            _hasError = true;
-            _errorMessage = remaining <= 2
-                ? 'Incorrect pattern. $remaining attempt${remaining == 1 ? '' : 's'} remaining!'
-                : 'Pattern does not match. Try again.';
-          });
-        }
-      }
-    }
-    _isChecking = false;
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final showTabs =
-        (_config?.hasPin ?? false) && (_config?.hasPattern ?? false);
+    return BlocProvider<SecurityBloc>.value(
+      value: _bloc,
+      child: BlocEffectListener<SecurityEffect>(
+        effects: _bloc.effects,
+        listener: _onEffect,
+        child: BlocBuilder<SecurityBloc, SecurityState>(
+          builder: (context, state) => _LockView(state: state, bloc: _bloc),
+        ),
+      ),
+    );
+  }
+}
+
+class _LockView extends StatelessWidget {
+  final SecurityState state;
+  final SecurityBloc bloc;
+
+  const _LockView({required this.state, required this.bloc});
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    final isLockedOut = state.isLockedOut;
+    final accent = isLockedOut ? AppColors.error : AppColors.moduleVault;
 
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl,
+          vertical: AppSpacing.lg,
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Shield Icon Header
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: AppSpacing.edgeInsetsAllLg,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: _lockoutSeconds > 0
-                    ? AppColors.error.withValues(alpha: 0.15)
-                    : AppColors.moduleVault.withValues(alpha: 0.14),
+                color: accent.withValues(alpha: isLockedOut ? 0.15 : 0.14),
                 border: Border.all(
-                  color: _lockoutSeconds > 0
-                      ? AppColors.error.withValues(alpha: 0.4)
-                      : AppColors.moduleVault.withValues(alpha: 0.3),
+                  color: accent.withValues(alpha: isLockedOut ? 0.4 : 0.3),
                   width: 2,
                 ),
               ),
               child: Icon(
-                _lockoutSeconds > 0
+                isLockedOut
                     ? Icons.gpp_bad_rounded
                     : Icons.lock_outline_rounded,
-                size: 44,
-                color: _lockoutSeconds > 0
-                    ? AppColors.error
-                    : AppColors.moduleVault,
+                size: AppSpacing.xxxl + AppSpacing.xxs,
+                color: accent,
               ),
             ),
-            const SizedBox(height: 16),
-
+            AppSpacing.gapH16,
             Text(
-              _lockoutSeconds > 0
-                  ? 'Security Cooldown Active'
-                  : 'Secure Vault Locked',
+              isLockedOut
+                  ? StringConstants.securityCooldownTitle
+                  : StringConstants.secureVaultLockedTitle,
               style: AppTextStyles.headingSmall.copyWith(
                 fontWeight: FontWeight.w800,
-                color: _lockoutSeconds > 0
-                    ? AppColors.error
-                    : (isDark
-                          ? AppColors.darkTextHeading
-                          : AppColors.textHeading),
+                color: isLockedOut ? AppColors.error : palette.heading,
               ),
             ),
-            const SizedBox(height: 6),
+            AppSpacing.gapH4,
             Text(
-              _lockoutSeconds > 0
-                  ? 'Rate-limit triggered. Inputs paused for safety.'
-                  : 'Hardware AES-256 encrypted storage',
-              style: TextStyle(
-                fontSize: 12,
-                color: isDark
-                    ? AppColors.darkTextCaption
-                    : AppColors.textCaption,
-              ),
+              isLockedOut
+                  ? StringConstants.securityCooldownSubtitle
+                  : StringConstants.secureVaultLockedSubtitle,
+              style: context.text.bodySmall?.copyWith(color: palette.caption),
             ),
-            const SizedBox(height: 20),
+            AppSpacing.gapH20,
 
             // Mode Selector (if both methods available)
-            if (showTabs && _lockoutSeconds == 0) ...[
+            if (state.showModeTabs) ...[
               Container(
-                padding: const EdgeInsets.all(4),
+                padding: const EdgeInsets.all(AppSpacing.xxs),
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.darkSurfaceSecondary
-                      : AppColors.surfaceSecondary,
+                  color: palette.surfaceMuted,
                   borderRadius: AppRadius.radiusFull,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildTabPill(
-                      title: 'PIN Code',
+                    _TabPill(
+                      title: StringConstants.pinCodeTab,
                       icon: Icons.pin_rounded,
-                      isSelected: _currentMode == SecurityLockMode.pin,
-                      isDark: isDark,
-                      onTap: () => setState(() {
-                        _currentMode = SecurityLockMode.pin;
-                        _hasError = false;
-                        _errorMessage = null;
-                        _enteredPin = '';
-                      }),
+                      isSelected: state.currentMode == SecurityLockMode.pin,
+                      onTap: () => bloc.add(
+                        const SwitchSecurityLockMode(SecurityLockMode.pin),
+                      ),
                     ),
-                    _buildTabPill(
-                      title: 'Pattern Lock',
+                    _TabPill(
+                      title: StringConstants.patternLockTab,
                       icon: Icons.pattern_rounded,
-                      isSelected: _currentMode == SecurityLockMode.pattern,
-                      isDark: isDark,
-                      onTap: () => setState(() {
-                        _currentMode = SecurityLockMode.pattern;
-                        _hasError = false;
-                        _errorMessage = null;
-                      }),
+                      isSelected: state.currentMode == SecurityLockMode.pattern,
+                      onTap: () => bloc.add(
+                        const SwitchSecurityLockMode(SecurityLockMode.pattern),
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              AppSpacing.gapH20,
             ],
 
             // Active Lock UI
-            if (_lockoutSeconds > 0)
-              Container(
-                margin: const EdgeInsets.symmetric(vertical: 24),
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: AppColors.error.withValues(alpha: 0.1),
-                  borderRadius: AppRadius.radiusLg,
-                  border: Border.all(
-                    color: AppColors.error.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      '$_lockoutSeconds',
-                      style: const TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.error,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Seconds remaining until unlock is re-enabled',
-                      style: TextStyle(fontSize: 12, color: AppColors.error),
-                    ),
-                  ],
-                ),
-              )
-            else if (_currentMode == SecurityLockMode.pin)
+            if (isLockedOut)
+              _LockoutCountdown(seconds: state.lockoutSeconds)
+            else if (state.currentMode == SecurityLockMode.pin)
               PinDialpadWidget(
-                pinLength: 4,
-                currentPin: _enteredPin,
-                hasError: _hasError,
-                errorMessage: _errorMessage,
-                showBiometrics: _biometricsAvailable,
-                onPinChanged: _handlePinChanged,
-                onBiometricTap: _handleBiometricUnlock,
+                pinLength: SecurityPolicy.pinLength,
+                currentPin: state.enteredPin,
+                hasError: state.hasError,
+                errorMessage: state.errorMessage,
+                showBiometrics: state.biometricsAvailable,
+                onPinChanged: (pin) => bloc.add(PinInputChanged(pin)),
+                onBiometricTap: () =>
+                    bloc.add(const BiometricUnlockRequested()),
               )
             else
               Column(
                 children: [
                   PatternLockGridWidget(
                     size: 240,
-                    hasError: _hasError,
-                    errorMessage: _errorMessage,
-                    onPatternStart: () {
-                      if (_hasError) {
-                        setState(() {
-                          _hasError = false;
-                          _errorMessage = null;
-                        });
-                      }
-                    },
-                    onPatternComplete: _handlePatternComplete,
+                    hasError: state.hasError,
+                    errorMessage: state.errorMessage,
+                    onPatternStart: () => bloc.add(const PatternInputStarted()),
+                    onPatternComplete: (pattern) =>
+                        bloc.add(PatternSubmitted(pattern)),
                   ),
-                  if (_biometricsAvailable) ...[
-                    const SizedBox(height: 12),
+                  if (state.biometricsAvailable) ...[
+                    AppSpacing.gapH12,
                     TextButton.icon(
-                      onPressed: _handleBiometricUnlock,
+                      onPressed: () =>
+                          bloc.add(const BiometricUnlockRequested()),
                       icon: const Icon(
                         Icons.fingerprint_rounded,
                         color: AppColors.moduleVault,
                       ),
-                      label: const Text(
-                        'Unlock with Biometrics',
-                        style: TextStyle(color: AppColors.moduleVault),
+                      label: Text(
+                        StringConstants.unlockWithBiometrics,
+                        style: context.text.labelLarge?.copyWith(
+                          color: AppColors.moduleVault,
+                        ),
                       ),
                     ),
                   ],
                 ],
               ),
 
-            const SizedBox(height: 24),
+            AppSpacing.gapH24,
             // Privacy Security Tag
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
                   Icons.lock_clock_rounded,
-                  size: 13,
-                  color: isDark
-                      ? AppColors.darkTextCaption
-                      : AppColors.textCaption,
+                  size: AppSpacing.sm + AppSpacing.xxxs,
+                  color: palette.caption,
                 ),
-                const SizedBox(width: 6),
+                AppSpacing.gapW8,
                 Text(
-                  'Auto-locks when app is backgrounded',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: isDark
-                        ? AppColors.darkTextCaption
-                        : AppColors.textCaption,
+                  StringConstants.autoLockFooter,
+                  style: context.text.labelSmall?.copyWith(
+                    color: palette.caption,
                   ),
                 ),
               ],
@@ -409,19 +235,66 @@ class _VaultLockScreenState extends State<VaultLockScreen> {
       ),
     );
   }
+}
 
-  Widget _buildTabPill({
-    required String title,
-    required IconData icon,
-    required bool isSelected,
-    required bool isDark,
-    required VoidCallback onTap,
-  }) {
+class _LockoutCountdown extends StatelessWidget {
+  final int seconds;
+
+  const _LockoutCountdown({required this.seconds});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
+      padding: AppSpacing.edgeInsetsAllLg,
+      decoration: BoxDecoration(
+        color: AppColors.error.withValues(alpha: 0.1),
+        borderRadius: AppRadius.borderLg,
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            '$seconds',
+            style: AppTextStyles.currencyHero.copyWith(color: AppColors.error),
+          ),
+          AppSpacing.gapH4,
+          Text(
+            StringConstants.lockoutSecondsCaption,
+            style: context.text.bodySmall?.copyWith(color: AppColors.error),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TabPill extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _TabPill({
+    required this.title,
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    final foreground = isSelected ? AppColors.textWhite : palette.caption;
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.xs,
+        ),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.moduleVault : Colors.transparent,
           borderRadius: AppRadius.radiusFull,
@@ -429,26 +302,13 @@ class _VaultLockScreenState extends State<VaultLockScreen> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 16,
-              color: isSelected
-                  ? Colors.white
-                  : (isDark
-                        ? AppColors.darkTextCaption
-                        : AppColors.textCaption),
-            ),
-            const SizedBox(width: 6),
+            Icon(icon, size: AppSpacing.md, color: foreground),
+            AppSpacing.gapW8,
             Text(
               title,
-              style: TextStyle(
-                fontSize: 12,
+              style: context.text.labelMedium?.copyWith(
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected
-                    ? Colors.white
-                    : (isDark
-                          ? AppColors.darkTextCaption
-                          : AppColors.textCaption),
+                color: foreground,
               ),
             ),
           ],

@@ -24,6 +24,22 @@ class StringConstants {
   // Module 1: Today Hub
   static const String playBriefing = 'Play Briefing';
   static const String playingAudio = 'Playing Audio Briefing...';
+  static const String audioBriefSectionTitle = "Today's Audio Brief";
+  static const String audioBriefSectionSubtitle =
+      'Tap to hear a clear summary of today\'s habits, schedule, tasks & safe spend.';
+  static const String audioBriefingSheetTitle = 'Daily Audio Briefing';
+  static const String audioBriefingSheetSubtitle =
+      'Complete summary of all your activities for today';
+  static const String audioBriefTapSectionHint =
+      'Tap any activity section below to hear it spoken aloud';
+  static const String audioBriefPlayAll = 'Play Full Brief';
+  static const String audioBriefOverviewTitle = 'Daily Momentum & Overview';
+  static const String audioBriefHabitsTitle = 'Habits & Micro-Routines';
+  static const String audioBriefScheduleTitle = "Today's Schedule & Tasks";
+  static const String audioBriefMoneyTitle = 'Safe-to-Spend & Money Pulse';
+  static const String audioBriefStatusPlaying = 'Speaking Briefing';
+  static const String audioBriefStatusPaused = 'Briefing Paused';
+  static const String audioBriefStatusReady = 'Ready to Play';
   static const String timelineFeed = "Today's Timeline";
   static const String habitsAndRoutines = 'Habits & Micro-Routines';
   static const String dailySpendMeter = 'Daily Safe-to-Spend';
@@ -236,4 +252,175 @@ class StringConstants {
   static const String quickActions = 'Quick Actions';
   static const String activeHabits = 'Active Habits';
   static const String upcomingTasks = 'Upcoming Tasks';
+
+  // Universal Command Palette & Spotlight Search
+  static const String commandPaletteTitle = 'Universal Command & Search';
+  static const String commandPaletteHint =
+      'Search habits, tasks, notes, expenses, logins, or run a command...';
+  static const String spotlightSearchTooltip = 'Universal Search & Commands';
+  static const String quickLaunchDockTitle = 'OS Quick Launch';
+  static const String commandPaletteEmptyTitle =
+      'No matching items or commands';
+  static const String commandPaletteEmptySubtitle =
+      'Try another keyword or tap Quick Capture to create it.';
+  static const String commandPaletteShortcutPrefix = '⌘K';
+  static const String commandPaletteIndexedSuffix = 'indexed';
+
+  // Quick Launch Dock Pills
+  static const String dockSpotlightTitle = '⌘K Search';
+  static const String dockSpotlightSubtitle = 'All 5 modules';
+  static const String dockFocusTitle = 'Focus Sprint';
+  static const String dockFocusSubtitle = 'Pomodoro & Zen';
+  static const String dockCaptureTitle = 'Quick Add';
+  static const String dockCaptureSubtitle = 'Smart NLP input';
+  static const String dockNotesTitle = 'Scratchpad';
+  static const String dockNotesSubtitle = 'Notes & checklists';
+
+  // Bottom Navigation Labels
+  static const String navTodayTab = 'Today';
+  static const String viewAction = 'View';
+
+  // Data / Failure Messages
+  static const String saveFailed =
+      'Could not save. Please check storage space and try again.';
+  static const String loadFailed = 'Could not load your data.';
+  static const String invalidAmount = 'Enter an amount greater than zero.';
+  static const String partialIndexWarning =
+      "Some modules couldn't be searched right now";
+
+  // Quick Capture
+  static const String quickCaptureSavedPrefix = 'Saved:';
+  static const String quickCaptureSaving = 'Saving...';
+  static const String quickCaptureDefaultIncome = 'Quick Income';
+  static const String quickCaptureDefaultExpense = 'Quick Expense';
+  static const String quickCaptureDefaultReminder = 'Quick Reminder';
+  static const String quickCaptureDefaultHabit = 'Daily Micro-Routine';
+  static const String quickCaptureDefaultNote = 'Quick Voice / Text Note';
+  static const String quickCaptureHabitDescription =
+      'Created via Quick Capture';
+  static const String quickCaptureModuleLabel =
+      'SAVE TO MODULE (AUTO-DETECTED OR TAP TO CHANGE)';
+  static const String intentLabelExpense = 'Money / Expense';
+  static const String intentLabelReminder = 'Planner / Reminder';
+  static const String intentLabelHabit = 'Today / Habit';
+  static const String intentLabelNote = 'Notes / Idea';
+
+  // Security / Lock Screen
+  static const String incorrectPin = 'Incorrect PIN. Try again.';
+  static const String incorrectPinPrefix = 'Incorrect PIN.';
+  static const String incorrectPattern = 'Pattern does not match. Try again.';
+  static const String incorrectPatternPrefix = 'Incorrect pattern.';
+  static const String biometricUnlockReason =
+      'Scan your fingerprint to unlock Secure Vault';
+  static const String lockoutMessagePrefix =
+      'Too many failed attempts. Locked for';
+  static const String securityCooldownTitle = 'Security Cooldown Active';
+  static const String securityCooldownSubtitle =
+      'Rate-limit triggered. Inputs paused for safety.';
+  static const String secureVaultLockedTitle = 'Secure Vault Locked';
+  static const String secureVaultLockedSubtitle =
+      'Hardware AES-256 encrypted storage';
+  static const String lockoutSecondsCaption =
+      'Seconds remaining until unlock is re-enabled';
+  static const String pinCodeTab = 'PIN Code';
+  static const String patternLockTab = 'Pattern Lock';
+  static const String autoLockFooter = 'Auto-locks when app is backgrounded';
+
+  // Profile & OS Control Center
+  static const String profileTitle = 'Profile & OS Preferences';
+  static const String profileSubtitle =
+      'Personalize your identity, workspace modules & quick controls';
+  static const String profileTooltip = 'Open Profile & OS Preferences';
+  static const String editProfileIdentity = 'Edit Name & Bio';
+  static const String displayNameLabel = 'Your Display Name';
+  static const String displayNameHint = 'Enter your name (e.g., Aarav)';
+  static const String taglineLabel = 'Personal Tagline / Role';
+  static const String taglineHint = 'e.g., Focused Builder • Daily Life OS';
+  static const String avatarSectionTitle = 'Profile Picture & Avatar Style';
+  static const String pickFromGallery = 'Gallery Photo';
+  static const String takeCameraPhoto = 'Camera';
+  static const String removePhoto = 'Use Avatar Style';
+  static const String workspaceControlsSection =
+      'Workspace & Quick-Access Controls';
+  static const String quickAccessBallTitle = 'Floating Quick-Access Ball';
+  static const String quickAccessBallSubtitle =
+      'Show movable quick-capture ball across screens for instant voice & text entry';
+  static const String quickLaunchDockToggleTitle = 'OS Quick-Launch Dock';
+  static const String quickLaunchDockToggleSubtitle =
+      'Show ⌘K Search, Focus Sprint, Quick Add & Scratchpad bar on Today Hub';
+  static const String audioBriefBannerToggleTitle =
+      "Today's Audio Brief Banner";
+  static const String audioBriefBannerToggleSubtitle =
+      'Show interactive voice briefing card on the Today Hub dashboard';
+  static const String safeSpendBannerToggleTitle = 'Daily Safe-to-Spend Meter';
+  static const String safeSpendBannerToggleSubtitle =
+      'Display live daily budget allowance and spend progress on Today Hub';
+  static const String eveningWrapUpToggleTitle = '60-Second Evening Wrap-Up';
+  static const String eveningWrapUpToggleSubtitle =
+      'Show end-of-day reflection and task rollover card on Today Hub';
+  static const String voiceAndSystemSection =
+      'Voice, Appearance & Regional Settings';
+  static const String autoPlayBriefingTitle = 'Auto-Speak Audio Briefing';
+  static const String autoPlayBriefingSubtitle =
+      'Automatically start voice playback when opening the Daily Audio Briefing';
+  static const String hapticFeedbackTitle = 'Tactile Haptic Feedback';
+  static const String hapticFeedbackSubtitle =
+      'Subtle vibration feedback when toggling habits, tasks, and quick actions';
+  static const String appearanceModeTitle = 'App Appearance';
+  static const String themeSystem = 'System';
+  static const String themeLight = 'Light';
+  static const String themeDark = 'Dark';
+  static const String activeCurrencyTitle = 'Primary Currency';
+  static const String dailyFocusGoalTitle = 'Daily Deep-Work Target';
+  static const String resetDefaultsLabel = 'Reset OS Preferences to Default';
+  static const String profileSavedMessage = 'Profile updated';
+
+  // Money Power Workflows (Transfer, Subscription Pay, IOU Sync, Statement)
+  static const String transferBetweenAccounts = 'Transfer Between Accounts';
+  static const String transferFromLabel = 'From Account';
+  static const String transferToLabel = 'To Account';
+  static const String transferSuccessMessage = 'Funds transferred successfully';
+  static const String transferSameAccountError =
+      'Source and destination accounts must be different';
+  static const String transferInsufficientAccounts =
+      'Add at least 2 accounts to transfer funds';
+  static const String payAndAdvanceLabel = 'Pay & Advance';
+  static const String subscriptionPaymentLogged =
+      'Subscription payment logged & next renewal advanced';
+  static const String iouSettledWithCashflow = 'IOU settled & cashflow updated';
+  static const String financialStatementTitle = 'Financial Statement & Report';
+  static const String financialStatementSubtitle =
+      'Summary of cashflow, safe-to-spend, budgets & account balances';
+  static const String copyStatementLabel = 'Copy Statement';
+  static const String statementCopiedMessage =
+      'Financial statement copied to clipboard';
+
+  // Cross-Module Smart Actions & Vault Pulse
+  static const String convertedToReminderMessage = 'Saved to Planner Reminders';
+  static const String convertedToExpenseMessage = 'Logged to Money Expenses';
+  static const String pushToTodayTimeline = "Add to Today's Timeline";
+  static const String pushedToTimelineMessage = "Added to Today's Timeline";
+  static const String vaultSecurityPulseTitle = 'Vault Security & Expiry Pulse';
+  static const String vaultHealthyLabel = 'All Vault items healthy';
+  static const String vaultWeakPasswordsLabel = 'Weak Passwords';
+  static const String vaultExpiringDocsLabel = 'Expiring / Expired';
+
+  // Next-Wave Enhancements (CSV Export, Repeat Today, Bill Split, OS Backup)
+  static const String exportCsvTooltip = 'Export CSV to Clipboard';
+  static const String csvExportedMessage =
+      'Transactions exported as CSV to clipboard';
+  static const String repeatTodayLabel = 'Repeat Today';
+  static const String repeatedTodayMessage = 'Logged a copy for today';
+  static const String billSplitTitle = 'Smart Bill Split & IOU Calculator';
+  static const String billSplitSubtitle =
+      'Split bills with friends, log your share & auto-create collection IOUs';
+  static const String billSplitShort = 'Bill Split';
+  static const String billSplitLogAction = 'Log My Share & Create IOUs';
+  static const String billSplitSuccessMessage =
+      'Your share logged & friend IOUs created';
+  static const String workspaceBackupSectionTitle =
+      'Workspace Data & Backup Summary';
+  static const String copyWorkspaceBackupLabel = 'Copy Full OS Backup Summary';
+  static const String workspaceBackupCopiedMessage =
+      'Workspace backup summary copied to clipboard';
 }

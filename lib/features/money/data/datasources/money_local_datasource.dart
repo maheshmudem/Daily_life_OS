@@ -56,6 +56,7 @@ abstract class MoneyLocalDataSource {
     required int iconCodePoint,
     bool autoKillEnabled = false,
   });
+  Future<void> updateSubscription(SubscriptionModel subscription);
   Future<void> deleteSubscription(int id);
   Future<void> deleteIou(int id);
   Future<MoneySettingsModel> getMoneySettings();
@@ -356,6 +357,21 @@ class MoneyLocalDataSourceImpl implements MoneyLocalDataSource {
             autoKillEnabled: Value(autoKillEnabled),
           ),
         );
+  }
+
+  @override
+  Future<void> updateSubscription(SubscriptionModel subscription) async {
+    await (_db.update(
+      _db.subscriptions,
+    )..where((t) => t.id.equals(subscription.id))).write(
+      SubscriptionsCompanion(
+        name: Value(subscription.name),
+        amount: Value(subscription.amount),
+        renewalDate: Value(subscription.renewalDate),
+        iconCodePoint: Value(subscription.iconCodePoint),
+        autoKillEnabled: Value(subscription.autoKillEnabled),
+      ),
+    );
   }
 
   @override

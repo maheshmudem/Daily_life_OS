@@ -30,6 +30,7 @@ class TransactionEntity extends Equatable {
   IconData get icon => IconData(iconCodePoint, fontFamily: 'MaterialIcons');
   bool get isExpense => type == 'expense';
   bool get isIncome => type == 'income';
+  bool get isTransfer => type == 'transfer';
 
   /// Parsed [date]; falls back to epoch for malformed rows so sorting stays stable.
   DateTime get dateTime =>
@@ -39,8 +40,8 @@ class TransactionEntity extends Equatable {
   MoneyCategory get categoryInfo =>
       MoneyCategory.resolve(category, isIncome: isIncome);
 
-  /// +amount for income, -amount for expense.
-  double get signedAmount => isIncome ? amount : -amount;
+  /// +amount for income, -amount for expense, 0 for internal account transfer.
+  double get signedAmount => isTransfer ? 0.0 : (isIncome ? amount : -amount);
 
   String get formattedDate {
     final dt = DateTime.tryParse(date);

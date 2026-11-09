@@ -5,6 +5,7 @@ import '../../domain/entities/subscription_entity.dart';
 import '../../domain/repositories/money_repository.dart';
 import '../datasources/money_local_datasource.dart';
 import '../models/money_account_model.dart';
+import '../models/subscription_model.dart';
 import '../models/transaction_model.dart';
 
 class MoneyRepositoryImpl implements MoneyRepository {
@@ -140,6 +141,12 @@ class MoneyRepositoryImpl implements MoneyRepository {
     iconCodePoint: iconCodePoint,
     autoKillEnabled: autoKillEnabled,
   );
+
+  @override
+  Future<void> updateSubscription(SubscriptionEntity subscription) =>
+      _localDataSource.updateSubscription(
+        SubscriptionModel.fromEntity(subscription),
+      );
 
   @override
   Future<void> deleteSubscription(int id) =>

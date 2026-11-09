@@ -347,13 +347,11 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                       : AppColors.textHeading,
                   fontWeight: FontWeight.w600,
                 ),
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Reminder Title',
                   hintText: StringConstants.reminderHint,
-                  prefixIcon: const Icon(Icons.edit_note_rounded),
-                  border: const OutlineInputBorder(
-                    borderRadius: AppRadius.radiusMd,
-                  ),
+                  prefixIcon: Icon(Icons.edit_note_rounded),
+                  border: OutlineInputBorder(borderRadius: AppRadius.radiusMd),
                 ),
               ),
               AppSpacing.gapH16,
@@ -480,7 +478,7 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                     ),
                   ),
                   if (_repeatType != 'none')
-                    Text(
+                    const Text(
                       'Recurring',
                       style: TextStyle(
                         fontSize: 11,
@@ -938,12 +936,10 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                       ? AppColors.darkTextHeading
                       : AppColors.textHeading,
                 ),
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Notes / Details (Optional)',
                   hintText: 'Add extra details or reminders here...',
-                  border: const OutlineInputBorder(
-                    borderRadius: AppRadius.radiusMd,
-                  ),
+                  border: OutlineInputBorder(borderRadius: AppRadius.radiusMd),
                 ),
               ),
               AppSpacing.gapH24,

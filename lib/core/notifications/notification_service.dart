@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -47,7 +46,7 @@ class NotificationServiceImpl implements NotificationService {
 
   @override
   Future<void> initialize() async {
-    if (_isInitialized) return;
+    if (_isInitialized || kIsWeb) return;
 
     try {
       // 1. Initialize Timezones
@@ -79,7 +78,7 @@ class NotificationServiceImpl implements NotificationService {
       );
 
       // 4. Create Notification Channels for Android
-      if (!kIsWeb && Platform.isAndroid) {
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
         final androidImplementation = _plugin
             .resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin
@@ -134,7 +133,7 @@ class NotificationServiceImpl implements NotificationService {
     try {
       if (kIsWeb) return false;
 
-      if (Platform.isAndroid) {
+      if (defaultTargetPlatform == TargetPlatform.android) {
         final androidImpl = _plugin
             .resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin
@@ -143,7 +142,8 @@ class NotificationServiceImpl implements NotificationService {
           final granted = await androidImpl.requestNotificationsPermission();
           return granted ?? false;
         }
-      } else if (Platform.isIOS || Platform.isMacOS) {
+      } else if (defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.macOS) {
         final darwinImpl = _plugin
             .resolvePlatformSpecificImplementation<
               IOSFlutterLocalNotificationsPlugin

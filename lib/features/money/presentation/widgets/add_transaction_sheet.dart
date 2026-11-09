@@ -231,6 +231,34 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     });
   }
 
+  void _repeatToday() {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    final amount = double.parse(_amountCtrl.text.trim());
+    final title = _titleCtrl.text.trim();
+    final note = _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim();
+    final cat = MoneyCategory.resolve(
+      _selectedCategoryKey,
+      isIncome: _isIncome,
+    );
+    context.read<MoneyBloc>().add(
+      AddTransaction(
+        title: title,
+        category: cat.key,
+        amount: amount,
+        mode: _selectedMode,
+        iconCodePoint: cat.icon.codePoint,
+        type: _type,
+        date: DateTime.now(),
+        note: note,
+      ),
+    );
+    Navigator.of(context).pop();
+    SnackbarUtils.showSuccess(
+      context,
+      '${StringConstants.repeatedTodayMessage}: $title',
+    );
+  }
+
   Future<void> _pickDate() async {
     final now = DateTime.now();
     final picked = await showDatePicker(
@@ -322,7 +350,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
         backgroundColor: isDark
             ? AppColors.darkCardBackground
             : AppColors.cardBackground,
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusXl),
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.radiusXl),
         contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -461,7 +489,30 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                     ],
                   ),
                 ),
-                if (!_isEditing) ...[
+                if (_isEditing) ...[
+                  TextButton.icon(
+                    key: const ValueKey('repeat_today_tx_btn'),
+                    onPressed: _repeatToday,
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      minimumSize: const Size(0, 32),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    icon: Icon(Icons.copy_rounded, size: 14, color: accent),
+                    label: Text(
+                      StringConstants.repeatTodayLabel,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: accent,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                ] else ...[
                   TextButton(
                     onPressed: _resetForm,
                     style: TextButton.styleFrom(

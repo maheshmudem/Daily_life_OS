@@ -7,8 +7,10 @@ import '../../../../core/widgets/feature_scaffold.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/date_utils.dart';
 import '../bloc/money_bloc.dart';
+import '../widgets/account_transfer_sheet.dart';
 import '../widgets/cashflow_overview_cards.dart';
 import '../widgets/category_breakdown_card.dart';
+import '../widgets/money_report_sheet.dart';
 import '../widgets/money_section_header.dart';
 import '../widgets/money_shell_scope.dart';
 import '../widgets/month_picker_sheet.dart';
@@ -33,7 +35,20 @@ class MoneyInsightsPage extends StatelessWidget {
         title: StringConstants.analytics,
         onBack: () => MoneyShellScope.handleBack(context),
         accentColor: AppColors.moduleMoney,
-        actions: const [],
+        actionsEndPadding: AppSpacing.pageGutter,
+        actions: [
+          FeatureIconButton(
+            tooltip: StringConstants.transfer,
+            icon: Icons.swap_horiz_rounded,
+            onPressed: () => AccountTransferSheet.show(context),
+          ),
+          const SizedBox(width: 8),
+          FeatureIconButton(
+            tooltip: StringConstants.financialStatementTitle,
+            icon: Icons.assessment_outlined,
+            onPressed: () => MoneyReportSheet.show(context),
+          ),
+        ],
         status: moneyFeatureStatus(moneyState),
         errorMessage: moneyState is MoneyError ? moneyState.message : null,
         onRetry: () => context.read<MoneyBloc>().add(const LoadMoney()),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
@@ -9,9 +10,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
+import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
-import '../../../../core/widgets/app_shimmer_loader.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
 import '../../../../core/widgets/feature_scaffold.dart';
 import '../../../../di/injection_container.dart';
@@ -44,6 +45,9 @@ class _VaultView extends StatefulWidget {
 class _VaultViewState extends State<_VaultView>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late TabController _tabController;
+  final TextEditingController _passwordSearchCtrl = TextEditingController();
+  final TextEditingController _documentSearchCtrl = TextEditingController();
+
   bool _isUnlocked = false;
   bool _isSecurityEnabled = false;
   bool _isLoadingSecurity = true;
@@ -53,6 +57,10 @@ class _VaultViewState extends State<_VaultView>
   String _selectedPasswordCategory = 'All';
   String _documentSearchQuery = '';
   String _selectedDocumentCategory = 'All';
+
+  // Interactive Password Generator state
+  int _generatorLength = 16;
+  late String _generatedPreviewKey;
 
   // Track revealed password IDs and persisted user-added/modified items
   static const _prefsCustomPasswordsKey = 'vault_custom_passwords_v1';
@@ -73,8 +81,19 @@ class _VaultViewState extends State<_VaultView>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _tabController = TabController(length: 2, vsync: this);
+    _generatedPreviewKey = _generateEntropyKey(_generatorLength);
     _loadPersistedVaultData();
     _checkSecurity();
+  }
+
+  String _generateEntropyKey(int length) {
+    const chars =
+        'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#\$%&*';
+    final rand = Random.secure();
+    return List.generate(
+      length,
+      (_) => chars[rand.nextInt(chars.length)],
+    ).join();
   }
 
   Future<void> _loadPersistedVaultData() async {
@@ -227,8 +246,6 @@ class _VaultViewState extends State<_VaultView>
       setState(() {
         _isSecurityEnabled = config.isSecurityEnabled;
         _isLoadingSecurity = false;
-        // If security is enabled, lock by default until user enters PIN/Pattern
-        // If security is disabled, unlock directly (opt-in security)
         _isUnlocked = !config.isSecurityEnabled;
       });
       if (config.isSecurityEnabled) {
@@ -241,6 +258,8 @@ class _VaultViewState extends State<_VaultView>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _tabController.dispose();
+    _passwordSearchCtrl.dispose();
+    _documentSearchCtrl.dispose();
     super.dispose();
   }
 
@@ -354,7 +373,7 @@ class _VaultViewState extends State<_VaultView>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final palette = context.palette;
 
     return BlocBuilder<VaultBloc, VaultState>(
       builder: (context, state) {
@@ -368,7 +387,10 @@ class _VaultViewState extends State<_VaultView>
           title: StringConstants.navVault,
           accentColor: AppColors.moduleVault,
           titleTrailing: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xs,
+              vertical: AppSpacing.xxxs,
+            ),
             decoration: BoxDecoration(
               color: AppColors.moduleVault.withValues(alpha: 0.12),
               borderRadius: AppRadius.radiusFull,
@@ -378,15 +400,15 @@ class _VaultViewState extends State<_VaultView>
               children: [
                 const Icon(
                   Icons.verified_user_rounded,
-                  size: 12,
+                  size: AppSpacing.sm,
                   color: AppColors.moduleVault,
                 ),
-                const SizedBox(width: 4),
+                AppSpacing.gapW4,
                 Text(
                   'AES-256',
-                  style: context.text.labelMedium?.copyWith(
+                  style: context.text.labelSmall?.copyWith(
                     color: AppColors.moduleVault,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
@@ -397,6 +419,7 @@ class _VaultViewState extends State<_VaultView>
             // Compact Decoy Pill Toggle (PRD Feature)
             GestureDetector(
               onTap: () {
+                HapticFeedback.selectionClick();
                 final nextDecoy = !isDecoy;
                 context.read<VaultBloc>().add(const ToggleDecoyMode());
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -413,55 +436,43 @@ class _VaultViewState extends State<_VaultView>
               },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
-                height: 32,
-                padding: const EdgeInsets.symmetric(horizontal: 10),
+                height: AppSpacing.xxl + AppSpacing.xxs,
+                padding: AppSpacing.edgeInsetsHSm,
                 decoration: BoxDecoration(
                   color: isDecoy
-                      ? AppColors.error.withValues(alpha: 0.15)
-                      : (isDark
-                            ? AppColors.darkCardBackground
-                            : AppColors.cardBackground),
+                      ? AppColors.error.withValues(alpha: 0.14)
+                      : palette.card,
                   borderRadius: AppRadius.radiusFull,
                   border: Border.all(
                     color: isDecoy
                         ? AppColors.error.withValues(alpha: 0.5)
-                        : (isDark ? AppColors.darkDivider : AppColors.divider),
-                    width: 0.8,
+                        : palette.border,
                   ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      width: 6,
-                      height: 6,
+                      width: AppSpacing.xs - AppSpacing.xxxs,
+                      height: AppSpacing.xs - AppSpacing.xxxs,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: isDecoy
-                            ? AppColors.error
-                            : (isDark
-                                  ? AppColors.darkTextCaption
-                                  : AppColors.textCaption),
+                        color: isDecoy ? AppColors.error : palette.caption,
                       ),
                     ),
-                    const SizedBox(width: 5),
+                    AppSpacing.gapW4,
                     Text(
                       'Decoy',
-                      style: TextStyle(
-                        fontSize: 11.5,
+                      style: context.text.labelSmall?.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: isDecoy
-                            ? AppColors.error
-                            : (isDark
-                                  ? AppColors.darkTextBody
-                                  : AppColors.textBody),
+                        color: isDecoy ? AppColors.error : palette.body,
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(width: 6),
+            AppSpacing.gapW8,
             FeatureIconButton(
               tooltip: 'Security Settings',
               icon: Icons.shield_outlined,
@@ -479,7 +490,7 @@ class _VaultViewState extends State<_VaultView>
                 });
               },
             ),
-            const SizedBox(width: 6),
+            AppSpacing.gapW8,
             FeatureIconButton(
               tooltip: !_isSecurityEnabled
                   ? 'Set Up Security'
@@ -514,49 +525,42 @@ class _VaultViewState extends State<_VaultView>
               },
             ),
             if (_isUnlocked) ...[
-              const SizedBox(width: 6),
+              AppSpacing.gapW8,
               FeatureIconButton(
                 tooltip: 'Add Vault Item',
                 icon: Icons.add_rounded,
                 color: Colors.white,
                 backgroundColor: AppColors.moduleVault,
                 borderColor: AppColors.moduleVault,
-                onPressed: () => _showAddVaultItemSheet(context, isDark),
+                onPressed: () => _showAddVaultItemSheet(context),
               ),
             ],
           ],
           bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(38),
+            preferredSize: const Size.fromHeight(
+              AppSpacing.xxxl + AppSpacing.xxs,
+            ),
             child: Container(
               decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: isDark ? AppColors.darkDivider : AppColors.divider,
-                    width: 0.8,
-                  ),
-                ),
+                border: Border(bottom: BorderSide(color: palette.border)),
               ),
               child: TabBar(
                 controller: _tabController,
                 indicatorColor: AppColors.moduleVault,
-                indicatorWeight: 2.2,
+                indicatorWeight: 2.5,
                 labelColor: AppColors.moduleVault,
-                unselectedLabelColor: isDark
-                    ? AppColors.darkTextCaption
-                    : AppColors.textCaption,
+                unselectedLabelColor: palette.caption,
                 indicatorSize: TabBarIndicatorSize.label,
                 dividerColor: Colors.transparent,
-                labelStyle: const TextStyle(
+                labelStyle: context.text.labelLarge?.copyWith(
                   fontWeight: FontWeight.w700,
-                  fontSize: 12.5,
                 ),
-                unselectedLabelStyle: const TextStyle(
+                unselectedLabelStyle: context.text.labelLarge?.copyWith(
                   fontWeight: FontWeight.w600,
-                  fontSize: 12.5,
                 ),
                 tabs: const [
-                  Tab(height: 36, text: 'Passwords & Logins'),
-                  Tab(height: 36, text: 'Warranty Locker'),
+                  Tab(height: AppSpacing.xxxl, text: 'Passwords & Logins'),
+                  Tab(height: AppSpacing.xxxl, text: 'Warranty Locker'),
                 ],
               ),
             ),
@@ -568,9 +572,11 @@ class _VaultViewState extends State<_VaultView>
           },
           errorMessage: state is VaultError ? state.message : null,
           onRetry: () => context.read<VaultBloc>().add(const LoadVault()),
-          loading: const _VaultLoadingView(),
+          loading: const FeatureLoadingView(
+            blockHeights: [96, 44, 36, 128, 128],
+          ),
           builder: (context) => !_isUnlocked
-              ? _buildLockedScreen(isDark)
+              ? _buildLockedScreen()
               : state is VaultLoaded
               ? TabBarView(
                   controller: _tabController,
@@ -579,14 +585,12 @@ class _VaultViewState extends State<_VaultView>
                       context,
                       _mergedPasswords(state.passwords),
                       _mergedDocuments(state.documents),
-                      isDark,
                       isDecoy,
                     ),
                     _buildDocumentsTab(
                       context,
                       _mergedDocuments(state.documents),
                       _mergedPasswords(state.passwords),
-                      isDark,
                       isDecoy,
                     ),
                   ],
@@ -597,7 +601,7 @@ class _VaultViewState extends State<_VaultView>
     );
   }
 
-  Widget _buildLockedScreen(bool isDark) {
+  Widget _buildLockedScreen() {
     return VaultLockScreen(
       securityRepository: sl<SecurityRepository>(),
       onUnlock: ({required bool isDecoy}) {
@@ -619,31 +623,27 @@ class _VaultViewState extends State<_VaultView>
   }
 
   // ============================================================================
-  // UNIFIED VAULT SECURITY & SUMMARY CARD (Replaces stacked oversized banners)
+  // 1PASSWORD-STYLE WATCHTOWER & SECURITY OVERVIEW CARD
   // ============================================================================
   Widget _buildVaultOverviewCard({
     required BuildContext context,
-    required bool isDark,
     required bool isDecoy,
     required int passwordCount,
     required int documentCount,
     required int expiringCount,
+    int weakPasswordCount = 0,
   }) {
-    final cardBg = isDark
-        ? AppColors.darkCardBackground
-        : AppColors.cardBackground;
-    final borderColor = isDark ? AppColors.darkDivider : AppColors.divider;
+    final palette = context.palette;
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: AppSpacing.edgeInsetsAllMd,
       decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: AppRadius.radiusMd,
+        color: palette.card,
+        borderRadius: AppRadius.borderLg,
         border: Border.all(
           color: !_isSecurityEnabled
               ? AppColors.warning.withValues(alpha: 0.45)
-              : borderColor,
-          width: 0.9,
+              : palette.border,
         ),
       ),
       child: Column(
@@ -652,23 +652,23 @@ class _VaultViewState extends State<_VaultView>
           Row(
             children: [
               Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF3949AB), Color(0xFF00ACC1)],
+                width: AppSpacing.xxxl,
+                height: AppSpacing.xxxl,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppColors.moduleVault, AppColors.secondary],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(9),
+                  borderRadius: AppRadius.borderMd,
                 ),
                 child: const Icon(
                   Icons.security_rounded,
                   color: Colors.white,
-                  size: 18,
+                  size: AppSpacing.lg,
                 ),
               ),
-              const SizedBox(width: 10),
+              AppSpacing.gapW12,
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -682,20 +682,17 @@ class _VaultViewState extends State<_VaultView>
                                 : 'Zero-Knowledge Encrypted',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
+                            style: context.text.titleSmall?.copyWith(
                               fontWeight: FontWeight.w700,
-                              fontSize: 13,
-                              color: isDark
-                                  ? AppColors.darkTextHeading
-                                  : AppColors.textHeading,
+                              color: palette.heading,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        AppSpacing.gapW8,
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 1.5,
+                            horizontal: AppSpacing.xs,
+                            vertical: AppSpacing.xxxs,
                           ),
                           decoration: BoxDecoration(
                             color:
@@ -707,8 +704,7 @@ class _VaultViewState extends State<_VaultView>
                           ),
                           child: Text(
                             _isSecurityEnabled ? 'Protected' : 'Unsecured',
-                            style: TextStyle(
-                              fontSize: 9.5,
+                            style: context.text.labelSmall?.copyWith(
                               fontWeight: FontWeight.w700,
                               color: _isSecurityEnabled
                                   ? AppColors.success
@@ -718,49 +714,46 @@ class _VaultViewState extends State<_VaultView>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 2),
+                    AppSpacing.gapH4,
                     Text(
                       !_isSecurityEnabled
                           ? 'No PIN/Pattern lock set. Enable lock to protect keys.'
                           : 'Keys never leave this device. Encrypted at rest.',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: isDark
-                            ? AppColors.darkTextCaption
-                            : AppColors.textCaption,
+                      style: context.text.bodySmall?.copyWith(
+                        color: palette.caption,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              AppSpacing.gapW8,
               if (!_isSecurityEnabled)
-                GestureDetector(
+                InkWell(
+                  borderRadius: AppRadius.borderSm,
                   onTap: () => _openSecuritySetup(context),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.xs,
                     ),
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: AppColors.moduleVault,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: AppRadius.borderSm,
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.shield_rounded,
-                          size: 12,
+                          size: AppSpacing.sm,
                           color: Colors.white,
                         ),
-                        SizedBox(width: 4),
+                        AppSpacing.gapW4,
                         Text(
                           'Set Lock',
-                          style: TextStyle(
-                            fontSize: 11,
+                          style: context.text.labelSmall?.copyWith(
                             fontWeight: FontWeight.w700,
                             color: Colors.white,
                           ),
@@ -770,33 +763,33 @@ class _VaultViewState extends State<_VaultView>
                   ),
                 )
               else
-                GestureDetector(
+                InkWell(
+                  borderRadius: AppRadius.borderSm,
                   onTap: () {
                     setState(() => _isUnlocked = false);
                     context.read<VaultBloc>().add(const LockVault());
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 9,
-                      vertical: 5,
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.xs,
                     ),
                     decoration: BoxDecoration(
                       color: AppColors.moduleVault.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: AppRadius.borderSm,
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.lock_outline_rounded,
-                          size: 12,
+                          size: AppSpacing.sm,
                           color: AppColors.moduleVault,
                         ),
-                        SizedBox(width: 4),
+                        AppSpacing.gapW4,
                         Text(
                           'Lock',
-                          style: TextStyle(
-                            fontSize: 11,
+                          style: context.text.labelSmall?.copyWith(
                             fontWeight: FontWeight.w700,
                             color: AppColors.moduleVault,
                           ),
@@ -807,54 +800,73 @@ class _VaultViewState extends State<_VaultView>
                 ),
             ],
           ),
-          const SizedBox(height: 10),
+          AppSpacing.gapH12,
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
+            padding: const EdgeInsets.symmetric(
+              vertical: AppSpacing.xs,
+              horizontal: AppSpacing.sm,
+            ),
             decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.darkScaffoldBackground.withValues(alpha: 0.65)
-                  : AppColors.scaffoldBackground,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: borderColor.withValues(alpha: 0.7),
-                width: 0.7,
-              ),
+              color: palette.surfaceMuted,
+              borderRadius: AppRadius.borderMd,
+              border: Border.all(color: palette.border),
             ),
             child: Row(
               children: [
                 Expanded(
                   child: _buildMiniVaultStat(
-                    isDark: isDark,
+                    context: context,
                     icon: Icons.key_rounded,
                     color: AppColors.moduleVault,
                     label: 'Logins',
                     value: '$passwordCount Saved',
                   ),
                 ),
-                Container(width: 0.8, height: 22, color: borderColor),
+                Container(
+                  width: 1,
+                  height: AppSpacing.xl,
+                  color: palette.border,
+                ),
                 Expanded(
                   child: _buildMiniVaultStat(
-                    isDark: isDark,
+                    context: context,
                     icon: Icons.verified_outlined,
                     color: AppColors.secondary,
                     label: 'Warranties',
                     value: '$documentCount Docs',
                   ),
                 ),
-                Container(width: 0.8, height: 22, color: borderColor),
+                Container(
+                  width: 1,
+                  height: AppSpacing.xl,
+                  color: palette.border,
+                ),
                 Expanded(
-                  child: _buildMiniVaultStat(
-                    isDark: isDark,
-                    icon: expiringCount > 0
-                        ? Icons.warning_amber_rounded
-                        : Icons.check_circle_outline_rounded,
-                    color: expiringCount > 0
-                        ? AppColors.warning
-                        : AppColors.success,
-                    label: 'Expiry Watch',
-                    value: expiringCount > 0
-                        ? '$expiringCount Expiring'
-                        : 'All Clear',
+                  child: InkWell(
+                    borderRadius: AppRadius.borderSm,
+                    onTap: expiringCount > 0
+                        ? () {
+                            setState(
+                              () => _selectedDocumentCategory = 'Expiring Soon',
+                            );
+                            _tabController.animateTo(1);
+                          }
+                        : null,
+                    child: _buildMiniVaultStat(
+                      context: context,
+                      icon: (expiringCount > 0 || weakPasswordCount > 0)
+                          ? Icons.warning_amber_rounded
+                          : Icons.check_circle_outline_rounded,
+                      color: (expiringCount > 0 || weakPasswordCount > 0)
+                          ? AppColors.warning
+                          : AppColors.success,
+                      label: StringConstants.vaultExpiringDocsLabel,
+                      value: expiringCount > 0
+                          ? '$expiringCount Expiring'
+                          : (weakPasswordCount > 0
+                                ? '$weakPasswordCount Weak'
+                                : 'All Clear'),
+                    ),
                   ),
                 ),
               ],
@@ -866,19 +878,21 @@ class _VaultViewState extends State<_VaultView>
   }
 
   Widget _buildMiniVaultStat({
-    required bool isDark,
+    required BuildContext context,
     required IconData icon,
     required Color color,
     required String label,
     required String value,
   }) {
+    final palette = context.palette;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 13, color: color),
-          const SizedBox(width: 5),
+          Icon(icon, size: AppSpacing.md - AppSpacing.xxxs, color: color),
+          AppSpacing.gapW4,
           Flexible(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -887,23 +901,17 @@ class _VaultViewState extends State<_VaultView>
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    color: isDark
-                        ? AppColors.darkTextCaption
-                        : AppColors.textCaption,
+                  style: context.text.labelSmall?.copyWith(
+                    color: palette.caption,
                   ),
                 ),
                 Text(
                   value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 11,
+                  style: context.text.labelMedium?.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: isDark
-                        ? AppColors.darkTextHeading
-                        : AppColors.textHeading,
+                    color: palette.heading,
                   ),
                 ),
               ],
@@ -921,10 +929,16 @@ class _VaultViewState extends State<_VaultView>
     BuildContext context,
     List<VaultPasswordEntity> passwords,
     List<VaultDocumentEntity> documents,
-    bool isDark,
     bool isDecoy,
   ) {
     final categories = ['All', 'Banking', 'Email', 'Wi-Fi', 'Social'];
+    final Map<String, int> categoryCounts = {'All': passwords.length};
+    for (final cat in categories.skip(1)) {
+      categoryCounts[cat] = passwords
+          .where((p) => p.category.toLowerCase() == cat.toLowerCase())
+          .length;
+    }
+
     final filtered = passwords.where((item) {
       final matchesCategory =
           _selectedPasswordCategory == 'All' ||
@@ -939,50 +953,64 @@ class _VaultViewState extends State<_VaultView>
       return matchesCategory && matchesQuery;
     }).toList();
 
-    // Group filtered items by category so each category gets its own clean card
     final Map<String, List<VaultPasswordEntity>> grouped = {};
     for (final item in filtered) {
       grouped.putIfAbsent(item.category, () => []).add(item);
     }
 
     final expiringCount = documents.where((d) => d.isExpiringSoon).length;
+    final weakPasswordCount = passwords
+        .where((p) => _secretForItem(p).length < 10)
+        .length;
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 88),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.pageGutter,
+        AppSpacing.sm,
+        AppSpacing.pageGutter,
+        AppSpacing.huge * 2,
+      ),
       children: [
-        // 1. Unified Overview Card
+        // 1. Unified Watchtower Overview Card
         _buildVaultOverviewCard(
           context: context,
-          isDark: isDark,
           isDecoy: isDecoy,
           passwordCount: passwords.length,
           documentCount: documents.length,
           expiringCount: expiringCount,
+          weakPasswordCount: weakPasswordCount,
         ),
-        const SizedBox(height: 10),
+        AppSpacing.gapH12,
 
-        // 2. Search & Category Filter Card
-        _buildSearchAndFilterCard(
-          isDark: isDark,
+        // 2. Clean 44px Search Bar + 36px Category Filter Pills
+        _buildSearchAndFilterSection(
+          context: context,
+          controller: _passwordSearchCtrl,
           hintText: 'Search logins, usernames, or categories...',
           query: _passwordSearchQuery,
           onQueryChanged: (val) => setState(() => _passwordSearchQuery = val),
+          onClearQuery: () {
+            _passwordSearchCtrl.clear();
+            setState(() => _passwordSearchQuery = '');
+          },
           categories: categories,
+          categoryCounts: categoryCounts,
           selectedCategory: _selectedPasswordCategory,
           onCategorySelected: (cat) =>
               setState(() => _selectedPasswordCategory = cat),
         ),
-        const SizedBox(height: 12),
+        AppSpacing.gapH16,
 
         // 3. Grouped Section Cards by Category
         if (filtered.isEmpty)
           _buildEmptySectionCard(
-            isDark: isDark,
+            context: context,
             icon: Icons.key_off_rounded,
             title: 'No matching logins found',
             subtitle:
                 'Try clearing your search or category filter, or add a new login.',
             onAction: () {
+              _passwordSearchCtrl.clear();
               setState(() {
                 _passwordSearchQuery = '';
                 _selectedPasswordCategory = 'All';
@@ -997,9 +1025,9 @@ class _VaultViewState extends State<_VaultView>
             final accent = _categoryColor(category);
 
             return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
               child: _buildSectionCardContainer(
-                isDark: isDark,
+                context: context,
                 sectionIcon: _sectionIconForCategory(category),
                 sectionTitle: _sectionTitleForCategory(category),
                 sectionAccent: accent,
@@ -1010,18 +1038,15 @@ class _VaultViewState extends State<_VaultView>
                     _buildPasswordRow(
                       context: context,
                       item: items[i],
-                      isDark: isDark,
                       accent: accent,
                     ),
                     if (i < items.length - 1)
                       Divider(
                         height: 1,
-                        thickness: 0.7,
-                        indent: 58,
-                        endIndent: 12,
-                        color: isDark
-                            ? AppColors.darkDivider
-                            : AppColors.divider,
+                        thickness: 1,
+                        indent: AppSpacing.md + AppSpacing.xxxl + AppSpacing.sm,
+                        endIndent: AppSpacing.md,
+                        color: context.palette.border,
                       ),
                   ],
                 ],
@@ -1029,8 +1054,10 @@ class _VaultViewState extends State<_VaultView>
             );
           }),
 
-        // 4. Password Security Tools & Quick Generator Section Card
-        _buildPasswordSecurityToolsCard(context, isDark),
+        AppSpacing.gapH4,
+
+        // 4. Interactive Password Security Tools & Live Key Generator Card
+        _buildPasswordSecurityToolsCard(context),
       ],
     );
   }
@@ -1038,33 +1065,33 @@ class _VaultViewState extends State<_VaultView>
   Widget _buildPasswordRow({
     required BuildContext context,
     required VaultPasswordEntity item,
-    required bool isDark,
     required Color accent,
   }) {
+    final palette = context.palette;
     final isRevealed = _revealedPasswordIds.contains(item.id);
     final secret = _secretForItem(item);
 
     return InkWell(
-      onTap: () => _showPasswordDetailSheet(context, item, isDark),
-      borderRadius: AppRadius.radiusMd,
+      onTap: () => _showPasswordDetailSheet(context, item),
+      borderRadius: AppRadius.borderMd,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
         child: Row(
           children: [
             Container(
-              width: 36,
-              height: 36,
+              width: AppSpacing.xxxl,
+              height: AppSpacing.xxxl,
               decoration: BoxDecoration(
                 color: accent.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: accent.withValues(alpha: 0.25),
-                  width: 0.8,
-                ),
+                borderRadius: AppRadius.borderMd,
+                border: Border.all(color: accent.withValues(alpha: 0.25)),
               ),
-              child: Icon(item.icon, color: accent, size: 18),
+              child: Icon(item.icon, color: accent, size: AppSpacing.lg),
             ),
-            const SizedBox(width: 11),
+            AppSpacing.gapW12,
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1076,20 +1103,17 @@ class _VaultViewState extends State<_VaultView>
                           item.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
+                          style: context.text.titleSmall?.copyWith(
                             fontWeight: FontWeight.w700,
-                            fontSize: 13.5,
-                            color: isDark
-                                ? AppColors.darkTextHeading
-                                : AppColors.textHeading,
+                            color: palette.heading,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      AppSpacing.gapW8,
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 5.5,
-                          vertical: 1.5,
+                          horizontal: AppSpacing.xs,
+                          vertical: AppSpacing.xxxs,
                         ),
                         decoration: BoxDecoration(
                           color: accent.withValues(alpha: 0.12),
@@ -1097,8 +1121,7 @@ class _VaultViewState extends State<_VaultView>
                         ),
                         child: Text(
                           item.category,
-                          style: TextStyle(
-                            fontSize: 9.5,
+                          style: context.text.labelSmall?.copyWith(
                             fontWeight: FontWeight.w700,
                             color: accent,
                           ),
@@ -1106,7 +1129,7 @@ class _VaultViewState extends State<_VaultView>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 2.5),
+                  AppSpacing.gapH4,
                   Row(
                     children: [
                       Flexible(
@@ -1114,38 +1137,33 @@ class _VaultViewState extends State<_VaultView>
                           item.username,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            color: isDark
-                                ? AppColors.darkTextCaption
-                                : AppColors.textCaption,
+                          style: context.text.bodySmall?.copyWith(
+                            color: palette.secondary,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      AppSpacing.gapW8,
                       Text(
                         '•',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: isDark
-                              ? AppColors.darkTextCaption
-                              : AppColors.textCaption,
+                        style: context.text.bodySmall?.copyWith(
+                          color: palette.caption,
                         ),
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        isRevealed ? secret : '••••••••',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontFamily: 'monospace',
-                          fontWeight: isRevealed
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                          color: isRevealed
-                              ? AppColors.moduleVault
-                              : (isDark
-                                    ? AppColors.darkTextCaption
-                                    : AppColors.textCaption),
+                      AppSpacing.gapW8,
+                      Flexible(
+                        child: Text(
+                          isRevealed ? secret : '••••••••',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.monoCode.copyWith(
+                            fontSize: 12,
+                            fontWeight: isRevealed
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: isRevealed
+                                ? AppColors.moduleVault
+                                : palette.caption,
+                          ),
                         ),
                       ),
                     ],
@@ -1153,20 +1171,16 @@ class _VaultViewState extends State<_VaultView>
                 ],
               ),
             ),
-            const SizedBox(width: 6),
+            AppSpacing.gapW8,
             // Reveal / Hide Password Button
             _buildRowActionIcon(
-              isDark: isDark,
               tooltip: isRevealed ? 'Hide Password' : 'Reveal Password',
               icon: isRevealed
                   ? Icons.visibility_off_outlined
                   : Icons.visibility_outlined,
-              color: isRevealed
-                  ? AppColors.moduleVault
-                  : (isDark
-                        ? AppColors.darkTextCaption
-                        : AppColors.textCaption),
+              color: isRevealed ? AppColors.moduleVault : palette.caption,
               onTap: () {
+                HapticFeedback.selectionClick();
                 setState(() {
                   if (isRevealed) {
                     _revealedPasswordIds.remove(item.id);
@@ -1176,10 +1190,9 @@ class _VaultViewState extends State<_VaultView>
                 });
               },
             ),
-            const SizedBox(width: 5),
+            AppSpacing.gapW8,
             // 1-Tap Copy Password Button
             _buildRowActionIcon(
-              isDark: isDark,
               tooltip: 'Copy Password',
               icon: Icons.copy_rounded,
               color: AppColors.moduleVault,
@@ -1191,103 +1204,166 @@ class _VaultViewState extends State<_VaultView>
     );
   }
 
-  Widget _buildPasswordSecurityToolsCard(BuildContext context, bool isDark) {
+  Widget _buildPasswordSecurityToolsCard(BuildContext context) {
+    final palette = context.palette;
+
     return _buildSectionCardContainer(
-      isDark: isDark,
+      context: context,
       sectionIcon: Icons.bolt_rounded,
       sectionTitle: 'SECURITY AUDIT & KEY GENERATOR',
       sectionAccent: AppColors.secondary,
       trailingBadgeText: '100% Strong',
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Row(
+          padding: AppSpacing.edgeInsetsAllMd,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: AppColors.secondary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(9),
-                ),
-                child: const Icon(
-                  Icons.password_rounded,
-                  size: 17,
-                  color: AppColors.secondary,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Cryptographic Key Generator',
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                        color: isDark
-                            ? AppColors.darkTextHeading
-                            : AppColors.textHeading,
-                      ),
+              Row(
+                children: [
+                  Container(
+                    width: AppSpacing.xxxl,
+                    height: AppSpacing.xxxl,
+                    decoration: BoxDecoration(
+                      color: AppColors.secondary.withValues(alpha: 0.12),
+                      borderRadius: AppRadius.borderMd,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Generate a 16-char high-entropy password & copy instantly',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: isDark
-                            ? AppColors.darkTextCaption
-                            : AppColors.textCaption,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              GestureDetector(
-                onTap: () {
-                  const chars =
-                      'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#\$%&*';
-                  final rand = Random.secure();
-                  final generated = List.generate(
-                    16,
-                    (_) => chars[rand.nextInt(chars.length)],
-                  ).join();
-                  _copySecret(context, 'Generated key ($generated)', generated);
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.secondary.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: AppColors.secondary.withValues(alpha: 0.3),
-                      width: 0.8,
+                    child: const Icon(
+                      Icons.password_rounded,
+                      size: AppSpacing.lg,
+                      color: AppColors.secondary,
                     ),
                   ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.auto_awesome_rounded,
-                        size: 13,
-                        color: AppColors.secondary,
+                  AppSpacing.gapW12,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Cryptographic Key Generator',
+                          style: context.text.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: palette.heading,
+                          ),
+                        ),
+                        AppSpacing.gapH4,
+                        Text(
+                          'Generate a $_generatorLength-char high-entropy password & copy instantly',
+                          style: context.text.bodySmall?.copyWith(
+                            color: palette.caption,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  AppSpacing.gapW8,
+                  InkWell(
+                    borderRadius: AppRadius.borderSm,
+                    onTap: () {
+                      final generated = _generateEntropyKey(_generatorLength);
+                      setState(() => _generatedPreviewKey = generated);
+                      _copySecret(
+                        context,
+                        'Generated key ($generated)',
+                        generated,
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: AppSpacing.xs,
                       ),
-                      SizedBox(width: 4),
-                      Text(
-                        'Generate',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.secondary,
+                      decoration: BoxDecoration(
+                        color: AppColors.secondary.withValues(alpha: 0.14),
+                        borderRadius: AppRadius.borderSm,
+                        border: Border.all(
+                          color: AppColors.secondary.withValues(alpha: 0.3),
                         ),
                       ),
-                    ],
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.auto_awesome_rounded,
+                            size: AppSpacing.sm,
+                            color: AppColors.secondary,
+                          ),
+                          AppSpacing.gapW4,
+                          Text(
+                            'Generate',
+                            style: context.text.labelSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.secondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
+                ],
+              ),
+              AppSpacing.gapH12,
+              // Interactive Live Entropy Preview & Length Selector
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                  vertical: AppSpacing.xs,
+                ),
+                decoration: BoxDecoration(
+                  color: palette.surfaceMuted,
+                  borderRadius: AppRadius.borderMd,
+                  border: Border.all(color: palette.border),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _generatedPreviewKey,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.captionBold.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: palette.heading,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ),
+                    AppSpacing.gapW8,
+                    for (final len in const [12, 16, 24]) ...[
+                      InkWell(
+                        borderRadius: AppRadius.radiusXs,
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setState(() {
+                            _generatorLength = len;
+                            _generatedPreviewKey = _generateEntropyKey(len);
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.xs,
+                            vertical: AppSpacing.xxxs,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _generatorLength == len
+                                ? AppColors.secondary
+                                : Colors.transparent,
+                            borderRadius: AppRadius.radiusXs,
+                          ),
+                          child: Text(
+                            '$len',
+                            style: context.text.labelSmall?.copyWith(
+                              color: _generatorLength == len
+                                  ? Colors.white
+                                  : palette.caption,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                      AppSpacing.gapW4,
+                    ],
+                  ],
                 ),
               ),
             ],
@@ -1304,7 +1380,6 @@ class _VaultViewState extends State<_VaultView>
     BuildContext context,
     List<VaultDocumentEntity> documents,
     List<VaultPasswordEntity> passwords,
-    bool isDark,
     bool isDecoy,
   ) {
     final categories = [
@@ -1314,6 +1389,16 @@ class _VaultViewState extends State<_VaultView>
       'Medical',
       'Vehicle',
     ];
+
+    final Map<String, int> categoryCounts = {
+      'All': documents.length,
+      'Expiring Soon': documents.where((d) => d.isExpiringSoon).length,
+    };
+    for (final cat in const ['Electronics', 'Medical', 'Vehicle']) {
+      categoryCounts[cat] = documents
+          .where((d) => d.category.toLowerCase() == cat.toLowerCase())
+          .length;
+    }
 
     final filtered = documents.where((doc) {
       final matchesCat =
@@ -1336,82 +1421,91 @@ class _VaultViewState extends State<_VaultView>
     final totalExpiring = documents.where((d) => d.isExpiringSoon).length;
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 88),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.pageGutter,
+        AppSpacing.sm,
+        AppSpacing.pageGutter,
+        AppSpacing.huge * 2,
+      ),
       children: [
-        // 1. Unified Overview Card
+        // 1. Unified Watchtower Overview Card
         _buildVaultOverviewCard(
           context: context,
-          isDark: isDark,
           isDecoy: isDecoy,
           passwordCount: passwords.length,
           documentCount: documents.length,
           expiringCount: totalExpiring,
         ),
-        const SizedBox(height: 10),
+        AppSpacing.gapH12,
 
-        // 2. Automated Expiry Notice Card (Compact & Clean)
+        // 2. Automated Expiry Notice Card
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+          padding: AppSpacing.edgeInsetsAllSm,
           decoration: BoxDecoration(
-            color: AppColors.moduleTime.withValues(alpha: isDark ? 0.14 : 0.08),
-            borderRadius: AppRadius.radiusMd,
+            color: AppColors.moduleTime.withValues(alpha: 0.1),
+            borderRadius: AppRadius.borderMd,
             border: Border.all(
               color: AppColors.moduleTime.withValues(alpha: 0.28),
-              width: 0.8,
             ),
           ),
           child: Row(
             children: [
               Container(
-                width: 28,
-                height: 28,
+                width: AppSpacing.xxl,
+                height: AppSpacing.xxl,
                 decoration: BoxDecoration(
                   color: AppColors.moduleTime.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(7),
+                  borderRadius: AppRadius.borderSm,
                 ),
                 child: const Icon(
                   Icons.notification_important_rounded,
                   color: AppColors.moduleTime,
-                  size: 15,
+                  size: AppSpacing.md,
                 ),
               ),
-              const SizedBox(width: 9),
-              const Expanded(
+              AppSpacing.gapW12,
+              Expanded(
                 child: Text(
                   'Automated Expiry Alerts: We notify you 30 days & 7 days before warranty or policy lapses.',
-                  style: TextStyle(
-                    fontSize: 11.5,
+                  style: context.text.bodySmall?.copyWith(
+                    color: context.palette.heading,
                     fontWeight: FontWeight.w600,
-                    height: 1.25,
                   ),
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 10),
+        AppSpacing.gapH12,
 
-        // 3. Search & Category Filter Card
-        _buildSearchAndFilterCard(
-          isDark: isDark,
+        // 3. Clean 44px Search Bar + 36px Category Filter Pills
+        _buildSearchAndFilterSection(
+          context: context,
+          controller: _documentSearchCtrl,
           hintText: 'Search warranties, policies, or categories...',
           query: _documentSearchQuery,
           onQueryChanged: (val) => setState(() => _documentSearchQuery = val),
+          onClearQuery: () {
+            _documentSearchCtrl.clear();
+            setState(() => _documentSearchQuery = '');
+          },
           categories: categories,
+          categoryCounts: categoryCounts,
           selectedCategory: _selectedDocumentCategory,
           onCategorySelected: (cat) =>
               setState(() => _selectedDocumentCategory = cat),
         ),
-        const SizedBox(height: 12),
+        AppSpacing.gapH16,
 
         if (filtered.isEmpty)
           _buildEmptySectionCard(
-            isDark: isDark,
+            context: context,
             icon: Icons.folder_off_rounded,
             title: 'No matching warranties or policies',
             subtitle:
                 'Clear your search filter or add a new warranty/insurance card.',
             onAction: () {
+              _documentSearchCtrl.clear();
               setState(() {
                 _documentSearchQuery = '';
                 _selectedDocumentCategory = 'All';
@@ -1423,54 +1517,46 @@ class _VaultViewState extends State<_VaultView>
           // 4. Section Card: EXPIRING SOON (Action Needed)
           if (expiringDocs.isNotEmpty) ...[
             _buildSectionCardContainer(
-              isDark: isDark,
+              context: context,
               sectionIcon: Icons.warning_amber_rounded,
               sectionTitle: 'EXPIRING SOON • RENEWAL NEEDED',
               sectionAccent: AppColors.warning,
               trailingBadgeText: '${expiringDocs.length} urgent',
               children: [
                 for (var i = 0; i < expiringDocs.length; i++) ...[
-                  _buildDocumentRow(
-                    context: context,
-                    doc: expiringDocs[i],
-                    isDark: isDark,
-                  ),
+                  _buildDocumentRow(context: context, doc: expiringDocs[i]),
                   if (i < expiringDocs.length - 1)
                     Divider(
                       height: 1,
-                      thickness: 0.7,
-                      indent: 58,
-                      endIndent: 12,
-                      color: isDark ? AppColors.darkDivider : AppColors.divider,
+                      thickness: 1,
+                      indent: AppSpacing.md + AppSpacing.xxxl + AppSpacing.sm,
+                      endIndent: AppSpacing.md,
+                      color: context.palette.border,
                     ),
                 ],
               ],
             ),
-            const SizedBox(height: 12),
+            AppSpacing.gapH12,
           ],
 
           // 5. Section Card: ACTIVE WARRANTIES & POLICIES
           if (activeDocs.isNotEmpty)
             _buildSectionCardContainer(
-              isDark: isDark,
+              context: context,
               sectionIcon: Icons.verified_user_outlined,
               sectionTitle: 'ACTIVE WARRANTIES & POLICIES',
               sectionAccent: AppColors.secondary,
               trailingBadgeText: '${activeDocs.length} active',
               children: [
                 for (var i = 0; i < activeDocs.length; i++) ...[
-                  _buildDocumentRow(
-                    context: context,
-                    doc: activeDocs[i],
-                    isDark: isDark,
-                  ),
+                  _buildDocumentRow(context: context, doc: activeDocs[i]),
                   if (i < activeDocs.length - 1)
                     Divider(
                       height: 1,
-                      thickness: 0.7,
-                      indent: 58,
-                      endIndent: 12,
-                      color: isDark ? AppColors.darkDivider : AppColors.divider,
+                      thickness: 1,
+                      indent: AppSpacing.md + AppSpacing.xxxl + AppSpacing.sm,
+                      endIndent: AppSpacing.md,
+                      color: context.palette.border,
                     ),
                 ],
               ],
@@ -1483,34 +1569,34 @@ class _VaultViewState extends State<_VaultView>
   Widget _buildDocumentRow({
     required BuildContext context,
     required VaultDocumentEntity doc,
-    required bool isDark,
   }) {
+    final palette = context.palette;
     final isExpiringSoon = doc.isExpiringSoon;
     final accent = isExpiringSoon
         ? AppColors.warning
         : _categoryColor(doc.category);
 
     return InkWell(
-      onTap: () => _showDocumentPreviewSheet(context, doc, isDark),
-      borderRadius: AppRadius.radiusMd,
+      onTap: () => _showDocumentPreviewSheet(context, doc),
+      borderRadius: AppRadius.borderMd,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
         child: Row(
           children: [
             Container(
-              width: 36,
-              height: 36,
+              width: AppSpacing.xxxl,
+              height: AppSpacing.xxxl,
               decoration: BoxDecoration(
                 color: accent.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: accent.withValues(alpha: 0.28),
-                  width: 0.8,
-                ),
+                borderRadius: AppRadius.borderMd,
+                border: Border.all(color: accent.withValues(alpha: 0.28)),
               ),
-              child: Icon(doc.icon, color: accent, size: 18),
+              child: Icon(doc.icon, color: accent, size: AppSpacing.lg),
             ),
-            const SizedBox(width: 11),
+            AppSpacing.gapW12,
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1522,20 +1608,17 @@ class _VaultViewState extends State<_VaultView>
                           doc.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
+                          style: context.text.titleSmall?.copyWith(
                             fontWeight: FontWeight.w700,
-                            fontSize: 13.5,
-                            color: isDark
-                                ? AppColors.darkTextHeading
-                                : AppColors.textHeading,
+                            color: palette.heading,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      AppSpacing.gapW8,
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 1.5,
+                          horizontal: AppSpacing.xs,
+                          vertical: AppSpacing.xxxs,
                         ),
                         decoration: BoxDecoration(
                           color:
@@ -1547,29 +1630,25 @@ class _VaultViewState extends State<_VaultView>
                         ),
                         child: Text(
                           isExpiringSoon ? 'Expiring' : 'Active',
-                          style: TextStyle(
+                          style: context.text.labelSmall?.copyWith(
                             color: isExpiringSoon
                                 ? AppColors.warning
                                 : AppColors.success,
-                            fontSize: 9.5,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 2.5),
+                  AppSpacing.gapH4,
                   Text(
                     '${doc.category} • ${doc.expiry}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 11.5,
+                    style: context.text.bodySmall?.copyWith(
                       color: isExpiringSoon
                           ? AppColors.warning
-                          : (isDark
-                                ? AppColors.darkTextCaption
-                                : AppColors.textCaption),
+                          : palette.secondary,
                       fontWeight: isExpiringSoon
                           ? FontWeight.w600
                           : FontWeight.w400,
@@ -1578,9 +1657,8 @@ class _VaultViewState extends State<_VaultView>
                 ],
               ),
             ),
-            const SizedBox(width: 6),
+            AppSpacing.gapW8,
             _buildRowActionIcon(
-              isDark: isDark,
               tooltip: 'Preview Document',
               icon: Icons.remove_red_eye_rounded,
               color: AppColors.moduleVault,
@@ -1591,7 +1669,7 @@ class _VaultViewState extends State<_VaultView>
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
-                _showDocumentPreviewSheet(context, doc, isDark);
+                _showDocumentPreviewSheet(context, doc);
               },
             ),
           ],
@@ -1603,230 +1681,213 @@ class _VaultViewState extends State<_VaultView>
   // ============================================================================
   // SHARED REUSABLE SECTION CARD & FILTER BAR BUILDERS
   // ============================================================================
-  Widget _buildSearchAndFilterCard({
-    required bool isDark,
+  Widget _buildSearchAndFilterSection({
+    required BuildContext context,
+    required TextEditingController controller,
     required String hintText,
     required String query,
     required ValueChanged<String> onQueryChanged,
+    required VoidCallback onClearQuery,
     required List<String> categories,
+    required Map<String, int> categoryCounts,
     required String selectedCategory,
     required ValueChanged<String> onCategorySelected,
   }) {
-    final cardBg = isDark
-        ? AppColors.darkCardBackground
-        : AppColors.cardBackground;
-    final borderColor = isDark ? AppColors.darkDivider : AppColors.divider;
+    final palette = context.palette;
 
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: AppRadius.radiusMd,
-        border: Border.all(color: borderColor, width: 0.8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Compact 36px Search Input
-          Container(
-            height: 36,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.darkScaffoldBackground.withValues(alpha: 0.7)
-                  : AppColors.scaffoldBackground,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: borderColor.withValues(alpha: 0.8),
-                width: 0.7,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 44px Search Bar matching Notes & Money
+        Container(
+          height: AppSpacing.xxxl + AppSpacing.xxs,
+          decoration: BoxDecoration(
+            color: palette.card,
+            borderRadius: AppRadius.borderMd,
+            border: Border.all(color: palette.border),
+          ),
+          child: TextField(
+            controller: controller,
+            onChanged: onQueryChanged,
+            style: context.text.bodyMedium?.copyWith(color: palette.heading),
+            decoration: InputDecoration(
+              filled: false,
+              hintText: hintText,
+              hintStyle: context.text.bodyMedium?.copyWith(
+                color: palette.caption,
+              ),
+              prefixIcon: Icon(
+                Icons.search_rounded,
+                size: AppSpacing.lg,
+                color: palette.caption,
+              ),
+              suffixIcon: query.isNotEmpty
+                  ? IconButton(
+                      visualDensity: VisualDensity.compact,
+                      onPressed: onClearQuery,
+                      icon: Icon(
+                        Icons.close_rounded,
+                        size: AppSpacing.md,
+                        color: palette.caption,
+                      ),
+                    )
+                  : null,
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                vertical: AppSpacing.sm,
               ),
             ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.search_rounded,
-                  size: 16,
-                  color: isDark
-                      ? AppColors.darkTextCaption
-                      : AppColors.textCaption,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextField(
-                    onChanged: onQueryChanged,
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      color: isDark
-                          ? AppColors.darkTextHeading
-                          : AppColors.textHeading,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: hintText,
-                      hintStyle: TextStyle(
-                        fontSize: 12,
-                        color: isDark
-                            ? AppColors.darkTextCaption
-                            : AppColors.textCaption,
-                      ),
-                      isDense: true,
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ),
-                ),
-                if (query.isNotEmpty)
-                  GestureDetector(
-                    onTap: () => onQueryChanged(''),
-                    child: Icon(
-                      Icons.close_rounded,
-                      size: 15,
-                      color: isDark
-                          ? AppColors.darkTextCaption
-                          : AppColors.textCaption,
-                    ),
-                  ),
-              ],
-            ),
           ),
-          const SizedBox(height: 8),
-          // Compact 28px Horizontal Filter Pills
-          SingleChildScrollView(
+        ),
+        AppSpacing.gapH12,
+        // 36px Horizontal Filter Pills with Counts
+        SizedBox(
+          height: AppSpacing.xxl + AppSpacing.xxs,
+          child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            child: Row(
-              children: categories.map((cat) {
-                final isSelected = cat == selectedCategory;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: GestureDetector(
-                    onTap: () => onCategorySelected(cat),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 160),
-                      height: 27,
-                      padding: const EdgeInsets.symmetric(horizontal: 11),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppColors.moduleVault
-                            : (isDark
-                                  ? AppColors.darkScaffoldBackground
-                                  : AppColors.scaffoldBackground),
-                        borderRadius: AppRadius.radiusFull,
-                        border: Border.all(
-                          color: isSelected
-                              ? AppColors.moduleVault
-                              : borderColor,
-                          width: 0.8,
-                        ),
-                      ),
-                      child: Text(
+            itemCount: categories.length,
+            separatorBuilder: (_, _) => AppSpacing.gapW8,
+            itemBuilder: (context, index) {
+              final cat = categories[index];
+              final isSelected = cat == selectedCategory;
+              final count = categoryCounts[cat] ?? 0;
+
+              return GestureDetector(
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  onCategorySelected(cat);
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  padding: AppSpacing.edgeInsetsHSm,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: isSelected ? AppColors.moduleVault : palette.card,
+                    borderRadius: AppRadius.radiusFull,
+                    border: Border.all(
+                      color: isSelected
+                          ? AppColors.moduleVault
+                          : palette.border,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
                         cat,
-                        style: TextStyle(
-                          fontSize: 11,
+                        style: context.text.labelMedium?.copyWith(
                           fontWeight: isSelected
                               ? FontWeight.w700
                               : FontWeight.w600,
-                          color: isSelected
-                              ? Colors.white
-                              : (isDark
-                                    ? AppColors.darkTextBody
-                                    : AppColors.textBody),
+                          color: isSelected ? Colors.white : palette.body,
                         ),
                       ),
-                    ),
+                      AppSpacing.gapW4,
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xxs + AppSpacing.xxxs,
+                          vertical: AppSpacing.xxxs / 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? Colors.white.withValues(alpha: 0.22)
+                              : palette.surfaceMuted,
+                          borderRadius: AppRadius.radiusFull,
+                        ),
+                        child: Text(
+                          '$count',
+                          style: context.text.labelSmall?.copyWith(
+                            color: isSelected ? Colors.white : palette.caption,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                );
-              }).toList(),
-            ),
+                ),
+              );
+            },
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   Widget _buildSectionCardContainer({
-    required bool isDark,
+    required BuildContext context,
     required IconData sectionIcon,
     required String sectionTitle,
     required Color sectionAccent,
     required String trailingBadgeText,
     required List<Widget> children,
   }) {
-    final cardBg = isDark
-        ? AppColors.darkCardBackground
-        : AppColors.cardBackground;
-    final borderColor = isDark ? AppColors.darkDivider : AppColors.divider;
+    final palette = context.palette;
 
     return Container(
       decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: AppRadius.radiusMd,
-        border: Border.all(color: borderColor, width: 0.8),
+        color: palette.card,
+        borderRadius: AppRadius.borderLg,
+        border: Border.all(color: palette.border),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Section Header Bar inside the card
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: sectionAccent.withValues(alpha: isDark ? 0.08 : 0.05),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(11),
-                topRight: Radius.circular(11),
+      child: ClipRRect(
+        borderRadius: AppRadius.borderLg,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Section Header Bar inside the card
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.xs,
               ),
-              border: Border(
-                bottom: BorderSide(
-                  color: borderColor.withValues(alpha: 0.7),
-                  width: 0.7,
-                ),
+              decoration: BoxDecoration(
+                color: sectionAccent.withValues(alpha: 0.08),
+                border: Border(bottom: BorderSide(color: palette.border)),
               ),
-            ),
-            child: Row(
-              children: [
-                Icon(sectionIcon, size: 13.5, color: sectionAccent),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    sectionTitle,
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.6,
-                      color: isDark
-                          ? AppColors.darkTextHeading
-                          : AppColors.textHeading,
+              child: Row(
+                children: [
+                  Icon(sectionIcon, size: AppSpacing.md, color: sectionAccent),
+                  AppSpacing.gapW8,
+                  Expanded(
+                    child: Text(
+                      sectionTitle,
+                      style: context.text.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
+                        color: palette.heading,
+                      ),
                     ),
                   ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6.5,
-                    vertical: 1.5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: sectionAccent.withValues(alpha: 0.14),
-                    borderRadius: AppRadius.radiusFull,
-                  ),
-                  child: Text(
-                    trailingBadgeText,
-                    style: TextStyle(
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w700,
-                      color: sectionAccent,
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xs,
+                      vertical: AppSpacing.xxxs,
+                    ),
+                    decoration: BoxDecoration(
+                      color: sectionAccent.withValues(alpha: 0.14),
+                      borderRadius: AppRadius.radiusFull,
+                    ),
+                    child: Text(
+                      trailingBadgeText,
+                      style: context.text.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: sectionAccent,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          ...children,
-        ],
+            ...children,
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildRowActionIcon({
-    required bool isDark,
     required String tooltip,
     required IconData icon,
     required Color color,
@@ -1836,66 +1897,72 @@ class _VaultViewState extends State<_VaultView>
       message: tooltip,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AppRadius.borderSm,
         child: Container(
-          width: 30,
-          height: 30,
+          width: AppSpacing.xxl,
+          height: AppSpacing.xxl,
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AppRadius.borderSm,
           ),
-          child: Icon(icon, size: 15.5, color: color),
+          child: Icon(icon, size: AppSpacing.md, color: color),
         ),
       ),
     );
   }
 
   Widget _buildEmptySectionCard({
-    required bool isDark,
+    required BuildContext context,
     required IconData icon,
     required String title,
     required String subtitle,
     required VoidCallback onAction,
     required String actionLabel,
   }) {
+    final palette = context.palette;
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: AppSpacing.edgeInsetsAllXl,
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
-        borderRadius: AppRadius.radiusMd,
-        border: Border.all(
-          color: isDark ? AppColors.darkDivider : AppColors.divider,
-          width: 0.8,
-        ),
+        color: palette.card,
+        borderRadius: AppRadius.borderLg,
+        border: Border.all(color: palette.border),
       ),
       child: Column(
         children: [
-          Icon(icon, size: 28, color: AppColors.moduleVault),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 13.5,
-              fontWeight: FontWeight.w700,
-              color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
+          Container(
+            width: AppSpacing.huge,
+            height: AppSpacing.huge,
+            decoration: BoxDecoration(
+              color: AppColors.moduleVault.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              size: AppSpacing.xl,
+              color: AppColors.moduleVault,
             ),
           ),
-          const SizedBox(height: 4),
+          AppSpacing.gapH12,
+          Text(
+            title,
+            style: context.text.titleMedium?.copyWith(color: palette.heading),
+          ),
+          AppSpacing.gapH4,
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 11.5,
-              color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
-            ),
+            style: context.text.bodySmall?.copyWith(color: palette.caption),
           ),
-          const SizedBox(height: 10),
+          AppSpacing.gapH12,
           TextButton.icon(
             onPressed: onAction,
-            icon: const Icon(Icons.refresh_rounded, size: 15),
+            icon: const Icon(Icons.refresh_rounded, size: AppSpacing.md),
             label: Text(
               actionLabel,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+              style: context.text.labelLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],
@@ -1909,71 +1976,66 @@ class _VaultViewState extends State<_VaultView>
   void _showPasswordDetailSheet(
     BuildContext context,
     VaultPasswordEntity item,
-    bool isDark,
   ) {
     final secret = _secretForItem(item);
     final accent = _categoryColor(item.category);
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: isDark
-          ? AppColors.darkCardBackground
-          : AppColors.cardBackground,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
+      backgroundColor: context.palette.card,
+      shape: const RoundedRectangleBorder(borderRadius: AppRadius.topXl),
       builder: (ctx) {
+        final palette = ctx.palette;
         return Padding(
-          padding: const EdgeInsets.fromLTRB(18, 14, 18, 24),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.pageGutter,
+            AppSpacing.md,
+            AppSpacing.pageGutter,
+            AppSpacing.xl,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(
                 child: Container(
-                  width: 36,
-                  height: 4,
+                  width: AppSpacing.xxxl,
+                  height: AppSpacing.xxs,
                   decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkDivider : AppColors.divider,
+                    color: palette.border,
                     borderRadius: AppRadius.radiusFull,
                   ),
                 ),
               ),
-              const SizedBox(height: 14),
+              AppSpacing.gapH16,
               Row(
                 children: [
                   Container(
-                    width: 40,
-                    height: 40,
+                    width: AppSpacing.xxxl + AppSpacing.xxs,
+                    height: AppSpacing.xxxl + AppSpacing.xxs,
                     decoration: BoxDecoration(
                       color: accent.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(11),
+                      borderRadius: AppRadius.borderMd,
                     ),
-                    child: Icon(item.icon, color: accent, size: 20),
+                    child: Icon(item.icon, color: accent, size: AppSpacing.lg),
                   ),
-                  const SizedBox(width: 12),
+                  AppSpacing.gapW12,
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           item.title,
-                          style: TextStyle(
-                            fontSize: 15,
+                          style: ctx.text.titleMedium?.copyWith(
                             fontWeight: FontWeight.w700,
-                            color: isDark
-                                ? AppColors.darkTextHeading
-                                : AppColors.textHeading,
+                            color: palette.heading,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        AppSpacing.gapH4,
                         Text(
                           '${item.category} • AES-256 Encrypted Record',
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            color: isDark
-                                ? AppColors.darkTextCaption
-                                : AppColors.textCaption,
+                          style: ctx.text.bodySmall?.copyWith(
+                            color: palette.caption,
                           ),
                         ),
                       ],
@@ -1997,20 +2059,20 @@ class _VaultViewState extends State<_VaultView>
                           _deletedPasswordIds.add(item.id);
                           _customSecrets.remove(item.id);
                         });
-                        _persistVaultData();
+                        unawaited(_persistVaultData());
                       }
                     },
                     icon: const Icon(
                       Icons.delete_outline_rounded,
                       color: AppColors.error,
-                      size: 20,
+                      size: AppSpacing.lg,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
+              AppSpacing.gapH16,
               _buildDetailFieldTile(
-                isDark: isDark,
+                context: ctx,
                 label: 'Username / Identifier',
                 value: item.username,
                 onCopy: () {
@@ -2018,9 +2080,9 @@ class _VaultViewState extends State<_VaultView>
                   _copySecret(context, 'Username', item.username);
                 },
               ),
-              const SizedBox(height: 8),
+              AppSpacing.gapH8,
               _buildDetailFieldTile(
-                isDark: isDark,
+                context: ctx,
                 label: 'Encrypted Password / Key',
                 value: secret,
                 isMonospace: true,
@@ -2039,7 +2101,6 @@ class _VaultViewState extends State<_VaultView>
   void _showDocumentPreviewSheet(
     BuildContext context,
     VaultDocumentEntity doc,
-    bool isDark,
   ) {
     final accent = doc.isExpiringSoon
         ? AppColors.warning
@@ -2047,66 +2108,62 @@ class _VaultViewState extends State<_VaultView>
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: isDark
-          ? AppColors.darkCardBackground
-          : AppColors.cardBackground,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
+      backgroundColor: context.palette.card,
+      shape: const RoundedRectangleBorder(borderRadius: AppRadius.topXl),
       builder: (ctx) {
+        final palette = ctx.palette;
         return Padding(
-          padding: const EdgeInsets.fromLTRB(18, 14, 18, 24),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.pageGutter,
+            AppSpacing.md,
+            AppSpacing.pageGutter,
+            AppSpacing.xl,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(
                 child: Container(
-                  width: 36,
-                  height: 4,
+                  width: AppSpacing.xxxl,
+                  height: AppSpacing.xxs,
                   decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkDivider : AppColors.divider,
+                    color: palette.border,
                     borderRadius: AppRadius.radiusFull,
                   ),
                 ),
               ),
-              const SizedBox(height: 14),
+              AppSpacing.gapH16,
               Row(
                 children: [
                   Container(
-                    width: 40,
-                    height: 40,
+                    width: AppSpacing.xxxl + AppSpacing.xxs,
+                    height: AppSpacing.xxxl + AppSpacing.xxs,
                     decoration: BoxDecoration(
                       color: accent.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(11),
+                      borderRadius: AppRadius.borderMd,
                     ),
-                    child: Icon(doc.icon, color: accent, size: 20),
+                    child: Icon(doc.icon, color: accent, size: AppSpacing.lg),
                   ),
-                  const SizedBox(width: 12),
+                  AppSpacing.gapW12,
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           doc.title,
-                          style: TextStyle(
-                            fontSize: 15,
+                          style: ctx.text.titleMedium?.copyWith(
                             fontWeight: FontWeight.w700,
-                            color: isDark
-                                ? AppColors.darkTextHeading
-                                : AppColors.textHeading,
+                            color: palette.heading,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        AppSpacing.gapH4,
                         Text(
                           '${doc.category} • ${doc.expiry}',
-                          style: TextStyle(
-                            fontSize: 11.5,
+                          style: ctx.text.bodySmall?.copyWith(
                             color: doc.isExpiringSoon
                                 ? AppColors.warning
-                                : (isDark
-                                      ? AppColors.darkTextCaption
-                                      : AppColors.textCaption),
+                                : palette.caption,
                           ),
                         ),
                       ],
@@ -2129,20 +2186,20 @@ class _VaultViewState extends State<_VaultView>
                           _customDocuments.removeWhere((d) => d.id == doc.id);
                           _deletedDocumentIds.add(doc.id);
                         });
-                        _persistVaultData();
+                        unawaited(_persistVaultData());
                       }
                     },
                     icon: const Icon(
                       Icons.delete_outline_rounded,
                       color: AppColors.error,
-                      size: 20,
+                      size: AppSpacing.lg,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
+              AppSpacing.gapH16,
               _buildDetailFieldTile(
-                isDark: isDark,
+                context: ctx,
                 label: 'Coverage Status & Reminder Schedule',
                 value: doc.isExpiringSoon
                     ? '${doc.expiry} • 30-day & 7-day auto alerts enabled'
@@ -2164,23 +2221,23 @@ class _VaultViewState extends State<_VaultView>
   }
 
   Widget _buildDetailFieldTile({
-    required bool isDark,
+    required BuildContext context,
     required String label,
     required String value,
     required VoidCallback onCopy,
     bool isMonospace = false,
   }) {
+    final palette = context.palette;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       decoration: BoxDecoration(
-        color: isDark
-            ? AppColors.darkScaffoldBackground
-            : AppColors.scaffoldBackground,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: isDark ? AppColors.darkDivider : AppColors.divider,
-          width: 0.8,
-        ),
+        color: palette.surfaceMuted,
+        borderRadius: AppRadius.borderMd,
+        border: Border.all(color: palette.border),
       ),
       child: Row(
         children: [
@@ -2190,24 +2247,23 @@ class _VaultViewState extends State<_VaultView>
               children: [
                 Text(
                   label,
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    color: isDark
-                        ? AppColors.darkTextCaption
-                        : AppColors.textCaption,
+                  style: context.text.labelSmall?.copyWith(
+                    color: palette.caption,
                   ),
                 ),
-                const SizedBox(height: 3),
+                AppSpacing.gapH4,
                 Text(
                   value,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontFamily: isMonospace ? 'monospace' : null,
-                    fontWeight: FontWeight.w700,
-                    color: isDark
-                        ? AppColors.darkTextHeading
-                        : AppColors.textHeading,
-                  ),
+                  style: isMonospace
+                      ? AppTextStyles.captionBold.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: palette.heading,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        )
+                      : context.text.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: palette.heading,
+                        ),
                 ),
               ],
             ),
@@ -2216,7 +2272,7 @@ class _VaultViewState extends State<_VaultView>
             onPressed: onCopy,
             icon: const Icon(
               Icons.copy_rounded,
-              size: 17,
+              size: AppSpacing.lg,
               color: AppColors.moduleVault,
             ),
             tooltip: 'Copy',
@@ -2226,7 +2282,7 @@ class _VaultViewState extends State<_VaultView>
     );
   }
 
-  void _showAddVaultItemSheet(BuildContext context, bool isDark) {
+  void _showAddVaultItemSheet(BuildContext context) {
     final isWarrantyTab = _tabController.index == 1;
     final titleCtrl = TextEditingController();
     final subCtrl = TextEditingController();
@@ -2236,55 +2292,61 @@ class _VaultViewState extends State<_VaultView>
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: isDark
-          ? AppColors.darkCardBackground
-          : AppColors.cardBackground,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
+      backgroundColor: context.palette.card,
+      shape: const RoundedRectangleBorder(borderRadius: AppRadius.topXl),
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setModalState) {
+            final palette = ctx.palette;
             final cats = isWarrantyTab
                 ? ['Electronics', 'Medical', 'Vehicle']
                 : ['Banking', 'Email', 'Wi-Fi', 'Social'];
             return Padding(
               padding: EdgeInsets.fromLTRB(
-                18,
-                14,
-                18,
-                MediaQuery.of(ctx).viewInsets.bottom + 20,
+                AppSpacing.pageGutter,
+                AppSpacing.md,
+                AppSpacing.pageGutter,
+                MediaQuery.of(ctx).viewInsets.bottom + AppSpacing.xl,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Center(
+                    child: Container(
+                      width: AppSpacing.xxxl,
+                      height: AppSpacing.xxs,
+                      decoration: BoxDecoration(
+                        color: palette.border,
+                        borderRadius: AppRadius.radiusFull,
+                      ),
+                    ),
+                  ),
+                  AppSpacing.gapH16,
                   Text(
                     isWarrantyTab
                         ? 'Add Warranty / Policy'
                         : 'Add Encrypted Login',
-                    style: TextStyle(
-                      fontSize: 15,
+                    style: ctx.text.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: isDark
-                          ? AppColors.darkTextHeading
-                          : AppColors.textHeading,
+                      color: palette.heading,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  AppSpacing.gapH12,
                   Wrap(
-                    spacing: 6,
+                    spacing: AppSpacing.xs,
+                    runSpacing: AppSpacing.xs,
                     children: cats.map((cat) {
                       final active = cat == selectedCat;
                       return ChoiceChip(
-                        label: Text(cat, style: const TextStyle(fontSize: 11)),
+                        label: Text(cat, style: ctx.text.labelMedium),
                         selected: active,
                         onSelected: (_) =>
                             setModalState(() => selectedCat = cat),
                       );
                     }).toList(),
                   ),
-                  const SizedBox(height: 10),
+                  AppSpacing.gapH12,
                   TextField(
                     controller: titleCtrl,
                     decoration: InputDecoration(
@@ -2294,7 +2356,7 @@ class _VaultViewState extends State<_VaultView>
                       isDense: true,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  AppSpacing.gapH12,
                   TextField(
                     controller: subCtrl,
                     decoration: InputDecoration(
@@ -2305,18 +2367,32 @@ class _VaultViewState extends State<_VaultView>
                     ),
                   ),
                   if (!isWarrantyTab) ...[
-                    const SizedBox(height: 8),
+                    AppSpacing.gapH12,
                     TextField(
                       controller: secretCtrl,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Password / PIN',
                         isDense: true,
+                        suffixIcon: IconButton(
+                          tooltip: 'Generate Strong Password',
+                          onPressed: () {
+                            setModalState(() {
+                              secretCtrl.text = _generateEntropyKey(16);
+                            });
+                          },
+                          icon: const Icon(
+                            Icons.auto_awesome_rounded,
+                            color: AppColors.secondary,
+                            size: AppSpacing.lg,
+                          ),
+                        ),
                       ),
                     ),
                   ],
-                  const SizedBox(height: 14),
+                  AppSpacing.gapH16,
                   SizedBox(
                     width: double.infinity,
+                    height: AppSpacing.huge,
                     child: FilledButton(
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.moduleVault,
@@ -2374,26 +2450,6 @@ class _VaultViewState extends State<_VaultView>
           },
         );
       },
-    );
-  }
-}
-
-class _VaultLoadingView extends StatelessWidget {
-  const _VaultLoadingView();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: const [
-        AppShimmerLoader.card(height: 68),
-        SizedBox(height: 12),
-        AppShimmerLoader.card(height: 54),
-        SizedBox(height: 10),
-        AppShimmerLoader.card(height: 54),
-        SizedBox(height: 10),
-        AppShimmerLoader.card(height: 54),
-      ],
     );
   }
 }

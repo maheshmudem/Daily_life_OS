@@ -309,7 +309,7 @@ class _MoneyBudgetsPageState extends State<MoneyBudgetsPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: isDark ? AppColors.darkSurface : AppColors.surface,
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusXl),
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.radiusXl),
         title: const Row(
           children: [
             Icon(Icons.lightbulb_rounded, color: AppColors.moduleTime),

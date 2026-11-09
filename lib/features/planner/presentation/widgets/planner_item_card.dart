@@ -3,6 +3,7 @@ import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/app_text_styles.dart';
+import '../../../../core/constants/string_constants.dart';
 import '../../../../core/widgets/app_dropdown_menu.dart';
 import '../../../../core/widgets/expandable_text_widget.dart';
 import '../../domain/entities/planner_item_entity.dart';
@@ -24,6 +25,7 @@ class PlannerItemCard extends StatefulWidget {
   final VoidCallback? onEdit;
   final VoidCallback? onDuplicate;
   final VoidCallback? onPushTomorrow;
+  final VoidCallback? onPushToTimeline;
   final ValueChanged<List<ChecklistItem>>? onChecklistChanged;
 
   const PlannerItemCard({
@@ -36,6 +38,7 @@ class PlannerItemCard extends StatefulWidget {
     this.onEdit,
     this.onDuplicate,
     this.onPushTomorrow,
+    this.onPushToTimeline,
     this.onChecklistChanged,
   });
 
@@ -454,6 +457,9 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
           case 'push_tomorrow':
             widget.onPushTomorrow?.call();
             break;
+          case 'push_timeline':
+            widget.onPushToTimeline?.call();
+            break;
           case 'delete':
             widget.onDelete();
             break;
@@ -483,6 +489,13 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
             value: 'push_tomorrow',
             icon: Icons.next_plan_outlined,
             label: 'Push to Tomorrow',
+          ),
+        if (widget.onPushToTimeline != null)
+          AppDropdownItem(
+            value: 'push_timeline',
+            icon: Icons.schedule_send_rounded,
+            label: StringConstants.pushToTodayTimeline,
+            tintColor: AppColors.primary,
           ),
         const AppDropdownDivider(),
         AppDropdownItem(

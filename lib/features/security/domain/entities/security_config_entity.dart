@@ -2,6 +2,19 @@ import 'package:equatable/equatable.dart';
 
 enum SecurityLockMode { pin, pattern }
 
+/// Brute-force protection policy, shared by the data layer (which enforces
+/// it) and the presentation layer (which explains it to the user).
+class SecurityPolicy {
+  SecurityPolicy._();
+
+  static const int maxFailedAttempts = 5;
+  static const Duration lockoutDuration = Duration(seconds: 30);
+  static const int pinLength = 4;
+
+  /// Below this many remaining attempts the UI warns explicitly.
+  static const int warnWhenRemainingAtMost = 2;
+}
+
 class SecurityConfigEntity extends Equatable {
   final bool isSecurityEnabled;
   final bool isBiometricEnabled;

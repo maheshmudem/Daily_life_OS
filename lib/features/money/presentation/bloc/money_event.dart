@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/money_account_entity.dart';
 import '../../domain/entities/money_insights.dart';
+import '../../domain/entities/subscription_entity.dart';
 import '../../domain/entities/transaction_entity.dart';
 
 abstract class MoneyEvent extends Equatable {
@@ -56,9 +57,10 @@ class ToggleAutoKill extends MoneyEvent {
 
 class SettleIou extends MoneyEvent {
   final int iouId;
-  const SettleIou(this.iouId);
+  final bool recordTransaction;
+  const SettleIou(this.iouId, {this.recordTransaction = false});
   @override
-  List<Object?> get props => [iouId];
+  List<Object?> get props => [iouId, recordTransaction];
 }
 
 class AddIou extends MoneyEvent {
@@ -226,4 +228,34 @@ class UpdateMoneySettings extends MoneyEvent {
 /// limits to 0 so the user can start fresh with their own data.
 class ResetAllMoneyData extends MoneyEvent {
   const ResetAllMoneyData();
+}
+
+/// Transfers [amount] from [fromAccountId] to [toAccountId] and optionally
+/// records a transfer entry in the activity log.
+class TransferBetweenAccounts extends MoneyEvent {
+  final int fromAccountId;
+  final int toAccountId;
+  final double amount;
+  final String? note;
+
+  const TransferBetweenAccounts({
+    required this.fromAccountId,
+    required this.toAccountId,
+    required this.amount,
+    this.note,
+  });
+
+  @override
+  List<Object?> get props => [fromAccountId, toAccountId, amount, note];
+}
+
+/// Logs an expense transaction for [subscription] and rolls its renewal date
+/// forward by 1 monthly cycle.
+class RecordSubscriptionPayment extends MoneyEvent {
+  final SubscriptionEntity subscription;
+
+  const RecordSubscriptionPayment(this.subscription);
+
+  @override
+  List<Object?> get props => [subscription];
 }

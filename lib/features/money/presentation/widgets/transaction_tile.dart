@@ -30,9 +30,18 @@ class TransactionTile extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final category = transaction.categoryInfo;
     final isIncome = transaction.isIncome;
-    final amountColor = isIncome
-        ? AppColors.success
-        : (isDark ? AppColors.darkTextPrimary : AppColors.textPrimary);
+    final isTransfer = transaction.isTransfer;
+    final tileColor = isTransfer ? AppColors.primary : category.color;
+    final tileIcon = isTransfer ? Icons.swap_horiz_rounded : category.icon;
+    final badgeColor = isTransfer
+        ? AppColors.primary
+        : (isIncome ? AppColors.success : category.color);
+    final badgeLabel = isTransfer ? 'Transfer' : category.shortLabel;
+    final amountColor = isTransfer
+        ? AppColors.primary
+        : (isIncome
+              ? AppColors.success
+              : (isDark ? AppColors.darkTextPrimary : AppColors.textPrimary));
     final captionColor = isDark ? AppColors.darkTextMuted : AppColors.textMuted;
     final note = transaction.note?.trim() ?? '';
 
@@ -45,11 +54,11 @@ class TransactionTile extends StatelessWidget {
           width: 42,
           height: 42,
           decoration: BoxDecoration(
-            color: category.color.withValues(alpha: isDark ? 0.16 : 0.11),
+            color: tileColor.withValues(alpha: isDark ? 0.16 : 0.11),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: category.color.withValues(alpha: 0.22)),
+            border: Border.all(color: tileColor.withValues(alpha: 0.22)),
           ),
-          child: Icon(category.icon, color: category.color, size: 19),
+          child: Icon(tileIcon, color: tileColor, size: 19),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -131,11 +140,13 @@ class TransactionTile extends StatelessWidget {
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerRight,
               child: Text(
-                CurrencyUtils.signed(
-                  transaction.amount,
-                  isCredit: isIncome,
-                  decimals: 2,
-                ),
+                isTransfer
+                    ? CurrencyUtils.format(transaction.amount, decimals: 2)
+                    : CurrencyUtils.signed(
+                        transaction.amount,
+                        isCredit: isIncome,
+                        decimals: 2,
+                      ),
                 style: TextStyle(
                   fontSize: 14.5,
                   fontWeight: FontWeight.w700,
@@ -148,16 +159,15 @@ class TransactionTile extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
               decoration: BoxDecoration(
-                color: (isIncome ? AppColors.success : category.color)
-                    .withValues(alpha: 0.12),
+                color: badgeColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
-                category.shortLabel,
+                badgeLabel,
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
-                  color: isIncome ? AppColors.success : category.color,
+                  color: badgeColor,
                 ),
               ),
             ),

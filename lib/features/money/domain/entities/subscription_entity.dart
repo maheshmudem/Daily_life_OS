@@ -51,8 +51,27 @@ class SubscriptionEntity extends Equatable {
     return months[m - 1];
   }
 
+  /// Computes the next monthly renewal date after logging a payment.
+  DateTime get nextCycleDate {
+    final now = DateTime.now();
+    final parsed = DateTime.tryParse(renewalDate) ?? now;
+    final anchor = parsed.isBefore(now) ? now : parsed;
+    final nextMonth = anchor.month == 12 ? 1 : anchor.month + 1;
+    final nextYear = anchor.month == 12 ? anchor.year + 1 : anchor.year;
+    final maxDay = DateTime(nextYear, nextMonth + 1, 0).day;
+    final clampedDay = anchor.day > maxDay ? maxDay : anchor.day;
+    return DateTime(nextYear, nextMonth, clampedDay);
+  }
+
   @override
-  List<Object?> get props => [id, autoKillEnabled];
+  List<Object?> get props => [
+    id,
+    name,
+    amount,
+    renewalDate,
+    autoKillEnabled,
+    iconCodePoint,
+  ];
 }
 
 class IouEntity extends Equatable {

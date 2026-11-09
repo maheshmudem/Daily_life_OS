@@ -121,8 +121,8 @@ class SecurityLocalDataSourceImpl implements SecurityLocalDataSource {
     final current = await getFailedAttempts();
     final updated = current + 1;
     await _storage.write(key: _keyFailedAttempts, value: updated.toString());
-    if (updated >= 5) {
-      final lockoutTime = DateTime.now().add(const Duration(seconds: 30));
+    if (updated >= SecurityPolicy.maxFailedAttempts) {
+      final lockoutTime = DateTime.now().add(SecurityPolicy.lockoutDuration);
       await _storage.write(
         key: _keyLockoutUntil,
         value: lockoutTime.millisecondsSinceEpoch.toString(),

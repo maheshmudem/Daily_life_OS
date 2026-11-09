@@ -1,9 +1,11 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../domain/entities/category_budget_entity.dart';
 import '../../domain/entities/money_account_entity.dart';
 import '../../domain/entities/money_category.dart';
 import '../../domain/entities/money_insights.dart';
+import '../../domain/entities/subscription_entity.dart';
 import '../../domain/usecases/get_transactions_and_budget_usecase.dart';
 import '../../domain/usecases/manage_budgets_and_accounts_usecase.dart';
 import '../../domain/usecases/manage_transactions_usecase.dart';
@@ -37,6 +39,7 @@ class MoneyBloc extends Bloc<MoneyEvent, MoneyState> {
   final UpdateAccountUseCase updateAccountUseCase;
   final DeleteAccountUseCase deleteAccountUseCase;
   final AddSubscriptionUseCase addSubscriptionUseCase;
+  final UpdateSubscriptionUseCase? updateSubscriptionUseCase;
   final DeleteSubscriptionUseCase deleteSubscriptionUseCase;
   final DeleteIouUseCase deleteIouUseCase;
   final GetMoneySettingsUseCase getMoneySettingsUseCase;
@@ -73,6 +76,7 @@ class MoneyBloc extends Bloc<MoneyEvent, MoneyState> {
     required this.updateAccountUseCase,
     required this.deleteAccountUseCase,
     required this.addSubscriptionUseCase,
+    this.updateSubscriptionUseCase,
     required this.deleteSubscriptionUseCase,
     required this.deleteIouUseCase,
     required this.getMoneySettingsUseCase,
@@ -105,6 +109,8 @@ class MoneyBloc extends Bloc<MoneyEvent, MoneyState> {
     on<DeleteIou>(_onDeleteIou);
     on<UpdateMoneySettings>(_onUpdateMoneySettings);
     on<ResetAllMoneyData>(_onResetAllMoneyData);
+    on<TransferBetweenAccounts>(_onTransferBetweenAccounts);
+    on<RecordSubscriptionPayment>(_onRecordSubscriptionPayment);
   }
 
   static DateTime _monthOf(DateTime date) => DateTime(date.year, date.month, 1);
@@ -256,7 +262,40 @@ class MoneyBloc extends Bloc<MoneyEvent, MoneyState> {
   }
 
   Future<void> _onSettleIou(SettleIou event, Emitter<MoneyState> emit) async {
-    await _mutate(emit, () => settleIouUseCase(event.iouId));
+    final current = state;
+    IouEntity? matchingIou;
+    if (event.recordTransaction && current is MoneyLoaded) {
+      for (final i in current.ious) {
+        if (i.id == event.iouId) {
+          matchingIou = i;
+          break;
+        }
+      }
+    }
+    await _mutate(
+      emit,
+      () async {
+        await settleIouUseCase(event.iouId);
+        if (event.recordTransaction && matchingIou != null) {
+          final isLent = matchingIou.isLent;
+          final cat = isLent ? MoneyCategory.otherIncome : MoneyCategory.other;
+          await addTransactionUseCase(
+            title: isLent
+                ? 'Collected IOU • ${matchingIou.person}'
+                : 'Settled IOU • ${matchingIou.person}',
+            category: cat.key,
+            amount: matchingIou.amount,
+            mode: 'UPI',
+            iconCodePoint: cat.icon.codePoint,
+            type: isLent ? 'income' : 'expense',
+            date: DateTime.now(),
+            note: matchingIou.cleanNote,
+          );
+        }
+      },
+      checkBudgetAlerts:
+          event.recordTransaction && matchingIou != null && !matchingIou.isLent,
+    );
   }
 
   Future<void> _onAddIou(AddIou event, Emitter<MoneyState> emit) async {
@@ -440,5 +479,98 @@ class MoneyBloc extends Bloc<MoneyEvent, MoneyState> {
       }
       await updateBudgetUseCase(0, 0);
     });
+  }
+
+  Future<void> _onTransferBetweenAccounts(
+    TransferBetweenAccounts event,
+    Emitter<MoneyState> emit,
+  ) async {
+    if (event.fromAccountId == event.toAccountId || event.amount <= 0) return;
+    await _mutate(emit, () async {
+      final accounts = await getAccountsUseCase();
+      MoneyAccountEntity? fromAcc;
+      MoneyAccountEntity? toAcc;
+      for (final acc in accounts) {
+        if (acc.id == event.fromAccountId) fromAcc = acc;
+        if (acc.id == event.toAccountId) toAcc = acc;
+      }
+      if (fromAcc == null || toAcc == null) return;
+
+      await updateAccountUseCase(
+        MoneyAccountEntity(
+          id: fromAcc.id,
+          name: fromAcc.name,
+          type: fromAcc.type,
+          balance: (fromAcc.balance - event.amount).clamp(0.0, double.infinity),
+          colorValue: fromAcc.colorValue,
+          iconCodePoint: fromAcc.iconCodePoint,
+        ),
+      );
+      await updateAccountUseCase(
+        MoneyAccountEntity(
+          id: toAcc.id,
+          name: toAcc.name,
+          type: toAcc.type,
+          balance: toAcc.balance + event.amount,
+          colorValue: toAcc.colorValue,
+          iconCodePoint: toAcc.iconCodePoint,
+        ),
+      );
+
+      final customNote = event.note?.trim();
+      final transferNote = customNote != null && customNote.isNotEmpty
+          ? '${fromAcc.name} → ${toAcc.name} • $customNote'
+          : '${fromAcc.name} → ${toAcc.name}';
+      await addTransactionUseCase(
+        title: 'Transfer: ${fromAcc.name} → ${toAcc.name}',
+        category: MoneyCategory.other.key,
+        amount: event.amount,
+        mode: 'Transfer',
+        iconCodePoint: Icons.swap_horiz_rounded.codePoint,
+        type: 'transfer',
+        date: DateTime.now(),
+        note: transferNote,
+      );
+    });
+  }
+
+  Future<void> _onRecordSubscriptionPayment(
+    RecordSubscriptionPayment event,
+    Emitter<MoneyState> emit,
+  ) async {
+    final sub = event.subscription;
+    final nextRenewal = sub.nextCycleDate;
+    await _mutate(emit, () async {
+      await addTransactionUseCase(
+        title: '${sub.name} Subscription',
+        category: MoneyCategory.bills.key,
+        amount: sub.amount,
+        mode: 'Card',
+        iconCodePoint: sub.iconCodePoint,
+        type: 'expense',
+        date: DateTime.now(),
+        note: 'Next renewal: ${nextRenewal.toIso8601String().split('T').first}',
+      );
+      final updated = SubscriptionEntity(
+        id: sub.id,
+        name: sub.name,
+        amount: sub.amount,
+        renewalDate: nextRenewal.toIso8601String(),
+        autoKillEnabled: sub.autoKillEnabled,
+        iconCodePoint: sub.iconCodePoint,
+      );
+      if (updateSubscriptionUseCase != null) {
+        await updateSubscriptionUseCase!(updated);
+      } else {
+        await deleteSubscriptionUseCase(sub.id);
+        await addSubscriptionUseCase(
+          name: sub.name,
+          amount: sub.amount,
+          renewalDate: nextRenewal,
+          iconCodePoint: sub.iconCodePoint,
+          autoKillEnabled: sub.autoKillEnabled,
+        );
+      }
+    }, checkBudgetAlerts: true);
   }
 }

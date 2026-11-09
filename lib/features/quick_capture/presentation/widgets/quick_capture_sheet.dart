@@ -1,34 +1,19 @@
-import 'package:drift/drift.dart' hide Column;
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../config/theme/app_colors.dart';
-import '../../config/theme/app_radius.dart';
-import '../../config/theme/app_spacing.dart';
-import '../../config/theme/app_text_styles.dart';
-import '../../di/injection_container.dart';
-import '../../features/today_hub/domain/entities/habit_entity.dart';
-import '../../features/today_hub/domain/usecases/manage_habits_usecase.dart';
-import '../constants/string_constants.dart';
-import '../database/app_database.dart';
-import '../notifications/notification_service.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-enum QuickCaptureMode { text, voice, scan }
+import '../../../../config/theme/app_colors.dart';
+import '../../../../config/theme/app_radius.dart';
+import '../../../../config/theme/app_spacing.dart';
+import '../../../../config/theme/app_text_styles.dart';
+import '../../../../core/constants/string_constants.dart';
+import '../../../../core/widgets/bloc_effect_listener.dart';
+import '../../../../di/injection_container.dart';
+import '../../domain/entities/quick_capture_entities.dart';
+import '../bloc/quick_capture_bloc.dart';
 
-enum DetectedIntent { expense, reminder, habit, note }
-
-/// Result returned when QuickCaptureSheet logs an item so the caller
-/// can refresh state and optionally jump to the target tab.
-class QuickCaptureResult {
-  final DetectedIntent intent;
-  final String summary;
-  final int targetTabIndex; // 0: Today, 1: Planner, 2: Money, 3: Notes
-
-  const QuickCaptureResult({
-    required this.intent,
-    required this.summary,
-    required this.targetTabIndex,
-  });
-}
+export '../../domain/entities/quick_capture_entities.dart';
 
 class QuickCaptureSheet extends StatefulWidget {
   final QuickCaptureMode initialMode;
@@ -56,6 +41,7 @@ class QuickCaptureSheet extends StatefulWidget {
 
 class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
   late QuickCaptureMode _mode;
+  late final QuickCaptureBloc _bloc;
   final TextEditingController _textController = TextEditingController();
   final TextEditingController _amountController = TextEditingController(
     text: '450',
@@ -183,6 +169,7 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
   @override
   void initState() {
     super.initState();
+    _bloc = sl<QuickCaptureBloc>();
     _mode = widget.initialMode;
     if (_mode == QuickCaptureMode.voice) {
       _isRecording = true;
@@ -191,13 +178,14 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
       _applyScanTemplate(0);
     }
 
-    _textController.addListener(_parseIntentFromText);
+    _textController.addListener(_dispatchParseIntent);
   }
 
   @override
   void dispose() {
     _textController.dispose();
     _amountController.dispose();
+    _bloc.close();
     super.dispose();
   }
 
@@ -221,321 +209,64 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
     });
   }
 
-  void _parseIntentFromText() {
-    final raw = _textController.text;
-    final text = raw.toLowerCase();
+  void _dispatchParseIntent() {
+    _bloc.add(
+      ParseQuickCaptureText(
+        _textController.text,
+        manualOverride: _manualIntentOverride,
+      ),
+    );
+  }
 
-    // 1. Extract amount if present
-    final numMatch =
-        RegExp(
-          r'(?:₹|rs\.?\s*|spent\s+|paid\s+|earned\s+|cost\s+|bill\s+)(\d+(?:\.\d+)?)',
-          caseSensitive: false,
-        ).firstMatch(raw) ??
-        RegExp(r'\b(\d{2,6}(?:\.\d{1,2})?)\b').firstMatch(raw);
-
-    if (numMatch != null) {
-      final parsedAmt = numMatch.group(1);
-      if (parsedAmt != null && parsedAmt.isNotEmpty) {
-        _amountController.text = parsedAmt;
-      }
-    }
-
-    // 2. Extract time if present (e.g., "5pm", "5:30 pm", "10 am")
-    final timeMatch = RegExp(
-      r'\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b',
-      caseSensitive: false,
-    ).firstMatch(raw);
-    if (timeMatch != null) {
-      final hr = int.tryParse(timeMatch.group(1)!) ?? 5;
-      final min = timeMatch.group(2) ?? '00';
-      final mer = timeMatch.group(3)!.toUpperCase();
-      _reminderTime = '${hr.toString().padLeft(2, '0')}:$min $mer';
-    }
-
-    // 3. Extract date ("tomorrow" vs "today")
-    if (text.contains('tomorrow') || text.contains('tmrw')) {
-      _isTomorrow = true;
-    } else if (text.contains('today')) {
-      _isTomorrow = false;
-    }
-
-    // 4. Extract priority
-    if (text.contains('urgent') || text.contains('asap')) {
-      _reminderPriority = 'urgent';
-    } else if (text.contains('high') || text.contains('important')) {
-      _reminderPriority = 'high';
-    }
-
-    // 5. Extract expense category & payment mode
-    if (text.contains('earned') ||
-        text.contains('salary') ||
-        text.contains('income') ||
-        text.contains('received')) {
-      _isIncome = true;
-    } else if (text.contains('spent') ||
-        text.contains('paid') ||
-        text.contains('bought')) {
-      _isIncome = false;
-    }
-
-    if (text.contains('bill') ||
-        text.contains('electr') ||
-        text.contains('wifi') ||
-        text.contains('rent')) {
-      _expenseCategory = 'bills';
-    } else if (text.contains('food') ||
-        text.contains('coffee') ||
-        text.contains('lunch') ||
-        text.contains('dinner') ||
-        text.contains('grocery')) {
-      _expenseCategory = 'food';
-    } else if (text.contains('cab') ||
-        text.contains('uber') ||
-        text.contains('metro') ||
-        text.contains('fuel') ||
-        text.contains('taxi')) {
-      _expenseCategory = 'transport';
-    } else if (text.contains('shop') ||
-        text.contains('amazon') ||
-        text.contains('charger')) {
-      _expenseCategory = 'shopping';
-    }
-
-    if (text.contains('cash')) {
-      _paymentMode = 'Cash';
-    } else if (text.contains('card') || text.contains('credit')) {
-      _paymentMode = 'Card';
-    } else if (text.contains('upi') || text.contains('gpay')) {
-      _paymentMode = 'UPI';
-    }
-
-    // 6. Extract Note tags
-    if (text.contains('@market')) {
-      _noteTag = '@Market';
-    } else if (text.contains('@office') || text.contains('@work')) {
-      _noteTag = '@Office';
-    } else if (text.contains('@home')) {
-      _noteTag = '@Home';
-    } else if (text.contains('password') ||
-        text.contains('pin') ||
-        text.contains('secret') ||
-        text.contains('warranty')) {
-      _noteTag = '@Vault';
-    }
-
-    // 7. Determine primary intent (unless manually overridden by user)
-    DetectedIntent autoIntent;
-    if (text.contains('spent') ||
-        text.contains('paid') ||
-        text.contains('bought') ||
-        text.contains('earned') ||
-        text.contains('salary') ||
-        text.contains('rs') ||
-        text.contains('₹') ||
-        text.contains('bill') ||
-        text.contains('cost')) {
-      autoIntent = DetectedIntent.expense;
-    } else if (text.contains('habit') ||
-        text.contains('routine') ||
-        text.contains('every day') ||
-        text.contains('daily')) {
-      autoIntent = DetectedIntent.habit;
-    } else if (text.contains('note') ||
-        text.contains('idea') ||
-        text.contains('@market') ||
-        text.contains('@office') ||
-        text.contains('@home') ||
-        text.contains('password') ||
-        text.contains('secret')) {
-      autoIntent = DetectedIntent.note;
-    } else if (text.contains('remind') ||
-        text.contains('at ') ||
-        text.contains('tomorrow') ||
-        text.contains('pm') ||
-        text.contains('am') ||
-        text.contains('call') ||
-        text.contains('meeting') ||
-        text.contains('task')) {
-      autoIntent = DetectedIntent.reminder;
-    } else {
-      autoIntent = _manualIntentOverride ?? DetectedIntent.reminder;
-    }
-
+  void _applyParsedIntent(ParsedQuickCaptureIntentEntity parsed) {
     setState(() {
-      _detectedIntent = _manualIntentOverride ?? autoIntent;
+      if (parsed.extractedAmount != null) {
+        _amountController.text = parsed.extractedAmount!;
+      }
+      if (parsed.extractedTime != null) {
+        _reminderTime = parsed.extractedTime!;
+      }
+      if (parsed.isTomorrow != null) {
+        _isTomorrow = parsed.isTomorrow!;
+      }
+      if (parsed.reminderPriority != null) {
+        _reminderPriority = parsed.reminderPriority!;
+      }
+      if (parsed.isIncome != null) {
+        _isIncome = parsed.isIncome!;
+      }
+      if (parsed.expenseCategory != null) {
+        _expenseCategory = parsed.expenseCategory!;
+      }
+      if (parsed.paymentMode != null) {
+        _paymentMode = parsed.paymentMode!;
+      }
+      if (parsed.noteTag != null) {
+        _noteTag = parsed.noteTag!;
+      }
+      _detectedIntent = _manualIntentOverride ?? parsed.detectedIntent;
     });
   }
 
-  String _cleanTitleText(String raw) {
-    final trimmed = raw.trim();
-    if (trimmed.isEmpty) {
-      return switch (_detectedIntent) {
-        DetectedIntent.expense =>
-          _isIncome
-              ? 'Quick Income'
-              : 'Quick Expense (${_expenseCategory.toUpperCase()})',
-        DetectedIntent.reminder => 'Quick Reminder',
-        DetectedIntent.habit => 'Daily Micro-Routine',
-        DetectedIntent.note => 'Quick Voice / Text Note',
-      };
-    }
-    return trimmed;
-  }
-
   Future<void> _submitQuickCapture(BuildContext context) async {
-    HapticFeedback.mediumImpact();
-    final effectiveText = _cleanTitleText(_textController.text);
-    final now = DateTime.now();
-    final nowIso = now.toIso8601String();
-    final todayIso = nowIso.substring(0, 10);
-    final tomorrowIso = now
-        .add(const Duration(days: 1))
-        .toIso8601String()
-        .substring(0, 10);
-
-    int targetTabIndex = 0;
-    String summaryText = effectiveText;
-
-    if (sl.isRegistered<AppDatabase>()) {
-      try {
-        final db = sl<AppDatabase>();
-
-        switch (_detectedIntent) {
-          case DetectedIntent.expense:
-            final parsedAmount =
-                double.tryParse(_amountController.text.trim()) ?? 250.0;
-            final amount = parsedAmount <= 0 ? 250.0 : parsedAmount;
-            await db
-                .into(db.transactions)
-                .insert(
-                  TransactionsCompanion.insert(
-                    title: effectiveText,
-                    category: _expenseCategory,
-                    amount: amount,
-                    mode: _paymentMode,
-                    iconCodePoint: _isIncome
-                        ? Icons.south_west_rounded.codePoint
-                        : Icons.bolt_rounded.codePoint,
-                    date: nowIso,
-                    type: Value(_isIncome ? 'income' : 'expense'),
-                    note: Value('Captured via ${_mode.name.toUpperCase()}'),
-                  ),
-                );
-            targetTabIndex = 2; // Money tab
-            summaryText =
-                '${_isIncome ? "Income" : "Expense"} ₹${amount.toStringAsFixed(0)} ($effectiveText)';
-            break;
-
-          case DetectedIntent.reminder:
-            final targetDate = _isTomorrow ? tomorrowIso : todayIso;
-            await db
-                .into(db.plannerItems)
-                .insert(
-                  PlannerItemsCompanion.insert(
-                    title: effectiveText,
-                    date: targetDate,
-                    startTime: Value(_reminderTime),
-                    category: _reminderCategory,
-                    priority: Value(_reminderPriority),
-                    colorValue: AppColors.moduleTime.toARGB32(),
-                    iconCodePoint: Icons.notifications_active_rounded.codePoint,
-                    notes: Value('Captured via ${_mode.name.toUpperCase()}'),
-                  ),
-                );
-            if (!_isTomorrow) {
-              await db
-                  .into(db.timelineItems)
-                  .insert(
-                    TimelineItemsCompanion.insert(
-                      time: _reminderTime,
-                      title: effectiveText,
-                      category: _reminderCategory,
-                      colorValue: AppColors.moduleTime.toARGB32(),
-                      iconCodePoint:
-                          Icons.notifications_active_rounded.codePoint,
-                      action: 'Start',
-                      date: todayIso,
-                    ),
-                  );
-            }
-            if (sl.isRegistered<NotificationService>()) {
-              final scheduledTime = now.add(const Duration(hours: 1));
-              await sl<NotificationService>().scheduleNotification(
-                id: effectiveText.hashCode & 0x7FFFFFFF,
-                title: 'Reminder: $effectiveText',
-                body: 'Scheduled for $_reminderTime ($_reminderCategory)',
-                scheduledDate: scheduledTime,
-              );
-            }
-            targetTabIndex = 1; // Planner tab
-            summaryText =
-                '"$effectiveText" (${_isTomorrow ? "Tomorrow" : "Today"} at $_reminderTime)';
-            break;
-
-          case DetectedIntent.habit:
-            if (sl.isRegistered<AddHabitUseCase>()) {
-              await sl<AddHabitUseCase>()(
-                HabitEntity(
-                  id: 0,
-                  title: effectiveText,
-                  description: 'Created via Quick Capture',
-                  iconCodePoint: Icons.bolt_rounded.codePoint,
-                  colorValue: AppColors.primary.toARGB32(),
-                  streakDays: 0,
-                  isDoneToday: false,
-                  createdAt: nowIso,
-                  category: _habitCategory,
-                  scheduleType: 'daily',
-                ),
-              );
-            } else {
-              await db
-                  .into(db.habits)
-                  .insert(
-                    HabitsCompanion.insert(
-                      title: effectiveText,
-                      iconCodePoint: Icons.bolt_rounded.codePoint,
-                      colorValue: AppColors.primary.toARGB32(),
-                      createdAt: nowIso,
-                    ),
-                  );
-            }
-            targetTabIndex = 0; // Today Hub tab
-            summaryText = 'Habit "$effectiveText" ($_habitCategory)';
-            break;
-
-          case DetectedIntent.note:
-            await db
-                .into(db.notes)
-                .insert(
-                  NotesCompanion.insert(
-                    title: effectiveText.length > 48
-                        ? '${effectiveText.substring(0, 48)}...'
-                        : effectiveText,
-                    content: effectiveText,
-                    colorValue: AppColors.moduleNotes.toARGB32(),
-                    isPinned: Value(_pinNote),
-                    tags: Value(_noteTag),
-                    createdAt: nowIso,
-                    updatedAt: nowIso,
-                  ),
-                );
-            targetTabIndex = 3; // Notes tab
-            summaryText = 'Note "$effectiveText" ($_noteTag)';
-            break;
-        }
-      } catch (_) {}
-    }
-
-    if (context.mounted) {
-      Navigator.of(context).pop(
-        QuickCaptureResult(
-          intent: _detectedIntent,
-          summary: summaryText,
-          targetTabIndex: targetTabIndex,
-        ),
-      );
-    }
+    unawaited(HapticFeedback.mediumImpact());
+    final submission = QuickCaptureSubmissionEntity(
+      mode: _mode,
+      intent: _detectedIntent,
+      rawText: _textController.text,
+      amountText: _amountController.text,
+      isIncome: _isIncome,
+      expenseCategory: _expenseCategory,
+      paymentMode: _paymentMode,
+      isTomorrow: _isTomorrow,
+      reminderTime: _reminderTime,
+      reminderPriority: _reminderPriority,
+      reminderCategory: _reminderCategory,
+      habitCategory: _habitCategory,
+      noteTag: _noteTag,
+      pinNote: _pinNote,
+    );
+    _bloc.add(SubmitQuickCapture(submission));
   }
 
   @override
@@ -549,243 +280,339 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
         : AppColors.textCaption;
     final dividerColor = isDark ? AppColors.darkDivider : AppColors.divider;
 
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: SafeArea(
-        top: false,
-        child: SingleChildScrollView(
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.darkCardBackground : Colors.white,
-              borderRadius: AppRadius.topXxl,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.35),
-                  blurRadius: 30,
-                  offset: const Offset(0, -6),
-                ),
-              ],
+    return BlocProvider<QuickCaptureBloc>.value(
+      value: _bloc,
+      child: BlocEffectListener<QuickCaptureEffect>(
+        effects: _bloc.effects,
+        listener: (context, effect) {
+          switch (effect) {
+            case QuickCaptureSubmitted(:final result):
+              Navigator.of(context).pop(result);
+          }
+        },
+        child: BlocListener<QuickCaptureBloc, QuickCaptureState>(
+          listenWhen: (previous, current) =>
+              previous.parsedIntent != current.parsedIntent &&
+              current.parsedIntent != null,
+          listener: (context, state) => _applyParsedIntent(state.parsedIntent!),
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Drag handle
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: dividerColor,
-                      borderRadius: AppRadius.radiusFull,
-                    ),
+            child: SafeArea(
+              top: false,
+              child: SingleChildScrollView(
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.pageGutter,
+                    AppSpacing.sm + AppSpacing.xxxs,
+                    AppSpacing.pageGutter,
+                    AppSpacing.lg,
                   ),
-                ),
-                const SizedBox(height: 14),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppColors.darkCardBackground
+                        : AppColors.cardBackground,
+                    borderRadius: AppRadius.topXxl,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.darkScaffoldBackground.withValues(
+                          alpha: 0.35,
+                        ),
+                        blurRadius: AppSpacing.xxl,
+                        offset: const Offset(0, -AppSpacing.xxs),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Drag handle
+                      Center(
+                        child: Container(
+                          width: AppSpacing.xxl + AppSpacing.xxs,
+                          height: AppSpacing.xxs,
+                          decoration: BoxDecoration(
+                            color: dividerColor,
+                            borderRadius: AppRadius.radiusFull,
+                          ),
+                        ),
+                      ),
+                      AppSpacing.gapH12,
 
-                // Header with Title, Active Intent Badge & 3 Mode Tabs
-                Row(
-                  children: [
-                    Expanded(
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 4,
-                        crossAxisAlignment: WrapCrossAlignment.center,
+                      // Header with Title, Active Intent Badge & 3 Mode Tabs
+                      Row(
                         children: [
-                          Text(
-                            StringConstants.quickCaptureTitle,
-                            style: AppTextStyles.titleLarge.copyWith(
-                              color: headingColor,
-                              fontSize: 17,
+                          Expanded(
+                            child: Wrap(
+                              spacing: AppSpacing.xs,
+                              runSpacing: AppSpacing.xxs,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                Text(
+                                  StringConstants.quickCaptureTitle,
+                                  style: AppTextStyles.titleLarge.copyWith(
+                                    color: headingColor,
+                                  ),
+                                ),
+                                _buildIntentBadge(),
+                              ],
                             ),
                           ),
-                          _buildIntentBadge(),
+                          AppSpacing.gapW8,
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _buildModeTab(
+                                Icons.keyboard_rounded,
+                                'Type',
+                                QuickCaptureMode.text,
+                                isDark,
+                              ),
+                              const SizedBox(width: AppSpacing.xxs + 2),
+                              _buildModeTab(
+                                Icons.mic_rounded,
+                                'Speak',
+                                QuickCaptureMode.voice,
+                                isDark,
+                              ),
+                              const SizedBox(width: AppSpacing.xxs + 2),
+                              _buildModeTab(
+                                Icons.document_scanner_rounded,
+                                'Scan',
+                                QuickCaptureMode.scan,
+                                isDark,
+                              ),
+                            ],
+                          ),
                         ],
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildModeTab(
-                          Icons.keyboard_rounded,
-                          'Type',
-                          QuickCaptureMode.text,
-                          isDark,
-                        ),
-                        const SizedBox(width: 6),
-                        _buildModeTab(
-                          Icons.mic_rounded,
-                          'Speak',
-                          QuickCaptureMode.voice,
-                          isDark,
-                        ),
-                        const SizedBox(width: 6),
-                        _buildModeTab(
-                          Icons.document_scanner_rounded,
-                          'Scan',
-                          QuickCaptureMode.scan,
-                          isDark,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
+                      AppSpacing.gapH12,
 
-                // Dynamic Body based on Mode
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 240),
-                  curve: Curves.easeOutCubic,
-                  alignment: Alignment.topCenter,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (_mode == QuickCaptureMode.voice) ...[
-                        _buildVoiceRecordingView(
-                          isDark,
-                          headingColor,
-                          captionColor,
+                      // Dynamic Body based on Mode
+                      AnimatedSize(
+                        duration: const Duration(milliseconds: 240),
+                        curve: Curves.easeOutCubic,
+                        alignment: Alignment.topCenter,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (_mode == QuickCaptureMode.voice) ...[
+                              _buildVoiceRecordingView(
+                                isDark,
+                                headingColor,
+                                captionColor,
+                              ),
+                              AppSpacing.gapH8,
+                            ] else if (_mode == QuickCaptureMode.scan) ...[
+                              _buildScanView(
+                                isDark,
+                                headingColor,
+                                captionColor,
+                                dividerColor,
+                              ),
+                              AppSpacing.gapH8,
+                            ],
+                            _buildTextInputView(
+                              isDark,
+                              headingColor,
+                              captionColor,
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 10),
-                      ] else if (_mode == QuickCaptureMode.scan) ...[
-                        _buildScanView(
-                          isDark,
-                          headingColor,
-                          captionColor,
-                          dividerColor,
+                      ),
+                      AppSpacing.gapH12,
+
+                      // Target Module Selector Pills
+                      Text(
+                        StringConstants.quickCaptureModuleLabel,
+                        style: AppTextStyles.overline.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: captionColor,
                         ),
-                        const SizedBox(height: 10),
-                      ],
-                      // Always show the editable text box so Voice transcripts & OCR scans
-                      // can be inspected and refined immediately!
-                      _buildTextInputView(isDark, headingColor, captionColor),
+                      ),
+                      AppSpacing.gapH8,
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: DetectedIntent.values.map((intent) {
+                            final selected = _detectedIntent == intent;
+                            final color = _intentColor(intent);
+                            return Padding(
+                              padding: const EdgeInsets.only(
+                                right: AppSpacing.xs,
+                              ),
+                              child: ChoiceChip(
+                                selected: selected,
+                                showCheckmark: false,
+                                avatar: Icon(
+                                  _intentIcon(intent),
+                                  size: AppSpacing.sm + AppSpacing.xxxs,
+                                  color: selected ? AppColors.textWhite : color,
+                                ),
+                                label: Text(_intentLabel(intent)),
+                                labelStyle: AppTextStyles.captionBold.copyWith(
+                                  color: selected
+                                      ? AppColors.textWhite
+                                      : headingColor,
+                                ),
+                                selectedColor: color,
+                                backgroundColor: isDark
+                                    ? AppColors.darkSurfaceSecondary
+                                    : AppColors.surfaceSecondary,
+                                visualDensity: VisualDensity.compact,
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                                onSelected: (_) {
+                                  HapticFeedback.selectionClick();
+                                  setState(() {
+                                    _manualIntentOverride = intent;
+                                    _detectedIntent = intent;
+                                  });
+                                },
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                      AppSpacing.gapH8,
+
+                      // Context-Aware Smart Parameter Editor Strip
+                      _buildSmartParametersCard(
+                        isDark: isDark,
+                        headingColor: headingColor,
+                        captionColor: captionColor,
+                        dividerColor: dividerColor,
+                      ),
+                      AppSpacing.gapH12,
+
+                      // Quick Suggestion Chips
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            _buildQuickChip(
+                              'Spent ₹450 Electricity',
+                              isDark,
+                              () {
+                                _manualIntentOverride = null;
+                                _textController.text =
+                                    'Spent ₹450 on electricity bill';
+                              },
+                            ),
+                            AppSpacing.gapW8,
+                            _buildQuickChip(
+                              'Call Bank Tomorrow 5PM',
+                              isDark,
+                              () {
+                                _manualIntentOverride = null;
+                                _textController.text =
+                                    'Call bank tomorrow at 5pm';
+                              },
+                            ),
+                            AppSpacing.gapW8,
+                            _buildQuickChip(
+                              'Daily Habit: Read 20m',
+                              isDark,
+                              () {
+                                _manualIntentOverride = null;
+                                _textController.text =
+                                    'Daily habit Read 20 mins before bed';
+                              },
+                            ),
+                            AppSpacing.gapW8,
+                            _buildQuickChip('Buy charger @Market', isDark, () {
+                              _manualIntentOverride = null;
+                              _textController.text =
+                                  'Buy phone charger @Market';
+                            }),
+                          ],
+                        ),
+                      ),
+                      AppSpacing.gapH12,
+
+                      // Save / Execute Button (+ inline failure message)
+                      BlocBuilder<QuickCaptureBloc, QuickCaptureState>(
+                        buildWhen: (previous, current) =>
+                            previous.submitStatus != current.submitStatus ||
+                            previous.failure != current.failure,
+                        builder: (context, captureState) {
+                          final failure = captureState.failure;
+                          final isSubmitting = captureState.isSubmitting;
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              if (failure != null) ...[
+                                Row(
+                                  key: const ValueKey('quick_capture_error'),
+                                  children: [
+                                    const Icon(
+                                      Icons.error_outline_rounded,
+                                      size: AppSpacing.md,
+                                      color: AppColors.error,
+                                    ),
+                                    AppSpacing.gapW8,
+                                    Expanded(
+                                      child: Text(
+                                        failure.message,
+                                        style: AppTextStyles.bodySmall.copyWith(
+                                          color: AppColors.error,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                AppSpacing.gapH8,
+                              ],
+                              SizedBox(
+                                height: AppSpacing.huge,
+                                child: ElevatedButton.icon(
+                                  onPressed: isSubmitting
+                                      ? null
+                                      : () => _submitQuickCapture(context),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: _intentColor(
+                                      _detectedIntent,
+                                    ),
+                                    foregroundColor: AppColors.textWhite,
+                                    disabledBackgroundColor: _intentColor(
+                                      _detectedIntent,
+                                    ).withValues(alpha: 0.6),
+                                    disabledForegroundColor:
+                                        AppColors.textWhite,
+                                    shape: const RoundedRectangleBorder(
+                                      borderRadius: AppRadius.radiusMd,
+                                    ),
+                                    elevation: 0,
+                                  ),
+                                  icon: isSubmitting
+                                      ? const SizedBox.square(
+                                          dimension: AppSpacing.md,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: AppColors.textWhite,
+                                          ),
+                                        )
+                                      : const Icon(Icons.bolt_rounded),
+                                  label: Text(
+                                    'Log to ${_intentLabel(_detectedIntent)} (Instant)',
+                                    style: AppTextStyles.titleSmall.copyWith(
+                                      color: AppColors.textWhite,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
-
-                // Target Module Selector Pills (Auto-detected + Manual Override)
-                Text(
-                  'SAVE TO MODULE (AUTO-DETECTED OR TAP TO CHANGE)',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.6,
-                    color: captionColor,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: DetectedIntent.values.map((intent) {
-                      final selected = _detectedIntent == intent;
-                      final color = _intentColor(intent);
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: ChoiceChip(
-                          selected: selected,
-                          showCheckmark: false,
-                          avatar: Icon(
-                            _intentIcon(intent),
-                            size: 14,
-                            color: selected ? Colors.white : color,
-                          ),
-                          label: Text(_intentLabel(intent)),
-                          labelStyle: TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w700,
-                            color: selected ? Colors.white : headingColor,
-                          ),
-                          selectedColor: color,
-                          backgroundColor: isDark
-                              ? AppColors.darkSurfaceSecondary
-                              : AppColors.surfaceSecondary,
-                          visualDensity: VisualDensity.compact,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                          onSelected: (_) {
-                            HapticFeedback.selectionClick();
-                            setState(() {
-                              _manualIntentOverride = intent;
-                              _detectedIntent = intent;
-                            });
-                          },
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-                const SizedBox(height: 10),
-
-                // Context-Aware Smart Parameter Editor Strip
-                _buildSmartParametersCard(
-                  isDark: isDark,
-                  headingColor: headingColor,
-                  captionColor: captionColor,
-                  dividerColor: dividerColor,
-                ),
-                const SizedBox(height: 12),
-
-                // Quick Suggestion Chips
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _buildQuickChip('Spent ₹450 Electricity', isDark, () {
-                        _manualIntentOverride = null;
-                        _textController.text = 'Spent ₹450 on electricity bill';
-                      }),
-                      AppSpacing.gapW8,
-                      _buildQuickChip('Call Bank Tomorrow 5PM', isDark, () {
-                        _manualIntentOverride = null;
-                        _textController.text = 'Call bank tomorrow at 5pm';
-                      }),
-                      AppSpacing.gapW8,
-                      _buildQuickChip('Daily Habit: Read 20m', isDark, () {
-                        _manualIntentOverride = null;
-                        _textController.text =
-                            'Daily habit Read 20 mins before bed';
-                      }),
-                      AppSpacing.gapW8,
-                      _buildQuickChip('Buy charger @Market', isDark, () {
-                        _manualIntentOverride = null;
-                        _textController.text = 'Buy phone charger @Market';
-                      }),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 14),
-
-                // Save / Execute Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton.icon(
-                    onPressed: () => _submitQuickCapture(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _intentColor(_detectedIntent),
-                      foregroundColor: Colors.white,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: AppRadius.radiusMd,
-                      ),
-                      elevation: 0,
-                    ),
-                    icon: const Icon(Icons.bolt_rounded),
-                    label: Text(
-                      'Log to ${_intentLabel(_detectedIntent)} (Instant)',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13.5,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -813,17 +640,17 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
         autofocus: _mode == QuickCaptureMode.text,
         maxLines: 2,
         minLines: 1,
-        style: TextStyle(color: headingColor, fontSize: 14.5),
+        style: AppTextStyles.bodyMedium.copyWith(color: headingColor),
         decoration: InputDecoration(
           hintText: StringConstants.quickCaptureHint,
-          hintStyle: TextStyle(color: captionColor, fontSize: 13),
+          hintStyle: AppTextStyles.bodySmall.copyWith(color: captionColor),
           prefixIcon: Icon(
             _mode == QuickCaptureMode.voice
                 ? Icons.record_voice_over_rounded
                 : (_mode == QuickCaptureMode.scan
                       ? Icons.document_scanner_rounded
                       : Icons.edit_note_rounded),
-            size: 18,
+            size: AppSpacing.lg - AppSpacing.xxxs,
             color: _intentColor(_detectedIntent),
           ),
           suffixIcon: _textController.text.isNotEmpty
@@ -837,14 +664,14 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                   },
                   icon: Icon(
                     Icons.close_rounded,
-                    size: 16,
+                    size: AppSpacing.md,
                     color: captionColor,
                   ),
                 )
               : null,
           contentPadding: const EdgeInsets.symmetric(
-            horizontal: 14,
-            vertical: 12,
+            horizontal: AppSpacing.sm + AppSpacing.xxxs,
+            vertical: AppSpacing.sm,
           ),
           filled: false,
           border: InputBorder.none,
@@ -862,7 +689,7 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
   ) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: AppSpacing.edgeInsetsAllSm,
       decoration: BoxDecoration(
         color: AppColors.voiceWaveform.withValues(alpha: isDark ? 0.15 : 0.08),
         borderRadius: AppRadius.radiusLg,
@@ -874,7 +701,6 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
         children: [
           Row(
             children: [
-              // Interactive Mic Toggle Button
               GestureDetector(
                 onTap: () {
                   HapticFeedback.lightImpact();
@@ -885,8 +711,8 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 220),
-                  width: 44,
-                  height: 44,
+                  width: AppSpacing.xxxl + AppSpacing.xxs,
+                  height: AppSpacing.xxxl + AppSpacing.xxs,
                   decoration: BoxDecoration(
                     color: _isRecording
                         ? AppColors.voiceWaveform
@@ -898,7 +724,7 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                               color: AppColors.voiceWaveform.withValues(
                                 alpha: 0.35,
                               ),
-                              blurRadius: 12,
+                              blurRadius: AppSpacing.sm,
                             ),
                           ]
                         : null,
@@ -906,13 +732,13 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                   child: Icon(
                     _isRecording ? Icons.mic_rounded : Icons.mic_off_rounded,
                     color: _isRecording
-                        ? Colors.white
+                        ? AppColors.textWhite
                         : AppColors.voiceWaveform,
-                    size: 22,
+                    size: AppSpacing.lg + AppSpacing.xxxs,
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              AppSpacing.gapW12,
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -921,14 +747,12 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                       _isRecording
                           ? 'Listening... Tap a voice phrase or dictate below'
                           : 'Voice capture paused — Tap mic to resume',
-                      style: const TextStyle(
-                        fontSize: 13,
+                      style: AppTextStyles.bodySmall.copyWith(
                         fontWeight: FontWeight.w700,
                         color: AppColors.voiceWaveform,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    // Deterministic animated waveform bars (settles cleanly in tests)
+                    AppSpacing.gapH4,
                     Row(
                       children: List.generate(14, (index) {
                         final activeHeight = _isRecording
@@ -956,28 +780,23 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          // Interactive Voice Phrases to simulate instant speech-to-intent
+          AppSpacing.gapH8,
           Wrap(
-            spacing: 6,
-            runSpacing: 6,
+            spacing: AppSpacing.xxs + AppSpacing.xxxs,
+            runSpacing: AppSpacing.xxs + AppSpacing.xxxs,
             children: _voiceSamplePhrases.map((phrase) {
               return ActionChip(
                 visualDensity: VisualDensity.compact,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 backgroundColor: isDark
                     ? AppColors.darkCardBackground
-                    : Colors.white,
+                    : AppColors.cardBackground,
                 side: BorderSide(
                   color: AppColors.voiceWaveform.withValues(alpha: 0.3),
                 ),
                 label: Text(
                   phrase.label,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: headingColor,
-                  ),
+                  style: AppTextStyles.label.copyWith(color: headingColor),
                 ),
                 onPressed: () {
                   HapticFeedback.selectionClick();
@@ -1003,7 +822,7 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
   ) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: AppSpacing.edgeInsetsAllSm,
       decoration: BoxDecoration(
         color: AppColors.moduleMoney.withValues(alpha: isDark ? 0.14 : 0.08),
         borderRadius: AppRadius.radiusLg,
@@ -1015,41 +834,40 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
           Row(
             children: [
               Container(
-                width: 38,
-                height: 38,
+                width: AppSpacing.xxl + AppSpacing.xs,
+                height: AppSpacing.xxl + AppSpacing.xs,
                 decoration: BoxDecoration(
                   color: AppColors.moduleMoney.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: AppRadius.borderSm,
                 ),
                 child: const Icon(
                   Icons.document_scanner_rounded,
-                  size: 20,
+                  size: AppSpacing.lg,
                   color: AppColors.moduleMoney,
                 ),
               ),
-              const SizedBox(width: 10),
+              AppSpacing.gapW8,
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Camera OCR Text & Bill Grabber',
-                      style: TextStyle(
-                        fontSize: 13.5,
+                      style: AppTextStyles.titleSmall.copyWith(
                         fontWeight: FontWeight.w800,
                         color: AppColors.moduleMoney,
                       ),
                     ),
                     Text(
                       'Select a receipt/document scan preset or edit OCR text below',
-                      style: TextStyle(fontSize: 11, color: captionColor),
+                      style: AppTextStyles.label.copyWith(color: captionColor),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          AppSpacing.gapH8,
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -1057,7 +875,7 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                 final tpl = _scanTemplates[index];
                 final isSelected = _selectedScanPreset == index;
                 return Padding(
-                  padding: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.only(right: AppSpacing.xs),
                   child: InkWell(
                     onTap: () {
                       HapticFeedback.selectionClick();
@@ -1067,15 +885,15 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 8,
+                        horizontal: AppSpacing.xs + AppSpacing.xxxs,
+                        vertical: AppSpacing.xs,
                       ),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? AppColors.moduleMoney
                             : (isDark
                                   ? AppColors.darkCardBackground
-                                  : Colors.white),
+                                  : AppColors.cardBackground),
                         borderRadius: AppRadius.radiusMd,
                         border: Border.all(
                           color: isSelected
@@ -1088,31 +906,30 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                         children: [
                           Icon(
                             tpl.icon,
-                            size: 16,
+                            size: AppSpacing.md,
                             color: isSelected
-                                ? Colors.white
+                                ? AppColors.textWhite
                                 : AppColors.moduleMoney,
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: AppSpacing.xxs + 2),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 tpl.title,
-                                style: TextStyle(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w700,
+                                style: AppTextStyles.captionBold.copyWith(
                                   color: isSelected
-                                      ? Colors.white
+                                      ? AppColors.textWhite
                                       : headingColor,
                                 ),
                               ),
                               Text(
                                 tpl.subtitle,
-                                style: TextStyle(
-                                  fontSize: 9.5,
+                                style: AppTextStyles.label.copyWith(
                                   color: isSelected
-                                      ? Colors.white.withValues(alpha: 0.85)
+                                      ? AppColors.textWhite.withValues(
+                                          alpha: 0.85,
+                                        )
                                       : captionColor,
                                 ),
                               ),
@@ -1138,7 +955,10 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
     required Color dividerColor,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs + AppSpacing.xxxs,
+      ),
       decoration: BoxDecoration(
         color: isDark
             ? AppColors.darkSurfaceSecondary
@@ -1152,7 +972,6 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
           children: [
             Row(
               children: [
-                // Expense vs Income toggle
                 ChoiceChip(
                   label: const Text('Expense'),
                   selected: !_isIncome,
@@ -1161,7 +980,7 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   onSelected: (_) => setState(() => _isIncome = false),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: AppSpacing.xxs + 2),
                 ChoiceChip(
                   label: const Text('Income'),
                   selected: _isIncome,
@@ -1170,16 +989,14 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   onSelected: (_) => setState(() => _isIncome = true),
                 ),
-                const SizedBox(width: 10),
-                // Editable Amount Input
+                AppSpacing.gapW8,
                 Expanded(
                   child: SizedBox(
-                    height: 32,
+                    height: AppSpacing.xxl,
                     child: TextField(
                       controller: _amountController,
                       keyboardType: TextInputType.number,
-                      style: TextStyle(
-                        fontSize: 13,
+                      style: AppTextStyles.bodySmall.copyWith(
                         fontWeight: FontWeight.w800,
                         color: headingColor,
                       ),
@@ -1187,16 +1004,15 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                         isDense: true,
                         prefixText: '₹ ',
                         labelText: 'Amount',
-                        labelStyle: TextStyle(
-                          fontSize: 11,
+                        labelStyle: AppTextStyles.label.copyWith(
                           color: captionColor,
                         ),
                         contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 6,
+                          horizontal: AppSpacing.xs,
+                          vertical: AppSpacing.xxs + AppSpacing.xxxs,
                         ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+                        border: const OutlineInputBorder(
+                          borderRadius: AppRadius.borderSm,
                         ),
                       ),
                     ),
@@ -1204,28 +1020,32 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            AppSpacing.gapH8,
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
                   for (final mode in ['UPI', 'Card', 'Cash'])
                     Padding(
-                      padding: const EdgeInsets.only(right: 6),
+                      padding: const EdgeInsets.only(
+                        right: AppSpacing.xxs + AppSpacing.xxxs,
+                      ),
                       child: ChoiceChip(
                         label: Text(mode),
                         selected: _paymentMode == mode,
                         showCheckmark: false,
                         visualDensity: VisualDensity.compact,
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        labelStyle: const TextStyle(fontSize: 11),
+                        labelStyle: AppTextStyles.label,
                         onSelected: (_) => setState(() => _paymentMode = mode),
                       ),
                     ),
                   Container(
                     width: 1,
-                    height: 18,
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    height: AppSpacing.md + AppSpacing.xxxs,
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xxs,
+                    ),
                     color: dividerColor,
                   ),
                   for (final cat in [
@@ -1236,14 +1056,16 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                     'other',
                   ])
                     Padding(
-                      padding: const EdgeInsets.only(right: 6),
+                      padding: const EdgeInsets.only(
+                        right: AppSpacing.xxs + AppSpacing.xxxs,
+                      ),
                       child: ChoiceChip(
                         label: Text(cat[0].toUpperCase() + cat.substring(1)),
                         selected: _expenseCategory == cat,
                         showCheckmark: false,
                         visualDensity: VisualDensity.compact,
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        labelStyle: const TextStyle(fontSize: 11),
+                        labelStyle: AppTextStyles.label,
                         onSelected: (_) =>
                             setState(() => _expenseCategory = cat),
                       ),
@@ -1263,43 +1085,47 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                 showCheckmark: false,
                 visualDensity: VisualDensity.compact,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                labelStyle: const TextStyle(fontSize: 11),
+                labelStyle: AppTextStyles.label,
                 onSelected: (_) => setState(() => _isTomorrow = false),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppSpacing.xxs + 2),
               ChoiceChip(
                 label: const Text('Tomorrow'),
                 selected: _isTomorrow,
                 showCheckmark: false,
                 visualDensity: VisualDensity.compact,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                labelStyle: const TextStyle(fontSize: 11),
+                labelStyle: AppTextStyles.label,
                 onSelected: (_) => setState(() => _isTomorrow = true),
               ),
-              const SizedBox(width: 8),
+              AppSpacing.gapW8,
               for (final t in ['09:00 AM', '01:00 PM', '05:00 PM', '08:00 PM'])
                 Padding(
-                  padding: const EdgeInsets.only(right: 6),
+                  padding: const EdgeInsets.only(
+                    right: AppSpacing.xxs + AppSpacing.xxxs,
+                  ),
                   child: ChoiceChip(
                     label: Text(t),
                     selected: _reminderTime == t,
                     showCheckmark: false,
                     visualDensity: VisualDensity.compact,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    labelStyle: const TextStyle(fontSize: 11),
+                    labelStyle: AppTextStyles.label,
                     onSelected: (_) => setState(() => _reminderTime = t),
                   ),
                 ),
               for (final p in ['medium', 'high', 'urgent'])
                 Padding(
-                  padding: const EdgeInsets.only(right: 6),
+                  padding: const EdgeInsets.only(
+                    right: AppSpacing.xxs + AppSpacing.xxxs,
+                  ),
                   child: ChoiceChip(
                     label: Text(p.toUpperCase()),
                     selected: _reminderPriority == p,
                     showCheckmark: false,
                     visualDensity: VisualDensity.compact,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    labelStyle: const TextStyle(fontSize: 10.5),
+                    labelStyle: AppTextStyles.label,
                     onSelected: (_) => setState(() => _reminderPriority = p),
                   ),
                 ),
@@ -1312,13 +1138,12 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
             children: [
               Text(
                 'Habit Category:',
-                style: TextStyle(
-                  fontSize: 11,
+                style: AppTextStyles.label.copyWith(
                   fontWeight: FontWeight.w700,
                   color: captionColor,
                 ),
               ),
-              const SizedBox(width: 8),
+              AppSpacing.gapW8,
               for (final cat in [
                 'Health',
                 'Mindfulness',
@@ -1326,14 +1151,16 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                 'Fitness',
               ])
                 Padding(
-                  padding: const EdgeInsets.only(right: 6),
+                  padding: const EdgeInsets.only(
+                    right: AppSpacing.xxs + AppSpacing.xxxs,
+                  ),
                   child: ChoiceChip(
                     label: Text(cat),
                     selected: _habitCategory == cat,
                     showCheckmark: false,
                     visualDensity: VisualDensity.compact,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    labelStyle: const TextStyle(fontSize: 11),
+                    labelStyle: AppTextStyles.label,
                     onSelected: (_) => setState(() => _habitCategory = cat),
                   ),
                 ),
@@ -1350,10 +1177,10 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                 showCheckmark: false,
                 visualDensity: VisualDensity.compact,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                labelStyle: const TextStyle(fontSize: 11),
+                labelStyle: AppTextStyles.label,
                 onSelected: (v) => setState(() => _pinNote = v),
               ),
-              const SizedBox(width: 8),
+              AppSpacing.gapW8,
               for (final tag in [
                 '@QuickCapture',
                 '@Office',
@@ -1362,14 +1189,16 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                 '@Vault',
               ])
                 Padding(
-                  padding: const EdgeInsets.only(right: 6),
+                  padding: const EdgeInsets.only(
+                    right: AppSpacing.xxs + AppSpacing.xxxs,
+                  ),
                   child: ChoiceChip(
                     label: Text(tag),
                     selected: _noteTag == tag,
                     showCheckmark: false,
                     visualDensity: VisualDensity.compact,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    labelStyle: const TextStyle(fontSize: 11),
+                    labelStyle: AppTextStyles.label,
                     onSelected: (_) => setState(() => _noteTag = tag),
                   ),
                 ),
@@ -1383,15 +1212,17 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
   Widget _buildIntentBadge() {
     final color = _intentColor(_detectedIntent);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: AppSpacing.xxxs + 1,
+      ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.14),
         borderRadius: AppRadius.radiusSm,
       ),
       child: Text(
         _intentLabel(_detectedIntent),
-        style: TextStyle(
-          fontSize: 11,
+        style: AppTextStyles.label.copyWith(
           fontWeight: FontWeight.w700,
           color: color,
         ),
@@ -1420,7 +1251,10 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xs + 1,
+          vertical: AppSpacing.xxs + AppSpacing.xxxs,
+        ),
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.primary
@@ -1434,17 +1268,16 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
           children: [
             Icon(
               icon,
-              size: 15,
-              color: isSelected ? Colors.white : AppColors.iconColor,
+              size: AppSpacing.md - 1,
+              color: isSelected ? AppColors.textWhite : AppColors.iconColor,
             ),
-            const SizedBox(width: 4),
+            AppSpacing.gapW4,
             Text(
               label,
-              style: TextStyle(
-                fontSize: 11,
+              style: AppTextStyles.label.copyWith(
                 fontWeight: FontWeight.w700,
                 color: isSelected
-                    ? Colors.white
+                    ? AppColors.textWhite
                     : (isDark ? AppColors.darkTextBody : AppColors.textBody),
               ),
             ),
@@ -1461,7 +1294,10 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
         onTap();
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xs + AppSpacing.xxxs,
+          vertical: AppSpacing.xxs + AppSpacing.xxxs,
+        ),
         decoration: BoxDecoration(
           color: isDark
               ? AppColors.darkSurfaceSecondary
@@ -1473,9 +1309,7 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
         ),
         child: Text(
           label,
-          style: TextStyle(
-            fontSize: 11.5,
-            fontWeight: FontWeight.w600,
+          style: AppTextStyles.captionBold.copyWith(
             color: isDark ? AppColors.darkTextBody : AppColors.textBody,
           ),
         ),
@@ -1512,13 +1346,13 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
   String _intentLabel(DetectedIntent intent) {
     switch (intent) {
       case DetectedIntent.expense:
-        return 'Money / Expense';
+        return StringConstants.intentLabelExpense;
       case DetectedIntent.reminder:
-        return 'Planner / Reminder';
+        return StringConstants.intentLabelReminder;
       case DetectedIntent.habit:
-        return 'Today / Habit';
+        return StringConstants.intentLabelHabit;
       case DetectedIntent.note:
-        return 'Notes / Idea';
+        return StringConstants.intentLabelNote;
     }
   }
 }

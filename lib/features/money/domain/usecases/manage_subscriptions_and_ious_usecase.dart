@@ -79,6 +79,15 @@ class DeleteSubscriptionUseCase {
   Future<void> call(int id) => _repository.deleteSubscription(id);
 }
 
+class UpdateSubscriptionUseCase {
+  final MoneyRepository _repository;
+
+  const UpdateSubscriptionUseCase(this._repository);
+
+  Future<void> call(SubscriptionEntity subscription) =>
+      _repository.updateSubscription(subscription);
+}
+
 class DeleteIouUseCase {
   final MoneyRepository _repository;
 

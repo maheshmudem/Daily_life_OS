@@ -23,6 +23,9 @@ import '../../domain/entities/planner_item_entity.dart';
 import '../../domain/entities/pomodoro_entities.dart';
 import '../../../../core/widgets/app_dropdown_menu.dart';
 import '../../../../core/utils/snackbar_utils.dart';
+import '../../../profile/presentation/bloc/profile_bloc.dart';
+import '../../../today_hub/domain/entities/timeline_item_entity.dart';
+import '../../../today_hub/domain/usecases/manage_habits_usecase.dart';
 import '../../data/models/countdown_item_model.dart';
 import '../bloc/planner_bloc.dart';
 
@@ -1905,6 +1908,42 @@ class _PlannerViewState extends State<_PlannerView>
     SnackbarUtils.showSuccess(context, 'Rescheduled to tomorrow');
   }
 
+  Future<void> _pushToTodayTimeline(
+    BuildContext context,
+    PlannerItemEntity item,
+  ) async {
+    try {
+      if (sl.isRegistered<AddTimelineItemUseCase>()) {
+        final todayStr = DateTime.now().toIso8601String().split('T').first;
+        await sl<AddTimelineItemUseCase>()(
+          TimelineItemEntity(
+            id: 0,
+            time: (item.startTime != null && item.startTime!.isNotEmpty)
+                ? item.startTime!
+                : '09:00 AM',
+            title: item.title,
+            category: item.category.isNotEmpty ? item.category : 'Planner',
+            colorValue: item.colorValue,
+            iconCodePoint: item.iconCodePoint,
+            isDone: item.isDone,
+            action: 'Mark Done',
+            date: todayStr,
+          ),
+        );
+      }
+      if (context.mounted) {
+        SnackbarUtils.showSuccess(
+          context,
+          '${StringConstants.pushedToTimelineMessage}: "${item.title}"',
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        SnackbarUtils.showError(context, '$e');
+      }
+    }
+  }
+
   void _markAllDone(List<PlannerItemEntity> items) {
     final pending = items.where((i) => !i.isDone).toList();
     for (final item in pending) {
@@ -1932,6 +1971,7 @@ class _PlannerViewState extends State<_PlannerView>
       onEdit: () => _openEditReminderSheet(context, item, isDark),
       onDuplicate: () => _duplicateReminder(item),
       onPushTomorrow: () => _pushToTomorrow(item),
+      onPushToTimeline: () => _pushToTodayTimeline(context, item),
       onChecklistChanged: (updatedChecklist) {
         context.read<PlannerBloc>().add(
           UpdatePlannerItem(
@@ -2688,27 +2728,39 @@ class _PlannerViewState extends State<_PlannerView>
             const SizedBox(height: 12),
             Padding(
               padding: gutter,
-              child: PomodoroAnalyticsDashboard(
-                sessions: _focusSessions,
-                distractions: _distractions,
-                dailyGoalSessions: _dailyGoalSessions,
-                workMinutes: _workMinutes,
-                isDark: isDark,
-                onOpenManualLog: () => _openManualSessionSheet(context, isDark),
-                onDeleteSession: (id) {
-                  setState(() {
-                    _focusSessions.removeWhere((s) => s.id == id);
-                  });
-                  _saveFocusSessions();
-                },
-                onAddDistraction: _addDistractionNote,
-                onConvertDistractionToTask: (item) =>
-                    _convertDistractionToPlanner(context, item),
-                onDeleteDistraction: (id) {
-                  setState(() {
-                    _distractions.removeWhere((d) => d.id == id);
-                  });
-                  _saveDistractions();
+              child: BlocBuilder<ProfileBloc, ProfileState>(
+                bloc: sl.isRegistered<ProfileBloc>() ? sl<ProfileBloc>() : null,
+                builder: (context, profileState) {
+                  final effectiveGoalSessions = sl.isRegistered<ProfileBloc>()
+                      ? (profileState.profile.dailyFocusGoalMinutes /
+                                (_workMinutes > 0 ? _workMinutes : 25))
+                            .ceil()
+                            .clamp(1, 16)
+                      : _dailyGoalSessions;
+                  return PomodoroAnalyticsDashboard(
+                    sessions: _focusSessions,
+                    distractions: _distractions,
+                    dailyGoalSessions: effectiveGoalSessions,
+                    workMinutes: _workMinutes,
+                    isDark: isDark,
+                    onOpenManualLog: () =>
+                        _openManualSessionSheet(context, isDark),
+                    onDeleteSession: (id) {
+                      setState(() {
+                        _focusSessions.removeWhere((s) => s.id == id);
+                      });
+                      _saveFocusSessions();
+                    },
+                    onAddDistraction: _addDistractionNote,
+                    onConvertDistractionToTask: (item) =>
+                        _convertDistractionToPlanner(context, item),
+                    onDeleteDistraction: (id) {
+                      setState(() {
+                        _distractions.removeWhere((d) => d.id == id);
+                      });
+                      _saveDistractions();
+                    },
+                  );
                 },
               ),
             ),

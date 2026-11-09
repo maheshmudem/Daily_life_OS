@@ -59,6 +59,15 @@ class AppTextStyles {
     fontFeatures: [FontFeature.tabularFigures()],
   );
 
+  static const TextStyle monoCode = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 13,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textHeading,
+    letterSpacing: 0.3,
+    fontFeatures: [FontFeature.tabularFigures()],
+  );
+
   // ==========================================
   // DISPLAY & HEADINGS
   // ==========================================

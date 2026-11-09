@@ -9,13 +9,16 @@ import '../../../../core/utils/date_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../core/widgets/expandable_text_widget.dart';
 import '../../../../core/widgets/feature_scaffold.dart';
-import '../../../../core/widgets/quick_capture_sheet.dart';
+import '../../../quick_capture/presentation/widgets/quick_capture_sheet.dart';
 import '../../domain/entities/money_category.dart';
 import '../bloc/money_bloc.dart';
 import '../widgets/add_transaction_sheet.dart';
+import '../widgets/account_transfer_sheet.dart';
 import '../widgets/balance_trend_card.dart';
+import '../widgets/bill_split_sheet.dart';
 import '../widgets/budget_progress_tile.dart';
 import '../widgets/edit_limit_sheet.dart';
+import '../widgets/money_report_sheet.dart';
 import '../widgets/money_section_header.dart';
 import '../widgets/money_shell_scope.dart';
 import '../widgets/month_picker_sheet.dart';
@@ -55,9 +58,15 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
         actionsEndPadding: AppSpacing.pageGutter,
         actions: [
           FeatureIconButton(
-            tooltip: 'Clear Data & Start Fresh',
-            icon: Icons.restart_alt_rounded,
-            onPressed: () => _confirmResetMoneyData(context),
+            tooltip: StringConstants.transfer,
+            icon: Icons.swap_horiz_rounded,
+            onPressed: () => AccountTransferSheet.show(context),
+          ),
+          const SizedBox(width: 8),
+          FeatureIconButton(
+            tooltip: StringConstants.financialStatementTitle,
+            icon: Icons.assessment_outlined,
+            onPressed: () => MoneyReportSheet.show(context),
           ),
           const SizedBox(width: 8),
           FeatureIconButton(
@@ -531,40 +540,6 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
     ];
   }
 
-  Future<void> _confirmResetMoneyData(BuildContext context) async {
-    final bloc = context.read<MoneyBloc>();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dCtx) => AlertDialog(
-        title: const Text('Clear Money Data & Start Fresh?'),
-        content: const Text(
-          'This will clear all existing transactions, lent/borrowed entries, subscriptions, and accounts so you can enter your own fresh salary, expenses, and reminders.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dCtx).pop(false),
-            child: const Text(StringConstants.cancel),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () => Navigator.of(dCtx).pop(true),
-            child: const Text('Clear & Start Fresh'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed == true && context.mounted) {
-      bloc.add(const ResetAllMoneyData());
-      SnackbarUtils.showSuccess(
-        context,
-        'Money workspace cleared! Start by adding your Salary or Budget Plan.',
-      );
-    }
-  }
-
   Widget _buildGuidedSetupCard(
     BuildContext context,
     MoneyLoaded state,
@@ -823,6 +798,22 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                 ),
               ),
               InkWell(
+                onTap: () => BillSplitSheet.show(context),
+                borderRadius: BorderRadius.circular(8),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                  child: Text(
+                    StringConstants.billSplitShort,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.moduleMoney,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              InkWell(
                 onTap: () => IouSheet.show(context),
                 borderRadius: BorderRadius.circular(8),
                 child: const Padding(
@@ -864,10 +855,10 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
+                        const Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Flexible(
+                            Flexible(
                               child: Text(
                                 'To Collect (Lent)',
                                 maxLines: 1,
@@ -879,7 +870,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                                 ),
                               ),
                             ),
-                            const Icon(
+                            Icon(
                               Icons.add_circle_outline_rounded,
                               size: 14,
                               color: AppColors.moduleMoney,
@@ -938,10 +929,10 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
+                        const Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Flexible(
+                            Flexible(
                               child: Text(
                                 'To Pay (Borrowed)',
                                 maxLines: 1,
@@ -953,7 +944,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                                 ),
                               ),
                             ),
-                            const Icon(
+                            Icon(
                               Icons.add_circle_outline_rounded,
                               size: 14,
                               color: AppColors.error,
@@ -1223,6 +1214,27 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
         title: StringConstants.accounts,
         subtitle: CurrencyUtils.format(state.insights.totalAssets, decimals: 0),
         onTap: () => MoneyAccountsSheet.show(context),
+      ),
+      _ToolItem(
+        icon: Icons.compare_arrows_rounded,
+        color: AppColors.moduleMoney,
+        title: StringConstants.transfer,
+        subtitle: '${state.accounts.length} accounts',
+        onTap: () => AccountTransferSheet.show(context),
+      ),
+      _ToolItem(
+        icon: Icons.call_split_rounded,
+        color: AppColors.moduleTime,
+        title: StringConstants.billSplitShort,
+        subtitle: 'Split & auto-IOU',
+        onTap: () => BillSplitSheet.show(context),
+      ),
+      _ToolItem(
+        icon: Icons.assessment_outlined,
+        color: AppColors.primary,
+        title: StringConstants.reports,
+        subtitle: state.selectedPeriod.label,
+        onTap: () => MoneyReportSheet.show(context),
       ),
       _ToolItem(
         icon: Icons.tune_rounded,

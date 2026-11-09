@@ -16,6 +16,8 @@ import '../../../security/presentation/widgets/security_setup_wizard.dart';
 import '../../domain/entities/money_account_entity.dart';
 import '../../domain/entities/subscription_entity.dart';
 import '../bloc/money_bloc.dart';
+import '../widgets/account_transfer_sheet.dart';
+import '../widgets/bill_split_sheet.dart';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 1. SUBSCRIPTIONS & AUTO-KILL SHEET
@@ -128,7 +130,9 @@ class SubscriptionsSheet extends StatelessWidget {
             backgroundColor: isDark
                 ? AppColors.darkCardBackground
                 : AppColors.cardBackground,
-            shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusXl),
+            shape: const RoundedRectangleBorder(
+              borderRadius: AppRadius.radiusXl,
+            ),
             title: const Text(StringConstants.addSubscription),
             content: Form(
               key: formKey,
@@ -372,17 +376,55 @@ class _SubscriptionTile extends StatelessWidget {
                   fontSize: 14,
                 ),
               ),
-              const SizedBox(height: 4),
-              GestureDetector(
-                onTap: () =>
-                    context.read<MoneyBloc>().add(DeleteSubscription(sub.id)),
-                child: Icon(
-                  Icons.delete_outline_rounded,
-                  size: 16,
-                  color: isDark
-                      ? AppColors.darkTextCaption
-                      : AppColors.textCaption,
-                ),
+              const SizedBox(height: 6),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    key: ValueKey('sub_pay_${sub.id}'),
+                    onTap: () {
+                      HapticFeedback.mediumImpact();
+                      context.read<MoneyBloc>().add(
+                        RecordSubscriptionPayment(sub),
+                      );
+                      SnackbarUtils.showSuccess(
+                        context,
+                        StringConstants.subscriptionPaymentLogged,
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.moduleMoney.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text(
+                        StringConstants.payAndAdvanceLabel,
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.moduleMoney,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () => context.read<MoneyBloc>().add(
+                      DeleteSubscription(sub.id),
+                    ),
+                    child: Icon(
+                      Icons.delete_outline_rounded,
+                      size: 16,
+                      color: isDark
+                          ? AppColors.darkTextCaption
+                          : AppColors.textCaption,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -453,6 +495,11 @@ class IouSheet extends StatelessWidget {
                       ),
                     ),
                     TextButton.icon(
+                      onPressed: () => BillSplitSheet.show(context),
+                      icon: const Icon(Icons.call_split_rounded, size: 17),
+                      label: const Text(StringConstants.billSplitShort),
+                    ),
+                    TextButton.icon(
                       onPressed: () => _showAddIouDialog(context),
                       icon: const Icon(Icons.add_rounded, size: 18),
                       label: const Text(StringConstants.addIou),
@@ -511,7 +558,9 @@ class IouSheet extends StatelessWidget {
             backgroundColor: isDark
                 ? AppColors.darkCardBackground
                 : AppColors.cardBackground,
-            shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusXl),
+            shape: const RoundedRectangleBorder(
+              borderRadius: AppRadius.radiusXl,
+            ),
             title: Text(
               isLent
                   ? 'Lent Money (To Collect)'
@@ -958,9 +1007,17 @@ class IouContent extends StatelessWidget {
                             ),
                           ),
                           GestureDetector(
-                            onTap: () => context.read<MoneyBloc>().add(
-                              SettleIou(iou.id),
-                            ),
+                            key: ValueKey('iou_settle_${iou.id}'),
+                            onTap: () {
+                              HapticFeedback.mediumImpact();
+                              context.read<MoneyBloc>().add(
+                                SettleIou(iou.id, recordTransaction: true),
+                              );
+                              SnackbarUtils.showSuccess(
+                                context,
+                                StringConstants.iouSettledWithCashflow,
+                              );
+                            },
                             child: const Text(
                               StringConstants.settle,
                               style: TextStyle(
@@ -1070,6 +1127,13 @@ class MoneyAccountsSheet extends StatelessWidget {
                         ],
                       ),
                     ),
+                    if (accounts.length >= 2)
+                      TextButton.icon(
+                        key: const ValueKey('accounts_sheet_transfer_btn'),
+                        onPressed: () => AccountTransferSheet.show(context),
+                        icon: const Icon(Icons.swap_horiz_rounded, size: 18),
+                        label: const Text(StringConstants.transfer),
+                      ),
                     TextButton.icon(
                       onPressed: () => _showAccountDialog(context),
                       icon: const Icon(Icons.add_rounded, size: 18),
@@ -1196,7 +1260,9 @@ class MoneyAccountsSheet extends StatelessWidget {
             backgroundColor: isDark
                 ? AppColors.darkCardBackground
                 : AppColors.cardBackground,
-            shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusXl),
+            shape: const RoundedRectangleBorder(
+              borderRadius: AppRadius.radiusXl,
+            ),
             title: Text(
               existing == null
                   ? StringConstants.addAccount

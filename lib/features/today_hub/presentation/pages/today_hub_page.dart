@@ -7,16 +7,25 @@ import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
+import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/app_shimmer_loader.dart';
 import '../../../../core/widgets/expandable_text_widget.dart';
 import '../../../../core/widgets/feature_scaffold.dart';
 import '../../../../core/widgets/habit_bubble_widget.dart';
+import '../../../quick_capture/presentation/widgets/quick_capture_sheet.dart';
 import '../../../../core/widgets/safe_spend_meter_widget.dart';
 import '../../../../di/injection_container.dart';
+import '../../../command_palette/presentation/widgets/global_command_palette_sheet.dart';
 import '../../../money/domain/usecases/get_transactions_and_budget_usecase.dart';
+import '../../../navigation/presentation/widgets/os_quick_launch_dock.dart';
+import '../../../profile/domain/entities/user_profile_entity.dart';
+import '../../../profile/presentation/bloc/profile_bloc.dart';
+import '../../../profile/presentation/widgets/profile_settings_sheet.dart';
+import '../../../profile/presentation/widgets/user_avatar_widget.dart';
 import '../../domain/entities/habit_entity.dart';
 import '../../domain/entities/timeline_item_entity.dart';
 import '../bloc/today_hub_bloc.dart';
+import '../widgets/audio_briefing_sheet.dart';
 import '../widgets/evening_wrap_up_sheet.dart';
 import '../widgets/habit_detail_sheet.dart';
 import '../widgets/habit_editor_sheet.dart';
@@ -24,19 +33,32 @@ import '../widgets/manage_habits_sheet.dart';
 import '../widgets/timeline_editor_sheet.dart';
 
 class TodayHubPage extends StatelessWidget {
-  const TodayHubPage({super.key});
+  final ValueChanged<int>? onNavigateToTab;
+  final ValueChanged<QuickCaptureMode>? onOpenQuickCapture;
+
+  const TodayHubPage({
+    super.key,
+    this.onNavigateToTab,
+    this.onOpenQuickCapture,
+  });
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => sl<TodayHubBloc>()..add(const LoadTodayHub()),
-      child: const _TodayHubView(),
+      child: _TodayHubView(
+        onNavigateToTab: onNavigateToTab,
+        onOpenQuickCapture: onOpenQuickCapture,
+      ),
     );
   }
 }
 
 class _TodayHubView extends StatefulWidget {
-  const _TodayHubView();
+  final ValueChanged<int>? onNavigateToTab;
+  final ValueChanged<QuickCaptureMode>? onOpenQuickCapture;
+
+  const _TodayHubView({this.onNavigateToTab, this.onOpenQuickCapture});
 
   @override
   State<_TodayHubView> createState() => _TodayHubViewState();
@@ -66,39 +88,25 @@ class _TodayHubViewState extends State<_TodayHubView> {
 
   void _playAudioBriefing(
     BuildContext context, {
-    required int habitsDone,
-    required int habitsTotal,
-    required int pendingTasks,
-    required double remainingSafe,
+    required UserProfileEntity profile,
+    List<HabitEntity>? habits,
+    List<TimelineItemEntity>? timelineItems,
+    DailySpendSnapshot? spendSnapshot,
   }) {
-    HapticFeedback.lightImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(
-              Icons.graphic_eq_rounded,
-              color: AppColors.voiceWaveform,
-              size: 20,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Briefing: $habitsDone/$habitsTotal habits done • $pendingTasks tasks ahead • ₹${remainingSafe.toStringAsFixed(0)} safe to spend.',
-                style: const TextStyle(fontSize: 12.5),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: AppColors.primaryDark,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 3),
-      ),
+    if (profile.enableHapticFeedback) {
+      HapticFeedback.lightImpact();
+    }
+    AudioBriefingSheet.show(
+      context,
+      userName: profile.displayName,
+      autoPlay: profile.autoPlayAudioBriefing,
+      habits: habits,
+      timelineItems: timelineItems,
+      spendSnapshot: spendSnapshot,
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildWithProfile(BuildContext context, UserProfileEntity profile) {
     final formattedDate = DateFormat('EEEE, d MMMM').format(DateTime.now());
 
     return BlocBuilder<TodayHubBloc, TodayHubState>(
@@ -129,10 +137,38 @@ class _TodayHubViewState extends State<_TodayHubView> {
                 : 0;
 
             return FeatureScaffold(
-              title: '${_getTimeGreeting()}, Aarav',
+              title: '${_getTimeGreeting()}, ${profile.displayName}',
               subtitle: formattedDate,
-              leading: const _AvatarMonogram(letter: 'A'),
+              onTitleTap: () => ProfileSettingsSheet.show(context),
+              leading: Tooltip(
+                message: StringConstants.profileTooltip,
+                child: UserAvatarWidget(
+                  key: const ValueKey('today_profile_avatar_button'),
+                  profile: profile,
+                  size: 34,
+                  borderRadius: 10,
+                  onTap: () => ProfileSettingsSheet.show(context),
+                ),
+              ),
               actions: [
+                FeatureIconButton(
+                  key: const ValueKey('today_spotlight_button'),
+                  icon: Icons.search_rounded,
+                  tooltip: StringConstants.spotlightSearchTooltip,
+                  color: AppColors.primary,
+                  onPressed: () => GlobalCommandPaletteSheet.show(
+                    context,
+                    onNavigateTab: (idx) => widget.onNavigateToTab?.call(idx),
+                    onOpenQuickCapture: (mode) {
+                      if (widget.onOpenQuickCapture != null) {
+                        widget.onOpenQuickCapture!(mode);
+                      } else {
+                        QuickCaptureSheet.show(context, mode: mode);
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(width: 6),
                 FeatureIconButton(
                   icon: Icons.auto_awesome_rounded,
                   tooltip: 'Manage Habits & Micro-Routines',
@@ -145,10 +181,12 @@ class _TodayHubViewState extends State<_TodayHubView> {
                   tooltip: StringConstants.playBriefing,
                   onPressed: () => _playAudioBriefing(
                     context,
-                    habitsDone: habitsDone,
-                    habitsTotal: habitsTotal,
-                    pendingTasks: pendingTasks,
-                    remainingSafe: remainingSafe,
+                    profile: profile,
+                    habits: state is TodayHubLoaded ? state.habits : null,
+                    timelineItems: state is TodayHubLoaded
+                        ? state.timelineItems
+                        : null,
+                    spendSnapshot: spend,
                   ),
                 ),
               ],
@@ -255,14 +293,73 @@ class _TodayHubViewState extends State<_TodayHubView> {
                                   ),
                                   const SizedBox(height: AppSpacing.md),
 
+                                  // 1.5. Interactive Today Audio Brief Section
+                                  if (profile.showAudioBriefCard) ...[
+                                    _AudioBriefSectionCard(
+                                      habitsDone: habitsDone,
+                                      habitsTotal: habitsTotal,
+                                      pendingTasks: pendingTasks,
+                                      remainingSafe: remainingSafe,
+                                      onTap: () => _playAudioBriefing(
+                                        context,
+                                        profile: profile,
+                                        habits: loaded.habits,
+                                        timelineItems: loaded.timelineItems,
+                                        spendSnapshot: spend,
+                                      ),
+                                    ),
+                                    const SizedBox(height: AppSpacing.md),
+                                  ],
+
                                   // 2. Safe-to-Spend Meter
-                                  SafeSpendMeterWidget(
-                                    spentToday: spentToday,
-                                    dailySafeLimit: safeDailyLimit,
-                                    daysRemaining: daysRemaining,
-                                    monthlyBudget: monthlyBudget,
-                                  ),
-                                  const SizedBox(height: AppSpacing.lg),
+                                  if (profile.showSafeSpendCard) ...[
+                                    SafeSpendMeterWidget(
+                                      spentToday: spentToday,
+                                      dailySafeLimit: safeDailyLimit,
+                                      daysRemaining: daysRemaining,
+                                      monthlyBudget: monthlyBudget,
+                                    ),
+                                    AppSpacing.gapH12,
+                                  ],
+
+                                  // 2.5. Cross-Module Quick-Launch OS Dock
+                                  if (profile.showQuickLaunchDock) ...[
+                                    OsQuickLaunchDock(
+                                      onOpenSpotlight: () =>
+                                          GlobalCommandPaletteSheet.show(
+                                            context,
+                                            onNavigateTab: (idx) => widget
+                                                .onNavigateToTab
+                                                ?.call(idx),
+                                            onOpenQuickCapture: (mode) {
+                                              if (widget.onOpenQuickCapture !=
+                                                  null) {
+                                                widget.onOpenQuickCapture!(
+                                                  mode,
+                                                );
+                                              } else {
+                                                QuickCaptureSheet.show(
+                                                  context,
+                                                  mode: mode,
+                                                );
+                                              }
+                                            },
+                                          ),
+                                      onNavigateTab: (idx) =>
+                                          widget.onNavigateToTab?.call(idx),
+                                      onQuickCapture: (mode) {
+                                        if (widget.onOpenQuickCapture != null) {
+                                          widget.onOpenQuickCapture!(mode);
+                                        } else {
+                                          QuickCaptureSheet.show(
+                                            context,
+                                            mode: mode,
+                                          );
+                                        }
+                                      },
+                                    ),
+                                    const SizedBox(height: AppSpacing.lg),
+                                  ],
 
                                   // 3 & 4. Habits & Timeline (2-column on wide screens, stacked on mobile)
                                   if (isWide)
@@ -283,10 +380,11 @@ class _TodayHubViewState extends State<_TodayHubView> {
                                   const SizedBox(height: AppSpacing.lg),
 
                                   // 5. Evening Wrap-Up Banner
-                                  _EveningWrapUpCard(
-                                    spentToday: spentToday,
-                                    safeDailyLimit: safeDailyLimit,
-                                  ),
+                                  if (profile.showEveningWrapUpCard)
+                                    _EveningWrapUpCard(
+                                      spentToday: spentToday,
+                                      safeDailyLimit: safeDailyLimit,
+                                    ),
                                 ],
                               ),
                             ),
@@ -301,6 +399,18 @@ class _TodayHubViewState extends State<_TodayHubView> {
           },
         );
       },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!sl.isRegistered<ProfileBloc>()) {
+      return _buildWithProfile(context, const UserProfileEntity());
+    }
+    return BlocBuilder<ProfileBloc, ProfileState>(
+      bloc: sl<ProfileBloc>(),
+      builder: (context, profileState) =>
+          _buildWithProfile(context, profileState.profile),
     );
   }
 }
@@ -875,40 +985,6 @@ class _TimelineSectionHeader extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ============================================================================
-// AVATAR MONOGRAM (36x36 for FeatureScaffold leading)
-// ============================================================================
-class _AvatarMonogram extends StatelessWidget {
-  final String letter;
-
-  const _AvatarMonogram({required this.letter});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 36,
-      height: 36,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.primary, AppColors.primaryLight],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(11),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        letter,
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w800,
-          fontSize: 15,
-        ),
       ),
     );
   }
@@ -1622,6 +1698,147 @@ class _EveningWrapUpCard extends StatelessWidget {
             Icons.chevron_right_rounded,
             color: AppColors.primary,
             size: 20,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// TODAY'S AUDIO BRIEFING SECTION CARD
+// ============================================================================
+class _AudioBriefSectionCard extends StatelessWidget {
+  final int habitsDone;
+  final int habitsTotal;
+  final int pendingTasks;
+  final double remainingSafe;
+  final VoidCallback onTap;
+
+  const _AudioBriefSectionCard({
+    required this.habitsDone,
+    required this.habitsTotal,
+    required this.pendingTasks,
+    required this.remainingSafe,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    final text = context.text;
+
+    return FeatureCard(
+      key: const ValueKey('today_audio_brief_section'),
+      borderColor: AppColors.primary.withValues(
+        alpha: palette.isDark ? 0.35 : 0.22,
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm + 4,
+      ),
+      onTap: onTap,
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppColors.primary, AppColors.primaryLight],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: const Icon(
+              Icons.graphic_eq_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        StringConstants.audioBriefSectionTitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: text.titleSmall?.copyWith(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
+                          color: palette.heading,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(
+                          alpha: palette.isDark ? 0.22 : 0.12,
+                        ),
+                        borderRadius: AppRadius.radiusFull,
+                      ),
+                      child: Text(
+                        'VOICE BRIEF',
+                        style: text.labelSmall?.copyWith(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.4,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '$habitsDone/$habitsTotal habits • $pendingTasks tasks ahead • ${CurrencyUtils.format(remainingSafe)} safe spend',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.labelSmall?.copyWith(
+                    fontSize: 11.5,
+                    color: palette.caption,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: const BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: AppRadius.radiusFull,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.play_arrow_rounded,
+                  size: 15,
+                  color: Colors.white,
+                ),
+                const SizedBox(width: 3),
+                Text(
+                  StringConstants.playBriefing,
+                  style: text.labelSmall?.copyWith(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

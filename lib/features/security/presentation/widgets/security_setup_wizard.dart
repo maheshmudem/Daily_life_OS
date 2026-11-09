@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../config/theme/app_colors.dart';
@@ -93,7 +94,7 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
     await widget.securityRepository.setSecurityEnabled(true);
 
     if (mounted) {
-      HapticFeedback.mediumImpact();
+      unawaited(HapticFeedback.mediumImpact());
       Navigator.pop(context);
       widget.onCompleted();
     }

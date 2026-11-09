@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../core/widgets/feature_scaffold.dart';
@@ -55,6 +57,43 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
     }).toList();
   }
 
+  Future<void> _exportCsv(
+    BuildContext context,
+    List<TransactionEntity> filtered,
+  ) async {
+    if (filtered.isEmpty) {
+      SnackbarUtils.showInfo(context, StringConstants.noMatchingTransactions);
+      return;
+    }
+    String escapeCsv(String input) {
+      final cleaned = input.replaceAll('"', '""');
+      if (cleaned.contains(',') ||
+          cleaned.contains('"') ||
+          cleaned.contains('\n')) {
+        return '"$cleaned"';
+      }
+      return cleaned;
+    }
+
+    final buffer = StringBuffer('Date,Title,Category,Type,Mode,Amount,Note\n');
+    for (final tx in filtered) {
+      final dateStr = tx.date.split('T').first;
+      buffer.writeln(
+        '${escapeCsv(dateStr)},'
+        '${escapeCsv(tx.title)},'
+        '${escapeCsv(tx.isTransfer ? "Transfer" : tx.categoryInfo.label)},'
+        '${escapeCsv(tx.type)},'
+        '${escapeCsv(tx.mode)},'
+        '${tx.amount.toStringAsFixed(2)},'
+        '${escapeCsv(tx.note ?? "")}',
+      );
+    }
+    await Clipboard.setData(ClipboardData(text: buffer.toString()));
+    if (!context.mounted) return;
+    unawaited(HapticFeedback.lightImpact());
+    SnackbarUtils.showSuccess(context, StringConstants.csvExportedMessage);
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -66,6 +105,13 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
         accentColor: AppColors.moduleMoney,
         actionsEndPadding: AppSpacing.pageGutter,
         actions: [
+          if (moneyState is MoneyLoaded)
+            FeatureIconButton(
+              tooltip: StringConstants.exportCsvTooltip,
+              icon: Icons.download_rounded,
+              onPressed: () =>
+                  unawaited(_exportCsv(context, _applyFilters(moneyState))),
+            ),
           FeatureIconButton(
             tooltip: StringConstants.addExpense,
             icon: Icons.add_rounded,
@@ -151,6 +197,12 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
                     _buildTypeChip(StringConstants.expenses, 'expense', isDark),
                     const SizedBox(width: 6),
                     _buildTypeChip(StringConstants.income, 'income', isDark),
+                    const SizedBox(width: 6),
+                    _buildTypeChip(
+                      StringConstants.transfer,
+                      'transfer',
+                      isDark,
+                    ),
                     const SizedBox(width: 8),
                     Container(
                       width: 1,
@@ -310,8 +362,7 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
                           final items = grouped[day]!;
                           final dayNet = items.fold<double>(
                             0,
-                            (sum, t) =>
-                                sum + (t.isIncome ? t.amount : -t.amount),
+                            (sum, t) => sum + t.signedAmount,
                           );
                           final isDayPositive = dayNet >= 0;
 

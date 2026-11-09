@@ -214,6 +214,40 @@ void main() {
       findsOneWidget,
     );
 
+    // 5.5. Switch back to Today Hub & Verify Universal Command Palette + OS Quick-Launch Dock
+    await tester.tap(
+      find.descendant(
+        of: find.byType(BottomNavigationBar),
+        matching: find.text('Today'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('dock_spotlight_pill')), findsOneWidget);
+    expect(find.byKey(const ValueKey('dock_focus_pill')), findsOneWidget);
+    expect(find.byKey(const ValueKey('dock_capture_pill')), findsOneWidget);
+    expect(find.byKey(const ValueKey('dock_notes_pill')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('today_spotlight_button')));
+    await tester.pumpAndSettle();
+    expect(find.text(StringConstants.commandPaletteTitle), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('command_palette_search_input')),
+      findsOneWidget,
+    );
+
+    // Search inside Command Palette and close
+    await tester.enterText(
+      find.byKey(const ValueKey('command_palette_search_input')),
+      'Pomodoro',
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Start Focus Sprint (Pomodoro)'), findsOneWidget);
+    Navigator.of(
+      tester.element(find.text(StringConstants.commandPaletteTitle)),
+    ).pop();
+    await tester.pumpAndSettle();
+
     // 6. Verify Tab switching works (Tap 'Vault')
     await tester.tap(
       find.descendant(
@@ -260,12 +294,24 @@ void main() {
     expect(find.text('Create New Note'), findsNothing);
     expect(find.text('Grocery Shopping List'), findsOneWidget);
 
-    // 8. Verify Daily Scratchpad UI & Tokens
+    // 8. Verify Daily Scratchpad UI & Tokens + View/Sort Controls
     expect(
       find.text(StringConstants.dailyScratchpad.toUpperCase()),
       findsOneWidget,
     );
+    expect(find.text('Instant auto-save'), findsOneWidget);
     expect(find.text(StringConstants.scratchpadHint), findsOneWidget);
+    expect(find.byKey(const ValueKey('toggle_notes_sort')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('toggle_notes_view_mode')),
+      findsOneWidget,
+    );
+
+    // Toggle Grid view and back to List view
+    await tester.tap(find.byKey(const ValueKey('toggle_notes_view_mode')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('toggle_notes_view_mode')));
+    await tester.pumpAndSettle();
 
     // Type into Scratchpad and Save as Note
     final scratchpadFinder = find.widgetWithText(

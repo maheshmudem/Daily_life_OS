@@ -20,11 +20,11 @@ class NetworkAwareWidget extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
             color: Colors.orange.shade700,
-            child: Row(
+            child: const Row(
               children: [
-                const Icon(Icons.wifi_off, color: Colors.white, size: 16),
-                const SizedBox(width: 8),
-                const Expanded(
+                Icon(Icons.wifi_off, color: Colors.white, size: 16),
+                SizedBox(width: 8),
+                Expanded(
                   child: Text(
                     StringConstants.networkError,
                     style: TextStyle(color: Colors.white, fontSize: 13),

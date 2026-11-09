@@ -1,31 +1,28 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../config/theme/app_colors.dart';
-import '../constants/string_constants.dart';
-import 'quick_capture_sheet.dart';
+
+import '../../../../config/theme/app_colors.dart';
+import '../../../../config/theme/app_radius.dart';
+import '../../../../config/theme/app_spacing.dart';
+import '../../../../config/theme/app_text_styles.dart';
+import '../../../../core/constants/string_constants.dart';
+import '../../domain/entities/quick_capture_entities.dart';
 
 /// A movable, minimizable Floating Quick-Capture Ball & Morphing Capsule
 /// inspired by iOS AssistiveTouch, Dynamic Island, and Xiaomi Quick Ball.
-///
-/// Key engineering guarantees:
-/// - **Zero-lag 120fps dragging**: Uses [ValueNotifier<Offset>] + [RepaintBoundary]
-///   so dragging updates only the layer offset without rebuilding parent tabs.
-/// - **Zero-pixel-break morphing**: Uses [ClipRRect] + [OverflowBox] with a fixed
-///   inner layout width so the expanded toolbar never reflows or overflows on
-///   intermediate animation frames.
-/// - **Smart edge clamping**: Automatically shifts the expanded capsule inward
-///   when the ball is parked near any screen edge, and restores the exact ball
-///   coordinates when minimized.
 class FloatingQuickBall extends StatefulWidget {
   final ValueChanged<QuickCaptureMode> onSelectMode;
+  final VoidCallback? onOpenSpotlight;
   final bool initiallyExpanded;
 
   const FloatingQuickBall({
     super.key,
     required this.onSelectMode,
+    this.onOpenSpotlight,
     this.initiallyExpanded = false,
   });
 
@@ -38,14 +35,12 @@ class _FloatingQuickBallState extends State<FloatingQuickBall>
   static const String _prefKeyXRatio = 'quick_ball_x_ratio_v1';
   static const String _prefKeyYRatio = 'quick_ball_y_ratio_v1';
 
-  static const double _ballSize = 54.0;
-  static const double _edgeMargin = 12.0;
+  static const double _ballSize = AppSpacing.huge + AppSpacing.xxs + 2.0;
+  static const double _edgeMargin = AppSpacing.sm;
 
   late final AnimationController _expandController;
   late final Animation<double> _expandAnimation;
 
-  /// Normalized (0.0 .. 1.0) position ratios so the ball adapts cleanly
-  /// across screen rotations and window resizes.
   final ValueNotifier<Offset> _ratioNotifier = ValueNotifier<Offset>(
     const Offset(1.0, 0.88),
   );
@@ -129,9 +124,9 @@ class _FloatingQuickBallState extends State<FloatingQuickBall>
 
   void _onPanUpdate(DragUpdateDetails details, Size viewport) {
     if (viewport.width <= 0 || viewport.height <= 0) return;
-    final minX = _edgeMargin;
+    const minX = _edgeMargin;
     final maxX = math.max(minX, viewport.width - _ballSize - _edgeMargin);
-    final minY = _edgeMargin + 8.0;
+    const minY = _edgeMargin + AppSpacing.xs;
     final maxY = math.max(minY, viewport.height - _ballSize - _edgeMargin);
 
     final usableW = math.max(1.0, maxX - minX);
@@ -154,17 +149,16 @@ class _FloatingQuickBallState extends State<FloatingQuickBall>
     if (mounted) {
       setState(() => _isDragging = false);
     }
-    // Apply gentle velocity projection so flicking feels natural
     if (_lastViewportSize.width > 0 && _lastViewportSize.height > 0) {
       final vx = details.velocity.pixelsPerSecond.dx;
       final vy = details.velocity.pixelsPerSecond.dy;
       if (vx.abs() > 80 || vy.abs() > 80) {
-        final minX = _edgeMargin;
+        const minX = _edgeMargin;
         final maxX = math.max(
           minX,
           _lastViewportSize.width - _ballSize - _edgeMargin,
         );
-        final minY = _edgeMargin + 8.0;
+        const minY = _edgeMargin + AppSpacing.xs;
         final maxY = math.max(
           minY,
           _lastViewportSize.height - _ballSize - _edgeMargin,
@@ -197,9 +191,9 @@ class _FloatingQuickBallState extends State<FloatingQuickBall>
         final viewport = Size(constraints.maxWidth, constraints.maxHeight);
         _lastViewportSize = viewport;
 
-        final minX = _edgeMargin;
+        const minX = _edgeMargin;
         final maxX = math.max(minX, viewport.width - _ballSize - _edgeMargin);
-        final minY = _edgeMargin + 8.0;
+        const minY = _edgeMargin + AppSpacing.xs;
         final maxY = math.max(minY, viewport.height - _ballSize - _edgeMargin);
 
         final usableW = math.max(1.0, maxX - minX);
@@ -216,8 +210,6 @@ class _FloatingQuickBallState extends State<FloatingQuickBall>
             final ballX = minX + (ratio.dx.clamp(0.0, 1.0) * usableW);
             final ballY = minY + (ratio.dy.clamp(0.0, 1.0) * usableH);
 
-            // Anchor expanded capsule toward the available side of the screen
-            // so it never overflows left or right edges.
             final isRightHalf = ratio.dx >= 0.5;
             final rawExpandedLeft = isRightHalf
                 ? (ballX + _ballSize - expandedWidth)
@@ -271,12 +263,12 @@ class _FloatingQuickBallState extends State<FloatingQuickBall>
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                   colors: [
-                                    Color(0xFF0F172A),
-                                    Color(0xFF1E1B4B),
-                                    Color(0xFF0F172A),
+                                    AppColors.darkScaffoldBackground,
+                                    AppColors.primaryDark,
+                                    AppColors.darkScaffoldBackground,
                                   ],
                                 ),
-                                borderRadius: BorderRadius.circular(27),
+                                borderRadius: AppRadius.radiusFull,
                                 border: Border.all(
                                   color: _isDragging
                                       ? AppColors.voiceWaveform.withValues(
@@ -289,26 +281,28 @@ class _FloatingQuickBallState extends State<FloatingQuickBall>
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(
-                                      alpha: _isDragging ? 0.42 : 0.28,
-                                    ),
-                                    blurRadius: _isDragging ? 22 : 16,
-                                    offset: const Offset(0, 6),
+                                    color: AppColors.darkScaffoldBackground
+                                        .withValues(
+                                          alpha: _isDragging ? 0.55 : 0.38,
+                                        ),
+                                    blurRadius: _isDragging
+                                        ? AppSpacing.xl
+                                        : AppSpacing.md,
+                                    offset: const Offset(0, AppSpacing.xxs),
                                   ),
                                   BoxShadow(
                                     color: AppColors.primary.withValues(
                                       alpha: _isExpanded ? 0.22 : 0.16,
                                     ),
-                                    blurRadius: 12,
+                                    blurRadius: AppSpacing.sm,
                                   ),
                                 ],
                               ),
                               child: ClipRRect(
-                                borderRadius: BorderRadius.circular(27),
+                                borderRadius: AppRadius.radiusFull,
                                 child: Stack(
                                   alignment: Alignment.center,
                                   children: [
-                                    // 1. Collapsed Quick Ball View
                                     if (collapsedOpacity > 0)
                                       IgnorePointer(
                                         ignoring: _isExpanded,
@@ -317,9 +311,6 @@ class _FloatingQuickBallState extends State<FloatingQuickBall>
                                           child: _buildCollapsedBallContent(),
                                         ),
                                       ),
-
-                                    // 2. Expanded Capsule Toolbar (Fixed width inside OverflowBox
-                                    //    so it NEVER causes RenderFlex overflow or pixel break)
                                     if (expandedOpacity > 0)
                                       IgnorePointer(
                                         ignoring: !_isExpanded,
@@ -360,12 +351,12 @@ class _FloatingQuickBallState extends State<FloatingQuickBall>
 
   Widget _buildCollapsedBallContent() {
     return Tooltip(
-      message: 'Quick Capture Ball (Tap to expand, Drag to move)',
+      message: StringConstants.quickCaptureTitle,
       child: Material(
         type: MaterialType.transparency,
         child: InkWell(
           key: const ValueKey('quick_capture_ball'),
-          borderRadius: BorderRadius.circular(27),
+          borderRadius: AppRadius.radiusFull,
           onTap: _toggleExpanded,
           onLongPress: () => _triggerModeAndCollapse(QuickCaptureMode.voice),
           child: SizedBox(
@@ -374,10 +365,9 @@ class _FloatingQuickBallState extends State<FloatingQuickBall>
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // Outer subtle glowing ring
                 Container(
-                  width: 38,
-                  height: 38,
+                  width: AppSpacing.xxl + AppSpacing.xs,
+                  height: AppSpacing.xxl + AppSpacing.xs,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: LinearGradient(
@@ -390,15 +380,17 @@ class _FloatingQuickBallState extends State<FloatingQuickBall>
                     ),
                   ),
                 ),
-                // Center Bolt + Mic icon
-                const Icon(Icons.bolt_rounded, color: Colors.white, size: 22),
-                // 3 micro status orbit dots (Voice, Type, Scan)
+                const Icon(
+                  Icons.bolt_rounded,
+                  color: AppColors.textWhite,
+                  size: AppSpacing.lg + AppSpacing.xxxs,
+                ),
                 Positioned(
-                  top: 7,
-                  right: 10,
+                  top: AppSpacing.xs,
+                  right: AppSpacing.sm - AppSpacing.xxxs,
                   child: Container(
-                    width: 5,
-                    height: 5,
+                    width: AppSpacing.xxs + 1,
+                    height: AppSpacing.xxs + 1,
                     decoration: const BoxDecoration(
                       color: AppColors.voiceWaveform,
                       shape: BoxShape.circle,
@@ -406,11 +398,11 @@ class _FloatingQuickBallState extends State<FloatingQuickBall>
                   ),
                 ),
                 Positioned(
-                  bottom: 8,
-                  left: 10,
+                  bottom: AppSpacing.xs,
+                  left: AppSpacing.sm - AppSpacing.xxxs,
                   child: Container(
-                    width: 4.5,
-                    height: 4.5,
+                    width: AppSpacing.xxs,
+                    height: AppSpacing.xxs,
                     decoration: const BoxDecoration(
                       color: AppColors.moduleMoneyLight,
                       shape: BoxShape.circle,
@@ -426,19 +418,26 @@ class _FloatingQuickBallState extends State<FloatingQuickBall>
   }
 
   Widget _buildExpandedCapsuleContent() {
+    final pillTextStyle = AppTextStyles.label.copyWith(
+      color: AppColors.textWhite,
+      fontWeight: FontWeight.w700,
+    );
+
     return Material(
       type: MaterialType.transparency,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
         child: Row(
           children: [
-            // Drag grip handle
-            const Padding(
-              padding: EdgeInsets.only(left: 2, right: 4),
+            Padding(
+              padding: const EdgeInsets.only(
+                left: AppSpacing.xxxs,
+                right: AppSpacing.xxs,
+              ),
               child: Icon(
                 Icons.drag_indicator_rounded,
-                size: 15,
-                color: Colors.white38,
+                size: AppSpacing.md - 1,
+                color: AppColors.textWhite.withValues(alpha: 0.38),
               ),
             ),
 
@@ -446,20 +445,20 @@ class _FloatingQuickBallState extends State<FloatingQuickBall>
             Expanded(
               flex: 5,
               child: InkWell(
-                borderRadius: BorderRadius.circular(22),
+                borderRadius: AppRadius.radiusFull,
                 onTap: () => _triggerModeAndCollapse(QuickCaptureMode.voice),
                 onLongPress: () =>
                     _triggerModeAndCollapse(QuickCaptureMode.voice),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 5,
-                    vertical: 6,
+                    horizontal: AppSpacing.xxs,
+                    vertical: AppSpacing.xxs + AppSpacing.xxxs,
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(5.5),
+                        padding: const EdgeInsets.all(AppSpacing.xxs + 1.5),
                         decoration: BoxDecoration(
                           color: AppColors.voiceWaveform.withValues(
                             alpha: 0.22,
@@ -469,20 +468,16 @@ class _FloatingQuickBallState extends State<FloatingQuickBall>
                         child: const Icon(
                           Icons.mic_rounded,
                           color: AppColors.voiceWaveform,
-                          size: 15,
+                          size: AppSpacing.md - 1,
                         ),
                       ),
-                      const SizedBox(width: 6),
-                      const Flexible(
+                      AppSpacing.gapW4,
+                      Flexible(
                         child: Text(
                           StringConstants.holdToSpeak,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: pillTextStyle,
                         ),
                       ),
                     ],
@@ -493,37 +488,38 @@ class _FloatingQuickBallState extends State<FloatingQuickBall>
 
             Container(
               width: 1,
-              height: 18,
-              margin: const EdgeInsets.symmetric(horizontal: 3),
-              color: Colors.white.withValues(alpha: 0.15),
+              height: AppSpacing.md + AppSpacing.xxxs,
+              margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xxxs),
+              color: AppColors.textWhite.withValues(alpha: 0.15),
             ),
 
             // 2. Quick Type
             Expanded(
               flex: 4,
               child: InkWell(
-                borderRadius: BorderRadius.circular(22),
+                borderRadius: AppRadius.radiusFull,
                 onTap: () => _triggerModeAndCollapse(QuickCaptureMode.text),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 5, vertical: 7),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xxs,
+                    vertical: AppSpacing.xxs + AppSpacing.xxxs,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
                         Icons.keyboard_rounded,
-                        color: Colors.white70,
-                        size: 16,
+                        color: AppColors.textWhite.withValues(alpha: 0.75),
+                        size: AppSpacing.md,
                       ),
-                      SizedBox(width: 5),
+                      AppSpacing.gapW4,
                       Flexible(
                         child: Text(
                           StringConstants.quickType,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11.5,
+                          style: pillTextStyle.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -536,21 +532,21 @@ class _FloatingQuickBallState extends State<FloatingQuickBall>
 
             Container(
               width: 1,
-              height: 18,
-              margin: const EdgeInsets.symmetric(horizontal: 3),
-              color: Colors.white.withValues(alpha: 0.15),
+              height: AppSpacing.md + AppSpacing.xxxs,
+              margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xxxs),
+              color: AppColors.textWhite.withValues(alpha: 0.15),
             ),
 
             // 3. Scan Bill / OCR
             Tooltip(
               message: StringConstants.scanText,
               child: InkWell(
-                borderRadius: BorderRadius.circular(22),
+                borderRadius: AppRadius.radiusFull,
                 onTap: () => _triggerModeAndCollapse(QuickCaptureMode.scan),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 7,
+                    horizontal: AppSpacing.xs,
+                    vertical: AppSpacing.xxs + AppSpacing.xxxs,
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -558,15 +554,13 @@ class _FloatingQuickBallState extends State<FloatingQuickBall>
                       const Icon(
                         Icons.document_scanner_rounded,
                         color: AppColors.moduleMoneyLight,
-                        size: 16,
+                        size: AppSpacing.md,
                       ),
-                      const SizedBox(width: 4),
+                      AppSpacing.gapW4,
                       Text(
                         'Scan',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.92),
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w700,
+                        style: pillTextStyle.copyWith(
+                          color: AppColors.textWhite.withValues(alpha: 0.92),
                         ),
                       ),
                     ],
@@ -575,26 +569,60 @@ class _FloatingQuickBallState extends State<FloatingQuickBall>
               ),
             ),
 
-            const SizedBox(width: 2),
+            if (widget.onOpenSpotlight != null) ...[
+              const SizedBox(width: AppSpacing.xxxs),
+              Tooltip(
+                message: StringConstants.spotlightSearchTooltip,
+                child: InkWell(
+                  key: const ValueKey('quick_ball_spotlight'),
+                  borderRadius: AppRadius.radiusFull,
+                  onTap: () {
+                    HapticFeedback.mediumImpact();
+                    if (_isExpanded) {
+                      setState(() {
+                        _isExpanded = false;
+                        _expandController.reverse();
+                      });
+                    }
+                    widget.onOpenSpotlight!();
+                  },
+                  child: Container(
+                    width: AppSpacing.xl + AppSpacing.xxs,
+                    height: AppSpacing.xl + AppSpacing.xxs,
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLight.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.search_rounded,
+                      size: AppSpacing.md - 1,
+                      color: AppColors.textWhite,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+
+            AppSpacing.gapW4,
 
             // 4. Minimize back to Quick Ball button
             Tooltip(
               message: 'Minimize to Quick Ball',
               child: InkWell(
                 key: const ValueKey('minimize_quick_ball'),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: AppRadius.radiusFull,
                 onTap: _toggleExpanded,
                 child: Container(
-                  width: 28,
-                  height: 28,
+                  width: AppSpacing.xl + AppSpacing.xxs,
+                  height: AppSpacing.xl + AppSpacing.xxs,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.12),
+                    color: AppColors.textWhite.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.close_fullscreen_rounded,
-                    size: 14,
-                    color: Colors.white70,
+                    size: AppSpacing.sm + AppSpacing.xxxs,
+                    color: AppColors.textWhite.withValues(alpha: 0.72),
                   ),
                 ),
               ),

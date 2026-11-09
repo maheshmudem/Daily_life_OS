@@ -56,6 +56,7 @@ abstract class MoneyRepository {
     required int iconCodePoint,
     bool autoKillEnabled = false,
   });
+  Future<void> updateSubscription(SubscriptionEntity subscription);
   Future<void> deleteSubscription(int id);
   Future<void> deleteIou(int id);
   Future<MoneySettingsEntity> getMoneySettings();

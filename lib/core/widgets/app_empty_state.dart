@@ -67,7 +67,7 @@ class AppEmptyState extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: tint,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
+                  shape: const RoundedRectangleBorder(
                     borderRadius: AppRadius.radiusMd,
                   ),
                   padding: const EdgeInsets.symmetric(
