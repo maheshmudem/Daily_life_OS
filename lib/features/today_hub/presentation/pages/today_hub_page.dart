@@ -3,13 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../config/theme/app_colors.dart';
+import '../../../../config/theme/app_decorations.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/app_shimmer_loader.dart';
-import '../../../../core/widgets/expandable_text_widget.dart';
 import '../../../../core/widgets/feature_scaffold.dart';
 import '../../../../core/widgets/habit_bubble_widget.dart';
 import '../../../../core/widgets/staggered_fade_slide.dart';
@@ -137,23 +137,32 @@ class _TodayHubViewState extends State<_TodayHubView> {
                 ? state.timelineItems.where((t) => !t.isDone).length
                 : 0;
 
+            final tintBg = AppColors.primary.withValues(
+              alpha: Theme.of(context).brightness == Brightness.dark
+                  ? 0.22
+                  : 0.10,
+            );
+
             return FeatureScaffold(
               title: '${_getTimeGreeting()}, ${profile.displayName}',
               subtitle: formattedDate,
               onTitleTap: () => ProfileSettingsSheet.show(context),
+              actionsEndPadding: AppSpacing.pageGutter,
               leading: Tooltip(
                 message: StringConstants.profileTooltip,
                 child: UserAvatarWidget(
                   key: const ValueKey('today_profile_avatar_button'),
                   profile: profile,
-                  size: 34,
-                  borderRadius: 10,
+                  size: 36,
+                  borderRadius: 11,
                   onTap: () => ProfileSettingsSheet.show(context),
                 ),
               ),
               actions: [
                 FeatureIconButton(
                   key: const ValueKey('today_spotlight_button'),
+                  backgroundColor: tintBg,
+                  borderColor: Colors.transparent,
                   icon: Icons.search_rounded,
                   tooltip: StringConstants.spotlightSearchTooltip,
                   color: AppColors.primary,
@@ -169,17 +178,22 @@ class _TodayHubViewState extends State<_TodayHubView> {
                     },
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 8),
                 FeatureIconButton(
                   icon: Icons.auto_awesome_rounded,
+                  backgroundColor: tintBg,
+                  borderColor: Colors.transparent,
                   tooltip: 'Manage Habits & Micro-Routines',
                   color: AppColors.primary,
                   onPressed: () => ManageHabitsSheet.show(context),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 8),
                 FeatureIconButton(
                   icon: Icons.volume_up_rounded,
+                  backgroundColor: tintBg,
+                  borderColor: Colors.transparent,
                   tooltip: StringConstants.playBriefing,
+                  color: AppColors.primary,
                   onPressed: () => _playAudioBriefing(
                     context,
                     profile: profile,
@@ -239,7 +253,7 @@ class _TodayHubViewState extends State<_TodayHubView> {
                             onManageHabits: () =>
                                 ManageHabitsSheet.show(context),
                           ),
-                          const SizedBox(height: AppSpacing.xs),
+                          const SizedBox(height: 10),
                           _HabitsManagementCard(state: loaded),
                         ],
                       );
@@ -258,7 +272,7 @@ class _TodayHubViewState extends State<_TodayHubView> {
                               );
                             },
                           ),
-                          const SizedBox(height: AppSpacing.xs),
+                          const SizedBox(height: 10),
                           _TimelineUnifiedCard(items: loaded.timelineItems),
                         ],
                       );
@@ -269,14 +283,14 @@ class _TodayHubViewState extends State<_TodayHubView> {
                         ),
                         padding: const EdgeInsets.fromLTRB(
                           AppSpacing.pageGutter,
-                          AppSpacing.xs,
+                          AppSpacing.sm,
                           AppSpacing.pageGutter,
                           110,
                         ),
                         children: [
                           Center(
                             child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 980),
+                              constraints: const BoxConstraints(maxWidth: 1080),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -295,7 +309,7 @@ class _TodayHubViewState extends State<_TodayHubView> {
                                           .firstOrNull,
                                     ),
                                   ),
-                                  const SizedBox(height: AppSpacing.md),
+                                  const SizedBox(height: AppSpacing.sm),
 
                                   // 1.5. Interactive Today Audio Brief Section
                                   if (profile.showAudioBriefCard) ...[
@@ -315,7 +329,7 @@ class _TodayHubViewState extends State<_TodayHubView> {
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(height: AppSpacing.md),
+                                    const SizedBox(height: AppSpacing.sm),
                                   ],
 
                                   // 2. Safe-to-Spend Meter
@@ -329,7 +343,7 @@ class _TodayHubViewState extends State<_TodayHubView> {
                                         monthlyBudget: monthlyBudget,
                                       ),
                                     ),
-                                    AppSpacing.gapH12,
+                                    const SizedBox(height: AppSpacing.sm),
                                   ],
 
                                   // 2.5. Cross-Module Quick-Launch OS Dock
@@ -462,89 +476,67 @@ class _HabitsSectionHeader extends StatelessWidget {
     final palette = context.palette;
     final text = context.text;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: Row(
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(
-                alpha: palette.isDark ? 0.22 : 0.12,
-              ),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(
-              Icons.repeat_rounded,
-              size: 16,
-              color: AppColors.primary,
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            StringConstants.habitsAndRoutines,
+            softWrap: true,
+            style: text.titleMedium?.copyWith(
+              fontSize: 16.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.3,
+              color: palette.heading,
             ),
           ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text(
-              StringConstants.habitsAndRoutines,
-              softWrap: true,
-              style: text.titleMedium?.copyWith(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.2,
-                color: palette.heading,
-              ),
-            ),
-          ),
-          const SizedBox(width: 6),
-          Tooltip(
-            message: 'Manage Habits & Routines',
-            child: InkWell(
-              onTap: onManageHabits,
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: palette.surfaceMuted,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: palette.border),
-                ),
-                child: Icon(
-                  Icons.tune_rounded,
-                  size: 14,
-                  color: palette.heading,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 6),
-          InkWell(
-            onTap: onAddHabit,
-            borderRadius: BorderRadius.circular(8),
+        ),
+        const SizedBox(width: 6),
+        Tooltip(
+          message: 'Manage Habits & Routines',
+          child: InkWell(
+            onTap: onManageHabits,
+            borderRadius: BorderRadius.circular(9),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              width: 30,
+              height: 30,
               decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(8),
+                color: palette.surfaceMuted,
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(color: palette.border),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.add_rounded, size: 14, color: Colors.white),
-                  const SizedBox(width: 3),
-                  Text(
-                    'Add',
-                    style: text.labelSmall?.copyWith(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
+              child: Icon(Icons.tune_rounded, size: 15, color: palette.heading),
             ),
           ),
-        ],
-      ),
+        ),
+        const SizedBox(width: 6),
+        InkWell(
+          onTap: onAddHabit,
+          borderRadius: BorderRadius.circular(9),
+          child: Container(
+            height: 30,
+            padding: const EdgeInsets.symmetric(horizontal: 11),
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.add_rounded, size: 15, color: Colors.white),
+                const SizedBox(width: 3),
+                Text(
+                  'Add',
+                  style: text.labelSmall?.copyWith(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -590,16 +582,19 @@ class _HabitsManagementCardState extends State<_HabitsManagementCard> {
         children: [
           // 1. Category Filter & Consistency Sub-Bar
           Container(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: 10,
+            ),
             decoration: BoxDecoration(
               color: palette.surfaceMuted.withValues(
                 alpha: palette.isDark ? 0.45 : 0.65,
               ),
               borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(15),
+                top: Radius.circular(17),
               ),
               border: Border(
-                bottom: BorderSide(color: palette.border, width: 0.7),
+                bottom: BorderSide(color: palette.divider, width: 1),
               ),
             ),
             child: Column(
@@ -615,7 +610,7 @@ class _HabitsManagementCardState extends State<_HabitsManagementCard> {
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        '$weeklyPct% 7-day consistency • Best streak ${state.longestActiveStreak}d',
+                        '$weeklyPct% consistency · Best ${state.longestActiveStreak}d',
                         softWrap: true,
                         style: text.labelSmall?.copyWith(
                           fontSize: 12,
@@ -786,8 +781,9 @@ class _HabitsManagementCardState extends State<_HabitsManagementCard> {
                       Divider(
                         height: 1,
                         thickness: 1,
-                        indent: 52,
-                        color: palette.border,
+                        indent: AppSpacing.md,
+                        endIndent: AppSpacing.md,
+                        color: palette.divider,
                       ),
                   ],
                 ],
@@ -796,7 +792,7 @@ class _HabitsManagementCardState extends State<_HabitsManagementCard> {
             if (filteredHabits.length > 5)
               Center(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  padding: const EdgeInsets.fromLTRB(0, 2, 0, 6),
                   child: TextButton.icon(
                     onPressed: () =>
                         setState(() => _showAllHabits = !_showAllHabits),
@@ -828,93 +824,6 @@ class _HabitsManagementCardState extends State<_HabitsManagementCard> {
                 ),
               ),
           ],
-
-          // 3. Bottom Action Footer Bar inside Card
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(color: palette.border, width: 0.7),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Flexible(
-                  child: InkWell(
-                    onTap: () {
-                      final bloc = context.read<TodayHubBloc>();
-                      HabitEditorSheet.show(
-                        context,
-                        onSave: (habit) => bloc.add(AddHabit(habit)),
-                      );
-                    },
-                    borderRadius: BorderRadius.circular(8),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 4,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.add_circle_outline_rounded,
-                            size: 14,
-                            color: AppColors.primary,
-                          ),
-                          const SizedBox(width: 5),
-                          Flexible(
-                            child: Text(
-                              'New Habit / Routine',
-                              style: text.labelSmall?.copyWith(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: InkWell(
-                    onTap: () => ManageHabitsSheet.show(context),
-                    borderRadius: BorderRadius.circular(8),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 4,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              'Analytics & Schedule',
-                              style: text.labelSmall?.copyWith(
-                                fontSize: 10.5,
-                                color: palette.caption,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 3),
-                          Icon(
-                            Icons.open_in_new_rounded,
-                            size: 12,
-                            color: palette.caption,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
@@ -938,88 +847,70 @@ class _TimelineSectionHeader extends StatelessWidget {
     final palette = context.palette;
     final text = context.text;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: Row(
-        children: [
-          Container(
-            width: 28,
-            height: 28,
+    return Row(
+      children: [
+        Expanded(
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(
+                StringConstants.timelineFeed,
+                softWrap: true,
+                style: text.titleMedium?.copyWith(
+                  fontSize: 16.5,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.3,
+                  color: palette.heading,
+                ),
+              ),
+              _CountPill(
+                text: pendingTasks == 0
+                    ? 'All done'
+                    : '$pendingTasks remaining',
+                color: pendingTasks == 0
+                    ? AppColors.success
+                    : AppColors.moduleTime,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 6),
+        InkWell(
+          onTap: onAddTask,
+          borderRadius: BorderRadius.circular(9),
+          child: Container(
+            height: 30,
+            padding: const EdgeInsets.symmetric(horizontal: 11),
             decoration: BoxDecoration(
               color: AppColors.moduleTime.withValues(
                 alpha: palette.isDark ? 0.22 : 0.12,
               ),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(9),
             ),
-            child: const Icon(
-              Icons.bolt_rounded,
-              size: 16,
-              color: AppColors.moduleTime,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 4,
-              crossAxisAlignment: WrapCrossAlignment.center,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  StringConstants.timelineFeed,
-                  softWrap: true,
-                  style: text.titleMedium?.copyWith(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.2,
-                    color: palette.heading,
-                  ),
+                const Icon(
+                  Icons.add_rounded,
+                  size: 15,
+                  color: AppColors.moduleTime,
                 ),
-                _CountPill(
-                  text: pendingTasks == 0
-                      ? 'All done'
-                      : '$pendingTasks remaining',
-                  color: pendingTasks == 0
-                      ? AppColors.success
-                      : AppColors.moduleTime,
+                const SizedBox(width: 3),
+                Text(
+                  'Task',
+                  style: text.labelSmall?.copyWith(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.moduleTime,
+                  ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 6),
-          InkWell(
-            onTap: onAddTask,
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: AppColors.moduleTime.withValues(
-                  alpha: palette.isDark ? 0.22 : 0.12,
-                ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.add_rounded,
-                    size: 14,
-                    color: AppColors.moduleTime,
-                  ),
-                  const SizedBox(width: 3),
-                  Text(
-                    'Task',
-                    style: text.labelSmall?.copyWith(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.moduleTime,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -1082,192 +973,147 @@ class _MomentumSummaryCard extends StatelessWidget {
     return 'Steady start — knock out your next priority task';
   }
 
-  String _getDetailedInsight(int pct) {
-    final nextText = nextPriorityTask != null
-        ? 'Next priority: "${nextPriorityTask!.title}" at ${nextPriorityTask!.time} (${nextPriorityTask!.category}). '
-        : 'All scheduled timeline tasks are completed for today! ';
-    final streakText = longestStreak > 0
-        ? 'Your longest active habit streak is $longestStreak days — keep the chain unbroken.'
-        : 'Complete a habit today to ignite your consistency streak.';
-    return '$nextText$streakText';
-  }
-
   @override
   Widget build(BuildContext context) {
-    final palette = context.palette;
     final text = context.text;
     final pct = (progress * 100).round();
+    final next = nextPriorityTask;
 
-    return FeatureCard(
-      padding: const EdgeInsets.all(AppSpacing.md),
+    // Gradient hero: the screen's single focal point. Ring + headline on top,
+    // a frosted three-metric strip below. Fixed height, nothing expandable.
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: AppDecorations.heroPrimaryGradient,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              TweenAnimationBuilder<double>(
-                tween: Tween<double>(begin: 0.0, end: progress),
-                duration: const Duration(milliseconds: 650),
-                curve: Curves.easeOutCubic,
-                builder: (context, animVal, _) {
-                  final animPct = (animVal * 100).round();
-                  return SizedBox(
-                    width: 52,
-                    height: 52,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        SizedBox(
-                          width: 52,
-                          height: 52,
-                          child: CircularProgressIndicator(
-                            value: animVal,
-                            strokeWidth: 5,
-                            backgroundColor: AppColors.primary.withValues(
-                              alpha: palette.isDark ? 0.22 : 0.12,
-                            ),
-                            valueColor: const AlwaysStoppedAnimation<Color>(
-                              AppColors.primary,
-                            ),
-                            strokeCap: StrokeCap.round,
-                          ),
-                        ),
-                        Text(
-                          '$animPct%',
-                          style: text.labelLarge?.copyWith(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            color: palette.heading,
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+              _MomentumRing(progress: progress),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 4,
-                      crossAxisAlignment: WrapCrossAlignment.center,
+                    Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 7,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(
-                              alpha: palette.isDark ? 0.20 : 0.10,
-                            ),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
+                        Flexible(
                           child: Text(
                             'DAILY MOMENTUM',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: text.labelSmall?.copyWith(
-                              fontSize: 9.5,
+                              fontSize: 10,
                               fontWeight: FontWeight.w800,
                               letterSpacing: 0.6,
-                              color: AppColors.primary,
+                              color: Colors.white.withValues(alpha: 0.74),
                             ),
                           ),
                         ),
-                        if (longestStreak > 0)
+                        if (longestStreak > 0) ...[
+                          const SizedBox(width: 6),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 7,
+                              horizontal: 6.5,
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.focusPomodoro.withValues(
-                                alpha: palette.isDark ? 0.20 : 0.12,
-                              ),
+                              color: Colors.white.withValues(alpha: 0.18),
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            child: Text(
-                              '🔥 ${longestStreak}d Top Streak',
-                              style: text.labelSmall?.copyWith(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.focusPomodoro,
-                              ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.local_fire_department_rounded,
+                                  size: 11.5,
+                                  color: Color(0xFFFBBF24),
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  '${longestStreak}d streak',
+                                  style: text.labelSmall?.copyWith(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 5),
                     Text(
                       _getMotivationMessage(pct),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: text.titleMedium?.copyWith(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: palette.heading,
+                        fontSize: 16.5,
                         height: 1.25,
+                        letterSpacing: -0.3,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    ExpandableTextWidget(
-                      text: _getDetailedInsight(pct),
-                      collapsedMaxLines: 1,
-                      characterThreshold: 55,
-                      toggleColor: AppColors.primary,
-                      style: text.bodySmall?.copyWith(
-                        fontSize: 12.5,
-                        height: 1.35,
-                        color: palette.caption,
+                    if (next != null) ...[
+                      const SizedBox(height: 5),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 13,
+                            color: Colors.white.withValues(alpha: 0.8),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              'Next · ${next.time} · ${next.title}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: text.labelSmall?.copyWith(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white.withValues(alpha: 0.85),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
-          Divider(height: 1, thickness: 1, color: palette.border),
-          const SizedBox(height: AppSpacing.sm + 2),
-          IntrinsicHeight(
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(14),
+            ),
             child: Row(
               children: [
                 Expanded(
-                  child: _MetricColumn(
-                    icon: Icons.check_circle_rounded,
-                    color: AppColors.secondary,
+                  child: _HeroMetric(
                     label: 'Habits Done',
                     value: '$habitsDone / $habitsTotal',
                   ),
                 ),
-                VerticalDivider(
-                  width: 1,
-                  thickness: 1,
-                  indent: 4,
-                  endIndent: 4,
-                  color: palette.border,
-                ),
+                const _HeroMetricDivider(),
                 Expanded(
-                  child: _MetricColumn(
-                    icon: Icons.schedule_rounded,
-                    color: AppColors.moduleTime,
+                  child: _HeroMetric(
                     label: 'Tasks Pending',
                     value: '$pendingTasks left',
                   ),
                 ),
-                VerticalDivider(
-                  width: 1,
-                  thickness: 1,
-                  indent: 4,
-                  endIndent: 4,
-                  color: palette.border,
-                ),
+                const _HeroMetricDivider(),
                 Expanded(
-                  child: _MetricColumn(
-                    icon: Icons.account_balance_wallet_rounded,
-                    color: AppColors.moduleMoney,
+                  child: _HeroMetric(
                     label: 'Safe Spend',
                     value: CurrencyUtils.format(remainingSafe, decimals: 0),
                   ),
@@ -1281,65 +1127,109 @@ class _MomentumSummaryCard extends StatelessWidget {
   }
 }
 
-class _MetricColumn extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final String label;
-  final String value;
+class _MomentumRing extends StatelessWidget {
+  final double progress;
 
-  const _MetricColumn({
-    required this.icon,
-    required this.color,
-    required this.label,
-    required this.value,
-  });
+  const _MomentumRing({required this.progress});
 
   @override
   Widget build(BuildContext context) {
-    final palette = context.palette;
-    final text = context.text;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0.0, end: progress),
+      duration: const Duration(milliseconds: 650),
+      curve: Curves.easeOutCubic,
+      builder: (context, animVal, _) {
+        return SizedBox(
+          width: 68,
+          height: 68,
+          child: Stack(
+            alignment: Alignment.center,
             children: [
-              Icon(icon, size: 13, color: color),
-              const SizedBox(width: 5),
-              Expanded(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    value,
-                    style: text.titleSmall?.copyWith(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
-                      color: palette.heading,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
+              SizedBox(
+                width: 68,
+                height: 68,
+                child: CircularProgressIndicator(
+                  value: animVal,
+                  strokeWidth: 6.5,
+                  backgroundColor: Colors.white.withValues(alpha: 0.22),
+                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                  strokeCap: StrokeCap.round,
+                ),
+              ),
+              Text(
+                '${(animVal * 100).round()}%',
+                style: context.text.labelLarge?.copyWith(
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 2),
+        );
+      },
+    );
+  }
+}
+
+class _HeroMetric extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _HeroMetric({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.text;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
           FittedBox(
             fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
+            alignment: Alignment.center,
+            child: Text(
+              value,
+              style: text.titleSmall?.copyWith(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.2,
+                color: Colors.white,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+          const SizedBox(height: 1),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.center,
             child: Text(
               label,
               style: text.labelSmall?.copyWith(
-                fontSize: 11,
-                color: palette.caption,
+                fontSize: 10.5,
+                fontWeight: FontWeight.w600,
+                color: Colors.white.withValues(alpha: 0.76),
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _HeroMetricDivider extends StatelessWidget {
+  const _HeroMetricDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 1,
+      height: 30,
+      color: Colors.white.withValues(alpha: 0.22),
     );
   }
 }
@@ -1401,7 +1291,7 @@ class _TimelineUnifiedCardState extends State<_TimelineUnifiedCard> {
     final hiddenCount = items.length - 5;
 
     return FeatureCard(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+      padding: EdgeInsets.zero,
       child: Column(
         children: [
           AnimatedSize(
@@ -1435,8 +1325,9 @@ class _TimelineUnifiedCardState extends State<_TimelineUnifiedCard> {
                     Divider(
                       height: 1,
                       thickness: 1,
-                      indent: 52,
-                      color: palette.border,
+                      indent: AppSpacing.md,
+                      endIndent: AppSpacing.md,
+                      color: palette.divider,
                     ),
                 ],
               ],
@@ -1495,7 +1386,16 @@ class _TimelineRowTile extends StatelessWidget {
     final palette = context.palette;
     final text = context.text;
     final tint = item.color;
+    final hasAction = !item.isDone && item.action.trim().isNotEmpty;
+    final metaStyle = text.labelSmall?.copyWith(
+      fontSize: 11,
+      height: 1.3,
+      letterSpacing: -0.1,
+      fontWeight: FontWeight.w500,
+      color: palette.caption,
+    );
 
+    // Two-line row: title, then `time · category · action` on one meta line.
     return Material(
       type: MaterialType.transparency,
       child: InkWell(
@@ -1510,69 +1410,66 @@ class _TimelineRowTile extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
-            vertical: 10,
+            vertical: 11,
           ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // 1. Check circle
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 220),
-                  curve: Curves.easeOutCubic,
-                  width: 22,
-                  height: 22,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: item.isDone ? AppColors.success : Colors.transparent,
-                    border: Border.all(
-                      color: item.isDone ? AppColors.success : palette.border,
-                      width: 1.5,
-                    ),
-                  ),
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 180),
-                    child: item.isDone
-                        ? const Icon(
-                            Icons.check_rounded,
-                            key: ValueKey('checked'),
-                            size: 14,
-                            color: Colors.white,
-                          )
-                        : const SizedBox.shrink(key: ValueKey('unchecked')),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: item.isDone ? AppColors.success : Colors.transparent,
+                  border: Border.all(
+                    color: item.isDone ? AppColors.success : palette.border,
+                    width: 1.5,
                   ),
                 ),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 180),
+                  child: item.isDone
+                      ? const Icon(
+                          Icons.check_rounded,
+                          key: ValueKey('checked'),
+                          size: 14,
+                          color: Colors.white,
+                        )
+                      : const SizedBox.shrink(key: ValueKey('unchecked')),
+                ),
               ),
-              const SizedBox(width: AppSpacing.md),
+              const SizedBox(width: 10),
 
               // 2. Category icon badge
               Container(
-                width: 32,
-                height: 32,
-                margin: const EdgeInsets.only(top: 1),
+                width: 34,
+                height: 34,
                 decoration: BoxDecoration(
                   color: tint.withValues(alpha: palette.isDark ? 0.22 : 0.12),
-                  borderRadius: BorderRadius.circular(9),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(item.icon, size: 16, color: tint),
+                child: Icon(item.icon, size: 17, color: tint),
               ),
-              const SizedBox(width: AppSpacing.sm + 4),
+              const SizedBox(width: 10),
 
-              // 3. Full Title (with Show More if long) + Time/Category/Action subtitle
+              // 3. Title + single meta line (time · category · status/action)
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    ExpandableTextWidget(
-                      text: item.title,
-                      collapsedMaxLines: 2,
-                      characterThreshold: 50,
-                      toggleColor: tint,
+                    Text(
+                      item.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: text.titleMedium?.copyWith(
-                        fontSize: 15,
-                        height: 1.3,
+                        fontSize: 14.5,
+                        height: 1.25,
                         fontWeight: FontWeight.w700,
+                        letterSpacing: -0.25,
                         color: item.isDone ? palette.caption : palette.heading,
                         decoration: item.isDone
                             ? TextDecoration.lineThrough
@@ -1580,55 +1477,78 @@ class _TimelineRowTile extends StatelessWidget {
                         decorationColor: palette.caption,
                       ),
                     ),
-                    const SizedBox(height: 5),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 4,
-                      crossAxisAlignment: WrapCrossAlignment.center,
+                    const SizedBox(height: 3),
+                    Row(
                       children: [
-                        Text(
-                          '${item.time} • ${item.category}',
-                          style: text.labelSmall?.copyWith(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: palette.caption,
+                        Flexible(
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: item.time,
+                                  style: metaStyle?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: item.isDone
+                                        ? palette.caption
+                                        : palette.body,
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                  ),
+                                ),
+                                TextSpan(text: ' · ${item.category}'),
+                                if (item.isDone)
+                                  TextSpan(
+                                    text: ' · Done',
+                                    style: metaStyle?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.success,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: metaStyle,
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: item.isDone
-                                ? AppColors.success.withValues(
-                                    alpha: palette.isDark ? 0.18 : 0.10,
-                                  )
-                                : tint.withValues(
-                                    alpha: palette.isDark ? 0.18 : 0.10,
-                                  ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            item.isDone ? 'Completed' : item.action,
-                            style: text.labelSmall?.copyWith(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w700,
-                              color: item.isDone ? AppColors.success : tint,
+                        if (hasAction) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6.5,
+                              vertical: 1.5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: tint.withValues(
+                                alpha: palette.isDark ? 0.18 : 0.10,
+                              ),
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            child: Text(
+                              item.action,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: text.labelSmall?.copyWith(
+                                fontSize: 10,
+                                height: 1.2,
+                                fontWeight: FontWeight.w700,
+                                color: tint,
+                              ),
                             ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 2),
+              const SizedBox(width: 4),
 
-              // 4. Menu button
+              // 4. Menu button, centered with row
               IconButton(
                 tooltip: 'Edit Task',
-                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
                 padding: EdgeInsets.zero,
                 visualDensity: VisualDensity.compact,
                 style: IconButton.styleFrom(
@@ -1672,7 +1592,7 @@ class _EveningWrapUpCard extends StatelessWidget {
       ),
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
-        vertical: AppSpacing.md,
+        vertical: 13,
       ),
       onTap: () {
         HapticFeedback.selectionClick();
@@ -1685,53 +1605,69 @@ class _EveningWrapUpCard extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 36,
-            height: 36,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(
-                alpha: palette.isDark ? 0.25 : 0.14,
+                alpha: palette.isDark ? 0.25 : 0.12,
               ),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
               Icons.nights_stay_rounded,
               color: AppColors.primary,
-              size: 18,
+              size: 19,
             ),
           ),
-          const SizedBox(width: AppSpacing.md),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  StringConstants.eveningWrapUpTitle,
-                  style: text.titleMedium?.copyWith(
-                    fontSize: 15.5,
-                    fontWeight: FontWeight.w700,
-                    color: palette.heading,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    StringConstants.eveningWrapUpTitle,
+                    maxLines: 1,
+                    style: text.titleMedium?.copyWith(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.25,
+                      color: palette.heading,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 3),
-                ExpandableTextWidget(
-                  text: StringConstants.eveningWrapUpSubtitle,
-                  collapsedMaxLines: 2,
-                  characterThreshold: 60,
-                  toggleColor: AppColors.primary,
+                const SizedBox(height: 2),
+                Text(
+                  StringConstants.eveningWrapUpSubtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: text.bodySmall?.copyWith(
-                    fontSize: 12.5,
-                    height: 1.35,
+                    fontSize: 12,
+                    height: 1.3,
                     color: palette.caption,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: AppSpacing.xs),
-          const Icon(
-            Icons.chevron_right_rounded,
-            color: AppColors.primary,
-            size: 20,
+          const SizedBox(width: AppSpacing.sm),
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(
+                alpha: palette.isDark ? 0.20 : 0.10,
+              ),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.primary,
+              size: 19,
+            ),
           ),
         ],
       ),
@@ -1762,6 +1698,8 @@ class _AudioBriefSectionCard extends StatelessWidget {
     final palette = context.palette;
     final text = context.text;
 
+    // Compact "now playing" strip: waveform tile · title + one-line summary ·
+    // round play button. The whole card is the tap target.
     return FeatureCard(
       key: const ValueKey('today_audio_brief_section'),
       borderColor: AppColors.primary.withValues(
@@ -1769,7 +1707,7 @@ class _AudioBriefSectionCard extends StatelessWidget {
       ),
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm + 4,
+        vertical: 12,
       ),
       onTap: onTap,
       child: Row(
@@ -1783,7 +1721,7 @@ class _AudioBriefSectionCard extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(11),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
               Icons.graphic_eq_rounded,
@@ -1791,92 +1729,60 @@ class _AudioBriefSectionCard extends StatelessWidget {
               size: 20,
             ),
           ),
-          const SizedBox(width: AppSpacing.md),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 4,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Text(
-                      StringConstants.audioBriefSectionTitle,
-                      softWrap: true,
-                      style: text.titleMedium?.copyWith(
-                        fontSize: 15.5,
-                        fontWeight: FontWeight.w700,
-                        color: palette.heading,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(
-                          alpha: palette.isDark ? 0.22 : 0.12,
-                        ),
-                        borderRadius: AppRadius.radiusFull,
-                      ),
-                      child: Text(
-                        'VOICE BRIEF',
-                        style: text.labelSmall?.copyWith(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.4,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 3),
                 Text(
-                  '$habitsDone/$habitsTotal habits • $pendingTasks tasks ahead • ${CurrencyUtils.format(remainingSafe)} safe spend',
-                  softWrap: true,
-                  style: text.bodySmall?.copyWith(
-                    fontSize: 12.5,
-                    height: 1.3,
-                    color: palette.caption,
+                  StringConstants.audioBriefSectionTitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.titleMedium?.copyWith(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.2,
+                    color: palette.heading,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '$habitsDone/$habitsTotal habits · $pendingTasks tasks left · '
+                    '${CurrencyUtils.format(remainingSafe, decimals: 0)} safe',
+                    maxLines: 1,
+                    style: text.bodySmall?.copyWith(
+                      fontSize: 12,
+                      height: 1.3,
+                      color: palette.caption,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: AppSpacing.xs),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 112),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: AppRadius.radiusFull,
-              ),
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.play_arrow_rounded,
-                      size: 15,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(width: 3),
-                    Text(
-                      StringConstants.playBriefing,
-                      style: text.labelSmall?.copyWith(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
+          const SizedBox(width: AppSpacing.sm),
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.25),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
                 ),
-              ),
+              ],
+            ),
+            child: const Icon(
+              Icons.play_arrow_rounded,
+              color: Colors.white,
+              size: 21,
             ),
           ),
         ],

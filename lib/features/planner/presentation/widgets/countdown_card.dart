@@ -8,7 +8,7 @@ import '../../domain/entities/countdown_item_entity.dart';
 
 /// Compact countdown card with full-width aligned divider and action footer.
 class CountdownCard extends StatelessWidget {
-  static const double _avatarSize = 38;
+  static const double _avatarSize = 40;
 
   final CountdownItemEntity item;
   final bool isDark;
@@ -57,12 +57,12 @@ class CountdownCard extends StatelessWidget {
     final dividerColor = isDark ? AppColors.darkDivider : AppColors.divider;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
-        borderRadius: AppRadius.radiusMd,
-        border: Border.all(color: dividerColor, width: 0.85),
+        borderRadius: AppRadius.radiusLg,
+        border: Border.all(color: dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,16 +75,16 @@ class CountdownCard extends StatelessWidget {
                 height: _avatarSize,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   // ignore: non_const_argument_for_const_parameter
                   IconData(item.iconCodePoint, fontFamily: 'MaterialIcons'),
                   color: color,
-                  size: 19,
+                  size: 20,
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,6 +97,7 @@ class CountdownCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 15,
                         height: 1.3,
+                        letterSpacing: -0.2,
                         fontWeight: FontWeight.w700,
                         color: headingColor,
                       ),
@@ -198,8 +199,8 @@ class CountdownCard extends StatelessWidget {
             ),
           ],
 
-          const SizedBox(height: 8),
-          Divider(height: 1, thickness: 0.8, color: dividerColor),
+          const SizedBox(height: 10),
+          Divider(height: 1, thickness: 1, color: dividerColor),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -207,35 +208,36 @@ class CountdownCard extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: onAddToPlanner,
                   style: FilledButton.styleFrom(
-                    minimumSize: const Size(0, 30),
+                    minimumSize: const Size(0, 32),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.sm,
                     ),
                     elevation: 0,
                     backgroundColor: AppColors.moduleTime.withValues(
-                      alpha: 0.14,
+                      alpha: isDark ? 0.22 : 0.14,
                     ),
                     foregroundColor: isDark
                         ? AppColors.moduleTimeLight
                         : AppColors.moduleTime,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(9),
                     ),
                     textStyle: const TextStyle(
                       fontFamily: AppTextStyles.fontFamily,
-                      fontSize: 11.5,
+                      fontSize: 12.5,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  icon: const Icon(Icons.event_available_rounded, size: 14),
+                  icon: const Icon(Icons.event_available_rounded, size: 15),
                   label: const FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Text('Add to Planner'),
                   ),
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
               _SquareIconButton(
                 icon: Icons.edit_outlined,
                 tooltip: 'Edit countdown',
@@ -243,7 +245,7 @@ class CountdownCard extends StatelessWidget {
                 isDark: isDark,
                 onPressed: onEdit,
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
               _SquareIconButton(
                 icon: Icons.delete_outline_rounded,
                 tooltip: 'Delete countdown',
@@ -298,17 +300,16 @@ class _SquareIconButton extends StatelessWidget {
     return IconButton(
       tooltip: tooltip,
       onPressed: onPressed,
-      icon: Icon(icon, size: 15),
+      icon: Icon(icon, size: 16),
       color: color,
       style: IconButton.styleFrom(
-        fixedSize: const Size(32, 30),
-        minimumSize: const Size(32, 30),
+        fixedSize: const Size(36, 32),
+        minimumSize: const Size(36, 32),
         padding: EdgeInsets.zero,
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
         side: BorderSide(
           color: isDark ? AppColors.darkDivider : AppColors.divider,
-          width: 0.85,
         ),
       ),
     );

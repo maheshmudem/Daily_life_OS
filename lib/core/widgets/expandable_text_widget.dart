@@ -43,19 +43,20 @@ class _ExpandableTextWidgetState extends State<ExpandableTextWidget> {
       builder: (context, constraints) {
         final effectiveStyle =
             widget.style ?? DefaultTextStyle.of(context).style;
-        bool exceedsLines =
-            widget.text.length > widget.characterThreshold ||
-            widget.text.contains('\n');
-
-        if (!exceedsLines &&
-            constraints.maxWidth.isFinite &&
-            constraints.maxWidth > 0) {
+        final bool exceedsLines;
+        if (constraints.maxWidth.isFinite && constraints.maxWidth > 0) {
           final painter = TextPainter(
             text: TextSpan(text: widget.text, style: effectiveStyle),
             maxLines: widget.collapsedMaxLines,
             textDirection: Directionality.of(context),
+            textScaler: MediaQuery.textScalerOf(context),
           )..layout(maxWidth: constraints.maxWidth);
           exceedsLines = painter.didExceedMaxLines;
+        } else {
+          final newlineCount = '\n'.allMatches(widget.text).length;
+          exceedsLines =
+              widget.text.length > widget.characterThreshold ||
+              newlineCount >= widget.collapsedMaxLines;
         }
 
         final accentColor = widget.toggleColor ?? AppColors.primary;

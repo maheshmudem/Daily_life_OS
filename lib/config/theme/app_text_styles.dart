@@ -3,7 +3,7 @@ import 'app_colors.dart';
 
 /// Design tokens for typography in Daily Life OS.
 ///
-/// One type scale for the whole app, built on the DMSans variable font.
+/// One type scale for the whole app, built on the Inter variable font.
 /// The scale follows the sizes used by mainstream iOS / Material apps:
 ///
 /// | Token          | Size | Weight | Typical use                         |
@@ -26,7 +26,7 @@ import 'app_colors.dart';
 class AppTextStyles {
   AppTextStyles._();
 
-  static const String fontFamily = 'DMSans';
+  static const String fontFamily = 'Inter';
 
   // ==========================================
   // HERO & STAT NUMERALS (CURRENCY & TIMERS)

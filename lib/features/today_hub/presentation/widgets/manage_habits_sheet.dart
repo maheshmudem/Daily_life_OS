@@ -222,7 +222,7 @@ class _ManageHabitsSheetState extends State<ManageHabitsSheet> {
                       Expanded(
                         child: _StudioMetric(
                           label: 'Top Streak',
-                          value: '${longestStreak}d 🔥',
+                          value: '${longestStreak}d',
                           color: AppColors.focusPomodoro,
                         ),
                       ),
@@ -579,13 +579,26 @@ class _ManageHabitCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                          Text(
-                            '🔥 ${habit.streakDays}d streak • $weeklyRate% 7d',
-                            style: text.labelSmall?.copyWith(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w600,
-                              color: palette.caption,
-                            ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.local_fire_department_rounded,
+                                size: 13,
+                                color: AppColors.focusPomodoro,
+                              ),
+                              const SizedBox(width: 2),
+                              Flexible(
+                                child: Text(
+                                  '${habit.streakDays}d streak · $weeklyRate% 7d',
+                                  style: text.labelSmall?.copyWith(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: palette.caption,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),

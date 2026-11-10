@@ -4,10 +4,12 @@ import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_text_styles.dart';
 import '../../../../core/constants/string_constants.dart';
 
-/// Compact inline "quick add" card at the top of the Reminders tab.
-/// Follows an 8pt/4pt spatial grid with 12px internal padding and 30px control pills.
+/// Inline "quick add" card at the top of the Reminders tab.
+///
+/// Three rows on an 8pt grid: a plain title with a "Full options" link, a
+/// 40dp input, and a 32dp control row (time · category · submit).
 class SetReminderCard extends StatelessWidget {
-  static const double _controlHeight = 30;
+  static const double _controlHeight = 32;
 
   final TextEditingController controller;
   final TimeOfDay selectedTime;
@@ -43,72 +45,64 @@ class SetReminderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final headingColor = isDark
+        ? AppColors.darkTextHeading
+        : AppColors.textHeading;
     final captionColor = isDark
         ? AppColors.darkTextCaption
         : AppColors.textCaption;
     final borderColor = isDark ? AppColors.darkDivider : AppColors.divider;
+    final fieldFill = isDark
+        ? AppColors.darkSurfaceSecondary
+        : AppColors.surfaceSecondary;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
-        borderRadius: AppRadius.radiusMd,
-        border: Border.all(color: borderColor, width: 0.8),
+        borderRadius: AppRadius.radiusLg,
+        border: Border.all(color: borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header Row
+          // Title · Full options
           Row(
             children: [
-              Container(
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: AppColors.moduleTime.withValues(alpha: 0.14),
-                  borderRadius: AppRadius.radiusXs,
-                ),
-                child: const Icon(
-                  Icons.alarm_add_rounded,
-                  color: AppColors.moduleTime,
-                  size: 13,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                StringConstants.setReminder.toUpperCase(),
-                style: AppTextStyles.overline.copyWith(
-                  color: AppColors.moduleTime,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.6,
+              Expanded(
+                child: Text(
+                  StringConstants.setReminder,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.2,
+                    color: headingColor,
+                  ),
                 ),
               ),
-              const Spacer(),
               InkWell(
                 borderRadius: AppRadius.radiusXs,
                 onTap: onOpenFullOptions,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 2,
-                  ),
+                  padding: const EdgeInsets.fromLTRB(6, 2, 2, 2),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        'Full Options',
+                      const Text(
+                        'Full options',
                         style: TextStyle(
-                          fontSize: 11.5,
+                          fontSize: 12.5,
                           fontWeight: FontWeight.w600,
-                          color: captionColor,
+                          color: AppColors.moduleTime,
                         ),
                       ),
-                      const SizedBox(width: 2),
+                      const SizedBox(width: 1),
                       Icon(
                         Icons.chevron_right_rounded,
-                        size: 15,
-                        color: captionColor,
+                        size: 17,
+                        color: AppColors.moduleTime.withValues(alpha: 0.9),
                       ),
                     ],
                   ),
@@ -116,44 +110,46 @@ class SetReminderCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
 
-          // Compact Input Field
+          // Input
           SizedBox(
-            height: 36,
+            height: 40,
             child: TextField(
               controller: controller,
               textInputAction: TextInputAction.done,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 13.5,
                 fontWeight: FontWeight.w500,
-                color: isDark
-                    ? AppColors.darkTextHeading
-                    : AppColors.textHeading,
+                color: headingColor,
               ),
               decoration: InputDecoration(
                 isDense: true,
                 filled: true,
-                fillColor: isDark
-                    ? AppColors.darkSurfaceSecondary
-                    : AppColors.surfaceSecondary,
+                fillColor: fieldFill,
                 hintText: StringConstants.reminderHint,
-                hintStyle: TextStyle(fontSize: 12.5, color: captionColor),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 9,
+                hintStyle: TextStyle(fontSize: 13, color: captionColor),
+                prefixIcon: const Icon(
+                  Icons.alarm_add_rounded,
+                  size: 17,
+                  color: AppColors.moduleTime,
                 ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                prefixIconConstraints: const BoxConstraints(
+                  minWidth: 38,
+                  minHeight: 38,
+                ),
+                contentPadding: const EdgeInsets.fromLTRB(0, 10, 12, 10),
+                border: const OutlineInputBorder(
+                  borderRadius: AppRadius.radiusSm,
                   borderSide: BorderSide.none,
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                enabledBorder: const OutlineInputBorder(
+                  borderRadius: AppRadius.radiusSm,
                   borderSide: BorderSide.none,
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(
+                focusedBorder: const OutlineInputBorder(
+                  borderRadius: AppRadius.radiusSm,
+                  borderSide: BorderSide(
                     color: AppColors.moduleTime,
                     width: 1.2,
                   ),
@@ -162,11 +158,13 @@ class SetReminderCard extends StatelessWidget {
               onSubmitted: (_) => onSubmit(),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
 
           // Time · Category · Submit
           Row(
             children: [
+              // The chip group owns the slack width; the category chip keeps
+              // its natural width and only truncates when the row is too narrow.
               Expanded(
                 child: Row(
                   children: [
@@ -174,14 +172,16 @@ class SetReminderCard extends StatelessWidget {
                       icon: Icons.schedule_rounded,
                       label: _formatTimeOfDay(selectedTime),
                       color: AppColors.moduleTime,
+                      isDark: isDark,
                       onTap: onPickTime,
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 8),
                     Flexible(
                       child: _OptionChip(
                         icon: categoryIcon,
                         label: selectedCategory,
                         color: categoryColor,
+                        isDark: isDark,
                         onTap: onCycleCategory,
                       ),
                     ),
@@ -196,14 +196,15 @@ class SetReminderCard extends StatelessWidget {
                   foregroundColor: Colors.white,
                   elevation: 0,
                   minimumSize: const Size(0, _controlHeight),
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(9),
                   ),
                   textStyle: const TextStyle(
                     fontFamily: AppTextStyles.fontFamily,
-                    fontSize: 12,
+                    fontSize: 12.5,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -221,38 +222,40 @@ class _OptionChip extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
+  final bool isDark;
   final VoidCallback onTap;
 
   const _OptionChip({
     required this.icon,
     required this.label,
     required this.color,
+    required this.isDark,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: color.withValues(alpha: 0.12),
-      borderRadius: BorderRadius.circular(8),
+      color: color.withValues(alpha: isDark ? 0.2 : 0.11),
+      borderRadius: BorderRadius.circular(9),
       child: InkWell(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(9),
         onTap: onTap,
         child: Container(
           height: SetReminderCard._controlHeight,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 13.5, color: color),
-              const SizedBox(width: 4),
+              Icon(icon, size: 14, color: color),
+              const SizedBox(width: 5),
               Flexible(
                 child: Text(
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 11.5,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: color,
                   ),

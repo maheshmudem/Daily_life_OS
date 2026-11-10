@@ -3,17 +3,21 @@ import 'package:flutter/services.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_spacing.dart';
 import '../../config/theme/theme_context.dart';
-import 'expandable_text_widget.dart';
 
-/// Best-in-class interactive habit row designed for unified grouped cards.
+/// Compact interactive habit row designed for unified grouped cards.
 ///
-/// Features:
-/// - Tactile circular check indicator on the left (toggles completion with smooth scale animation)
+/// Layout (2–3 lines, ~58–76dp tall):
+/// ```
+/// [check] [icon]  Title                               🔥 14d
+///                 Category · Status · 🔔 07:00        ●●●●●●○
+///                 One-line description (optional)
+/// ```
+/// - Tactile circular check indicator on the left toggles completion directly
 /// - Vibrant squircle tinted icon
-/// - Full readable title (wraps up to 2 lines, expandable when long)
-/// - Optional expandable description ("Show more / Show less")
-/// - Subtitle metadata: category pill, status, reminder time, and 7-day mini consistency dots
-/// - Compact streak pill with flame icon and tabular figures
+/// - Title wraps to at most 2 lines
+/// - Single metadata line: category, status / schedule, reminder time
+/// - Trailing column stacks the streak pill over the 7-day consistency dots
+/// - Tapping the row (or long-pressing) opens the detail sheet
 class HabitBubbleWidget extends StatelessWidget {
   final String title;
   final String? description;
@@ -53,13 +57,31 @@ class HabitBubbleWidget extends StatelessWidget {
     final palette = context.palette;
     final text = context.text;
 
+    // Short status copy keeps the single meta line from truncating on
+    // 360dp phones at default font scale.
     final statusText = isDone
-        ? 'Completed today'
+        ? 'Done today'
         : isSkipped
-        ? 'Skipped for today'
+        ? 'Skipped today'
         : (scheduleLabel != null && scheduleLabel!.isNotEmpty
               ? scheduleLabel!
               : 'Tap to mark done');
+    final statusColor = isDone
+        ? AppColors.success
+        : isSkipped
+        ? AppColors.warning
+        : palette.caption;
+    final hasCategory = category != null && category!.isNotEmpty;
+    final hasReminder =
+        reminderEnabled && reminderTime != null && reminderTime!.isNotEmpty;
+    final hasDots = recentWeekDots != null && recentWeekDots!.isNotEmpty;
+
+    final metaStyle = text.labelSmall?.copyWith(
+      fontSize: 11.5,
+      height: 1.3,
+      fontWeight: FontWeight.w500,
+      color: palette.caption,
+    );
 
     return Semantics(
       button: true,
@@ -93,7 +115,7 @@ class HabitBubbleWidget extends StatelessWidget {
               vertical: 11,
             ),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // 1. Tactile check circle (always toggles completion directly)
                 GestureDetector(
@@ -104,8 +126,8 @@ class HabitBubbleWidget extends StatelessWidget {
                   },
                   child: Padding(
                     padding: const EdgeInsets.only(
-                      right: AppSpacing.sm + 4,
-                      top: 5,
+                      right: 10,
+                      top: 2,
                       bottom: 2,
                     ),
                     child: AnimatedContainer(
@@ -157,7 +179,6 @@ class HabitBubbleWidget extends StatelessWidget {
                   curve: Curves.easeOutCubic,
                   width: 34,
                   height: 34,
-                  margin: const EdgeInsets.only(top: 1),
                   decoration: BoxDecoration(
                     color: tintColor.withValues(
                       alpha: palette.isDark ? 0.22 : 0.12,
@@ -166,22 +187,22 @@ class HabitBubbleWidget extends StatelessWidget {
                   ),
                   child: Icon(icon, size: 17, color: tintColor),
                 ),
-                const SizedBox(width: AppSpacing.sm + 2),
+                const SizedBox(width: 10),
 
-                // 3. Full Title + Metadata Wrap + Optional Expandable Description
+                // 3. Title + single metadata line
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      ExpandableTextWidget(
-                        text: title,
-                        collapsedMaxLines: 2,
-                        characterThreshold: 55,
-                        toggleColor: tintColor,
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: text.titleMedium?.copyWith(
-                          fontSize: 15,
-                          height: 1.3,
+                          fontSize: 14.5,
+                          height: 1.25,
+                          letterSpacing: -0.25,
                           fontWeight: FontWeight.w700,
                           color: isDone ? palette.caption : palette.heading,
                           decoration: isDone
@@ -190,114 +211,71 @@ class HabitBubbleWidget extends StatelessWidget {
                           decorationColor: palette.caption,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          if (category != null && category!.isNotEmpty)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: tintColor.withValues(
-                                  alpha: palette.isDark ? 0.16 : 0.10,
-                                ),
-                                borderRadius: BorderRadius.circular(5),
-                              ),
-                              child: Text(
-                                category!,
-                                style: text.labelSmall?.copyWith(
-                                  fontSize: 10.5,
+                      const SizedBox(height: 3),
+                      Text.rich(
+                        TextSpan(
+                          children: [
+                            if (hasCategory) ...[
+                              TextSpan(
+                                text: category,
+                                style: metaStyle?.copyWith(
                                   fontWeight: FontWeight.w700,
                                   color: tintColor,
                                 ),
                               ),
+                              const TextSpan(text: ' · '),
+                            ],
+                            TextSpan(
+                              text: statusText,
+                              style: metaStyle?.copyWith(
+                                fontWeight: isDone || isSkipped
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                                color: statusColor,
+                              ),
                             ),
-                          Text(
-                            statusText,
-                            style: text.labelSmall?.copyWith(
-                              fontSize: 12,
-                              fontWeight: isDone || isSkipped
-                                  ? FontWeight.w600
-                                  : FontWeight.w500,
-                              color: isDone
-                                  ? AppColors.success
-                                  : isSkipped
-                                  ? AppColors.warning
-                                  : palette.caption,
-                            ),
-                          ),
-                          if (reminderEnabled &&
-                              reminderTime != null &&
-                              reminderTime!.isNotEmpty)
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
+                            if (hasReminder) ...[
+                              const TextSpan(text: ' · '),
+                              WidgetSpan(
+                                alignment: PlaceholderAlignment.middle,
+                                child: Icon(
                                   Icons.notifications_active_outlined,
                                   size: 12,
                                   color: palette.caption,
                                 ),
-                                const SizedBox(width: 2),
-                                Text(
-                                  reminderTime!,
-                                  style: text.labelSmall?.copyWith(
-                                    fontSize: 11.5,
-                                    color: palette.caption,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              ),
+                              TextSpan(
+                                text: ' $reminderTime',
+                                style: metaStyle?.copyWith(
+                                  fontWeight: FontWeight.w600,
                                 ),
-                              ],
-                            ),
-                          if (recentWeekDots != null &&
-                              recentWeekDots!.isNotEmpty)
-                            _MiniWeekDots(
-                              dots: recentWeekDots!,
-                              accentColor: tintColor,
-                            ),
-                        ],
-                      ),
-                      if (description != null &&
-                          description!.trim().isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        ExpandableTextWidget(
-                          text: description!.trim(),
-                          collapsedMaxLines: 1,
-                          characterThreshold: 45,
-                          toggleColor: tintColor,
-                          style: text.bodySmall?.copyWith(
-                            fontSize: 12.5,
-                            height: 1.35,
-                            color: palette.caption,
-                          ),
+                              ),
+                            ],
+                          ],
                         ),
-                      ],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: metaStyle,
+                      ),
                     ],
                   ),
                 ),
-                const SizedBox(width: AppSpacing.xs),
+                const SizedBox(width: 8),
 
-                // 4. Streak badge & detail chevron
-                Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _StreakBadge(days: streakDays),
-                      if (onDetailTap != null) ...[
-                        const SizedBox(width: 2),
-                        Icon(
-                          Icons.chevron_right_rounded,
-                          size: 16,
-                          color: palette.caption.withValues(alpha: 0.7),
-                        ),
-                      ],
+                // 4. Trailing: streak pill stacked over the 7-day dots
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _StreakBadge(days: streakDays),
+                    if (hasDots) ...[
+                      const SizedBox(height: 5),
+                      _MiniWeekDots(
+                        dots: recentWeekDots!,
+                        accentColor: tintColor,
+                      ),
                     ],
-                  ),
+                  ],
                 ),
               ],
             ),
@@ -329,7 +307,7 @@ class _MiniWeekDots extends StatelessWidget {
               shape: BoxShape.circle,
               color: dots[i]
                   ? accentColor
-                  : palette.border.withValues(alpha: 0.8),
+                  : palette.border.withValues(alpha: 0.9),
             ),
           ),
       ],
@@ -347,40 +325,29 @@ class _StreakBadge extends StatelessWidget {
     final palette = context.palette;
     final active = days > 0;
     const flameColor = AppColors.focusPomodoro;
+    final color = active ? flameColor : palette.caption;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
         color: active
             ? flameColor.withValues(alpha: palette.isDark ? 0.18 : 0.10)
             : palette.surfaceMuted,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.local_fire_department_rounded,
-            size: 13,
-            color: active ? flameColor : palette.caption,
-          ),
-          const SizedBox(width: 3),
-          Text(
-            '$days',
-            style: context.text.labelMedium?.copyWith(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w700,
-              color: active ? flameColor : palette.caption,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
+          Icon(Icons.local_fire_department_rounded, size: 12, color: color),
           const SizedBox(width: 2),
           Text(
-            'd',
-            style: context.text.labelSmall?.copyWith(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w600,
-              color: active ? flameColor : palette.caption,
+            '${days}d',
+            style: context.text.labelMedium?.copyWith(
+              fontSize: 11.5,
+              height: 1.2,
+              fontWeight: FontWeight.w700,
+              color: color,
+              fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
         ],

@@ -125,7 +125,7 @@ void main() {
   );
 
   testWidgets(
-    'Analytics & Schedule (ManageHabitsSheet) renders full habit titles without overflow on 320px viewport',
+    'Manage button (ManageHabitsSheet) renders full habit titles without overflow on 320px viewport',
     (WidgetTester tester) async {
       tester.view.physicalSize = const Size(320, 2600);
       tester.view.devicePixelRatio = 1.0;
@@ -136,10 +136,12 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
 
-      // Tap 'Analytics & Schedule' chip to open ManageHabitsSheet
-      await tester.ensureVisible(find.text('Analytics & Schedule'));
+      // The habits card no longer has a footer; the section header's tune
+      // button is the single entry point to ManageHabitsSheet.
+      final manageButton = find.byTooltip('Manage Habits & Routines');
+      await tester.ensureVisible(manageButton);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Analytics & Schedule'));
+      await tester.tap(manageButton);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
 

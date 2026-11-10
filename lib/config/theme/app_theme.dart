@@ -6,7 +6,7 @@ import 'app_text_styles.dart';
 class AppTheme {
   AppTheme._();
 
-  static const String fontFamily = 'DMSans';
+  static const String fontFamily = 'Inter';
 
   static ThemeData get lightTheme {
     return ThemeData(

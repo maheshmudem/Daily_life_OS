@@ -56,82 +56,138 @@ class _SafeSpendMeterWidgetState extends State<SafeSpendMeterWidget> {
     final remaining = (widget.dailySafeLimit - widget.spentToday).abs();
 
     return FeatureCard(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: 14,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        Text(
-                          'Safe-to-Spend Today',
-                          style: text.titleMedium?.copyWith(
-                            fontSize: 15.5,
-                            fontWeight: FontWeight.w700,
-                            color: palette.heading,
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2.5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: tone.withValues(alpha: 0.14),
-                            borderRadius: AppRadius.radiusFull,
-                          ),
-                          child: Text(
-                            statusLabel,
-                            style: text.labelSmall?.copyWith(
-                              color: tone,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 10.5,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    AppSpacing.gapH4,
-                    Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(
-                            text: CurrencyUtils.format(remaining),
-                            style: text.headlineLarge?.copyWith(
-                              color: isOver ? tone : palette.heading,
-                              fontFeatures: const [
-                                FontFeature.tabularFigures(),
-                              ],
-                            ),
-                          ),
-                          TextSpan(
-                            text: isOver ? '  over limit' : '  left today',
-                            style: text.bodySmall,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+              Flexible(
+                child: Text(
+                  'Safe-to-Spend Today',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.titleMedium?.copyWith(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.2,
+                    color: palette.heading,
+                  ),
                 ),
               ),
-              if (widget.onLogExpense != null)
-                FeatureIconButton(
-                  icon: Icons.add_rounded,
-                  tooltip: 'Log expense',
-                  color: AppColors.moduleMoney,
-                  onPressed: widget.onLogExpense!,
-                ),
+              const SizedBox(width: 8),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2.5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: tone.withValues(alpha: 0.14),
+                      borderRadius: AppRadius.radiusFull,
+                    ),
+                    child: Text(
+                      statusLabel,
+                      style: text.labelSmall?.copyWith(
+                        color: tone,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 10.5,
+                      ),
+                    ),
+                  ),
+                  if (widget.onLogExpense != null) ...[
+                    const SizedBox(width: 6),
+                    FeatureIconButton(
+                      icon: Icons.add_rounded,
+                      tooltip: 'Log expense',
+                      color: AppColors.moduleMoney,
+                      onPressed: widget.onLogExpense!,
+                    ),
+                  ],
+                ],
+              ),
             ],
           ),
-          AppSpacing.gapH12,
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: CurrencyUtils.format(remaining),
+                        style: text.headlineLarge?.copyWith(
+                          fontSize: 24,
+                          height: 1.15,
+                          letterSpacing: -0.6,
+                          color: isOver ? tone : palette.heading,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                      TextSpan(
+                        text: isOver ? '  over limit' : '  left today',
+                        style: text.bodySmall?.copyWith(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: palette.caption,
+                        ),
+                      ),
+                    ],
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              InkWell(
+                onTap: () => setState(() => _showDetails = !_showDetails),
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: palette.surfaceMuted,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: palette.divider, width: 0.8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _showDetails ? 'Show less' : 'Show more',
+                        style: text.labelSmall?.copyWith(
+                          color: palette.body,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 11,
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      Icon(
+                        _showDetails
+                            ? Icons.keyboard_arrow_up_rounded
+                            : Icons.keyboard_arrow_down_rounded,
+                        size: 14,
+                        color: palette.caption,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
           TweenAnimationBuilder<double>(
             tween: Tween<double>(begin: 0.0, end: ratio),
             duration: const Duration(milliseconds: 550),
@@ -148,50 +204,34 @@ class _SafeSpendMeterWidgetState extends State<SafeSpendMeterWidget> {
               );
             },
           ),
-          AppSpacing.gapH8,
-          Wrap(
-            spacing: 12,
-            runSpacing: 4,
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Spent ${CurrencyUtils.format(widget.spentToday)} of '
-                '${CurrencyUtils.format(widget.dailySafeLimit)}',
-                style: text.labelMedium?.copyWith(
-                  fontFeatures: const [FontFeature.tabularFigures()],
+              Flexible(
+                child: Text(
+                  'Spent ${CurrencyUtils.format(widget.spentToday)} of '
+                  '${CurrencyUtils.format(widget.dailySafeLimit)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.labelMedium?.copyWith(
+                    fontSize: 12,
+                    color: palette.caption,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
                 ),
               ),
-              Text(
-                '${widget.daysRemaining} days left in month',
-                style: text.labelMedium?.copyWith(
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
-              InkWell(
-                onTap: () => setState(() => _showDetails = !_showDetails),
-                borderRadius: AppRadius.radiusXs,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        _showDetails ? 'Show less' : 'Show more',
-                        style: text.labelSmall?.copyWith(
-                          color: AppColors.moduleMoney,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(width: 2),
-                      Icon(
-                        _showDetails
-                            ? Icons.keyboard_arrow_up_rounded
-                            : Icons.keyboard_arrow_down_rounded,
-                        size: 14,
-                        color: AppColors.moduleMoney,
-                      ),
-                    ],
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  '${widget.daysRemaining} days left in month',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                  style: text.labelMedium?.copyWith(
+                    fontSize: 12,
+                    color: palette.caption,
+                    fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
               ),

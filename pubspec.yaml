@@ -76,9 +76,9 @@ flutter:
     - .env
 
   fonts:
-    - family: DMSans
+    - family: Inter
       fonts:
-        - asset: assets/fonts/DMSans-VariableFont_opsz,wght.ttf
+        - asset: assets/fonts/Inter-Variable.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

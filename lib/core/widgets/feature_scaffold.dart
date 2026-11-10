@@ -99,7 +99,7 @@ class FeatureScaffold extends StatelessWidget {
     this.onBack,
     this.onTitleTap,
     this.actions = const [],
-    this.actionsEndPadding = AppSpacing.xs,
+    this.actionsEndPadding = AppSpacing.pageGutter,
     this.bottom,
     this.showAppBar = true,
     this.status = FeatureStatus.content,
@@ -160,9 +160,7 @@ class FeatureScaffold extends StatelessWidget {
       scrolledUnderElevation: 0,
       automaticallyImplyLeading: false,
       toolbarHeight: hasSubtitle ? 64 : 56,
-      titleSpacing: onBack != null
-          ? 0
-          : (leading != null ? AppSpacing.md : AppSpacing.pageGutter),
+      titleSpacing: onBack != null ? 0 : AppSpacing.pageGutter,
       actionsPadding: EdgeInsets.only(right: actionsEndPadding),
       leading: onBack == null
           ? null
@@ -177,7 +175,10 @@ class FeatureScaffold extends StatelessWidget {
             ),
       title: Row(
         children: [
-          if (leading != null) ...[leading!, const SizedBox(width: 10)],
+          if (leading != null) ...[
+            leading!,
+            const SizedBox(width: AppSpacing.sm),
+          ],
           Expanded(
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
@@ -501,22 +502,28 @@ class FeatureHeaderButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FilledButton.icon(
-      onPressed: onPressed,
-      style: FilledButton.styleFrom(
-        backgroundColor: color,
-        foregroundColor: Colors.white,
-        minimumSize: const Size(0, 36),
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        textStyle: context.text.labelLarge?.copyWith(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
+    return SizedBox(
+      height: 36,
+      child: FilledButton.icon(
+        onPressed: onPressed,
+        style: FilledButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: Colors.white,
+          visualDensity: VisualDensity.compact,
+          minimumSize: const Size(0, 36),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(11),
+          ),
+          textStyle: context.text.labelLarge?.copyWith(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
         ),
+        icon: Icon(icon, size: 16),
+        label: Text(label),
       ),
-      icon: Icon(icon, size: 16),
-      label: Text(label),
     );
   }
 }
@@ -547,15 +554,15 @@ class FeatureIconButton extends StatelessWidget {
       tooltip: tooltip,
       onPressed: onPressed,
       style: IconButton.styleFrom(
-        fixedSize: const Size(34, 34),
-        minimumSize: const Size(34, 34),
+        fixedSize: const Size(36, 36),
+        minimumSize: const Size(36, 36),
         padding: EdgeInsets.zero,
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         backgroundColor: backgroundColor ?? palette.card,
         side: BorderSide(color: borderColor ?? palette.divider),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
       ),
-      icon: Icon(icon, size: 17, color: color ?? palette.heading),
+      icon: Icon(icon, size: 18, color: color ?? palette.heading),
     );
   }
 }

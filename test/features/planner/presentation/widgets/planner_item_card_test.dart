@@ -79,9 +79,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(editCalled, isTrue);
 
-      // Reset and tap Edit outlined button at bottom
+      // Reset and tap the Edit text action in the footer
       editCalled = false;
-      final editOutlinedBtn = find.widgetWithText(OutlinedButton, 'Edit');
+      final editOutlinedBtn = find.widgetWithText(TextButton, 'Edit');
       expect(editOutlinedBtn, findsOneWidget);
       await tester.tap(editOutlinedBtn);
       expect(editCalled, isTrue);

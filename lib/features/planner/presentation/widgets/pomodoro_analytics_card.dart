@@ -57,6 +57,33 @@ class _PomodoroAnalyticsDashboardState
   String _isoForDate(DateTime dt) =>
       '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
 
+  /// "Today", "Yesterday", or "Nov 10" for the session log, instead of a raw
+  /// ISO date that wrapped onto a second line.
+  String _friendlyDate(DateTime dt) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final day = DateTime(dt.year, dt.month, dt.day);
+    final diff = today.difference(day).inDays;
+    if (diff == 0) return 'Today';
+    if (diff == 1) return 'Yesterday';
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    final label = '${months[dt.month - 1]} ${dt.day}';
+    return dt.year == now.year ? label : '$label, ${dt.year}';
+  }
+
   String _weekdayShort(int weekday) {
     switch (weekday) {
       case 1:
@@ -196,95 +223,22 @@ class _PomodoroAnalyticsDashboardState
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: cardBg,
-            borderRadius: AppRadius.radiusMd,
-            border: Border.all(color: dividerColor, width: 0.85),
+            borderRadius: AppRadius.radiusLg,
+            border: Border.all(color: dividerColor),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 26,
-                    height: 26,
-                    decoration: BoxDecoration(
-                      color: AppColors.focusPomodoro.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.local_fire_department_rounded,
-                      color: AppColors.focusPomodoro,
-                      size: 15,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Daily Focus Activity',
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.1,
-                        color: headingColor,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 7,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? AppColors.darkScaffoldBackground
-                          : AppColors.scaffoldBackground,
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: dividerColor, width: 0.8),
-                    ),
-                    child: Text(
-                      'Goal: ${widget.dailyGoalSessions} sessions',
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w600,
-                        color: captionColor,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  InkWell(
-                    onTap: widget.onOpenManualLog,
-                    borderRadius: BorderRadius.circular(6),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.moduleTime.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.add_rounded,
-                            size: 12,
-                            color: AppColors.moduleTime,
-                          ),
-                          SizedBox(width: 2),
-                          Text(
-                            'Log',
-                            style: TextStyle(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.moduleTime,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+              _CardHeader(
+                title: 'Daily Focus Activity',
+                subtitle: 'Goal: ${widget.dailyGoalSessions} sessions a day',
+                headingColor: headingColor,
+                captionColor: captionColor,
+                trailing: _HeaderAction(
+                  icon: Icons.add_rounded,
+                  label: 'Log',
+                  onTap: widget.onOpenManualLog,
+                ),
               ),
               const SizedBox(height: 12),
 
@@ -410,9 +364,9 @@ class _PomodoroAnalyticsDashboardState
                 children: [
                   Expanded(
                     child: _buildBentoMetricTile(
-                      value: '$streakDays days',
+                      value: '${streakDays}d',
                       label: 'Streak',
-                      subtitle: 'Best: $bestStreak days',
+                      subtitle: 'Best: ${bestStreak}d',
                       icon: Icons.local_fire_department_rounded,
                       color: AppColors.focusPomodoro,
                       isDark: isDark,
@@ -424,7 +378,7 @@ class _PomodoroAnalyticsDashboardState
                     child: _buildBentoMetricTile(
                       value: '${avgRating.toStringAsFixed(1)}★',
                       label: 'Flow',
-                      subtitle: 'Avg: ${avgSessionMins}m / sprint',
+                      subtitle: 'Avg ${avgSessionMins}m per sprint',
                       icon: Icons.auto_awesome_rounded,
                       color: AppColors.primary,
                       isDark: isDark,
@@ -487,64 +441,76 @@ class _PomodoroAnalyticsDashboardState
         ? AppColors.darkTextCaption
         : AppColors.textCaption;
 
+    // Value + label always share one line (scaled down if needed) and the
+    // subtitle never wraps, so the 2x2 grid keeps equal tile heights.
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
         color: isDark
             ? AppColors.darkSurfaceSecondary
             : AppColors.surfaceSecondary,
         borderRadius: AppRadius.radiusSm,
-        border: Border.all(color: dividerColor.withValues(alpha: 0.65)),
       ),
       child: Row(
         children: [
           Container(
-            width: 30,
-            height: 30,
+            width: 32,
+            height: 32,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(9),
             ),
-            child: Icon(icon, size: 15, color: color),
+            child: Icon(icon, size: 16, color: color),
           ),
-          const SizedBox(width: 9),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
                         value,
                         style: TextStyle(
-                          fontSize: 14.5,
+                          fontSize: 15.5,
                           height: 1.15,
+                          letterSpacing: -0.3,
                           fontWeight: FontWeight.w800,
                           fontFeatures: const [FontFeature.tabularFigures()],
                           color: headingColor,
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 5),
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: color,
+                      const SizedBox(width: 5),
+                      Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color: color,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w500,
-                    color: captionColor,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    subtitle,
+                    maxLines: 1,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: captionColor,
+                    ),
                   ),
                 ),
               ],
@@ -613,55 +579,20 @@ class _PomodoroAnalyticsDashboardState
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: cardBg,
-        borderRadius: AppRadius.radiusMd,
-        border: Border.all(color: dividerColor, width: 0.85),
+        borderRadius: AppRadius.radiusLg,
+        border: Border.all(color: dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(7),
-                ),
-                child: const Icon(
-                  Icons.bar_chart_rounded,
-                  color: AppColors.primary,
-                  size: 14,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  '7-Day Focus Trend & Categories',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: headingColor,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.moduleTime.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  '${selectedDay.label}: ${selectedDay.minutes}m (${selectedDay.count}x)',
-                  style: const TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.moduleTime,
-                  ),
-                ),
-              ),
-            ],
+          _CardHeader(
+            title: '7-Day Focus Trend & Categories',
+            subtitle:
+                '${selectedDay.label}: ${selectedDay.minutes}m across '
+                '${selectedDay.count} ${selectedDay.count == 1 ? 'session' : 'sessions'}',
+            subtitleColor: AppColors.moduleTime,
+            headingColor: headingColor,
+            captionColor: captionColor,
           ),
           const SizedBox(height: 14),
 
@@ -883,50 +814,19 @@ class _PomodoroAnalyticsDashboardState
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: cardBg,
-        borderRadius: AppRadius.radiusMd,
-        border: Border.all(color: dividerColor, width: 0.85),
+        borderRadius: AppRadius.radiusLg,
+        border: Border.all(color: dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: AppColors.moduleVault.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(7),
-                ),
-                child: const Icon(
-                  Icons.psychology_alt_rounded,
-                  color: AppColors.moduleVault,
-                  size: 14,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Distraction Blocker & Brain Dump',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: headingColor,
-                      ),
-                    ),
-                    Text(
-                      'Park random thoughts mid-sprint and convert them to tasks later',
-                      style: TextStyle(fontSize: 10.5, color: captionColor),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          _CardHeader(
+            title: 'Distraction Blocker & Brain Dump',
+            subtitle: 'Park stray thoughts now, turn them into tasks later',
+            headingColor: headingColor,
+            captionColor: captionColor,
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
@@ -1150,52 +1050,20 @@ class _PomodoroAnalyticsDashboardState
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: cardBg,
-        borderRadius: AppRadius.radiusMd,
-        border: Border.all(color: dividerColor, width: 0.85),
+        borderRadius: AppRadius.radiusLg,
+        border: Border.all(color: dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(7),
-                    ),
-                    child: const Icon(
-                      Icons.history_rounded,
-                      color: AppColors.success,
-                      size: 14,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Recent Focus Sessions',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: headingColor,
-                    ),
-                  ),
-                ],
-              ),
-              Text(
-                '${widget.sessions.length} logged',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: captionColor,
-                ),
-              ),
-            ],
+          _CardHeader(
+            title: 'Recent Focus Sessions',
+            subtitle:
+                '${widget.sessions.length} ${widget.sessions.length == 1 ? 'session' : 'sessions'} logged',
+            headingColor: headingColor,
+            captionColor: captionColor,
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           if (visibleSessions.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
@@ -1215,10 +1083,7 @@ class _PomodoroAnalyticsDashboardState
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 9,
-                      ),
+                      padding: const EdgeInsets.fromLTRB(10, 10, 6, 10),
                       decoration: BoxDecoration(
                         color: isDark
                             ? AppColors.darkSurfaceSecondary
@@ -1229,16 +1094,16 @@ class _PomodoroAnalyticsDashboardState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            width: 32,
-                            height: 32,
+                            width: 34,
+                            height: 34,
                             margin: const EdgeInsets.only(top: 1),
                             decoration: BoxDecoration(
                               color: catColor.withValues(alpha: 0.14),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(
                               session.categoryIcon,
-                              size: 16,
+                              size: 17,
                               color: catColor,
                             ),
                           ),
@@ -1253,22 +1118,44 @@ class _PomodoroAnalyticsDashboardState
                                   characterThreshold: 55,
                                   toggleColor: catColor,
                                   style: TextStyle(
-                                    fontSize: 12.5,
+                                    fontSize: 13.5,
                                     fontWeight: FontWeight.w700,
                                     height: 1.3,
+                                    letterSpacing: -0.2,
                                     color: headingColor,
                                   ),
                                 ),
                                 const SizedBox(height: 3),
+                                // Meta: category · when · rating. A Wrap, so the
+                                // rating drops to a second line instead of being
+                                // cut off on narrow phones.
                                 Wrap(
                                   spacing: 6,
-                                  runSpacing: 3,
+                                  runSpacing: 2,
                                   crossAxisAlignment: WrapCrossAlignment.center,
                                   children: [
-                                    Text(
-                                      '${session.category} • ${session.isoDate} at ${session.formattedTime}${session.isStopwatch ? " • Flow ⏱" : ""}',
+                                    Text.rich(
+                                      TextSpan(
+                                        children: [
+                                          TextSpan(
+                                            text: session.category,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              color: catColor,
+                                            ),
+                                          ),
+                                          TextSpan(
+                                            text:
+                                                ' · ${_friendlyDate(session.completedAt)}, ${session.formattedTime}',
+                                          ),
+                                          if (session.isStopwatch)
+                                            const TextSpan(text: ' · Flow ⏱'),
+                                        ],
+                                      ),
                                       style: TextStyle(
-                                        fontSize: 10.5,
+                                        fontSize: 11.5,
+                                        height: 1.3,
+                                        fontWeight: FontWeight.w500,
                                         color: captionColor,
                                       ),
                                     ),
@@ -1281,12 +1168,13 @@ class _PomodoroAnalyticsDashboardState
                                         color: AppColors.moduleTime.withValues(
                                           alpha: 0.12,
                                         ),
-                                        borderRadius: BorderRadius.circular(4),
+                                        borderRadius: BorderRadius.circular(5),
                                       ),
                                       child: Text(
                                         '${session.focusRating}★',
                                         style: const TextStyle(
-                                          fontSize: 9.5,
+                                          fontSize: 10,
+                                          height: 1.2,
                                           fontWeight: FontWeight.w800,
                                           color: AppColors.moduleTime,
                                         ),
@@ -1302,7 +1190,7 @@ class _PomodoroAnalyticsDashboardState
                                     characterThreshold: 55,
                                     toggleColor: AppColors.moduleTime,
                                     style: TextStyle(
-                                      fontSize: 11,
+                                      fontSize: 11.5,
                                       height: 1.35,
                                       fontStyle: FontStyle.italic,
                                       color: captionColor,
@@ -1312,40 +1200,52 @@ class _PomodoroAnalyticsDashboardState
                               ],
                             ),
                           ),
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 7,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: catColor.withValues(alpha: 0.14),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              '${session.durationMinutes}m',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                                color: catColor,
+                          const SizedBox(width: 8),
+                          // Duration above delete: a narrow trailing column so
+                          // the title and meta keep most of the row width.
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 7,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: catColor.withValues(alpha: 0.14),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  '${session.durationMinutes}m',
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    height: 1.2,
+                                    fontWeight: FontWeight.w800,
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                    color: catColor,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          IconButton(
-                            onPressed: () => widget.onDeleteSession(session.id),
-                            visualDensity: VisualDensity.compact,
-                            constraints: const BoxConstraints(
-                              minWidth: 24,
-                              minHeight: 24,
-                            ),
-                            padding: EdgeInsets.zero,
-                            tooltip: 'Delete session',
-                            icon: Icon(
-                              Icons.delete_outline_rounded,
-                              size: 15,
-                              color: captionColor,
-                            ),
+                              IconButton(
+                                onPressed: () =>
+                                    widget.onDeleteSession(session.id),
+                                visualDensity: VisualDensity.compact,
+                                constraints: const BoxConstraints(
+                                  minWidth: 28,
+                                  minHeight: 28,
+                                ),
+                                padding: EdgeInsets.zero,
+                                tooltip: 'Delete session',
+                                icon: Icon(
+                                  Icons.delete_outline_rounded,
+                                  size: 16,
+                                  color: captionColor,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -1388,6 +1288,106 @@ class _PomodoroAnalyticsDashboardState
           ],
         ],
       ),
+    );
+  }
+}
+
+/// Shared header for the analytics cards: plain title, optional one-line
+/// subtitle, optional trailing action. No icon tile, so the four cards read
+/// as one calm column rather than four differently branded boxes.
+class _CardHeader extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+  final Color headingColor;
+  final Color captionColor;
+  final Color? subtitleColor;
+  final Widget? trailing;
+
+  const _CardHeader({
+    required this.title,
+    required this.headingColor,
+    required this.captionColor,
+    this.subtitle,
+    this.subtitleColor,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.3,
+                  color: headingColor,
+                ),
+              ),
+              if (subtitle != null) ...[
+                const SizedBox(height: 2),
+                Text(
+                  subtitle!,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: subtitleColor ?? captionColor,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (trailing != null) ...[const SizedBox(width: 10), trailing!],
+      ],
+    );
+  }
+}
+
+/// Small tonal action used in card headers ("+ Log").
+class _HeaderAction extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _HeaderAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton.icon(
+      onPressed: onTap,
+      style: FilledButton.styleFrom(
+        backgroundColor: AppColors.moduleTime.withValues(alpha: 0.14),
+        foregroundColor: AppColors.moduleTime,
+        elevation: 0,
+        minimumSize: const Size(0, 30),
+        padding: const EdgeInsets.fromLTRB(8, 0, 11, 0),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        visualDensity: VisualDensity.compact,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        textStyle: const TextStyle(
+          fontFamily: AppTextStyles.fontFamily,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      icon: Icon(icon, size: 15),
+      label: Text(label),
     );
   }
 }

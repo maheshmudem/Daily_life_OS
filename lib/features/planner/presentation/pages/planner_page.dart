@@ -878,7 +878,7 @@ class _PlannerViewState extends State<_PlannerView>
                     completedCount: completedCount,
                     isDark: isDark,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
 
                   // 2. Quick add
                   SetReminderCard(
@@ -897,41 +897,41 @@ class _PlannerViewState extends State<_PlannerView>
                 ],
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
 
-            // 3. Quick templates (edge-to-edge horizontal scroll starting on 16px gutter)
+            // 3. Quick templates (edge-to-edge horizontal scroll starting on the gutter)
             SizedBox(
-              height: 28,
+              height: 32,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: gutter,
                 itemCount: _quickTemplates.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 6),
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
                 itemBuilder: (context, index) {
                   final tmpl = _quickTemplates[index];
                   return _buildTemplateChip(tmpl, isDark);
                 },
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 14),
 
             Padding(
               padding: gutter,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // 4. Compact 36px Search + filter + sort
+                  // 4. 38px Search + filter + sort
                   _buildControlsBar(isDark),
                   const SizedBox(height: 8),
 
-                  // 5. Compact 34px Status segments
+                  // 5. 36px Status segments
                   _buildSegmentedStatusBar(
                     totalCount,
                     pendingCount,
                     completedCount,
                     isDark,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
 
                   // 6. Items from DB
                   if (state is PlannerLoading || state is PlannerInitial)
@@ -990,7 +990,6 @@ class _PlannerViewState extends State<_PlannerView>
                                               ? 'Habits'
                                               : 'One-Off Reminders')
                                         : '$_selectedStatusFilter Reminders')),
-                        icon: Icons.filter_list_rounded,
                         color: AppColors.moduleTime,
                         count: filteredItems.length,
                         isDark: isDark,
@@ -1037,7 +1036,6 @@ class _PlannerViewState extends State<_PlannerView>
                             if (overdue.isNotEmpty) ...[
                               _buildSectionHeader(
                                 title: 'Overdue',
-                                icon: Icons.warning_amber_rounded,
                                 color: AppColors.error,
                                 count: overdue.length,
                                 isDark: isDark,
@@ -1056,7 +1054,6 @@ class _PlannerViewState extends State<_PlannerView>
                             if (todayAndRecurring.isNotEmpty) ...[
                               _buildSectionHeader(
                                 title: 'Today & Routines',
-                                icon: Icons.today_rounded,
                                 color: AppColors.moduleTime,
                                 count: todayAndRecurring.length,
                                 isDark: isDark,
@@ -1076,7 +1073,6 @@ class _PlannerViewState extends State<_PlannerView>
                             if (upcoming.isNotEmpty) ...[
                               _buildSectionHeader(
                                 title: 'Upcoming',
-                                icon: Icons.upcoming_rounded,
                                 color: AppColors.primary,
                                 count: upcoming.length,
                                 isDark: isDark,
@@ -1094,7 +1090,6 @@ class _PlannerViewState extends State<_PlannerView>
                             if (otherPending.isNotEmpty) ...[
                               _buildSectionHeader(
                                 title: 'Other Reminders',
-                                icon: Icons.checklist_rounded,
                                 color: AppColors.textBody,
                                 count: otherPending.length,
                                 isDark: isDark,
@@ -1112,7 +1107,6 @@ class _PlannerViewState extends State<_PlannerView>
                             if (completed.isNotEmpty) ...[
                               _buildSectionHeader(
                                 title: 'Completed',
-                                icon: Icons.check_circle_outline_rounded,
                                 color: AppColors.success,
                                 count: completed.length,
                                 isDark: isDark,
@@ -1176,14 +1170,14 @@ class _PlannerViewState extends State<_PlannerView>
         : 0;
     final borderCol = isDark ? AppColors.darkDivider : AppColors.divider;
 
-    Widget divider() => Container(width: 0.8, height: 22, color: borderCol);
+    Widget divider() => Container(width: 1, height: 26, color: borderCol);
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
-        borderRadius: AppRadius.radiusMd,
-        border: Border.all(color: borderCol, width: 0.85),
+        borderRadius: AppRadius.radiusLg,
+        border: Border.all(color: borderCol),
       ),
       child: Row(
         children: [
@@ -1243,41 +1237,46 @@ class _PlannerViewState extends State<_PlannerView>
     required bool isDark,
     Color? valueColor,
   }) {
+    // Stacked stat: big value on top, small icon + label underneath, centred,
+    // so the four tiles read as one calm strip.
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 13.5, color: iconColor),
-          const SizedBox(width: 5),
-          Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: 16,
+                height: 1.15,
+                letterSpacing: -0.3,
+                fontWeight: FontWeight.w800,
+                fontFeatures: const [FontFeature.tabularFigures()],
+                color:
+                    valueColor ??
+                    (isDark
+                        ? AppColors.darkTextHeading
+                        : AppColors.textHeading),
+              ),
+            ),
+          ),
+          const SizedBox(height: 3),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 13,
-                    height: 1.15,
-                    fontWeight: FontWeight.w800,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                    color:
-                        valueColor ??
-                        (isDark
-                            ? AppColors.darkTextHeading
-                            : AppColors.textHeading),
-                  ),
-                ),
+                Icon(icon, size: 12, color: iconColor),
+                const SizedBox(width: 4),
                 Text(
                   label,
                   maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
                     color: isDark
                         ? AppColors.darkTextCaption
                         : AppColors.textCaption,
@@ -1298,23 +1297,22 @@ class _PlannerViewState extends State<_PlannerView>
       shape: StadiumBorder(
         side: BorderSide(
           color: isDark ? AppColors.darkDivider : AppColors.divider,
-          width: 0.8,
         ),
       ),
       child: InkWell(
         customBorder: const StadiumBorder(),
         onTap: () => _applyQuickTemplate(tmpl),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(tmpl['icon'] as IconData, size: 13, color: catColor),
-              const SizedBox(width: 4),
+              Icon(tmpl['icon'] as IconData, size: 14, color: catColor),
+              const SizedBox(width: 5),
               Text(
                 tmpl['title'] as String,
                 style: TextStyle(
-                  fontSize: 11.5,
+                  fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: isDark
                       ? AppColors.darkTextHeading
@@ -1328,15 +1326,15 @@ class _PlannerViewState extends State<_PlannerView>
     );
   }
 
-  /// Square 36px icon button that matches the compact search field's height/border.
+  /// Square 38px icon button that matches the search field's height/border.
   Widget _buildControlSquare({
     required IconData icon,
     required bool isDark,
     bool isActive = false,
   }) {
     return Container(
-      width: 36,
-      height: 36,
+      width: 38,
+      height: 38,
       decoration: BoxDecoration(
         color: isActive
             ? AppColors.moduleTime.withValues(alpha: 0.12)
@@ -1345,8 +1343,7 @@ class _PlannerViewState extends State<_PlannerView>
         border: Border.all(
           color: isActive
               ? AppColors.moduleTime.withValues(alpha: 0.5)
-              : (isDark ? AppColors.darkDivider : AppColors.border),
-          width: 0.8,
+              : (isDark ? AppColors.darkDivider : AppColors.divider),
         ),
       ),
       child: Stack(
@@ -1387,14 +1384,13 @@ class _PlannerViewState extends State<_PlannerView>
       children: [
         Expanded(
           child: SizedBox(
-            height: 36,
+            height: 38,
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: isDark ? AppColors.darkCardBackground : Colors.white,
                 borderRadius: AppRadius.radiusSm,
                 border: Border.all(
-                  color: isDark ? AppColors.darkDivider : AppColors.border,
-                  width: 0.8,
+                  color: isDark ? AppColors.darkDivider : AppColors.divider,
                 ),
               ),
               child: TextField(
@@ -1402,7 +1398,7 @@ class _PlannerViewState extends State<_PlannerView>
                 onChanged: (query) =>
                     setState(() => _searchQuery = query.trim()),
                 style: TextStyle(
-                  fontSize: 12.5,
+                  fontSize: 13,
                   color: isDark
                       ? AppColors.darkTextHeading
                       : AppColors.textHeading,
@@ -1415,18 +1411,18 @@ class _PlannerViewState extends State<_PlannerView>
                     color: isDark
                         ? AppColors.darkTextCaption
                         : AppColors.textCaption,
-                    fontSize: 12,
+                    fontSize: 12.5,
                   ),
                   prefixIcon: Icon(
                     Icons.search_rounded,
                     color: isDark
                         ? AppColors.darkTextCaption
                         : AppColors.iconColor,
-                    size: 16,
+                    size: 17,
                   ),
                   prefixIconConstraints: const BoxConstraints(
-                    minWidth: 34,
-                    minHeight: 34,
+                    minWidth: 36,
+                    minHeight: 36,
                   ),
                   suffixIcon: _searchQuery.isNotEmpty
                       ? GestureDetector(
@@ -1456,7 +1452,7 @@ class _PlannerViewState extends State<_PlannerView>
             ),
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: 8),
 
         // 1. Filter Dropdown Menu
         AppDropdownMenu<String>(
@@ -1576,7 +1572,7 @@ class _PlannerViewState extends State<_PlannerView>
             isActive: hasActiveFilter,
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: 8),
 
         // 2. Sort Dropdown Menu
         AppDropdownMenu<PlannerSortOption>(
@@ -1658,17 +1654,13 @@ class _PlannerViewState extends State<_PlannerView>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          height: 34,
+          height: 36,
           padding: const EdgeInsets.all(3),
           decoration: BoxDecoration(
             color: isDark
                 ? AppColors.darkSurfaceSecondary
                 : AppColors.surfaceSecondary,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: isDark ? AppColors.darkDivider : AppColors.divider,
-              width: 0.8,
-            ),
+            borderRadius: AppRadius.radiusSm,
           ),
           child: Row(
             children: [
@@ -1767,7 +1759,7 @@ class _PlannerViewState extends State<_PlannerView>
                 ],
               ),
               style: TextStyle(
-                fontSize: 11.5,
+                fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                 color: textColor,
               ),
@@ -1778,9 +1770,11 @@ class _PlannerViewState extends State<_PlannerView>
     );
   }
 
+  /// Plain section title (same 17px style as the Today tab) with a tinted
+  /// count pill and right-aligned text actions. The title owns the slack
+  /// width, so it never wraps while the actions still sit on the gutter.
   Widget _buildSectionHeader({
     required String title,
-    required IconData icon,
     required Color color,
     required int count,
     required bool isDark,
@@ -1788,44 +1782,54 @@ class _PlannerViewState extends State<_PlannerView>
     VoidCallback? onMarkAllDone,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(top: 10, bottom: 6),
+      padding: const EdgeInsets.only(top: 16, bottom: 8),
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 28),
         child: Row(
           children: [
-            Icon(icon, size: 17, color: color),
-            const SizedBox(width: 7),
-            Flexible(
-              child: Text(
-                title,
-                softWrap: true,
-                style: TextStyle(
-                  fontSize: 15.5,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.2,
-                  color: isDark
-                      ? AppColors.darkTextHeading
-                      : AppColors.textHeading,
-                ),
+            Expanded(
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.3,
+                        color: isDark
+                            ? AppColors.darkTextHeading
+                            : AppColors.textHeading,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      '$count',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        height: 1.2,
+                        fontWeight: FontWeight.w700,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                        color: color,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                '$count',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: color,
-                ),
-              ),
-            ),
-            const Spacer(),
+            const SizedBox(width: 8),
             if (onMarkAllDone != null)
               _buildHeaderAction(
                 label: 'Mark All Done',
@@ -1854,7 +1858,7 @@ class _PlannerViewState extends State<_PlannerView>
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         textStyle: const TextStyle(
           fontFamily: AppTextStyles.fontFamily,
-          fontSize: 11.5,
+          fontSize: 12.5,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -2531,7 +2535,7 @@ class _PlannerViewState extends State<_PlannerView>
                     onModeSelected: _switchFocusMode,
                     isDark: isDark,
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
                   PomodoroFocusCard(
                     focusModeIndex: _focusModeIndex,
                     currentRound: _currentRound,
@@ -2917,9 +2921,9 @@ class _PlannerViewState extends State<_PlannerView>
 
   Widget _buildFocusSectionHeader(String title, bool isDark, {Widget? action}) {
     return Padding(
-      padding: const EdgeInsets.only(top: 12, bottom: 6),
+      padding: const EdgeInsets.only(top: 16, bottom: 8),
       child: SizedBox(
-        height: 24,
+        height: 26,
         child: Row(
           children: [
             Expanded(
@@ -2928,9 +2932,9 @@ class _PlannerViewState extends State<_PlannerView>
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 15.5,
                   fontWeight: FontWeight.w700,
-                  letterSpacing: -0.1,
+                  letterSpacing: -0.3,
                   color: isDark
                       ? AppColors.darkTextHeading
                       : AppColors.textHeading,
@@ -2947,12 +2951,12 @@ class _PlannerViewState extends State<_PlannerView>
   /// Horizontal chip row that scrolls edge-to-edge but starts on the gutter.
   Widget _buildChipStrip({required List<Widget> children}) {
     return SizedBox(
-      height: 30,
+      height: 32,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageGutter),
         itemCount: children.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 6),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (_, i) => children[i],
       ),
     );
@@ -2977,14 +2981,13 @@ class _PlannerViewState extends State<_PlannerView>
           color: isSelected
               ? AppColors.moduleTime.withValues(alpha: 0.5)
               : (isDark ? AppColors.darkDivider : AppColors.divider),
-          width: 0.85,
         ),
       ),
       child: InkWell(
         customBorder: const StadiumBorder(),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 11),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -3003,7 +3006,7 @@ class _PlannerViewState extends State<_PlannerView>
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 11.5,
+                  fontSize: 12,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   color: fg,
                 ),
@@ -3116,20 +3119,25 @@ class _PlannerViewState extends State<_PlannerView>
                   children: [
                     Text(
                       'Important Countdowns',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 14.5,
+                        fontSize: 17,
                         fontWeight: FontWeight.w700,
-                        letterSpacing: -0.1,
+                        letterSpacing: -0.3,
                         color: isDark
                             ? AppColors.darkTextHeading
                             : AppColors.textHeading,
                       ),
                     ),
-                    const SizedBox(height: 1),
+                    const SizedBox(height: 2),
                     Text(
                       '${_countdowns.length} upcoming events & milestones',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 11.5,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w500,
                         color: isDark
                             ? AppColors.darkTextCaption
                             : AppColors.textCaption,
@@ -3138,41 +3146,46 @@ class _PlannerViewState extends State<_PlannerView>
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               FilledButton.icon(
                 onPressed: () => _openCountdownSheet(context, isDark),
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.moduleTime,
-                  foregroundColor: Colors.white,
+                  backgroundColor: AppColors.moduleTime.withValues(
+                    alpha: isDark ? 0.22 : 0.14,
+                  ),
+                  foregroundColor: isDark
+                      ? AppColors.moduleTimeLight
+                      : AppColors.moduleTime,
                   elevation: 0,
-                  minimumSize: const Size(0, 30),
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  minimumSize: const Size(0, 32),
+                  padding: const EdgeInsets.fromLTRB(10, 0, 12, 0),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(9),
                   ),
                   textStyle: const TextStyle(
                     fontFamily: AppTextStyles.fontFamily,
-                    fontSize: 11.5,
+                    fontSize: 12.5,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                icon: const Icon(Icons.add_rounded, size: 15),
+                icon: const Icon(Icons.add_rounded, size: 16),
                 label: const Text('Add Event'),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
 
         // Category filter strip (edge-to-edge)
         SizedBox(
-          height: 30,
+          height: 32,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: gutter,
             itemCount: _countdownCategories.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 6),
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (context, index) {
               final cat = _countdownCategories[index];
               final isSelected = _selectedCountdownCategory == cat;
@@ -3184,7 +3197,7 @@ class _PlannerViewState extends State<_PlannerView>
                 onSelected: (_) =>
                     setState(() => _selectedCountdownCategory = cat),
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                padding: const EdgeInsets.symmetric(horizontal: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
                 shape: const StadiumBorder(),
                 backgroundColor: isDark
                     ? AppColors.darkCardBackground
@@ -3194,10 +3207,9 @@ class _PlannerViewState extends State<_PlannerView>
                   color: isSelected
                       ? AppColors.moduleTime.withValues(alpha: 0.5)
                       : (isDark ? AppColors.darkDivider : AppColors.divider),
-                  width: 0.85,
                 ),
                 labelStyle: TextStyle(
-                  fontSize: 11.5,
+                  fontSize: 12,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   color: isSelected
                       ? AppColors.moduleTime

@@ -215,14 +215,14 @@ class _NotesViewState extends State<_NotesView> {
         errorMessage: state is NotesError ? state.message : null,
         onRetry: () => context.read<NotesBloc>().add(const LoadNotes()),
         loading: const FeatureLoadingView(
-          blockHeights: [44, 112, 36, 128, 128],
+          blockHeights: [40, 108, 32, 128, 128],
         ),
         builder: (_) => _buildContent(context, state as NotesLoaded),
         actions: [
           FeatureIconButton(
             tooltip: 'Camera OCR Scan',
             icon: Icons.document_scanner_outlined,
-            color: context.palette.icon,
+            color: AppColors.moduleNotes,
             onPressed: () async {
               await QuickCaptureSheet.show(
                 context,
@@ -293,69 +293,128 @@ class _NotesViewState extends State<_NotesView> {
 
     final pinnedNotes = filteredNotes.where((n) => n.isPinned).toList();
     final unpinnedNotes = filteredNotes.where((n) => !n.isPinned).toList();
+    final isWide = MediaQuery.sizeOf(context).width >= 820;
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.pageGutter,
-        AppSpacing.xs,
-        AppSpacing.pageGutter,
-        AppSpacing.huge * 2,
-      ),
-      children: [
-        // ── 1. Search Bar + Layout & Sort Controls ─────────────────────────
-        _buildSearchAndControlBar(context),
-        AppSpacing.gapH12,
-
-        // ── 2. Elevated Daily Scratchpad Card ──────────────────────────────
-        _buildScratchpadCard(context),
-        AppSpacing.gapH16,
-
-        // ── 3. Tag Filter Strip with Counts ────────────────────────────────
-        if (allTags.length > 1) ...[
-          SizedBox(
-            height: AppSpacing.xxl + AppSpacing.xxs,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: allTags.length,
-              separatorBuilder: (_, _) => AppSpacing.gapW8,
-              itemBuilder: (context, index) {
-                final tag = allTags[index];
-                return _buildTagChip(context, tag, tagCounts[tag] ?? 0);
-              },
-            ),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1080),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.pageGutter,
+            AppSpacing.xs,
+            AppSpacing.pageGutter,
+            AppSpacing.huge * 2,
           ),
-          AppSpacing.gapH16,
-        ],
+          children: [
+            // ── 1. Search Bar + Layout & Sort Controls ─────────────────────
+            _buildSearchAndControlBar(context),
+            const SizedBox(height: 12),
 
-        // ── 4. Empty State or Note Cards (List / 2-Column Bento Grid) ──────
-        if (filteredNotes.isEmpty)
-          _buildEmptyNotesState(context)
-        else ...[
-          if (pinnedNotes.isNotEmpty) ...[
-            _buildSectionHeader(
-              context: context,
-              icon: Icons.push_pin_rounded,
-              iconColor: AppColors.moduleNotes,
-              label: 'PINNED (${pinnedNotes.length})',
-            ),
-            AppSpacing.gapH8,
-            _buildNotesCollection(context, pinnedNotes),
-            AppSpacing.gapH16,
-          ],
-          if (unpinnedNotes.isNotEmpty) ...[
-            if (pinnedNotes.isNotEmpty) ...[
+            // ── 2. Elevated Daily Scratchpad Card ──────────────────────────
+            _buildScratchpadCard(context),
+            const SizedBox(height: 14),
+
+            // ── 3. Tag Filter Strip with Counts ────────────────────────────
+            if (allTags.length > 1) ...[
+              SizedBox(
+                height: 32,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: allTags.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 6),
+                  itemBuilder: (context, index) {
+                    final tag = allTags[index];
+                    return _buildTagChip(context, tag, tagCounts[tag] ?? 0);
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            // ── 4. Empty State or Note Cards (List / 2-Column Bento Grid) ──
+            if (filteredNotes.isEmpty)
+              _buildEmptyNotesState(context)
+            else if (_isGridView) ...[
               _buildSectionHeader(
                 context: context,
-                icon: Icons.notes_rounded,
-                iconColor: context.palette.caption,
-                label: 'ALL NOTES (${unpinnedNotes.length})',
+                icon: Icons.grid_view_rounded,
+                iconColor: AppColors.moduleNotes,
+                label: pinnedNotes.isNotEmpty
+                    ? 'NOTES (${filteredNotes.length} · ${pinnedNotes.length} PINNED)'
+                    : 'ALL NOTES (${filteredNotes.length})',
               ),
-              AppSpacing.gapH8,
+              const SizedBox(height: 10),
+              _buildNotesCollection(context, [
+                ...pinnedNotes,
+                ...unpinnedNotes,
+              ]),
+            ] else if (isWide &&
+                pinnedNotes.isNotEmpty &&
+                unpinnedNotes.isNotEmpty) ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionHeader(
+                          context: context,
+                          icon: Icons.push_pin_rounded,
+                          iconColor: AppColors.moduleNotes,
+                          label: 'PINNED (${pinnedNotes.length})',
+                        ),
+                        const SizedBox(height: 10),
+                        _buildNotesCollection(context, pinnedNotes),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionHeader(
+                          context: context,
+                          icon: Icons.notes_rounded,
+                          iconColor: context.palette.caption,
+                          label: 'ALL NOTES (${unpinnedNotes.length})',
+                        ),
+                        const SizedBox(height: 10),
+                        _buildNotesCollection(context, unpinnedNotes),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ] else ...[
+              if (pinnedNotes.isNotEmpty) ...[
+                _buildSectionHeader(
+                  context: context,
+                  icon: Icons.push_pin_rounded,
+                  iconColor: AppColors.moduleNotes,
+                  label: 'PINNED (${pinnedNotes.length})',
+                ),
+                const SizedBox(height: 10),
+                _buildNotesCollection(context, pinnedNotes),
+                const SizedBox(height: 16),
+              ],
+              if (unpinnedNotes.isNotEmpty) ...[
+                if (pinnedNotes.isNotEmpty) ...[
+                  _buildSectionHeader(
+                    context: context,
+                    icon: Icons.notes_rounded,
+                    iconColor: context.palette.caption,
+                    label: 'ALL NOTES (${unpinnedNotes.length})',
+                  ),
+                  const SizedBox(height: 10),
+                ],
+                _buildNotesCollection(context, unpinnedNotes),
+              ],
             ],
-            _buildNotesCollection(context, unpinnedNotes),
           ],
-        ],
-      ],
+        ),
+      ),
     );
   }
 
@@ -365,7 +424,7 @@ class _NotesViewState extends State<_NotesView> {
         children: notes
             .map(
               (note) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                padding: const EdgeInsets.only(bottom: 12),
                 child: _buildNoteCard(context, note, isCompactGrid: false),
               ),
             )
@@ -380,14 +439,14 @@ class _NotesViewState extends State<_NotesView> {
       final second = (i + 1 < notes.length) ? notes[i + 1] : null;
       rows.add(
         Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+          padding: const EdgeInsets.only(bottom: 12),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: _buildNoteCard(context, first, isCompactGrid: true),
               ),
-              AppSpacing.gapW12,
+              const SizedBox(width: 12),
               Expanded(
                 child: second != null
                     ? _buildNoteCard(context, second, isCompactGrid: true)
@@ -409,11 +468,13 @@ class _NotesViewState extends State<_NotesView> {
   }) {
     return Row(
       children: [
-        Icon(icon, size: AppSpacing.md, color: iconColor),
-        AppSpacing.gapW8,
+        Icon(icon, size: 15, color: iconColor),
+        const SizedBox(width: 6),
         Text(
           label,
           style: context.text.labelSmall?.copyWith(
+            fontSize: 11.5,
+            letterSpacing: 0.5,
             color: context.palette.caption,
             fontWeight: FontWeight.w700,
           ),
@@ -430,31 +491,39 @@ class _NotesViewState extends State<_NotesView> {
       children: [
         Expanded(
           child: Container(
-            height: AppSpacing.xxxl + AppSpacing.xxs,
+            height: 40,
             decoration: BoxDecoration(
               color: palette.card,
-              borderRadius: AppRadius.borderMd,
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(color: palette.border),
             ),
+            alignment: Alignment.center,
             child: TextField(
               controller: _searchController,
               onChanged: (val) => setState(() => _searchQuery = val),
-              style: context.text.bodyMedium?.copyWith(color: palette.heading),
+              textAlignVertical: TextAlignVertical.center,
+              style: context.text.bodyMedium?.copyWith(
+                fontSize: 13.5,
+                letterSpacing: -0.15,
+                color: palette.heading,
+              ),
               decoration: InputDecoration(
                 filled: false,
                 isDense: true,
                 hintText: 'Search notes, tags, or content...',
                 hintStyle: context.text.bodyMedium?.copyWith(
+                  fontSize: 13.5,
+                  letterSpacing: -0.15,
                   color: palette.caption,
                 ),
                 prefixIcon: Icon(
                   Icons.search_rounded,
                   color: palette.icon,
-                  size: AppSpacing.lg,
+                  size: 18,
                 ),
                 prefixIconConstraints: const BoxConstraints(
-                  minWidth: AppSpacing.xxxl,
-                  minHeight: AppSpacing.xxxl,
+                  minWidth: 36,
+                  minHeight: 40,
                 ),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
@@ -465,7 +534,7 @@ class _NotesViewState extends State<_NotesView> {
                         },
                         icon: Icon(
                           Icons.close_rounded,
-                          size: AppSpacing.md,
+                          size: 16,
                           color: palette.caption,
                         ),
                       )
@@ -473,21 +542,19 @@ class _NotesViewState extends State<_NotesView> {
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: AppSpacing.sm,
-                ),
+                contentPadding: const EdgeInsets.only(right: 12),
               ),
             ),
           ),
         ),
-        AppSpacing.gapW8,
+        const SizedBox(width: 8),
         Tooltip(
           message: _sortOrder == _NoteSortOrder.updatedDesc
               ? 'Sorted by recent'
               : 'Sorted A–Z',
           child: InkWell(
             key: const ValueKey('toggle_notes_sort'),
-            borderRadius: AppRadius.borderMd,
+            borderRadius: BorderRadius.circular(12),
             onTap: () {
               HapticFeedback.selectionClick();
               setState(() {
@@ -497,18 +564,18 @@ class _NotesViewState extends State<_NotesView> {
               });
             },
             child: Container(
-              width: AppSpacing.xxxl + AppSpacing.xxs,
-              height: AppSpacing.xxxl + AppSpacing.xxs,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 color: palette.card,
-                borderRadius: AppRadius.borderMd,
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: palette.border),
               ),
               child: Icon(
                 _sortOrder == _NoteSortOrder.updatedDesc
                     ? Icons.swap_vert_rounded
                     : Icons.sort_by_alpha_rounded,
-                size: AppSpacing.lg,
+                size: 18,
                 color: _sortOrder == _NoteSortOrder.titleAsc
                     ? AppColors.moduleNotes
                     : palette.icon,
@@ -516,24 +583,24 @@ class _NotesViewState extends State<_NotesView> {
             ),
           ),
         ),
-        AppSpacing.gapW8,
+        const SizedBox(width: 8),
         Tooltip(
           message: _isGridView ? 'Switch to List view' : 'Switch to Grid view',
           child: InkWell(
             key: const ValueKey('toggle_notes_view_mode'),
-            borderRadius: AppRadius.borderMd,
+            borderRadius: BorderRadius.circular(12),
             onTap: () {
               HapticFeedback.selectionClick();
               setState(() => _isGridView = !_isGridView);
             },
             child: Container(
-              width: AppSpacing.xxxl + AppSpacing.xxs,
-              height: AppSpacing.xxxl + AppSpacing.xxs,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 color: _isGridView
                     ? AppColors.moduleNotes.withValues(alpha: 0.14)
                     : palette.card,
-                borderRadius: AppRadius.borderMd,
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: _isGridView ? AppColors.moduleNotes : palette.border,
                 ),
@@ -542,7 +609,7 @@ class _NotesViewState extends State<_NotesView> {
                 _isGridView
                     ? Icons.view_agenda_outlined
                     : Icons.grid_view_rounded,
-                size: AppSpacing.lg,
+                size: 18,
                 color: _isGridView ? AppColors.moduleNotes : palette.icon,
               ),
             ),
@@ -557,12 +624,14 @@ class _NotesViewState extends State<_NotesView> {
     final palette = context.palette;
 
     return Container(
-      padding: AppSpacing.edgeInsetsAllMd,
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: palette.card,
         borderRadius: AppRadius.borderLg,
         border: Border.all(
-          color: AppColors.moduleNotes.withValues(alpha: 0.32),
+          color: AppColors.moduleNotes.withValues(
+            alpha: palette.isDark ? 0.36 : 0.28,
+          ),
         ),
       ),
       child: Column(
@@ -572,24 +641,27 @@ class _NotesViewState extends State<_NotesView> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    width: AppSpacing.xl + AppSpacing.xxs,
-                    height: AppSpacing.xl + AppSpacing.xxs,
+                    width: 26,
+                    height: 26,
                     decoration: BoxDecoration(
                       color: AppColors.moduleNotes.withValues(alpha: 0.14),
-                      borderRadius: AppRadius.borderSm,
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(
                       Icons.bolt_rounded,
                       color: AppColors.moduleNotes,
-                      size: AppSpacing.md,
+                      size: 15,
                     ),
                   ),
-                  AppSpacing.gapW8,
+                  const SizedBox(width: 8),
                   Text(
                     StringConstants.dailyScratchpad.toUpperCase(),
                     style: context.text.labelSmall?.copyWith(
+                      fontSize: 11.5,
+                      letterSpacing: 0.5,
                       color: AppColors.moduleNotes,
                       fontWeight: FontWeight.w700,
                     ),
@@ -601,10 +673,36 @@ class _NotesViewState extends State<_NotesView> {
                 builder: (context, value, _) {
                   final hasText = value.text.trim().isNotEmpty;
                   if (!hasText) {
-                    return Text(
-                      'Instant auto-save',
-                      style: context.text.labelSmall?.copyWith(
-                        color: palette.caption,
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: palette.surfaceMuted,
+                        borderRadius: AppRadius.radiusFull,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 5,
+                            height: 5,
+                            decoration: const BoxDecoration(
+                              color: AppColors.moduleNotes,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            'Instant auto-save',
+                            style: context.text.labelSmall?.copyWith(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w600,
+                              color: palette.caption,
+                            ),
+                          ),
+                        ],
                       ),
                     );
                   }
@@ -612,29 +710,28 @@ class _NotesViewState extends State<_NotesView> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       InkWell(
-                        borderRadius: AppRadius.radiusSm,
+                        borderRadius: BorderRadius.circular(8),
                         onTap: () => _saveScratchpadAsNote(context),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.sm,
-                            vertical: AppSpacing.xxs,
-                          ),
-                          decoration: const BoxDecoration(
+                          height: 28,
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          decoration: BoxDecoration(
                             color: AppColors.moduleNotes,
-                            borderRadius: AppRadius.radiusSm,
+                            borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(
                                 Icons.bookmark_add_outlined,
-                                size: AppSpacing.sm + AppSpacing.xxxs,
+                                size: 14,
                                 color: AppColors.textWhite,
                               ),
-                              AppSpacing.gapW4,
+                              const SizedBox(width: 4),
                               Text(
                                 StringConstants.save,
                                 style: context.text.labelMedium?.copyWith(
+                                  fontSize: 12,
                                   color: AppColors.textWhite,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -643,15 +740,20 @@ class _NotesViewState extends State<_NotesView> {
                           ),
                         ),
                       ),
-                      AppSpacing.gapW8,
+                      const SizedBox(width: 6),
                       InkWell(
-                        borderRadius: AppRadius.radiusSm,
+                        borderRadius: BorderRadius.circular(8),
                         onTap: () => _clearScratchpad(context),
-                        child: Padding(
-                          padding: const EdgeInsets.all(AppSpacing.xxs),
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: palette.surfaceMuted,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                           child: Icon(
                             Icons.close_rounded,
-                            size: AppSpacing.md,
+                            size: 15,
                             color: palette.caption,
                           ),
                         ),
@@ -662,24 +764,40 @@ class _NotesViewState extends State<_NotesView> {
               ),
             ],
           ),
-          AppSpacing.gapH12,
-          TextField(
-            controller: _scratchpadController,
-            onChanged: _saveScratchpad,
-            minLines: 2,
-            maxLines: 4,
-            style: context.text.bodyMedium?.copyWith(color: palette.heading),
-            decoration: InputDecoration(
-              filled: false,
-              isDense: true,
-              hintText: StringConstants.scratchpadHint,
-              hintStyle: context.text.bodyMedium?.copyWith(
-                color: palette.caption,
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: palette.surfaceMuted.withValues(
+                alpha: palette.isDark ? 0.45 : 0.65,
               ),
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              contentPadding: AppSpacing.edgeInsetsZero,
+              borderRadius: BorderRadius.circular(11),
+              border: Border.all(color: palette.divider, width: 0.8),
+            ),
+            child: TextField(
+              controller: _scratchpadController,
+              onChanged: _saveScratchpad,
+              minLines: 2,
+              maxLines: 4,
+              style: context.text.bodyMedium?.copyWith(
+                fontSize: 13.5,
+                height: 1.4,
+                color: palette.heading,
+              ),
+              decoration: InputDecoration(
+                filled: false,
+                isDense: true,
+                hintText: StringConstants.scratchpadHint,
+                hintStyle: context.text.bodyMedium?.copyWith(
+                  fontSize: 13.5,
+                  height: 1.4,
+                  color: palette.caption,
+                ),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                contentPadding: AppSpacing.edgeInsetsZero,
+              ),
             ),
           ),
         ],
@@ -699,10 +817,7 @@ class _NotesViewState extends State<_NotesView> {
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.xxs + AppSpacing.xxxs,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 9.5, vertical: 4),
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: isSelected ? AppColors.moduleNotes : palette.card,
@@ -717,16 +832,15 @@ class _NotesViewState extends State<_NotesView> {
             Text(
               tag,
               style: context.text.labelMedium?.copyWith(
+                fontSize: 12,
+                letterSpacing: -0.2,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
                 color: isSelected ? AppColors.textWhite : palette.body,
               ),
             ),
-            AppSpacing.gapW4,
+            const SizedBox(width: 4),
             Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.xxs + AppSpacing.xxxs,
-                vertical: 1,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
               decoration: BoxDecoration(
                 color: isSelected
                     ? AppColors.textWhite.withValues(alpha: 0.22)
@@ -736,6 +850,8 @@ class _NotesViewState extends State<_NotesView> {
               child: Text(
                 '$count',
                 style: context.text.labelSmall?.copyWith(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
                   color: isSelected ? AppColors.textWhite : palette.caption,
                 ),
               ),
@@ -855,280 +971,307 @@ class _NotesViewState extends State<_NotesView> {
           child: InkWell(
             onTap: () => _showNoteEditor(context, note: note),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md + AppSpacing.xxs,
-                AppSpacing.md,
-                AppSpacing.md,
-                AppSpacing.md,
-              ),
+              padding: isCompactGrid
+                  ? const EdgeInsets.fromLTRB(14, 12, 11, 12)
+                  : const EdgeInsets.fromLTRB(16, 14, 14, 13),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
+                  // Header Row: Title + Pin + More Actions Menu
+                  Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header Row: Title + Pin + More Actions Menu
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: AppSpacing.xs,
-                            height: AppSpacing.xs,
-                            decoration: BoxDecoration(
-                              color: noteColor,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          AppSpacing.gapW8,
-                          Expanded(
-                            child: ExpandableTextWidget(
-                              text: note.title,
-                              collapsedMaxLines: 2,
-                              characterThreshold: 45,
-                              toggleColor: noteColor,
-                              style:
-                                  (isCompactGrid
-                                          ? context.text.titleSmall
-                                          : context.text.titleMedium)
-                                      ?.copyWith(
-                                        color: palette.heading,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                            ),
-                          ),
-                          AppSpacing.gapW4,
-                          Tooltip(
-                            message: note.isPinned ? 'Unpin' : 'Pin note',
-                            child: InkWell(
-                              borderRadius: AppRadius.radiusSm,
-                              onTap: () => context.read<NotesBloc>().add(
-                                TogglePinNote(note.id),
-                              ),
-                              child: SizedBox(
-                                width: AppSpacing.xl + AppSpacing.xxs,
-                                height: AppSpacing.xl + AppSpacing.xxs,
-                                child: Icon(
-                                  note.isPinned
-                                      ? Icons.push_pin_rounded
-                                      : Icons.push_pin_outlined,
-                                  size: AppSpacing.md,
-                                  color: note.isPinned
-                                      ? noteColor
-                                      : palette.caption,
-                                ),
-                              ),
-                            ),
-                          ),
-                          _buildCardDropdownMenu(context, note),
-                        ],
-                      ),
-
-                      // Prose Preview with ExpandableTextWidget
-                      if (prosePreview.isNotEmpty) ...[
-                        AppSpacing.gapH8,
-                        ExpandableTextWidget(
-                          text: prosePreview,
-                          collapsedMaxLines: isCompactGrid ? 3 : 3,
-                          toggleColor: noteColor,
-                          style: context.text.bodyMedium?.copyWith(
-                            color: palette.body,
-                          ),
-                        ),
-                      ],
-
-                      // Interactive Inline Checklists + Completion Progress Bar
-                      if (checklistIndices.isNotEmpty) ...[
-                        AppSpacing.gapH8,
-                        Builder(
-                          builder: (context) {
-                            final doneCount = checklistIndices.where((idx) {
-                              final raw = allLines[idx].trimLeft();
-                              return raw.startsWith('[x] ') ||
-                                  raw.startsWith('[X] ');
-                            }).length;
-                            final totalCount = checklistIndices.length;
-                            final pct = totalCount > 0
-                                ? (doneCount / totalCount).clamp(0.0, 1.0)
-                                : 0.0;
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 6),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: ClipRRect(
-                                      borderRadius: AppRadius.radiusFull,
-                                      child: TweenAnimationBuilder<double>(
-                                        tween: Tween<double>(
-                                          begin: 0,
-                                          end: pct,
-                                        ),
-                                        duration: const Duration(
-                                          milliseconds: 420,
-                                        ),
-                                        curve: Curves.easeOutCubic,
-                                        builder: (context, val, _) =>
-                                            LinearProgressIndicator(
-                                              value: val,
-                                              minHeight: 4,
-                                              backgroundColor:
-                                                  palette.surfaceMuted,
-                                              valueColor:
-                                                  AlwaysStoppedAnimation<Color>(
-                                                    noteColor,
-                                                  ),
-                                            ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '$doneCount/$totalCount',
-                                    style: context.text.labelSmall?.copyWith(
-                                      fontSize: 10,
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            note.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style:
+                                (isCompactGrid
+                                        ? context.text.titleSmall
+                                        : context.text.titleMedium)
+                                    ?.copyWith(
+                                      fontSize: isCompactGrid ? 14 : 15.5,
+                                      letterSpacing: -0.25,
+                                      height: 1.25,
+                                      color: palette.heading,
                                       fontWeight: FontWeight.w700,
-                                      color: noteColor,
-                                      fontFeatures: const [
-                                        FontFeature.tabularFigures(),
-                                      ],
                                     ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+                          ),
                         ),
-                        ...checklistIndices.take(isCompactGrid ? 3 : 4).map((
-                          lineIdx,
-                        ) {
-                          final rawLine = allLines[lineIdx].trimLeft();
-                          final isChecked =
-                              rawLine.startsWith('[x] ') ||
-                              rawLine.startsWith('[X] ');
-                          final itemText = rawLine.substring(4);
-                          return Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: AppSpacing.xxs,
+                      ),
+                      const SizedBox(width: 4),
+                      if (!isCompactGrid || note.isPinned)
+                        Tooltip(
+                          message: note.isPinned ? 'Unpin' : 'Pin note',
+                          child: InkWell(
+                            borderRadius: AppRadius.radiusSm,
+                            onTap: () => context.read<NotesBloc>().add(
+                              TogglePinNote(note.id),
                             ),
-                            child: InkWell(
-                              borderRadius: AppRadius.radiusXs,
-                              onTap: () =>
-                                  _toggleChecklistLine(context, note, lineIdx),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: AppSpacing.xxxs,
-                                ),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 1.5),
-                                      child: Icon(
-                                        isChecked
-                                            ? Icons.check_circle_rounded
-                                            : Icons
-                                                  .radio_button_unchecked_rounded,
-                                        size: AppSpacing.md,
-                                        color: isChecked
-                                            ? noteColor
-                                            : palette.caption,
-                                      ),
-                                    ),
-                                    AppSpacing.gapW8,
-                                    Expanded(
-                                      child: Text(
-                                        itemText,
-                                        softWrap: true,
-                                        style: context.text.bodySmall?.copyWith(
-                                          color: isChecked
-                                              ? palette.caption
-                                              : palette.body,
-                                          decoration: isChecked
-                                              ? TextDecoration.lineThrough
-                                              : null,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                            child: SizedBox(
+                              width: isCompactGrid ? 22 : 28,
+                              height: isCompactGrid ? 24 : 26,
+                              child: Icon(
+                                note.isPinned
+                                    ? Icons.push_pin_rounded
+                                    : Icons.push_pin_outlined,
+                                size: isCompactGrid ? 14 : 15,
+                                color: note.isPinned
+                                    ? noteColor
+                                    : palette.caption,
                               ),
                             ),
-                          );
-                        }),
-                      ],
+                          ),
+                        ),
+                      _buildCardDropdownMenu(context, note),
                     ],
                   ),
 
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AppSpacing.gapH12,
-                      // Footer: Tags + Updated Date + Convert to Planner Pill
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Wrap(
-                              spacing: AppSpacing.xs,
-                              runSpacing: AppSpacing.xxs,
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              children: [
-                                Text(
-                                  _formatShortDate(note.updatedAt),
-                                  style: context.text.labelSmall?.copyWith(
-                                    color: palette.caption,
-                                  ),
-                                ),
-                                ...note.tags
-                                    .take(isCompactGrid ? 1 : 3)
-                                    .map(
-                                      (tag) => Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: AppSpacing.xs,
-                                          vertical: AppSpacing.xxxs,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: noteColor.withValues(
-                                            alpha: 0.12,
-                                          ),
-                                          borderRadius: AppRadius.radiusXs,
-                                        ),
-                                        child: Text(
-                                          tag,
-                                          style: context.text.labelSmall
-                                              ?.copyWith(
-                                                color: noteColor,
-                                                fontWeight: FontWeight.w700,
+                  // Prose Preview with ExpandableTextWidget
+                  if (prosePreview.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    ExpandableTextWidget(
+                      text: prosePreview,
+                      collapsedMaxLines: isCompactGrid ? 4 : 3,
+                      toggleColor: noteColor,
+                      style: context.text.bodyMedium?.copyWith(
+                        fontSize: isCompactGrid ? 12.5 : 13.5,
+                        height: 1.42,
+                        color: palette.body,
+                      ),
+                    ),
+                  ],
+
+                  // Interactive Inline Checklists + Completion Progress Bar
+                  if (checklistIndices.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Builder(
+                      builder: (context) {
+                        final doneCount = checklistIndices.where((idx) {
+                          final raw = allLines[idx].trimLeft();
+                          return raw.startsWith('[x] ') ||
+                              raw.startsWith('[X] ');
+                        }).length;
+                        final totalCount = checklistIndices.length;
+                        final pct = totalCount > 0
+                            ? (doneCount / totalCount).clamp(0.0, 1.0)
+                            : 0.0;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: AppRadius.radiusFull,
+                                  child: TweenAnimationBuilder<double>(
+                                    tween: Tween<double>(begin: 0, end: pct),
+                                    duration: const Duration(milliseconds: 420),
+                                    curve: Curves.easeOutCubic,
+                                    builder: (context, val, _) =>
+                                        LinearProgressIndicator(
+                                          value: val,
+                                          minHeight: 4,
+                                          backgroundColor: palette.surfaceMuted,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                noteColor,
                                               ),
                                         ),
-                                      ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '$doneCount/$totalCount',
+                                style: context.text.labelSmall?.copyWith(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: noteColor,
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures(),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                    ...checklistIndices.take(isCompactGrid ? 3 : 4).map((
+                      lineIdx,
+                    ) {
+                      final rawLine = allLines[lineIdx].trimLeft();
+                      final isChecked =
+                          rawLine.startsWith('[x] ') ||
+                          rawLine.startsWith('[X] ');
+                      final itemText = rawLine.substring(4);
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.xxs),
+                        child: InkWell(
+                          borderRadius: AppRadius.radiusXs,
+                          onTap: () =>
+                              _toggleChecklistLine(context, note, lineIdx),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: AppSpacing.xxxs,
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 1.5),
+                                  child: Icon(
+                                    isChecked
+                                        ? Icons.check_circle_rounded
+                                        : Icons.radio_button_unchecked_rounded,
+                                    size: AppSpacing.md,
+                                    color: isChecked
+                                        ? noteColor
+                                        : palette.caption,
+                                  ),
+                                ),
+                                AppSpacing.gapW8,
+                                Expanded(
+                                  child: Text(
+                                    itemText,
+                                    softWrap: true,
+                                    style: context.text.bodySmall?.copyWith(
+                                      color: isChecked
+                                          ? palette.caption
+                                          : palette.body,
+                                      decoration: isChecked
+                                          ? TextDecoration.lineThrough
+                                          : null,
                                     ),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
-                          AppSpacing.gapW8,
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _buildConverterButton(
-                                context: context,
-                                label: isCompactGrid ? 'Task' : '-> Task',
-                                icon: Icons.add_task_rounded,
-                                color: AppColors.moduleTime,
-                                onTap: () =>
-                                    _convertToPlannerTask(context, note),
+                        ),
+                      );
+                    }),
+                  ],
+
+                  if (isCompactGrid && note.tags.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 5,
+                      runSpacing: 4,
+                      children: note.tags
+                          .take(2)
+                          .map(
+                            (tag) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6.5,
+                                vertical: 2,
                               ),
-                              if (!isCompactGrid) ...[
-                                AppSpacing.gapW4,
-                                _buildConverterButton(
-                                  context: context,
-                                  label: '-> Expense',
-                                  icon: Icons.payments_outlined,
-                                  color: AppColors.moduleMoney,
-                                  onTap: () => _convertToExpense(context, note),
+                              decoration: BoxDecoration(
+                                color: noteColor.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                tag,
+                                style: context.text.labelSmall?.copyWith(
+                                  fontSize: 10.5,
+                                  color: noteColor,
+                                  fontWeight: FontWeight.w700,
                                 ),
-                              ],
-                            ],
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ],
+
+                  const SizedBox(height: 10),
+                  Divider(height: 1, thickness: 0.8, color: palette.divider),
+                  const SizedBox(height: 9),
+
+                  // Footer: Updated Date + Tags + Convert Actions
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: isCompactGrid
+                            ? Text(
+                                _formatShortDate(note.updatedAt),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: context.text.labelSmall?.copyWith(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: palette.caption,
+                                ),
+                              )
+                            : Wrap(
+                                spacing: 6,
+                                runSpacing: 4,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  Text(
+                                    _formatShortDate(note.updatedAt),
+                                    style: context.text.labelSmall?.copyWith(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: palette.caption,
+                                    ),
+                                  ),
+                                  ...note.tags
+                                      .take(3)
+                                      .map(
+                                        (tag) => Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 7,
+                                            vertical: 2,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: noteColor.withValues(
+                                              alpha: 0.12,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              6,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            tag,
+                                            style: context.text.labelSmall
+                                                ?.copyWith(
+                                                  fontSize: 11,
+                                                  color: noteColor,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                          ),
+                                        ),
+                                      ),
+                                ],
+                              ),
+                      ),
+                      const SizedBox(width: 6),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildConverterButton(
+                            context: context,
+                            label: 'Task',
+                            icon: Icons.add_task_rounded,
+                            color: AppColors.moduleTime,
+                            onTap: () => _convertToPlannerTask(context, note),
                           ),
+                          if (!isCompactGrid) ...[
+                            const SizedBox(width: 6),
+                            _buildConverterButton(
+                              context: context,
+                              label: 'Expense',
+                              icon: Icons.payments_outlined,
+                              color: AppColors.moduleMoney,
+                              onTap: () => _convertToExpense(context, note),
+                            ),
+                          ],
                         ],
                       ),
                     ],
@@ -1154,11 +1297,7 @@ class _NotesViewState extends State<_NotesView> {
 
     return AppDropdownMenu<String>(
       tooltip: 'Note actions',
-      icon: Icon(
-        Icons.more_horiz_rounded,
-        size: AppSpacing.lg,
-        color: palette.caption,
-      ),
+      icon: Icon(Icons.more_horiz_rounded, size: 18, color: palette.caption),
       onSelected: (action) {
         switch (action) {
           case 'edit':
@@ -1234,25 +1373,23 @@ class _NotesViewState extends State<_NotesView> {
     required VoidCallback onTap,
   }) {
     return InkWell(
-      borderRadius: AppRadius.radiusXs,
+      borderRadius: BorderRadius.circular(7),
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.xs,
-          vertical: AppSpacing.xxs,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.12),
-          borderRadius: AppRadius.radiusXs,
+          borderRadius: BorderRadius.circular(7),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: AppSpacing.sm, color: color),
-            AppSpacing.gapW4,
+            Icon(icon, size: 12.5, color: color),
+            const SizedBox(width: 4),
             Text(
               label,
               style: context.text.labelSmall?.copyWith(
+                fontSize: 11,
                 fontWeight: FontWeight.w700,
                 color: color,
               ),
@@ -1504,14 +1641,17 @@ class _NotesViewState extends State<_NotesView> {
                                 Text(
                                   isEditing ? 'Edit Note' : 'Create New Note',
                                   style: textTheme.headlineSmall?.copyWith(
+                                    fontSize: 18,
+                                    letterSpacing: -0.3,
                                     color: palette.heading,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
-                                AppSpacing.gapH4,
+                                const SizedBox(height: 2),
                                 Text(
                                   '$wordCount words · ${contentCtrl.text.length} chars',
                                   style: textTheme.labelSmall?.copyWith(
+                                    fontSize: 11.5,
                                     color: palette.caption,
                                   ),
                                 ),
@@ -1526,7 +1666,7 @@ class _NotesViewState extends State<_NotesView> {
                                   visualDensity: VisualDensity.compact,
                                   icon: const Icon(
                                     Icons.delete_outline_rounded,
-                                    size: AppSpacing.lg,
+                                    size: 19,
                                     color: AppColors.error,
                                   ),
                                   tooltip: 'Delete Note',
@@ -1554,26 +1694,35 @@ class _NotesViewState extends State<_NotesView> {
                                     }
                                   },
                                 ),
-                              IconButton(
-                                visualDensity: VisualDensity.compact,
-                                icon: Icon(
-                                  Icons.close_rounded,
-                                  size: AppSpacing.lg,
-                                  color: palette.icon,
+                              InkWell(
+                                borderRadius: BorderRadius.circular(10),
+                                onTap: () => Navigator.of(sheetContext).pop(),
+                                child: Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: palette.surfaceMuted,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(
+                                    Icons.close_rounded,
+                                    size: 18,
+                                    color: palette.icon,
+                                  ),
                                 ),
-                                onPressed: () =>
-                                    Navigator.of(sheetContext).pop(),
                               ),
                             ],
                           ),
                         ],
                       ),
-                      AppSpacing.gapH12,
+                      const SizedBox(height: 12),
 
                       // Title Input (borderless filled: false with accent underline)
                       TextField(
                         controller: titleCtrl,
                         style: textTheme.titleLarge?.copyWith(
+                          fontSize: 17,
+                          letterSpacing: -0.25,
                           color: palette.heading,
                           fontWeight: FontWeight.w700,
                         ),
@@ -1582,11 +1731,13 @@ class _NotesViewState extends State<_NotesView> {
                           isDense: true,
                           hintText: 'Note Title...',
                           hintStyle: textTheme.titleLarge?.copyWith(
+                            fontSize: 17,
+                            letterSpacing: -0.25,
                             color: palette.caption,
                             fontWeight: FontWeight.w600,
                           ),
                           contentPadding: const EdgeInsets.symmetric(
-                            vertical: AppSpacing.xs,
+                            vertical: 8,
                           ),
                           border: UnderlineInputBorder(
                             borderSide: BorderSide(
@@ -1596,7 +1747,7 @@ class _NotesViewState extends State<_NotesView> {
                           ),
                           enabledBorder: UnderlineInputBorder(
                             borderSide: BorderSide(
-                              color: accentColor.withValues(alpha: 0.55),
+                              color: accentColor.withValues(alpha: 0.45),
                               width: 1.5,
                             ),
                           ),
@@ -1608,7 +1759,7 @@ class _NotesViewState extends State<_NotesView> {
                           ),
                         ),
                       ),
-                      AppSpacing.gapH16,
+                      const SizedBox(height: 12),
 
                       // Color Palette Selector
                       Row(
@@ -1616,15 +1767,16 @@ class _NotesViewState extends State<_NotesView> {
                           Text(
                             'Color Accent: ',
                             style: textTheme.labelMedium?.copyWith(
+                              fontSize: 12.5,
                               color: palette.secondary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          AppSpacing.gapW8,
+                          const SizedBox(width: 8),
                           Expanded(
                             child: Wrap(
-                              spacing: AppSpacing.xs,
-                              runSpacing: AppSpacing.xs,
+                              spacing: 8,
+                              runSpacing: 8,
                               children: _notePalette.map((colorVal) {
                                 final isSelected = selectedColor == colorVal;
                                 final swatchColor = Color(colorVal);
@@ -1637,14 +1789,25 @@ class _NotesViewState extends State<_NotesView> {
                                   },
                                   child: AnimatedContainer(
                                     duration: const Duration(milliseconds: 160),
-                                    width: AppSpacing.xl + AppSpacing.xxs,
-                                    height: AppSpacing.xl + AppSpacing.xxs,
+                                    width: 26,
+                                    height: 26,
                                     decoration: BoxDecoration(
                                       color: swatchColor,
                                       shape: BoxShape.circle,
+                                      boxShadow: isSelected
+                                          ? [
+                                              BoxShadow(
+                                                color: swatchColor.withValues(
+                                                  alpha: 0.4,
+                                                ),
+                                                blurRadius: 6,
+                                                spreadRadius: 1,
+                                              ),
+                                            ]
+                                          : null,
                                       border: isSelected
                                           ? Border.all(
-                                              color: palette.heading,
+                                              color: AppColors.textWhite,
                                               width: 2,
                                             )
                                           : null,
@@ -1652,7 +1815,7 @@ class _NotesViewState extends State<_NotesView> {
                                     child: isSelected
                                         ? const Icon(
                                             Icons.check_rounded,
-                                            size: AppSpacing.md,
+                                            size: 14,
                                             color: AppColors.textWhite,
                                           )
                                         : null,
@@ -1663,7 +1826,7 @@ class _NotesViewState extends State<_NotesView> {
                           ),
                         ],
                       ),
-                      AppSpacing.gapH16,
+                      const SizedBox(height: 12),
 
                       // Formatting Shortcut Toolbar
                       SingleChildScrollView(
@@ -1674,6 +1837,7 @@ class _NotesViewState extends State<_NotesView> {
                               context: sheetStateContext,
                               icon: Icons.format_list_bulleted_rounded,
                               label: 'Bullet',
+                              accentColor: accentColor,
                               onTap: () {
                                 final text = contentCtrl.text;
                                 final selection = contentCtrl.selection;
@@ -1692,11 +1856,12 @@ class _NotesViewState extends State<_NotesView> {
                                 setSheetState(() => contentCtrl.text = newText);
                               },
                             ),
-                            AppSpacing.gapW8,
+                            const SizedBox(width: 8),
                             _buildEditorHelperChip(
                               context: sheetStateContext,
                               icon: Icons.check_box_outline_blank_rounded,
                               label: 'Checklist',
+                              accentColor: accentColor,
                               onTap: () {
                                 final text = contentCtrl.text;
                                 final selection = contentCtrl.selection;
@@ -1715,11 +1880,12 @@ class _NotesViewState extends State<_NotesView> {
                                 setSheetState(() => contentCtrl.text = newText);
                               },
                             ),
-                            AppSpacing.gapW8,
+                            const SizedBox(width: 8),
                             _buildEditorHelperChip(
                               context: sheetStateContext,
                               icon: Icons.calendar_today_rounded,
                               label: 'Date',
+                              accentColor: accentColor,
                               onTap: () {
                                 final nowStr = DateFormat(
                                   'dd MMM, h:mm a',
@@ -1744,21 +1910,25 @@ class _NotesViewState extends State<_NotesView> {
                           ],
                         ),
                       ),
-                      AppSpacing.gapH12,
+                      const SizedBox(height: 10),
 
                       // Content Input Field
                       Container(
-                        padding: AppSpacing.edgeInsetsAllMd,
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: palette.surfaceMuted,
-                          borderRadius: AppRadius.borderMd,
+                          color: palette.surfaceMuted.withValues(
+                            alpha: palette.isDark ? 0.45 : 0.65,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: palette.border),
                         ),
                         child: TextField(
                           controller: contentCtrl,
                           onChanged: (_) => setSheetState(() {}),
-                          maxLines: 6,
+                          maxLines: 5,
                           style: textTheme.bodyMedium?.copyWith(
+                            fontSize: 13.5,
+                            height: 1.4,
                             color: palette.heading,
                           ),
                           decoration: InputDecoration(
@@ -1767,6 +1937,8 @@ class _NotesViewState extends State<_NotesView> {
                             hintText:
                                 'Write your thoughts, checklists, or plans...',
                             hintStyle: textTheme.bodyMedium?.copyWith(
+                              fontSize: 13.5,
+                              height: 1.4,
                               color: palette.caption,
                             ),
                             border: InputBorder.none,
@@ -1776,72 +1948,110 @@ class _NotesViewState extends State<_NotesView> {
                           ),
                         ),
                       ),
-                      AppSpacing.gapH16,
+                      const SizedBox(height: 12),
 
                       // Quick Tag Chips
                       Text(
                         'Tags:',
                         style: textTheme.labelMedium?.copyWith(
+                          fontSize: 12,
                           color: palette.secondary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      AppSpacing.gapH8,
+                      const SizedBox(height: 6),
                       Wrap(
-                        spacing: AppSpacing.xs,
-                        runSpacing: AppSpacing.xs,
+                        spacing: 6,
+                        runSpacing: 6,
                         children: _suggestedTags.map((tag) {
                           final isTagActive = activeTags.contains(tag);
-                          return FilterChip(
-                            visualDensity: VisualDensity.compact,
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                            selected: isTagActive,
-                            label: Text(tag, style: textTheme.labelMedium),
-                            selectedColor: accentColor.withValues(alpha: 0.2),
-                            checkmarkColor: accentColor,
-                            onSelected: (selected) {
+                          return GestureDetector(
+                            onTap: () {
+                              HapticFeedback.selectionClick();
                               setSheetState(() {
-                                if (selected) {
-                                  activeTags.add(tag);
-                                } else {
+                                if (isTagActive) {
                                   activeTags.remove(tag);
+                                } else {
+                                  activeTags.add(tag);
                                 }
                               });
                             },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 140),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isTagActive
+                                    ? accentColor.withValues(alpha: 0.16)
+                                    : palette.surfaceMuted,
+                                borderRadius: AppRadius.radiusFull,
+                                border: Border.all(
+                                  color: isTagActive
+                                      ? accentColor
+                                      : palette.border,
+                                ),
+                              ),
+                              child: Text(
+                                tag,
+                                style: textTheme.labelMedium?.copyWith(
+                                  fontSize: 12,
+                                  fontWeight: isTagActive
+                                      ? FontWeight.w700
+                                      : FontWeight.w600,
+                                  color: isTagActive
+                                      ? accentColor
+                                      : palette.body,
+                                ),
+                              ),
+                            ),
                           );
                         }).toList(),
                       ),
-                      AppSpacing.gapH12,
+                      const SizedBox(height: 10),
 
                       // Custom Tag Input Row
                       Row(
                         children: [
                           Expanded(
-                            child: SizedBox(
-                              height: AppSpacing.xxxl,
+                            child: Container(
+                              height: 38,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: palette.surfaceMuted.withValues(
+                                  alpha: palette.isDark ? 0.45 : 0.65,
+                                ),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: palette.border),
+                              ),
                               child: TextField(
                                 controller: customTagCtrl,
                                 style: textTheme.bodySmall?.copyWith(
+                                  fontSize: 12.5,
                                   color: palette.heading,
                                 ),
                                 decoration: InputDecoration(
+                                  filled: false,
                                   hintText: 'Add custom tag (e.g. @Meeting)',
                                   hintStyle: textTheme.bodySmall?.copyWith(
+                                    fontSize: 12.5,
                                     color: palette.caption,
                                   ),
                                   isDense: true,
+                                  border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
                                   contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: AppSpacing.sm,
-                                    vertical: AppSpacing.xs + AppSpacing.xxxs,
+                                    horizontal: 12,
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                          AppSpacing.gapW8,
+                          const SizedBox(width: 8),
                           SizedBox(
-                            height: AppSpacing.xxxl,
+                            height: 38,
                             child: OutlinedButton(
                               onPressed: () {
                                 final custom = customTagCtrl.text.trim();
@@ -1858,20 +2068,32 @@ class _NotesViewState extends State<_NotesView> {
                                 }
                               },
                               style: OutlinedButton.styleFrom(
-                                padding: AppSpacing.edgeInsetsHSm,
-                                textStyle: textTheme.labelMedium,
+                                foregroundColor: accentColor,
+                                side: BorderSide(
+                                  color: accentColor.withValues(alpha: 0.55),
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
+                                textStyle: textTheme.labelMedium?.copyWith(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                               child: const Text('Add Tag'),
                             ),
                           ),
                         ],
                       ),
-                      AppSpacing.gapH20,
+                      const SizedBox(height: 16),
 
                       // Save / Submit Button
                       SizedBox(
                         width: double.infinity,
-                        height: AppSpacing.huge,
+                        height: 46,
                         child: FilledButton.icon(
                           onPressed: () {
                             final title = titleCtrl.text.trim();
@@ -1932,14 +2154,11 @@ class _NotesViewState extends State<_NotesView> {
                           style: FilledButton.styleFrom(
                             backgroundColor: accentColor,
                             foregroundColor: AppColors.textWhite,
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: AppRadius.borderMd,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          icon: const Icon(
-                            Icons.check_rounded,
-                            size: AppSpacing.lg,
-                          ),
+                          icon: const Icon(Icons.check_rounded, size: 18),
                           label: Text(
                             isEditing ? 'Save Changes' : 'Create Note',
                             style: AppTextStyles.buttonText.copyWith(
@@ -1963,17 +2182,37 @@ class _NotesViewState extends State<_NotesView> {
     required BuildContext context,
     required IconData icon,
     required String label,
+    required Color accentColor,
     required VoidCallback onTap,
   }) {
-    return ActionChip(
-      visualDensity: VisualDensity.compact,
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      avatar: Icon(icon, size: AppSpacing.md, color: context.palette.icon),
-      label: Text(
-        label,
-        style: context.text.labelMedium?.copyWith(color: context.palette.body),
+    final palette = context.palette;
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: onTap,
+      child: Container(
+        height: 30,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        decoration: BoxDecoration(
+          color: palette.surfaceMuted,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: palette.border),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: accentColor),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: context.text.labelMedium?.copyWith(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: palette.body,
+              ),
+            ),
+          ],
+        ),
       ),
-      onPressed: onTap,
     );
   }
 }

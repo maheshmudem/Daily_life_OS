@@ -42,7 +42,7 @@ class _FloatingQuickBallState extends State<FloatingQuickBall>
   late final Animation<double> _expandAnimation;
 
   final ValueNotifier<Offset> _ratioNotifier = ValueNotifier<Offset>(
-    const Offset(1.0, 0.88),
+    const Offset(1.0, 0.96),
   );
 
   bool _isExpanded = false;

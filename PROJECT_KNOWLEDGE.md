@@ -79,7 +79,7 @@ modules that talk to each other, and privacy.
 | Misc | `intl`, `image_picker`, `permission_handler`, `path_provider`, `flutter_tts` | |
 | Testing | `flutter_test`, `bloc_test`, `mocktail` | |
 | Lint | `flutter_lints ^6.0.0` | `analysis_options.yaml` uses defaults |
-| Font | DMSans (variable) | `assets/fonts/` |
+| Font | Inter (variable) | `assets/fonts/Inter-Variable.ttf` |
 
 ---
 
@@ -410,11 +410,12 @@ Tap Manage / Add → ManageHabitsSheet / HabitEditorSheet → full CRUD + local 
 Tap Evening Wrap-Up → EveningWrapUpSheet → review pending habits/tasks + save daily reflection to Notes DB
 ```
 
-**UI pieces:** greeting header, "Play briefing" → `AudioBriefingSheet` (TTS powered with fallback),
-`_OverviewCard` (`Daily Progress` ring + tabular percentage + 3 live glance capsules for habits, tasks, and safe spend),
+**UI pieces:** greeting header, compact audio-brief strip (`_AudioBriefSectionCard`: waveform tile · title + two-line summary · round play button; whole card plays the `AudioBriefingSheet` TTS brief),
+`_MomentumSummaryCard` gradient hero (`AppDecorations.heroPrimaryGradient`: 64dp white progress ring, eyebrow + streak chip, motivation headline, one-line next task, frosted 3-metric strip for habits, tasks, and safe spend),
 `SafeSpendMeterWidget` (dynamic snapshot via `GetDailySpendSnapshotUseCase`),
-habit grouped card (`HabitBubbleWidget` rows with tactile check indicators, squircle icons, titles, and streak pills),
-timeline grouped card (`_TimelineCard` with inset dividers), and evening wrap-up card.
+habit grouped card (`HabitBubbleWidget` compact 2–3 line rows: check indicator, squircle icon, title, one meta line `Category · Status · reminder`, optional single-line description, and a trailing streak pill stacked over 7-day dots; the header's tune and Add buttons are the only card actions),
+section headers are plain 17px titles (no icon tiles) with trailing actions; `OsQuickLaunchDock` is four standalone tiles with no outer card; app-bar actions are borderless primary-tinted squircles;
+timeline grouped card (`_TimelineUnifiedCard`: two-line `_TimelineRowTile` rows with check, icon, title, `time · category` meta line with an inline action chip that wraps only when needed, kebab for edit; inset dividers), and evening wrap-up card.
 Standard 8pt/16pt/24pt grid rhythm: `AppSpacing.sm` top clearance, `gapH16` between hero cards, `gapH24` before section headers, `gapH8` between header and grouped card.
 
 ---
@@ -466,13 +467,17 @@ Standard 8pt/16pt/24pt grid rhythm: `AppSpacing.sm` top clearance, `gapH16` betw
 
 #### Page: 3 tabs (`TabController(length: 3)`)
 1. **Reminders tab**
-   - Productivity metrics bar, controls bar (filters/sort), segmented status bar
-     (e.g. today / upcoming / overdue / done), section headers.
+   - Productivity metrics bar (four stacked value-over-label stats), controls bar (38px search +
+     filter/sort squares), segmented status bar (All / Pending / Completed), plain 17px section
+     headers (title owns the slack width so it never wraps; tinted count pill; text actions on the
+     gutter). Cards use `AppRadius.radiusLg` + 1px `divider` border like the Today tab.
    - `SetReminderCard`: quick inline add (title + time + category cycle) → `_submitQuickReminder`:
      dispatches `AddPlannerItem` for today, then schedules a notification.
    - Full sheet: `SetReminderSheet.show(...)` with recurrence, priority, offset, checklist and notes.
      `onSubmit` dispatches `AddPlannerItem`/`UpdatePlannerItem`, then calls `_scheduleReminderNotification`.
      Editing cancels the old notification first.
+   - `PlannerItemCard` layout: 22px check · title (priority pill) · `⋯` menu; icon meta line;
+     notes; divider; footer = quiet `Edit` / `Snooze +15m` text actions + one tonal `Mark Done`.
    - `PlannerItemCard`: toggle, checklist toggles (via `UpdatePlannerItem`), delete (cancel notification,
      then `DeletePlannerItem`), snooze (15 min / 1 h / tomorrow → schedules a notification only),
      duplicate, push to tomorrow, mark all done, clear completed (with `ConfirmationDialog`), quick templates.
@@ -480,6 +485,8 @@ Standard 8pt/16pt/24pt grid rhythm: `AppSpacing.sm` top clearance, `gapH16` betw
    - Modes: Work 25 / Short break 5 / Long break 15 / Flowtime Stopwatch (`Flow ⏱`), customisable via `PomodoroCustomDurationSheet` (including rounds, daily goal, auto-start breaks/work, strict focus mode, and TTS voice coach cues).
    - `PomodoroFocusCard` renders a custom radial 60-tick dial (`_FocusDialPainter`) with breathing aura animation, `+1m`/`+5m` quick boosts, Full-Screen `PomodoroZenScreen`, and live Planner subtask checklist toggling & task completion.
    - `PomodoroAnalyticsDashboard` provides a Daily Focus Goal ring, 7-day interactive Focus Trend bar chart, category distribution bar, Distraction Blocker ("Brain Dump") pad with 1-tap conversion to Planner tasks, manual session logger, and recent session history.
+     All four analytics cards share a plain `_CardHeader` (title + one-line subtitle, no icon tile);
+     stat tiles keep value + label on one line and session rows show `Category · Today, 09:30 AM · 5★`.
 3. **Countdowns tab**
    - List stored in **SharedPreferences** (`planner_saved_countdowns`). There are default examples
      if nothing is saved.
@@ -630,7 +637,7 @@ and empty views. `builder` only runs in the `content` state. Map Bloc state → 
 | `FloatingQuickBall` | Movable, minimizable 54×54 AssistiveTouch / Dynamic Island Quick Ball that morphs smoothly into the Quick-Capture capsule with zero lag (`ValueNotifier<Offset>` + `RepaintBoundary`) and zero pixel break (`ClipRRect` + `OverflowBox`) |
 | `QuickCaptureSheet.show(mode)` | Zero-friction Voice / Quick Type / OCR Scan capture with smart NLP intent detection, editable parameters, and real DB persistence across Money, Planner, Today Habits, and Notes |
 | `AudioBriefingSheet.show` | "Play my day" (UI only) |
-| `HabitBubbleWidget`, `SafeSpendMeterWidget` | Today Hub building blocks (with animated progress, budget breakdown toggle, and expandable habit descriptions) |
+| `HabitBubbleWidget`, `SafeSpendMeterWidget` | Today Hub building blocks (compact habit rows with a single meta line and stacked streak + 7-day dots; animated progress and budget breakdown toggle) |
 | `ExpandableTextWidget` | Reusable multi-line text widget with smooth `AnimatedSize` "Show more / Show less" toggle for long titles, notes, and insights |
 
 ### `core/utils/`
@@ -659,7 +666,7 @@ Failures: `ServerFailure`, `CacheFailure`, `NetworkFailure`, `ValidationFailure`
   Each has `Light`/`Dark` variants, and there's a full dark palette (`darkScaffoldBackground`, `darkCardBackground`, …).
 - `app_text_styles.dart`, `app_spacing.dart`, `app_radius.dart`, `app_decorations.dart`
   (e.g. `floatingBar`), `app_theme.dart` (`lightTheme`, `darkTheme`).
-- Font: **DMSans**. Theme follows the system (light/dark).
+- Font: **Inter**. Theme follows the system (light/dark).
 - **Typography:** one scale in `app_text_styles.dart` (24 / 20 / 18 / 17 / 15 / 14 / 16-14-13 body /
   12 caption / 11 overline). `AppTextStyles.textTheme(brightness)` feeds both themes, so Material
   widgets render the same sizes in light and dark mode. The `AppTextStyles.*` constants carry
@@ -674,7 +681,7 @@ Failures: `ServerFailure`, `CacheFailure`, `NetworkFailure`, `ValidationFailure`
     `tapTargetSize: MaterialTapTargetSize.shrinkWrap`, or Material adds invisible 48px padding.
   - Borderless inline `TextField`s inside a styled container set `filled: false` (the dark theme fill
     otherwise draws a mismatched box).
-  - Use `Text.rich`, not `RichText`: `RichText` ignores the theme and falls back to Roboto instead of DMSans.
+  - Use `Text.rich`, not `RichText`: `RichText` ignores the theme and falls back to Roboto instead of Inter.
   - Segmented pills with long labels use `FittedBox(fit: BoxFit.scaleDown)` instead of ellipsis.
 - Priority colors (in `PlannerItemEntity.priorityColor`): urgent red, high orange, medium indigo, low emerald.
 

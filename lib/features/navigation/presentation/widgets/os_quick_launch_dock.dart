@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../config/theme/app_colors.dart';
-import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
@@ -10,6 +9,9 @@ import '../../../../core/widgets/staggered_fade_slide.dart';
 import '../../../quick_capture/domain/entities/quick_capture_entities.dart';
 
 /// Cross-Module Quick-Launch OS Dock (Spotlight, Focus, Capture, Scratchpad).
+///
+/// Four equal tiles sitting directly on the page background (no outer card),
+/// the "quick actions" row pattern used by most banking / productivity apps.
 class OsQuickLaunchDock extends StatelessWidget {
   final VoidCallback onOpenSpotlight;
   final ValueChanged<int> onNavigateTab;
@@ -24,64 +26,54 @@ class OsQuickLaunchDock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = context.palette;
-
-    return Container(
-      padding: AppSpacing.edgeInsetsAllSm,
-      decoration: BoxDecoration(
-        color: palette.card,
-        borderRadius: AppRadius.borderLg,
-        border: Border.all(color: palette.border),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _OsDockPill(
-              key: const ValueKey('dock_spotlight_pill'),
-              icon: Icons.search_rounded,
-              label: StringConstants.dockSpotlightTitle,
-              color: AppColors.primary,
-              onTap: onOpenSpotlight,
-            ),
+    return Row(
+      children: [
+        Expanded(
+          child: _OsDockPill(
+            key: const ValueKey('dock_spotlight_pill'),
+            icon: Icons.search_rounded,
+            label: StringConstants.dockSpotlightTitle,
+            color: AppColors.primary,
+            onTap: onOpenSpotlight,
           ),
-          AppSpacing.gapW8,
-          Expanded(
-            child: _OsDockPill(
-              key: const ValueKey('dock_focus_pill'),
-              icon: Icons.timer_rounded,
-              label: StringConstants.dockFocusTitle,
-              color: AppColors.moduleTime,
-              onTap: () {
-                HapticFeedback.selectionClick();
-                onNavigateTab(1);
-              },
-            ),
+        ),
+        AppSpacing.gapW8,
+        Expanded(
+          child: _OsDockPill(
+            key: const ValueKey('dock_focus_pill'),
+            icon: Icons.timer_rounded,
+            label: StringConstants.dockFocusTitle,
+            color: AppColors.moduleTime,
+            onTap: () {
+              HapticFeedback.selectionClick();
+              onNavigateTab(1);
+            },
           ),
-          AppSpacing.gapW8,
-          Expanded(
-            child: _OsDockPill(
-              key: const ValueKey('dock_capture_pill'),
-              icon: Icons.bolt_rounded,
-              label: StringConstants.dockCaptureTitle,
-              color: AppColors.moduleMoney,
-              onTap: () => onQuickCapture(QuickCaptureMode.text),
-            ),
+        ),
+        AppSpacing.gapW8,
+        Expanded(
+          child: _OsDockPill(
+            key: const ValueKey('dock_capture_pill'),
+            icon: Icons.bolt_rounded,
+            label: StringConstants.dockCaptureTitle,
+            color: AppColors.moduleMoney,
+            onTap: () => onQuickCapture(QuickCaptureMode.text),
           ),
-          AppSpacing.gapW8,
-          Expanded(
-            child: _OsDockPill(
-              key: const ValueKey('dock_notes_pill'),
-              icon: Icons.lightbulb_outline_rounded,
-              label: StringConstants.dockNotesTitle,
-              color: AppColors.moduleNotes,
-              onTap: () {
-                HapticFeedback.selectionClick();
-                onNavigateTab(3);
-              },
-            ),
+        ),
+        AppSpacing.gapW8,
+        Expanded(
+          child: _OsDockPill(
+            key: const ValueKey('dock_notes_pill'),
+            icon: Icons.lightbulb_outline_rounded,
+            label: StringConstants.dockNotesTitle,
+            color: AppColors.moduleNotes,
+            onTap: () {
+              HapticFeedback.selectionClick();
+              onNavigateTab(3);
+            },
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -103,48 +95,51 @@ class _OsDockPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = context.palette;
+    final radius = BorderRadius.circular(16);
 
     return PressableScale(
       onTap: onTap,
-      child: InkWell(
-        borderRadius: AppRadius.borderMd,
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.xs,
-            vertical: AppSpacing.xs,
-          ),
-          decoration: BoxDecoration(
-            color: palette.surfaceMuted,
-            borderRadius: AppRadius.borderMd,
-            border: Border.all(color: palette.border),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: AppSpacing.xl + AppSpacing.xxs,
-                height: AppSpacing.xl + AppSpacing.xxs,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.14),
-                  borderRadius: AppRadius.borderSm,
+      child: Material(
+        color: palette.card,
+        shape: RoundedRectangleBorder(
+          borderRadius: radius,
+          side: BorderSide(color: palette.divider),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 11),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: color.withValues(
+                      alpha: palette.isDark ? 0.22 : 0.12,
+                    ),
+                    borderRadius: BorderRadius.circular(11),
+                  ),
+                  child: Icon(icon, size: 18, color: color),
                 ),
-                child: Icon(icon, size: AppSpacing.md, color: color),
-              ),
-              AppSpacing.gapH4,
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  style: context.text.labelMedium?.copyWith(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
-                    color: palette.heading,
+                const SizedBox(height: 6),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    style: context.text.labelMedium?.copyWith(
+                      fontSize: 11.5,
+                      letterSpacing: -0.2,
+                      fontWeight: FontWeight.w600,
+                      color: palette.heading,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

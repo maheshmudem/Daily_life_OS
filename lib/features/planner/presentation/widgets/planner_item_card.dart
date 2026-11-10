@@ -11,11 +11,14 @@ import '../../domain/entities/planner_item_entity.dart';
 /// Reminder card used in the Planner list.
 ///
 /// Layout (all cards share the same grid so lists line up vertically):
-///   [check] Title ................................ [priority] [⋯]
-///           meta · meta · meta
-///           notes
-///           ───────────────────────────────────────────────
-///           [ Edit ] [ Snooze +15m ] [ Mark Done ]
+///   [check]  Title ............................... [priority] [⋯]
+///            meta · meta · meta
+///            notes
+///            ─────────────────────────────────────────────
+///            Edit   Snooze +15m                 [✓ Mark Done]
+///
+/// The footer is a row of quiet text actions plus one tonal primary action,
+/// so a list of cards reads as content first and buttons second.
 class PlannerItemCard extends StatefulWidget {
   final PlannerItemEntity item;
   final bool isDark;
@@ -47,15 +50,17 @@ class PlannerItemCard extends StatefulWidget {
 }
 
 class _PlannerItemCardState extends State<PlannerItemCard> {
-  static const double _checkSize = 20;
+  static const double _checkSize = 22;
   static const double _titleLineHeight = 20;
-  static const double _contentInset = _checkSize + 10;
+  static const double _contentInset = _checkSize + 12;
+  static const double _actionHeight = 30;
 
   bool _isExpanded = false;
 
   bool get _isDark => widget.isDark;
   Color get _headingColor =>
       _isDark ? AppColors.darkTextHeading : AppColors.textHeading;
+  Color get _bodyColor => _isDark ? AppColors.darkTextBody : AppColors.textBody;
   Color get _captionColor =>
       _isDark ? AppColors.darkTextCaption : AppColors.textCaption;
   Color get _dividerColor =>
@@ -67,22 +72,22 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
 
     final Color borderColor;
     if (item.isOverdue) {
-      borderColor = AppColors.error.withValues(alpha: 0.4);
+      borderColor = AppColors.error.withValues(alpha: 0.45);
     } else if (item.isDone) {
-      borderColor = AppColors.success.withValues(alpha: 0.3);
+      borderColor = AppColors.success.withValues(alpha: 0.35);
     } else {
       borderColor = _dividerColor;
     }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.fromLTRB(14, 12, 12, 10),
       decoration: BoxDecoration(
         color: _isDark
             ? AppColors.darkCardBackground
             : AppColors.cardBackground,
-        borderRadius: AppRadius.radiusMd,
-        border: Border.all(color: borderColor, width: 0.85),
+        borderRadius: AppRadius.radiusLg,
+        border: Border.all(color: borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,7 +96,7 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildCheck(item),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: InkWell(
                   onTap: widget.onEdit,
@@ -110,11 +115,9 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
                           characterThreshold: 65,
                           toggleColor: AppColors.moduleTime,
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 12.5,
                             height: 1.35,
-                            color: _isDark
-                                ? AppColors.darkTextBody
-                                : AppColors.textBody,
+                            color: _bodyColor,
                           ),
                         ),
                       ],
@@ -139,9 +142,9 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
                 : const SizedBox.shrink(),
           ),
 
-          const SizedBox(height: 8),
-          Divider(height: 1, thickness: 0.8, color: _dividerColor),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
+          Divider(height: 1, thickness: 1, color: _dividerColor),
+          const SizedBox(height: 4),
           _buildActions(item),
         ],
       ),
@@ -156,7 +159,7 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
       button: true,
       child: InkResponse(
         onTap: () => widget.onToggle(!isDone),
-        radius: 18,
+        radius: 20,
         child: SizedBox(
           height: _titleLineHeight,
           child: Center(
@@ -174,14 +177,14 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
                             ? AppColors.error
                             : (_isDark
                                   ? AppColors.darkBorder
-                                  : AppColors.textCaption)),
+                                  : AppColors.border)),
                   width: 1.8,
                 ),
               ),
               child: isDone
                   ? const Icon(
                       Icons.check_rounded,
-                      size: 13,
+                      size: 14,
                       color: Colors.white,
                     )
                   : null,
@@ -207,6 +210,7 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
             style: TextStyle(
               fontSize: 15,
               height: 1.3,
+              letterSpacing: -0.2,
               fontWeight: FontWeight.w700,
               color: item.isDone ? _captionColor : _headingColor,
               decoration: item.isDone ? TextDecoration.lineThrough : null,
@@ -235,7 +239,7 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
   Widget _buildMeta(PlannerItemEntity item) {
     final metaColor = item.isOverdue ? AppColors.error : _captionColor;
     return Wrap(
-      spacing: 8,
+      spacing: 10,
       runSpacing: 4,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
@@ -330,7 +334,7 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
                     child: Text(
                       c.title,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 12.5,
                         color: c.isDone ? _captionColor : _headingColor,
                         decoration: c.isDone
                             ? TextDecoration.lineThrough
@@ -361,78 +365,84 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
     );
   }
 
-  // ── Footer actions (full card width so left/right edges align strictly) ──
+  // ── Footer actions ────────────────────────────────────────────────────────
+  // Quiet text actions on the left, one tonal primary action on the right.
   Widget _buildActions(PlannerItemEntity item) {
-    final outlinedStyle = OutlinedButton.styleFrom(
-      minimumSize: const Size(0, 28),
-      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    final quietStyle = TextButton.styleFrom(
+      foregroundColor: _bodyColor,
+      minimumSize: const Size(0, _actionHeight),
       padding: const EdgeInsets.symmetric(horizontal: 8),
-      foregroundColor: _isDark ? AppColors.darkTextBody : AppColors.textBody,
-      side: BorderSide(
-        color: _isDark ? AppColors.darkDivider : AppColors.divider,
-        width: 0.85,
-      ),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: VisualDensity.compact,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       textStyle: const TextStyle(
         fontFamily: AppTextStyles.fontFamily,
-        fontSize: 11.5,
+        fontSize: 12.5,
         fontWeight: FontWeight.w600,
       ),
     );
 
     return Row(
       children: [
-        if (widget.onEdit != null) ...[
-          Expanded(
-            child: OutlinedButton.icon(
-              onPressed: widget.onEdit,
-              style: outlinedStyle,
-              icon: const Icon(Icons.edit_outlined, size: 13),
-              label: const Text('Edit'),
-            ),
-          ),
-          const SizedBox(width: 6),
-        ],
+        // The quiet actions own the slack width (so "Mark Done" stays on the
+        // right edge) and the first label lines up with the title gutter.
         Expanded(
-          child: OutlinedButton(
-            onPressed: widget.onSnooze,
-            style: outlinedStyle,
-            child: const FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text('Snooze +15m'),
-            ),
+          child: Row(
+            children: [
+              const SizedBox(width: _contentInset - 8),
+              if (widget.onEdit != null)
+                TextButton.icon(
+                  onPressed: widget.onEdit,
+                  style: quietStyle,
+                  icon: const Icon(Icons.edit_outlined, size: 14),
+                  label: const Text('Edit'),
+                ),
+              Flexible(
+                child: TextButton.icon(
+                  onPressed: widget.onSnooze,
+                  style: quietStyle,
+                  icon: const Icon(Icons.snooze_rounded, size: 14),
+                  label: const Text(
+                    'Snooze +15m',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(width: 6),
-        Expanded(
-          child: FilledButton(
-            onPressed: () => widget.onToggle(!item.isDone),
-            style: FilledButton.styleFrom(
-              minimumSize: const Size(0, 28),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              elevation: 0,
-              backgroundColor: item.isDone
-                  ? (_isDark
-                        ? AppColors.darkSurfaceSecondary
-                        : AppColors.surfaceSecondary)
-                  : AppColors.moduleTime.withValues(alpha: 0.14),
-              foregroundColor: item.isDone
-                  ? _captionColor
-                  : (_isDark
-                        ? AppColors.moduleTimeLight
-                        : AppColors.moduleTime),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              textStyle: const TextStyle(
-                fontFamily: AppTextStyles.fontFamily,
-                fontSize: 11.5,
-                fontWeight: FontWeight.w700,
-              ),
+        const SizedBox(width: 8),
+        FilledButton.icon(
+          onPressed: () => widget.onToggle(!item.isDone),
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(0, _actionHeight),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+            padding: const EdgeInsets.fromLTRB(10, 0, 12, 0),
+            elevation: 0,
+            backgroundColor: item.isDone
+                ? (_isDark
+                      ? AppColors.darkSurfaceSecondary
+                      : AppColors.surfaceSecondary)
+                : AppColors.moduleTime.withValues(alpha: _isDark ? 0.22 : 0.14),
+            foregroundColor: item.isDone
+                ? _captionColor
+                : (_isDark ? AppColors.moduleTimeLight : AppColors.moduleTime),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: Text(item.isDone ? 'Undo' : 'Mark Done'),
+            textStyle: const TextStyle(
+              fontFamily: AppTextStyles.fontFamily,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+            ),
           ),
+          icon: Icon(
+            item.isDone ? Icons.undo_rounded : Icons.check_rounded,
+            size: 15,
+          ),
+          label: Text(item.isDone ? 'Undo' : 'Mark Done'),
         ),
       ],
     );
@@ -512,7 +522,7 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
           alignment: Alignment.centerRight,
           child: Icon(
             Icons.more_horiz_rounded,
-            size: 18,
+            size: 20,
             color: _isDark ? AppColors.darkIconColor : AppColors.iconColor,
           ),
         ),
@@ -540,12 +550,13 @@ class _MetaItem extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 12.5, color: color),
-        const SizedBox(width: 3.5),
+        Icon(icon, size: 13, color: color),
+        const SizedBox(width: 4),
         Text(
           label,
           style: TextStyle(
-            fontSize: 11.5,
+            fontSize: 12,
+            height: 1.3,
             fontWeight: FontWeight.w500,
             color: color,
           ),
@@ -571,15 +582,16 @@ class _Pill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(5),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 10,
+          fontSize: 10.5,
+          height: 1.2,
           fontWeight: FontWeight.w700,
           letterSpacing: letterSpacing,
           color: color,
