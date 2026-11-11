@@ -64,9 +64,68 @@ void main() {
     expect(find.text('Tasks Pending'), findsOneWidget);
     expect(find.text('Safe Spend'), findsOneWidget);
 
-    // 4. Verify Safe-to-Spend Meter and Habits Strip
+    // 4. Verify Safe-to-Spend Meter and Habits Strip with Add Habit entry point
     expect(find.text('Safe-to-Spend Today'), findsOneWidget);
     expect(find.text(StringConstants.habitsAndRoutines), findsOneWidget);
+    expect(find.text('Add'), findsOneWidget);
+    expect(find.text('Add Habit'), findsOneWidget);
     expect(find.text(StringConstants.timelineFeed), findsOneWidget);
+  });
+
+  testWidgets('Tapping Add Habit header button opens HabitFormSheet in create mode',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: TodayHubPage(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Tap on the "+ Add" header chip
+    await tester.tap(find.text('Add'));
+    await tester.pumpAndSettle();
+
+    // Verify HabitFormSheet opens with create mode elements
+    expect(find.text('Add New Habit'), findsOneWidget);
+    expect(find.text('Create a micro-routine for daily momentum'), findsOneWidget);
+    expect(find.text('QUICK TEMPLATES'), findsOneWidget);
+    expect(find.text('HABIT NAME'), findsOneWidget);
+    expect(find.text('CHOOSE ICON'), findsOneWidget);
+    expect(find.text('COLOR ACCENT'), findsOneWidget);
+    expect(find.text('Create Habit'), findsOneWidget);
+  });
+
+  testWidgets('Long pressing a habit bubble opens HabitFormSheet in edit/delete mode',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: TodayHubPage(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Find first habit bubble (seeded: "Drink 3L Water") and long press
+    final habitBubble = find.text('Drink 3L Water');
+    expect(habitBubble, findsOneWidget);
+
+    await tester.longPress(habitBubble);
+    await tester.pumpAndSettle();
+
+    // Verify Edit sheet opens
+    expect(find.text('Edit Habit'), findsOneWidget);
+    expect(find.text('Adjust streak, icon, or remove habit'), findsOneWidget);
+    expect(find.text('Current Streak'), findsOneWidget);
+    expect(find.text('Delete'), findsOneWidget);
+    expect(find.text('Save Changes'), findsOneWidget);
   });
 }

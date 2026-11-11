@@ -10,6 +10,7 @@ class HabitBubbleWidget extends StatelessWidget {
   final bool isDone;
   final Color tintColor;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
   const HabitBubbleWidget({
     super.key,
@@ -19,6 +20,7 @@ class HabitBubbleWidget extends StatelessWidget {
     required this.isDone,
     required this.tintColor,
     required this.onTap,
+    this.onLongPress,
   });
 
   @override
@@ -27,6 +29,7 @@ class HabitBubbleWidget extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
+      onLongPress: onLongPress,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 240),
         curve: Curves.easeOutCubic,

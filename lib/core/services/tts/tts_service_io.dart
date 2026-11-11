@@ -143,6 +143,7 @@ class IoTtsService implements AppTtsService {
   Future<void> resume() async {
     try {
       if (_flutterTts != null) {
+        await _flutterTts!.setSpeechRate(0.46 * _lastRate);
         await _flutterTts!.speak(_lastText);
       }
     } catch (e) {

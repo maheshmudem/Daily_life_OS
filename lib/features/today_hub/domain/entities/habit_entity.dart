@@ -27,15 +27,18 @@ class HabitEntity extends Equatable {
   Color get color => Color(colorValue);
 
   HabitEntity copyWith({
+    String? title,
+    int? iconCodePoint,
+    int? colorValue,
     bool? isDoneToday,
     int? streakDays,
     String? lastCompletedDate,
   }) {
     return HabitEntity(
       id: id,
-      title: title,
-      iconCodePoint: iconCodePoint,
-      colorValue: colorValue,
+      title: title ?? this.title,
+      iconCodePoint: iconCodePoint ?? this.iconCodePoint,
+      colorValue: colorValue ?? this.colorValue,
       streakDays: streakDays ?? this.streakDays,
       isDoneToday: isDoneToday ?? this.isDoneToday,
       lastCompletedDate: lastCompletedDate ?? this.lastCompletedDate,

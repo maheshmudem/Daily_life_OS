@@ -3,6 +3,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:daily_life_os/core/database/app_database.dart';
 import 'package:daily_life_os/features/today_hub/data/datasources/today_hub_local_datasource.dart';
+import 'package:daily_life_os/features/today_hub/domain/entities/habit_entity.dart';
 
 void main() {
   late AppDatabase db;
@@ -76,6 +77,38 @@ void main() {
       await dataSource.toggleTimelineItem(timelineId);
       final toggledTimeline = await dataSource.getTodayTimeline();
       expect(toggledTimeline.first.isDone, true);
+
+      // 7. Test addHabit
+      await dataSource.addHabit(
+        HabitEntity(
+          id: 0,
+          title: 'Morning Yoga',
+          iconCodePoint: 789,
+          colorValue: 0xFF14B8A6,
+          streakDays: 0,
+          isDoneToday: false,
+          createdAt: now,
+        ),
+      );
+      var allHabits = await dataSource.getHabits();
+      expect(allHabits.length, 2);
+      final addedHabit = allHabits.firstWhere((h) => h.title == 'Morning Yoga');
+      expect(addedHabit.streakDays, 0);
+
+      // 8. Test updateHabit
+      await dataSource.updateHabit(
+        addedHabit.copyWith(title: 'Power Yoga', streakDays: 7),
+      );
+      allHabits = await dataSource.getHabits();
+      final updatedHabit = allHabits.firstWhere((h) => h.id == addedHabit.id);
+      expect(updatedHabit.title, 'Power Yoga');
+      expect(updatedHabit.streakDays, 7);
+
+      // 9. Test deleteHabit
+      await dataSource.deleteHabit(addedHabit.id);
+      allHabits = await dataSource.getHabits();
+      expect(allHabits.length, 1);
+      expect(allHabits.any((h) => h.id == addedHabit.id), false);
     },
   );
 }
