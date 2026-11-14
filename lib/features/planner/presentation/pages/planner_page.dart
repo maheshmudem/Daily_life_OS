@@ -13,6 +13,7 @@ import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
+import '../../../../core/monitoring/app_monitor.dart';
 import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/services/tts/tts_service.dart';
 import '../../../../core/widgets/app_empty_state.dart';
@@ -2165,9 +2166,21 @@ class _PlannerViewState extends State<_PlannerView>
           '${StringConstants.pushedToTimelineMessage}: "${item.title}"',
         );
       }
-    } catch (e) {
+    } catch (e, st) {
+      AppMonitor.instance.recordError(
+        e,
+        st,
+        source: 'planner.pushToTimeline',
+        fallbackAction: "add this to today's timeline",
+      );
       if (context.mounted) {
-        SnackbarUtils.showError(context, '$e');
+        SnackbarUtils.showError(
+          context,
+          AppMonitor.friendlyMessage(
+            e,
+            fallbackAction: "add this to today's timeline",
+          ),
+        );
       }
     }
   }
@@ -3753,8 +3766,12 @@ class _PlannerViewState extends State<_PlannerView>
       } else {
         await _cancelCountdownNotifications(item.id);
       }
-    } catch (e) {
-      debugPrint('Error syncing countdown notifications: $e');
+    } catch (e, st) {
+      AppMonitor.instance.recordError(
+        e,
+        st,
+        source: 'planner.syncCountdownNotifications',
+      );
     }
   }
 
@@ -3768,8 +3785,12 @@ class _PlannerViewState extends State<_PlannerView>
       await sl<NotificationService>().cancelNotification(
         (baseId + 7) & 0x7FFFFFFF,
       );
-    } catch (e) {
-      debugPrint('Error canceling countdown notifications: $e');
+    } catch (e, st) {
+      AppMonitor.instance.recordError(
+        e,
+        st,
+        source: 'planner.cancelCountdownNotifications',
+      );
     }
   }
 

@@ -3,6 +3,7 @@ import 'package:get_it/get_it.dart';
 import 'package:local_auth/local_auth.dart';
 
 import '../core/database/app_database.dart';
+import '../core/monitoring/app_monitor.dart';
 import '../core/notifications/notification_service.dart';
 // Command Palette
 import '../features/command_palette/data/datasources/command_palette_local_datasource.dart';
@@ -82,6 +83,10 @@ Future<void> initDependencies({
   }
 
   // ── Core Services ─────────────────────────────────────────────────────────
+  sl.registerLazySingleton<AppMonitor>(() => AppMonitor.instance);
+  sl.registerLazySingleton<FlutterSecureStorage>(
+    () => secureStorage ?? const FlutterSecureStorage(),
+  );
   sl.registerLazySingleton<NotificationService>(
     () => notificationService ?? NotificationServiceImpl(),
   );
@@ -107,7 +112,7 @@ Future<void> initDependencies({
   );
   sl.registerLazySingleton<SecurityLocalDataSource>(
     () => SecurityLocalDataSourceImpl(
-      storage: secureStorage,
+      storage: sl<FlutterSecureStorage>(),
       localAuth: localAuth,
     ),
   );
@@ -282,6 +287,7 @@ Future<void> initDependencies({
       getNotesUseCase: sl<GetNotesUseCase>(),
       getVaultPasswordsUseCase: sl<GetVaultPasswordsUseCase>(),
       getVaultDocumentsUseCase: sl<GetVaultDocumentsUseCase>(),
+      securityRepository: sl<SecurityRepository>(),
     ),
   );
   sl.registerLazySingleton<CommandPaletteRepository>(
@@ -403,11 +409,25 @@ Future<void> initDependencies({
     ),
   );
 
+  // Preload persisted user profile (including Dark/Light themeMode) so frame 1
+  // renders with zero startup theme flash.
+  final preloadedProfile = await (() async {
+    try {
+      return await AppMonitor.instance.traceAsync(
+        'profile.preload',
+        () => sl<ProfileLocalDataSource>().getProfile(),
+      );
+    } catch (_) {
+      return null;
+    }
+  })();
+
   sl.registerLazySingleton<ProfileBloc>(
     () => ProfileBloc(
       getUserProfile: sl<GetUserProfileUseCase>(),
       saveUserProfile: sl<SaveUserProfileUseCase>(),
       pickProfileAvatar: sl<PickProfileAvatarUseCase>(),
+      initialProfile: preloadedProfile,
     )..add(const LoadProfile()),
   );
 }

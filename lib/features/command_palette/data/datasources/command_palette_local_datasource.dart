@@ -5,6 +5,7 @@ import '../../../money/domain/usecases/get_transactions_and_budget_usecase.dart'
 import '../../../money/domain/usecases/manage_subscriptions_and_ious_usecase.dart';
 import '../../../notes/domain/usecases/get_notes_usecase.dart';
 import '../../../planner/domain/usecases/get_planner_items_usecase.dart';
+import '../../../security/domain/repositories/security_repository.dart';
 import '../../../today_hub/domain/usecases/get_habits_usecase.dart';
 import '../../../today_hub/domain/usecases/get_today_timeline_usecase.dart';
 import '../../../vault/domain/usecases/get_vault_items_usecase.dart';
@@ -39,6 +40,7 @@ class CommandPaletteLocalDataSourceImpl
   final GetNotesUseCase _getNotes;
   final GetVaultPasswordsUseCase _getVaultPasswords;
   final GetVaultDocumentsUseCase _getVaultDocuments;
+  final SecurityRepository? securityRepository;
 
   const CommandPaletteLocalDataSourceImpl({
     required GetHabitsUseCase getHabitsUseCase,
@@ -50,6 +52,7 @@ class CommandPaletteLocalDataSourceImpl
     required GetNotesUseCase getNotesUseCase,
     required GetVaultPasswordsUseCase getVaultPasswordsUseCase,
     required GetVaultDocumentsUseCase getVaultDocumentsUseCase,
+    this.securityRepository,
   }) : _getHabits = getHabitsUseCase,
        _getTodayTimeline = getTodayTimelineUseCase,
        _getPlannerItems = getPlannerItemsUseCase,
@@ -289,6 +292,13 @@ class CommandPaletteLocalDataSourceImpl
   @override
   Future<List<CommandPaletteEntryModel>> getVaultEntries() {
     return _load(CommandPaletteModules.vault, () async {
+      final secRepo = securityRepository;
+      if (secRepo != null) {
+        final config = await secRepo.getConfig();
+        if (config.isSecurityEnabled && !secRepo.isMasterSessionUnlocked) {
+          return const <CommandPaletteEntryModel>[];
+        }
+      }
       final passwords = await _getVaultPasswords();
       final docs = await _getVaultDocuments();
       return [

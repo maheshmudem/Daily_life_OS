@@ -8,8 +8,10 @@ import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
+import '../../../../core/monitoring/app_monitor.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
+import '../../../../core/widgets/app_bottom_sheet.dart';
 import '../../../../di/injection_container.dart';
 import '../../../money/presentation/bloc/money_bloc.dart';
 import '../../../notes/presentation/bloc/notes_bloc.dart';
@@ -143,6 +145,22 @@ class _ProfileSettingsSheetState extends State<ProfileSettingsSheet> {
     );
   }
 
+  Future<void> _copyDiagnosticsReport(
+    BuildContext context,
+    UserProfileEntity profile,
+  ) async {
+    final report = AppMonitor.instance.snapshot().toUserSupportSummary();
+    await Clipboard.setData(ClipboardData(text: report));
+    if (!context.mounted) return;
+    if (profile.enableHapticFeedback) {
+      unawaited(HapticFeedback.lightImpact());
+    }
+    SnackbarUtils.showSuccess(
+      context,
+      StringConstants.diagnosticsCopiedMessage,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final palette = context.palette;
@@ -152,6 +170,18 @@ class _ProfileSettingsSheetState extends State<ProfileSettingsSheet> {
     return BlocBuilder<ProfileBloc, ProfileState>(
       builder: (context, state) {
         final profile = state.profile;
+        final isDarkActive =
+            profile.themeMode == 'dark' ||
+            (profile.themeMode == 'system' && palette.isDark);
+        final darkModeSubtitle = switch (profile.themeMode) {
+          'dark' => StringConstants.darkModeActiveSubtitle,
+          'light' => StringConstants.lightModeActiveSubtitle,
+          _ =>
+            palette.isDark
+                ? StringConstants.systemDarkSubtitle
+                : StringConstants.systemLightSubtitle,
+        };
+        final health = AppMonitor.instance.snapshot();
 
         return Container(
           key: const ValueKey('profile_settings_sheet'),
@@ -172,17 +202,8 @@ class _ProfileSettingsSheetState extends State<ProfileSettingsSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Drag handle
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: palette.divider,
-                    borderRadius: AppRadius.radiusFull,
-                  ),
-                ),
-              ),
-              AppSpacing.gapH16,
+              const Center(child: AppSheetHandle()),
+              AppSpacing.gapH12,
 
               // Sheet Header
               Row(
@@ -230,6 +251,111 @@ class _ProfileSettingsSheetState extends State<ProfileSettingsSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // 0. Appearance & Dark Mode Quick Control Card
+                      _SectionCard(
+                        title: StringConstants.appearanceAndDarkModeSection,
+                        icon: isDarkActive
+                            ? Icons.dark_mode_rounded
+                            : Icons.light_mode_rounded,
+                        accentColor: isDarkActive
+                            ? AppColors.primaryLight
+                            : AppColors.primary,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _PreferenceToggleTile(
+                              switchKey: const ValueKey(
+                                'toggle_dark_mode_switch',
+                              ),
+                              icon: isDarkActive
+                                  ? Icons.dark_mode_rounded
+                                  : Icons.wb_sunny_rounded,
+                              iconColor: isDarkActive
+                                  ? AppColors.primaryLight
+                                  : AppColors.warning,
+                              title: StringConstants.darkModeToggleTitle,
+                              subtitle: darkModeSubtitle,
+                              value: isDarkActive,
+                              onChanged: (enabled) {
+                                if (profile.enableHapticFeedback) {
+                                  unawaited(HapticFeedback.selectionClick());
+                                }
+                                context.read<ProfileBloc>().add(
+                                  ToggleDarkModePreference(enabled),
+                                );
+                              },
+                            ),
+                            Divider(height: 18, color: palette.border),
+                            AppText(
+                              StringConstants.appearanceModeTitle,
+                              style: text.labelSmall?.copyWith(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                                color: palette.heading,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                _ThemeModeOption(
+                                  optionKey: const ValueKey(
+                                    'theme_mode_system',
+                                  ),
+                                  label: StringConstants.themeSystem,
+                                  icon: Icons.brightness_auto_rounded,
+                                  selected: profile.themeMode == 'system',
+                                  onTap: () {
+                                    if (profile.enableHapticFeedback) {
+                                      unawaited(
+                                        HapticFeedback.selectionClick(),
+                                      );
+                                    }
+                                    context.read<ProfileBloc>().add(
+                                      const ChangeThemeModePreference('system'),
+                                    );
+                                  },
+                                ),
+                                const SizedBox(width: 8),
+                                _ThemeModeOption(
+                                  optionKey: const ValueKey('theme_mode_light'),
+                                  label: StringConstants.themeLight,
+                                  icon: Icons.light_mode_rounded,
+                                  selected: profile.themeMode == 'light',
+                                  onTap: () {
+                                    if (profile.enableHapticFeedback) {
+                                      unawaited(
+                                        HapticFeedback.selectionClick(),
+                                      );
+                                    }
+                                    context.read<ProfileBloc>().add(
+                                      const ChangeThemeModePreference('light'),
+                                    );
+                                  },
+                                ),
+                                const SizedBox(width: 8),
+                                _ThemeModeOption(
+                                  optionKey: const ValueKey('theme_mode_dark'),
+                                  label: StringConstants.themeDark,
+                                  icon: Icons.dark_mode_rounded,
+                                  selected: profile.themeMode == 'dark',
+                                  onTap: () {
+                                    if (profile.enableHapticFeedback) {
+                                      unawaited(
+                                        HapticFeedback.selectionClick(),
+                                      );
+                                    }
+                                    context.read<ProfileBloc>().add(
+                                      const ChangeThemeModePreference('dark'),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      AppSpacing.gapH12,
+
                       // 1. Identity & Profile Picture Card
                       _SectionCard(
                         title: StringConstants.avatarSectionTitle,
@@ -594,48 +720,6 @@ class _ProfileSettingsSheetState extends State<ProfileSettingsSheet> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Theme Mode Selector
-                            AppText(
-                              StringConstants.appearanceModeTitle,
-                              style: text.labelSmall?.copyWith(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w700,
-                                color: palette.heading,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                _ThemeModeOption(
-                                  label: StringConstants.themeSystem,
-                                  icon: Icons.brightness_auto_rounded,
-                                  selected: profile.themeMode == 'system',
-                                  onTap: () => context.read<ProfileBloc>().add(
-                                    const ChangeThemeModePreference('system'),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                _ThemeModeOption(
-                                  label: StringConstants.themeLight,
-                                  icon: Icons.light_mode_rounded,
-                                  selected: profile.themeMode == 'light',
-                                  onTap: () => context.read<ProfileBloc>().add(
-                                    const ChangeThemeModePreference('light'),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                _ThemeModeOption(
-                                  label: StringConstants.themeDark,
-                                  icon: Icons.dark_mode_rounded,
-                                  selected: profile.themeMode == 'dark',
-                                  onTap: () => context.read<ProfileBloc>().add(
-                                    const ChangeThemeModePreference('dark'),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            AppSpacing.gapH16,
-
                             // Primary Currency Selector
                             AppText(
                               StringConstants.activeCurrencyTitle,
@@ -791,10 +875,142 @@ class _ProfileSettingsSheetState extends State<ProfileSettingsSheet> {
                             onPressed: () =>
                                 _copyWorkspaceBackupSummary(context, profile),
                             icon: const Icon(Icons.copy_all_rounded, size: 17),
-                            label: const AppText(
-                              StringConstants.copyWorkspaceBackupLabel,
+                            label: const FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: AppText(
+                                StringConstants.copyWorkspaceBackupLabel,
+                                maxLines: 1,
+                              ),
                             ),
                           ),
+                        ),
+                      ),
+                      AppSpacing.gapH12,
+
+                      // ── 5. App Care & Smoothness (User-First View) ──────
+                      _SectionCard(
+                        title: StringConstants.systemHealthSectionTitle,
+                        icon: Icons.verified_user_outlined,
+                        accentColor: health.status == AppHealthStatus.healthy
+                            ? AppColors.success
+                            : AppColors.warning,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                _DiagnosticMetricPill(
+                                  label: 'App Status',
+                                  value: health.userStatusLabel,
+                                  accent:
+                                      health.status == AppHealthStatus.healthy
+                                      ? AppColors.success
+                                      : AppColors.warning,
+                                ),
+                                const _DiagnosticMetricPill(
+                                  label: 'Saved Data',
+                                  value: 'Safe on Device',
+                                  accent: AppColors.success,
+                                ),
+                                _DiagnosticMetricPill(
+                                  label: 'Vault Lock',
+                                  value: health.securityAlerts == 0
+                                      ? 'Protected'
+                                      : 'Extra Care On',
+                                  accent: AppColors.moduleVault,
+                                ),
+                                _DiagnosticMetricPill(
+                                  label: 'Recent Hiccups',
+                                  value: health.totalErrors == 0
+                                      ? 'None'
+                                      : '${health.totalErrors} Handled Safely',
+                                  accent: health.totalErrors == 0
+                                      ? AppColors.success
+                                      : AppColors.warning,
+                                ),
+                              ],
+                            ),
+                            AppSpacing.gapH8,
+                            AppText.caption(
+                              health.userReassuranceMessage,
+                              color: palette.caption,
+                            ),
+                            if (health.recentErrors.isNotEmpty) ...[
+                              AppSpacing.gapH8,
+                              Container(
+                                padding: const EdgeInsets.all(AppSpacing.sm),
+                                decoration: BoxDecoration(
+                                  color: palette.card,
+                                  borderRadius: AppRadius.radiusSm,
+                                  border: Border.all(color: palette.border),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(
+                                      health.recentErrors.last.userView.icon,
+                                      size: 16,
+                                      color: health
+                                          .recentErrors
+                                          .last
+                                          .userView
+                                          .accentColor,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          AppText.captionBold(
+                                            health
+                                                .recentErrors
+                                                .last
+                                                .userView
+                                                .title,
+                                            color: palette.heading,
+                                          ),
+                                          const SizedBox(height: 2),
+                                          AppText.caption(
+                                            health
+                                                .recentErrors
+                                                .last
+                                                .userView
+                                                .message,
+                                            color: palette.caption,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            AppSpacing.gapH12,
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton.icon(
+                                key: const ValueKey(
+                                  'copy_diagnostics_report_btn',
+                                ),
+                                onPressed: () =>
+                                    _copyDiagnosticsReport(context, profile),
+                                icon: const Icon(
+                                  Icons.support_agent_rounded,
+                                  size: 17,
+                                ),
+                                label: const FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: AppText(
+                                    StringConstants.copyDiagnosticsLabel,
+                                    maxLines: 1,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       AppSpacing.gapH12,
@@ -807,8 +1023,12 @@ class _ProfileSettingsSheetState extends State<ProfileSettingsSheet> {
                             const ResetProfilePreferences(),
                           ),
                           icon: const Icon(Icons.restore_rounded, size: 16),
-                          label: const AppText(
-                            StringConstants.resetDefaultsLabel,
+                          label: const FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: AppText(
+                              StringConstants.resetDefaultsLabel,
+                              maxLines: 1,
+                            ),
                           ),
                         ),
                       ),
@@ -1010,12 +1230,14 @@ class _ActionChipButton extends StatelessWidget {
 }
 
 class _ThemeModeOption extends StatelessWidget {
+  final Key? optionKey;
   final String label;
   final IconData icon;
   final bool selected;
   final VoidCallback onTap;
 
   const _ThemeModeOption({
+    this.optionKey,
     required this.label,
     required this.icon,
     required this.selected,
@@ -1029,6 +1251,7 @@ class _ThemeModeOption extends StatelessWidget {
 
     return Expanded(
       child: GestureDetector(
+        key: optionKey,
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
@@ -1049,16 +1272,62 @@ class _ThemeModeOption extends StatelessWidget {
                 color: selected ? AppColors.textWhite : palette.heading,
               ),
               const SizedBox(width: 5),
-              AppText(
-                label,
-                style: text.labelSmall?.copyWith(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                  color: selected ? AppColors.textWhite : palette.heading,
+              Flexible(
+                child: AppText(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.labelSmall?.copyWith(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: selected ? AppColors.textWhite : palette.heading,
+                  ),
                 ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DiagnosticMetricPill extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color accent;
+
+  const _DiagnosticMetricPill({
+    required this.label,
+    required this.value,
+    required this.accent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: palette.card,
+        borderRadius: AppRadius.radiusSm,
+        border: Border.all(color: palette.border),
+      ),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 6),
+            AppText.caption('$label: ', color: palette.caption),
+            AppText.captionBold(value, color: palette.heading),
+          ],
         ),
       ),
     );

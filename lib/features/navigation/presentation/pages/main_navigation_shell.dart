@@ -112,29 +112,33 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
             backgroundColor: palette.scaffold,
             body: Stack(
               children: [
-                IndexedStack(index: currentIndex, children: pages),
+                RepaintBoundary(
+                  child: IndexedStack(index: currentIndex, children: pages),
+                ),
 
                 // Movable, minimizable Floating Quick-Capture Ball & Capsule
                 // (hidden while inside Money or when disabled in Profile preferences)
                 if (!isInMoneyMode)
                   Positioned.fill(
-                    child: BlocBuilder<ProfileBloc, ProfileState>(
-                      bloc: sl.isRegistered<ProfileBloc>()
-                          ? sl<ProfileBloc>()
-                          : null,
-                      buildWhen: (prev, curr) =>
-                          prev.profile.showFloatingQuickBall !=
-                          curr.profile.showFloatingQuickBall,
-                      builder: (context, profileState) {
-                        if (!profileState.profile.showFloatingQuickBall) {
-                          return const SizedBox.shrink();
-                        }
-                        return FloatingQuickBall(
-                          onSelectMode: (mode) =>
-                              _openQuickCapture(context, mode),
-                          onOpenSpotlight: () => _openCommandPalette(context),
-                        );
-                      },
+                    child: RepaintBoundary(
+                      child: BlocBuilder<ProfileBloc, ProfileState>(
+                        bloc: sl.isRegistered<ProfileBloc>()
+                            ? sl<ProfileBloc>()
+                            : null,
+                        buildWhen: (prev, curr) =>
+                            prev.profile.showFloatingQuickBall !=
+                            curr.profile.showFloatingQuickBall,
+                        builder: (context, profileState) {
+                          if (!profileState.profile.showFloatingQuickBall) {
+                            return const SizedBox.shrink();
+                          }
+                          return FloatingQuickBall(
+                            onSelectMode: (mode) =>
+                                _openQuickCapture(context, mode),
+                            onOpenSpotlight: () => _openCommandPalette(context),
+                          );
+                        },
+                      ),
                     ),
                   ),
               ],

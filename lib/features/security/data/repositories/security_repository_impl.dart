@@ -8,6 +8,12 @@ class SecurityRepositoryImpl implements SecurityRepository {
   SecurityRepositoryImpl(this.localDataSource);
 
   @override
+  bool get isMasterSessionUnlocked => localDataSource.isMasterSessionUnlocked;
+
+  @override
+  void lockSession() => localDataSource.lockSession();
+
+  @override
   Future<SecurityConfigEntity> getConfig() => localDataSource.getConfig();
 
   @override

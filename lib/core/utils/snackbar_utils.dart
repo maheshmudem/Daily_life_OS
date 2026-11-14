@@ -4,6 +4,7 @@ import 'package:daily_life_os/core/widgets/app_text.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_radius.dart';
 import '../../config/theme/app_spacing.dart';
+import '../monitoring/app_monitor.dart';
 
 class SnackbarUtils {
   SnackbarUtils._();
@@ -29,9 +30,16 @@ class SnackbarUtils {
     Duration duration = const Duration(seconds: 3),
     EdgeInsetsGeometry? margin,
   }) {
+    if (AppMonitor.containsTechnicalJargon(message)) {
+      AppMonitor.instance.recordError(
+        message,
+        null,
+        source: 'ui.snackbar_error',
+      );
+    }
     _show(
       context,
-      message,
+      AppMonitor.friendlyMessage(message),
       backgroundColor: AppColors.error,
       duration: duration,
       margin: margin,

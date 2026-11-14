@@ -12,6 +12,7 @@ import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/database/app_database.dart';
+import '../../../../core/monitoring/app_monitor.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
@@ -282,9 +283,18 @@ class _NotesViewState extends State<_NotesView> {
           '${StringConstants.convertedToReminderMessage}: "$taskTitle"',
         );
       }
-    } catch (e) {
+    } catch (e, st) {
+      AppMonitor.instance.recordError(
+        e,
+        st,
+        source: 'notes.convertToTask',
+        fallbackAction: 'save that reminder',
+      );
       if (context.mounted) {
-        SnackbarUtils.showError(context, 'Could not convert to task: $e');
+        SnackbarUtils.showError(
+          context,
+          AppMonitor.friendlyMessage(e, fallbackAction: 'save that reminder'),
+        );
       }
     }
   }
@@ -322,9 +332,21 @@ class _NotesViewState extends State<_NotesView> {
           '${StringConstants.pushedToTimelineMessage}: "$itemTitle"',
         );
       }
-    } catch (e) {
+    } catch (e, st) {
+      AppMonitor.instance.recordError(
+        e,
+        st,
+        source: 'notes.pushToTimeline',
+        fallbackAction: "add this to today's timeline",
+      );
       if (context.mounted) {
-        SnackbarUtils.showError(context, 'Could not add to timeline: $e');
+        SnackbarUtils.showError(
+          context,
+          AppMonitor.friendlyMessage(
+            e,
+            fallbackAction: "add this to today's timeline",
+          ),
+        );
       }
     }
   }
@@ -352,9 +374,18 @@ class _NotesViewState extends State<_NotesView> {
           '${StringConstants.convertedToExpenseMessage}: ${result.title} (${CurrencyUtils.format(result.amount)})',
         );
       }
-    } catch (e) {
+    } catch (e, st) {
+      AppMonitor.instance.recordError(
+        e,
+        st,
+        source: 'notes.convertToExpense',
+        fallbackAction: 'log that expense',
+      );
       if (context.mounted) {
-        SnackbarUtils.showError(context, '$e');
+        SnackbarUtils.showError(
+          context,
+          AppMonitor.friendlyMessage(e, fallbackAction: 'log that expense'),
+        );
       }
     }
   }

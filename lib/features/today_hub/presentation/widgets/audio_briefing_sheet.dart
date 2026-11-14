@@ -7,6 +7,7 @@ import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
+import '../../../../core/monitoring/app_monitor.dart';
 import '../../../../core/services/tts/tts_service.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../di/injection_container.dart';
@@ -130,7 +131,7 @@ class _AudioBriefingSheetState extends State<AudioBriefingSheet> {
         }
       },
       onError: (msg) {
-        debugPrint('TTS Error: $msg');
+        AppMonitor.instance.recordError(msg, null, source: 'briefing.tts');
         if (mounted) {
           setState(() {
             _isPlaying = false;
@@ -189,8 +190,8 @@ class _AudioBriefingSheetState extends State<AudioBriefingSheet> {
           await _tts.speak(_activeScript, rate: _speed);
         }
       }
-    } catch (e) {
-      debugPrint('AudioBriefingSheet dynamic load error: $e');
+    } catch (e, st) {
+      AppMonitor.instance.recordError(e, st, source: 'briefing.load');
     }
   }
 

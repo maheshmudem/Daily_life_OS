@@ -1,18 +1,18 @@
-import 'dart:developer' as developer;
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../monitoring/app_monitor.dart';
 
 /// Global [BlocObserver] registered in `main.dart`.
 ///
-/// - Errors thrown inside any bloc are always logged, so failures are never
-///   silent.
-/// - Transitions are logged only in debug builds to aid development without
-///   adding noise or overhead in release builds.
+/// - Forwards BLoC transitions and uncaught BLoC errors into [AppMonitor] with
+///   automatic PII/secret redaction.
+/// - Avoids string-formatting overhead in release builds.
 class AppBlocObserver extends BlocObserver {
-  const AppBlocObserver();
+  final AppMonitor? monitor;
 
-  static const String _logName = 'DailyLifeOS.Bloc';
+  const AppBlocObserver({this.monitor});
+
+  AppMonitor get _activeMonitor => monitor ?? AppMonitor.instance;
 
   @override
   void onTransition(
@@ -20,22 +20,19 @@ class AppBlocObserver extends BlocObserver {
     Transition<dynamic, dynamic> transition,
   ) {
     super.onTransition(bloc, transition);
-    if (kDebugMode) {
-      developer.log(
-        '${bloc.runtimeType}: ${transition.event.runtimeType}',
-        name: _logName,
-      );
-    }
+    _activeMonitor.recordBlocTransition(
+      '${bloc.runtimeType}',
+      '${transition.event.runtimeType}',
+    );
   }
 
   @override
   void onError(BlocBase<dynamic> bloc, Object error, StackTrace stackTrace) {
-    developer.log(
-      '${bloc.runtimeType} error',
-      name: _logName,
-      error: error,
-      stackTrace: stackTrace,
-      level: 1000,
+    _activeMonitor.recordError(
+      error,
+      stackTrace,
+      source: 'bloc.${bloc.runtimeType}',
+      notifyUser: true,
     );
     super.onError(bloc, error, stackTrace);
   }

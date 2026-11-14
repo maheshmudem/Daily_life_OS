@@ -9,6 +9,7 @@ import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
+import '../../../../core/monitoring/app_monitor.dart';
 import '../../../../core/widgets/bloc_effect_listener.dart';
 import '../../../../di/injection_container.dart';
 import '../../domain/entities/quick_capture_entities.dart';
@@ -543,7 +544,10 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                                     AppSpacing.gapW8,
                                     Expanded(
                                       child: AppText.bodySmall(
-                                        failure.message,
+                                        AppMonitor.friendlyMessage(
+                                          failure,
+                                          fallbackAction: 'save that item',
+                                        ),
                                         color: AppColors.error,
                                         fontWeight: FontWeight.w600,
                                       ),

@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/monitoring/app_monitor.dart';
 import '../../domain/usecases/get_vault_items_usecase.dart';
 import 'vault_event.dart';
 import 'vault_state.dart';
@@ -44,8 +45,21 @@ class VaultBloc extends Bloc<VaultEvent, VaultState> {
           isDecoyMode: prevDecoy,
         ),
       );
-    } catch (e) {
-      emit(VaultError(e.toString()));
+    } catch (e, st) {
+      AppMonitor.instance.recordError(
+        e,
+        st,
+        source: 'vault.load',
+        fallbackAction: 'open your vault items',
+      );
+      emit(
+        VaultError(
+          AppMonitor.friendlyMessage(
+            e,
+            fallbackAction: 'open your vault items',
+          ),
+        ),
+      );
     }
   }
 

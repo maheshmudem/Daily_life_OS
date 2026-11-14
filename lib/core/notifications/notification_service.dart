@@ -4,6 +4,7 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../../config/theme/app_colors.dart';
+import '../monitoring/app_monitor.dart';
 
 export 'package:flutter_local_notifications/flutter_local_notifications.dart'
     show DateTimeComponents;
@@ -73,7 +74,10 @@ class NotificationServiceImpl implements NotificationService {
       await _plugin.initialize(
         settings: initSettings,
         onDidReceiveNotificationResponse: (NotificationResponse response) {
-          debugPrint('Notification tapped with payload: ${response.payload}');
+          AppMonitor.instance.recordBreadcrumb(
+            category: 'notifications.tap',
+            message: 'Notification opened',
+          );
         },
       );
 
@@ -123,8 +127,12 @@ class NotificationServiceImpl implements NotificationService {
       }
 
       _isInitialized = true;
-    } catch (e) {
-      debugPrint('NotificationService initialization exception: $e');
+    } catch (e, st) {
+      AppMonitor.instance.recordError(
+        e,
+        st,
+        source: 'notifications.initialize',
+      );
     }
   }
 
@@ -157,8 +165,12 @@ class NotificationServiceImpl implements NotificationService {
           return granted ?? false;
         }
       }
-    } catch (e) {
-      debugPrint('Error requesting notification permissions: $e');
+    } catch (e, st) {
+      AppMonitor.instance.recordError(
+        e,
+        st,
+        source: 'notifications.permissions',
+      );
     }
     return false;
   }
@@ -180,8 +192,8 @@ class NotificationServiceImpl implements NotificationService {
         notificationDetails: details,
         payload: payload,
       );
-    } catch (e) {
-      debugPrint('Error showing instant notification: $e');
+    } catch (e, st) {
+      AppMonitor.instance.recordError(e, st, source: 'notifications.show');
     }
   }
 
@@ -222,8 +234,8 @@ class NotificationServiceImpl implements NotificationService {
         payload: payload,
         matchDateTimeComponents: matchDateTimeComponents,
       );
-    } catch (e) {
-      debugPrint('Error scheduling notification: $e');
+    } catch (e, st) {
+      AppMonitor.instance.recordError(e, st, source: 'notifications.schedule');
       // Fallback: If exact alarms fail or permission is restricted, show instant confirmation
       await showInstantNotification(
         id: id,
@@ -239,8 +251,8 @@ class NotificationServiceImpl implements NotificationService {
   Future<void> cancelNotification(int id) async {
     try {
       await _plugin.cancel(id: id);
-    } catch (e) {
-      debugPrint('Error canceling notification: $e');
+    } catch (e, st) {
+      AppMonitor.instance.recordError(e, st, source: 'notifications.cancel');
     }
   }
 
@@ -248,8 +260,8 @@ class NotificationServiceImpl implements NotificationService {
   Future<void> cancelAllNotifications() async {
     try {
       await _plugin.cancelAll();
-    } catch (e) {
-      debugPrint('Error canceling all notifications: $e');
+    } catch (e, st) {
+      AppMonitor.instance.recordError(e, st, source: 'notifications.cancelAll');
     }
   }
 

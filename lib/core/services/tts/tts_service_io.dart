@@ -1,5 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+
+import '../../monitoring/app_monitor.dart';
 import 'tts_service_interface.dart';
 
 class IoTtsService implements AppTtsService {
@@ -90,8 +91,8 @@ class IoTtsService implements AppTtsService {
           }
         }
       } catch (_) {}
-    } catch (e) {
-      debugPrint('IoTtsService init error: $e');
+    } catch (e, st) {
+      AppMonitor.instance.recordError(e, st, source: 'tts.init');
     }
   }
 
@@ -118,9 +119,9 @@ class IoTtsService implements AppTtsService {
         _isPaused = false;
         _onStart?.call();
       }
-    } catch (e) {
-      debugPrint('TTS speak error: $e');
-      _onError?.call(e.toString());
+    } catch (e, st) {
+      AppMonitor.instance.recordError(e, st, source: 'tts.speak');
+      _onError?.call(AppMonitor.friendlyMessage(e));
     }
   }
 
@@ -130,8 +131,8 @@ class IoTtsService implements AppTtsService {
       if (_flutterTts != null) {
         await _flutterTts!.pause();
       }
-    } catch (e) {
-      debugPrint('TTS pause error: $e');
+    } catch (e, st) {
+      AppMonitor.instance.recordError(e, st, source: 'tts.pause');
     }
     _isSpeaking = false;
     _isPaused = true;
@@ -143,8 +144,8 @@ class IoTtsService implements AppTtsService {
       if (_flutterTts != null) {
         await _flutterTts!.speak(_lastText);
       }
-    } catch (e) {
-      debugPrint('TTS resume error: $e');
+    } catch (e, st) {
+      AppMonitor.instance.recordError(e, st, source: 'tts.resume');
     }
     _isSpeaking = true;
     _isPaused = false;

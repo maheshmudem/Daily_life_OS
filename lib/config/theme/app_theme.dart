@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'app_colors.dart';
 import 'app_radius.dart';
 import 'app_spacing.dart';
@@ -29,6 +30,13 @@ class AppTheme {
         foregroundColor: AppColors.textHeading,
         elevation: 0,
         centerTitle: false,
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: AppColors.transparent,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
+          systemNavigationBarColor: AppColors.cardBackground,
+          systemNavigationBarIconBrightness: Brightness.dark,
+        ),
         titleSpacing: AppSpacing.pageGutter,
         actionsPadding: EdgeInsets.only(right: AppSpacing.xs),
         titleTextStyle: AppTextStyles.headingMedium,
@@ -175,6 +183,13 @@ class AppTheme {
         foregroundColor: AppColors.darkTextHeading,
         elevation: 0,
         centerTitle: false,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: AppColors.transparent,
+          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: Brightness.dark,
+          systemNavigationBarColor: AppColors.darkCardBackground,
+          systemNavigationBarIconBrightness: Brightness.light,
+        ),
         titleSpacing: AppSpacing.pageGutter,
         actionsPadding: const EdgeInsets.only(right: AppSpacing.xs),
         titleTextStyle: AppTextStyles.headingMedium.copyWith(
@@ -304,6 +319,13 @@ class AppTheme {
             color: AppColors.primaryLight,
             width: 1.5,
           ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.error),
+        ),
+        labelStyle: AppTextStyles.bodyMedium.copyWith(
+          color: AppColors.darkTextCaption,
         ),
       ),
     );

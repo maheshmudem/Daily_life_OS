@@ -118,6 +118,15 @@ class ChangeThemeModePreference extends ProfileEvent {
   List<Object?> get props => [themeMode];
 }
 
+class ToggleDarkModePreference extends ProfileEvent {
+  final bool enabled;
+
+  const ToggleDarkModePreference(this.enabled);
+
+  @override
+  List<Object?> get props => [enabled];
+}
+
 class ChangeCurrencyPreference extends ProfileEvent {
   final String currencyCode;
 

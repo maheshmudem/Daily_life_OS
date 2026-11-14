@@ -8,6 +8,7 @@ import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
+import '../../../../core/monitoring/app_monitor.dart';
 import '../../../../di/injection_container.dart';
 import '../../../profile/presentation/widgets/profile_settings_sheet.dart';
 import '../../../quick_capture/domain/entities/quick_capture_entities.dart';
@@ -220,16 +221,20 @@ class _CommandPaletteViewState extends State<_CommandPaletteView> {
                         child: CircularProgressIndicator(),
                       ),
                     ),
-                    _ when state.status.isFailure => _PaletteMessageCard(
-                      icon: Icons.error_outline_rounded,
-                      iconColor: AppColors.error,
-                      title: StringConstants.loadFailed,
-                      subtitle:
-                          state.failure?.message ??
-                          StringConstants.genericError,
-                      actionLabel: StringConstants.retry,
-                      onAction: () => bloc.add(const LoadCommandPalette()),
-                    ),
+                    _ when state.status.isFailure => () {
+                      final friendly = AppMonitor.toUserFriendlyError(
+                        state.failure,
+                        fallbackAction: 'search your workspace',
+                      );
+                      return _PaletteMessageCard(
+                        icon: friendly.icon,
+                        iconColor: friendly.accentColor,
+                        title: friendly.title,
+                        subtitle: friendly.message,
+                        actionLabel: friendly.actionLabel,
+                        onAction: () => bloc.add(const LoadCommandPalette()),
+                      );
+                    }(),
                     _ when filtered.isEmpty => const _PaletteMessageCard(
                       icon: Icons.search_off_rounded,
                       iconColor: AppColors.primary,

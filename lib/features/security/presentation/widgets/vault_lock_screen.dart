@@ -8,6 +8,7 @@ import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
+import '../../../../core/monitoring/app_monitor.dart';
 import '../../../../core/widgets/bloc_effect_listener.dart';
 import '../../domain/entities/security_config_entity.dart';
 import '../../domain/repositories/security_repository.dart';
@@ -172,7 +173,9 @@ class _LockView extends StatelessWidget {
                 pinLength: SecurityPolicy.pinLength,
                 currentPin: state.enteredPin,
                 hasError: state.hasError,
-                errorMessage: state.errorMessage,
+                errorMessage: state.errorMessage == null
+                    ? null
+                    : AppMonitor.friendlyMessage(state.errorMessage),
                 showBiometrics: state.biometricsAvailable,
                 onPinChanged: (pin) => bloc.add(PinInputChanged(pin)),
                 onBiometricTap: () =>
@@ -184,7 +187,9 @@ class _LockView extends StatelessWidget {
                   PatternLockGridWidget(
                     size: 240,
                     hasError: state.hasError,
-                    errorMessage: state.errorMessage,
+                    errorMessage: state.errorMessage == null
+                        ? null
+                        : AppMonitor.friendlyMessage(state.errorMessage),
                     onPatternStart: () => bloc.add(const PatternInputStarted()),
                     onPatternComplete: (pattern) =>
                         bloc.add(PatternSubmitted(pattern)),

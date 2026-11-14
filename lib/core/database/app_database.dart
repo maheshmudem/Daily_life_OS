@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
-import 'package:flutter/foundation.dart';
+
+import '../monitoring/app_monitor.dart';
 
 part 'app_database.g.dart';
 
@@ -234,8 +235,10 @@ class AppDatabase extends _$AppDatabase {
         driftWorker: Uri.parse('drift_worker.js'),
         onResult: (result) {
           if (result.missingFeatures.isNotEmpty) {
-            debugPrint(
-              'Drift Web: Using ${result.chosenImplementation} (missing: ${result.missingFeatures})',
+            AppMonitor.instance.recordBreadcrumb(
+              category: 'database.web',
+              message:
+                  'Drift Web using ${result.chosenImplementation} (missing: ${result.missingFeatures})',
             );
           }
         },

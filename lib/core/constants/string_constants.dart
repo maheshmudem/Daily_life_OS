@@ -367,6 +367,20 @@ class StringConstants {
   static const String hapticFeedbackSubtitle =
       'Subtle vibration feedback when toggling habits, tasks, and quick actions';
   static const String appearanceModeTitle = 'App Appearance';
+  static const String appearanceAndDarkModeSection = 'Appearance & Dark Mode';
+  static const String darkModeToggleTitle = 'Dark Mode';
+  static const String darkModeActiveSubtitle =
+      'Dark theme active • Comfortable low-glare surfaces';
+  static const String lightModeActiveSubtitle =
+      'Light theme active • Crisp daylight contrast';
+  static const String systemDarkSubtitle =
+      'Following system appearance (Currently Dark)';
+  static const String systemLightSubtitle =
+      'Following system appearance (Currently Light)';
+  static const String systemHealthSectionTitle = 'App Care & Smoothness';
+  static const String copyDiagnosticsLabel = 'Copy Support Summary';
+  static const String diagnosticsCopiedMessage =
+      'Support summary copied to clipboard';
   static const String themeSystem = 'System';
   static const String themeLight = 'Light';
   static const String themeDark = 'Dark';

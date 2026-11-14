@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/bloc/bloc_status.dart';
+import '../../../../core/monitoring/app_monitor.dart';
 import '../../domain/entities/user_profile_entity.dart';
 import '../../domain/usecases/profile_usecases.dart';
 import 'profile_event.dart';
@@ -17,7 +18,12 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     required this.getUserProfile,
     required this.saveUserProfile,
     required this.pickProfileAvatar,
-  }) : super(const ProfileState()) {
+    UserProfileEntity? initialProfile,
+  }) : super(
+         initialProfile != null
+             ? ProfileState(status: BlocStatus.success, profile: initialProfile)
+             : const ProfileState(),
+       ) {
     on<LoadProfile>(_onLoadProfile);
     on<UpdateProfileIdentity>(_onUpdateIdentity);
     on<SelectAvatarPreset>(_onSelectAvatarPreset);
@@ -31,6 +37,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     on<ToggleAutoPlayBriefing>(_onToggleAutoPlayBriefing);
     on<ToggleHapticFeedback>(_onToggleHapticFeedback);
     on<ChangeThemeModePreference>(_onChangeThemeMode);
+    on<ToggleDarkModePreference>(_onToggleDarkMode);
     on<ChangeCurrencyPreference>(_onChangeCurrency);
     on<ChangeDailyFocusGoal>(_onChangeDailyFocusGoal);
     on<ResetProfilePreferences>(_onResetPreferences);
@@ -218,10 +225,27 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     ChangeThemeModePreference event,
     Emitter<ProfileState> emit,
   ) async {
-    await _persistAndEmit(
-      state.profile.copyWith(themeMode: event.themeMode),
-      emit,
+    final normalized = event.themeMode.trim().toLowerCase();
+    final safeMode = const {'system', 'light', 'dark'}.contains(normalized)
+        ? normalized
+        : 'system';
+    AppMonitor.instance.recordBreadcrumb(
+      category: 'appearance',
+      message: 'Theme mode changed to $safeMode',
     );
+    await _persistAndEmit(state.profile.copyWith(themeMode: safeMode), emit);
+  }
+
+  Future<void> _onToggleDarkMode(
+    ToggleDarkModePreference event,
+    Emitter<ProfileState> emit,
+  ) async {
+    final targetMode = event.enabled ? 'dark' : 'light';
+    AppMonitor.instance.recordBreadcrumb(
+      category: 'appearance',
+      message: 'Dark mode toggled ${event.enabled ? "ON" : "OFF"}',
+    );
+    await _persistAndEmit(state.profile.copyWith(themeMode: targetMode), emit);
   }
 
   Future<void> _onChangeCurrency(

@@ -1,77 +1,88 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
+
 import 'config/routes/app_router.dart';
 import 'config/theme/app_theme.dart';
 import 'core/bloc/app_bloc_observer.dart';
 import 'core/constants/string_constants.dart';
 import 'core/database/app_database.dart';
 import 'core/database/database_seeder.dart';
+import 'core/monitoring/app_monitor.dart';
 import 'core/notifications/notification_service.dart';
+import 'core/utils/currency_utils.dart';
+import 'core/widgets/app_user_error_banner.dart';
 import 'di/injection_container.dart';
 import 'features/profile/presentation/bloc/profile_bloc.dart';
 
 void main() async {
+  final bootStopwatch = Stopwatch()..start();
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Centralised BLoC error logging (and debug-only transition tracing)
+  // Production crash & platform error boundaries + UI frame jank telemetry
+  AppMonitor.instance
+    ..installGlobalErrorHandlers()
+    ..attachFrameTimingObserver();
+
   Bloc.observer = const AppBlocObserver();
 
-  // Load environment variables safely
+  // Load environment variables (gracefully ignore if .env missing)
   try {
     await dotenv.load(fileName: '.env');
   } catch (_) {
-    // Fallback if .env is not found or fails to load
+    // Offline-first fallback
   }
 
-  // Initialize Dependency Injection
-  await initDependencies();
+  // Initialize Clean Architecture Service Locator (GetIt)
+  await AppMonitor.instance.traceAsync(
+    'startup.initDependencies',
+    initDependencies,
+  );
 
-  // Seed database with demo data on first launch (guarded by timeout so UI never hangs)
-  try {
-    final db = sl<AppDatabase>();
-    await DatabaseSeeder.seedIfEmpty(db).timeout(const Duration(seconds: 4));
-    await DatabaseSeeder.clearMoneyDemoDataOnce(
-      db,
-    ).timeout(const Duration(seconds: 2));
-  } catch (e, stack) {
-    debugPrint('Database seeding notice/error: $e\n$stack');
-  }
+  // Seed default offline SQLite rows on first run
+  await AppMonitor.instance.traceAsync(
+    'startup.seedDatabase',
+    () => DatabaseSeeder.seedIfEmpty(sl<AppDatabase>()),
+  );
 
-  runApp(DailyLifeOSApp(router: createRouter()));
+  // Local notifications are non-critical on startup — fire-and-forget so
+  // cold-start isn't blocked by OS permission channels.
+  unawaited(
+    sl<NotificationService>().initialize().catchError((Object e, StackTrace s) {
+      AppMonitor.instance.recordError(e, s, source: 'notifications.init');
+    }),
+  );
 
-  // Initialize Notification Service & permissions asynchronously after UI mounts
-  unawaited(_initNotificationsSafely());
-}
+  bootStopwatch.stop();
+  AppMonitor.instance.recordStartupDuration(bootStopwatch.elapsed);
 
-Future<void> _initNotificationsSafely() async {
-  try {
-    final notificationService = sl<NotificationService>();
-    await notificationService.initialize();
-    await notificationService.requestPermissions();
-  } catch (e, stack) {
-    debugPrint('Notification service initialization notice/error: $e\n$stack');
-  }
+  runApp(const DailyLifeOSApp());
 }
 
 class DailyLifeOSApp extends StatefulWidget {
-  final GoRouter? router;
-
-  const DailyLifeOSApp({super.key, this.router});
+  const DailyLifeOSApp({super.key});
 
   @override
   State<DailyLifeOSApp> createState() => _DailyLifeOSAppState();
 }
 
 class _DailyLifeOSAppState extends State<DailyLifeOSApp> {
-  late final GoRouter _effectiveRouter;
+  // Created once per app lifetime so theme / locale / currency rebuilds never
+  // recreate the router and blow away navigation state.
+  late final GoRouter _router = createRouter();
 
-  @override
-  void initState() {
-    super.initState();
-    _effectiveRouter = widget.router ?? createRouter();
+  ThemeMode _resolveThemeMode(String raw) {
+    switch (raw) {
+      case 'light':
+        return ThemeMode.light;
+      case 'dark':
+        return ThemeMode.dark;
+      default:
+        return ThemeMode.system;
+    }
   }
 
   @override
@@ -83,30 +94,40 @@ class _DailyLifeOSAppState extends State<DailyLifeOSApp> {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.system,
-        routerConfig: _effectiveRouter,
+        themeAnimationDuration: const Duration(milliseconds: 220),
+        themeAnimationCurve: Curves.easeOutCubic,
+        builder: (context, child) =>
+            AppMonitorUserErrorHost(child: child ?? const SizedBox.shrink()),
+        routerConfig: _router,
       );
     }
 
-    return BlocBuilder<ProfileBloc, ProfileState>(
-      bloc: sl<ProfileBloc>(),
-      buildWhen: (prev, curr) =>
-          prev.profile.themeMode != curr.profile.themeMode ||
-          prev.profile.currencyCode != curr.profile.currencyCode,
-      builder: (context, profileState) {
-        final mode = switch (profileState.profile.themeMode) {
-          'light' => ThemeMode.light,
-          'dark' => ThemeMode.dark,
-          _ => ThemeMode.system,
-        };
-        return MaterialApp.router(
-          title: StringConstants.appName,
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          themeMode: mode,
-          routerConfig: _effectiveRouter,
-        );
-      },
+    final profileBloc = sl<ProfileBloc>();
+
+    return BlocProvider<ProfileBloc>.value(
+      value: profileBloc,
+      child: BlocBuilder<ProfileBloc, ProfileState>(
+        bloc: profileBloc,
+        buildWhen: (prev, curr) =>
+            prev.profile.themeMode != curr.profile.themeMode ||
+            prev.profile.currencyCode != curr.profile.currencyCode,
+        builder: (context, profileState) {
+          CurrencyUtils.setCurrency(profileState.profile.currencyCode);
+          return MaterialApp.router(
+            title: StringConstants.appName,
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: _resolveThemeMode(profileState.profile.themeMode),
+            themeAnimationDuration: const Duration(milliseconds: 220),
+            themeAnimationCurve: Curves.easeOutCubic,
+            builder: (context, child) => AppMonitorUserErrorHost(
+              child: child ?? const SizedBox.shrink(),
+            ),
+            routerConfig: _router,
+          );
+        },
+      ),
     );
   }
 }

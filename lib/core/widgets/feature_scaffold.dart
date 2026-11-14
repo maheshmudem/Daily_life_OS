@@ -4,7 +4,7 @@ import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_radius.dart';
 import '../../config/theme/app_spacing.dart';
 import '../../config/theme/theme_context.dart';
-import '../constants/string_constants.dart';
+import '../monitoring/app_monitor.dart';
 import 'app_empty_state.dart';
 import 'app_shimmer_loader.dart';
 
@@ -322,7 +322,8 @@ class FeatureLoadingView extends StatelessWidget {
   }
 }
 
-/// Calm, centred error state with an optional retry button.
+/// Calm, centred user-friendly error state with plain-language explanation,
+/// data-safety reassurance, and an optional retry button.
 class FeatureErrorView extends StatelessWidget {
   final String? message;
   final VoidCallback? onRetry;
@@ -333,61 +334,101 @@ class FeatureErrorView extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = context.palette;
     final text = context.text;
+    final friendly = AppMonitor.toUserFriendlyError(message);
 
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.xxl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.error_outline_rounded,
-                size: 26,
-                color: AppColors.error,
-              ),
-            ),
-            AppSpacing.gapH16,
-            AppText(
-              'Something went wrong',
-              textAlign: TextAlign.center,
-              style: text.titleMedium,
-            ),
-            if (message != null && message!.isNotEmpty) ...[
-              AppSpacing.gapH4,
-              AppText(
-                message!,
-                textAlign: TextAlign.center,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: text.bodySmall,
-              ),
-            ],
-            if (onRetry != null) ...[
-              AppSpacing.gapH20,
-              OutlinedButton.icon(
-                onPressed: onRetry,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: palette.heading,
-                  side: BorderSide(color: palette.border),
-                  minimumSize: const Size(0, 40),
-                  padding: const EdgeInsets.symmetric(horizontal: 18),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 380),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: friendly.accentColor.withValues(
+                    alpha: palette.isDark ? 0.20 : 0.12,
                   ),
-                  textStyle: text.labelLarge,
+                  shape: BoxShape.circle,
                 ),
-                icon: const Icon(Icons.refresh_rounded, size: 18),
-                label: const AppText(StringConstants.retry),
+                child: Icon(
+                  friendly.icon,
+                  size: 28,
+                  color: friendly.accentColor,
+                ),
               ),
+              AppSpacing.gapH16,
+              AppText(
+                friendly.title,
+                textAlign: TextAlign.center,
+                style: text.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: palette.heading,
+                ),
+              ),
+              AppSpacing.gapH8,
+              AppText(
+                friendly.message,
+                textAlign: TextAlign.center,
+                style: text.bodySmall?.copyWith(
+                  color: palette.body,
+                  height: 1.4,
+                ),
+              ),
+              AppSpacing.gapH12,
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: palette.surfaceMuted.withValues(
+                    alpha: palette.isDark ? 0.50 : 0.75,
+                  ),
+                  borderRadius: AppRadius.radiusMd,
+                  border: Border.all(color: palette.border),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.verified_user_outlined,
+                      size: 15,
+                      color: AppColors.success,
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: AppText.caption(
+                        friendly.reassurance,
+                        textAlign: TextAlign.center,
+                        color: palette.caption,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (onRetry != null) ...[
+                AppSpacing.gapH20,
+                OutlinedButton.icon(
+                  onPressed: onRetry,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: palette.heading,
+                    side: BorderSide(color: palette.border),
+                    minimumSize: const Size(0, 40),
+                    padding: const EdgeInsets.symmetric(horizontal: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    textStyle: text.labelLarge,
+                  ),
+                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  label: AppText(friendly.actionLabel),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

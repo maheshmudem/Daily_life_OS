@@ -1,6 +1,8 @@
 import '../entities/security_config_entity.dart';
 
 abstract class SecurityRepository {
+  bool get isMasterSessionUnlocked;
+  void lockSession();
   Future<SecurityConfigEntity> getConfig();
   Future<bool> isBiometricsAvailable();
   Future<bool> authenticateBiometrics({String reason});

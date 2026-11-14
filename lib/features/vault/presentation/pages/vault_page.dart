@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../config/theme/app_colors.dart';
@@ -66,9 +67,17 @@ class _VaultViewState extends State<_VaultView>
   // Track revealed password IDs and persisted user-added/modified items
   static const _prefsCustomPasswordsKey = 'vault_custom_passwords_v1';
   static const _prefsCustomDocumentsKey = 'vault_custom_documents_v1';
-  static const _prefsCustomSecretsKey = 'vault_custom_secrets_v1';
+  static const _legacyPrefsCustomSecretsKey = 'vault_custom_secrets_v1';
+  static const _secureCustomSecretsKey = 'vault_secure_custom_secrets_v2';
   static const _prefsDeletedPasswordIdsKey = 'vault_deleted_password_ids_v1';
   static const _prefsDeletedDocumentIdsKey = 'vault_deleted_document_ids_v1';
+
+  Timer? _clipboardClearTimer;
+
+  FlutterSecureStorage get _secureStorage =>
+      sl.isRegistered<FlutterSecureStorage>()
+      ? sl<FlutterSecureStorage>()
+      : const FlutterSecureStorage();
 
   final Set<int> _revealedPasswordIds = {};
   final List<VaultPasswordEntity> _customPasswords = [];
@@ -102,7 +111,21 @@ class _VaultViewState extends State<_VaultView>
       final prefs = await SharedPreferences.getInstance();
       final rawPw = prefs.getString(_prefsCustomPasswordsKey);
       final rawDocs = prefs.getString(_prefsCustomDocumentsKey);
-      final rawSecrets = prefs.getString(_prefsCustomSecretsKey);
+      String? rawSecrets = await _secureStorage.read(
+        key: _secureCustomSecretsKey,
+      );
+      // Migrate any legacy plaintext secrets out of SharedPreferences
+      final legacySecrets = prefs.getString(_legacyPrefsCustomSecretsKey);
+      if (legacySecrets != null && legacySecrets.isNotEmpty) {
+        if (rawSecrets == null || rawSecrets.isEmpty) {
+          rawSecrets = legacySecrets;
+          await _secureStorage.write(
+            key: _secureCustomSecretsKey,
+            value: legacySecrets,
+          );
+        }
+        await prefs.remove(_legacyPrefsCustomSecretsKey);
+      }
       final delPw = prefs.getStringList(_prefsDeletedPasswordIdsKey);
       final delDocs = prefs.getStringList(_prefsDeletedDocumentIdsKey);
 
@@ -204,12 +227,13 @@ class _VaultViewState extends State<_VaultView>
               .toList(),
         ),
       );
-      await prefs.setString(
-        _prefsCustomSecretsKey,
-        jsonEncode({
+      await _secureStorage.write(
+        key: _secureCustomSecretsKey,
+        value: jsonEncode({
           for (final e in _customSecrets.entries) e.key.toString(): e.value,
         }),
       );
+      await prefs.remove(_legacyPrefsCustomSecretsKey);
       await prefs.setStringList(
         _prefsDeletedPasswordIdsKey,
         _deletedPasswordIds.map((e) => e.toString()).toList(),
@@ -250,6 +274,7 @@ class _VaultViewState extends State<_VaultView>
         _isUnlocked = !config.isSecurityEnabled;
       });
       if (config.isSecurityEnabled) {
+        sl<SecurityRepository>().lockSession();
         context.read<VaultBloc>().add(const LockVault());
       }
     }
@@ -257,6 +282,7 @@ class _VaultViewState extends State<_VaultView>
 
   @override
   void dispose() {
+    _clipboardClearTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _tabController.dispose();
     _passwordSearchCtrl.dispose();
@@ -270,6 +296,7 @@ class _VaultViewState extends State<_VaultView>
         state == AppLifecycleState.inactive) {
       if (mounted && _isUnlocked && _isSecurityEnabled) {
         setState(() => _isUnlocked = false);
+        sl<SecurityRepository>().lockSession();
         context.read<VaultBloc>().add(const LockVault());
       }
     }
@@ -360,10 +387,14 @@ class _VaultViewState extends State<_VaultView>
 
   void _copySecret(BuildContext context, String label, String value) {
     Clipboard.setData(ClipboardData(text: value));
+    _clipboardClearTimer?.cancel();
+    _clipboardClearTimer = Timer(const Duration(seconds: 45), () {
+      Clipboard.setData(const ClipboardData(text: ''));
+    });
     HapticFeedback.lightImpact();
     SnackbarUtils.showMessage(
       context,
-      '$label copied to clipboard safely!',
+      '$label copied (auto-clears in 45s)',
       duration: const Duration(seconds: 2),
     );
   }
@@ -421,6 +452,9 @@ class _VaultViewState extends State<_VaultView>
               onTap: () {
                 HapticFeedback.selectionClick();
                 final nextDecoy = !isDecoy;
+                if (nextDecoy) {
+                  sl<SecurityRepository>().lockSession();
+                }
                 context.read<VaultBloc>().add(const ToggleDecoyMode());
                 SnackbarUtils.showMessage(
                   context,
@@ -481,6 +515,7 @@ class _VaultViewState extends State<_VaultView>
                   securityRepository: sl<SecurityRepository>(),
                   onLockNow: () {
                     setState(() => _isUnlocked = false);
+                    sl<SecurityRepository>().lockSession();
                     context.read<VaultBloc>().add(const LockVault());
                   },
                 ).then((_) {
@@ -508,6 +543,7 @@ class _VaultViewState extends State<_VaultView>
                 }
                 if (_isUnlocked) {
                   setState(() => _isUnlocked = false);
+                  sl<SecurityRepository>().lockSession();
                   context.read<VaultBloc>().add(const LockVault());
                 } else {
                   SnackbarUtils.showMessage(
@@ -681,49 +717,50 @@ class _VaultViewState extends State<_VaultView>
                       ),
                     ),
                     const SizedBox(height: 3),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.xs - AppSpacing.xxxs,
-                            vertical: 1.5,
-                          ),
-                          decoration: BoxDecoration(
-                            color:
-                                (_isSecurityEnabled
-                                        ? AppColors.success
-                                        : AppColors.warning)
-                                    .withValues(alpha: 0.14),
-                            borderRadius: AppRadius.radiusFull,
-                          ),
-                          child: AppText(
-                            _isSecurityEnabled ? 'Protected' : 'Unsecured',
-                            style: context.text.labelSmall?.copyWith(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w700,
-                              color: _isSecurityEnabled
-                                  ? AppColors.success
-                                  : AppColors.warning,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.xs - AppSpacing.xxxs,
+                              vertical: 1.5,
                             ),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.xs - AppSpacing.xxxs),
-                        Flexible(
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
+                            decoration: BoxDecoration(
+                              color:
+                                  (_isSecurityEnabled
+                                          ? AppColors.success
+                                          : AppColors.warning)
+                                      .withValues(alpha: 0.14),
+                              borderRadius: AppRadius.radiusFull,
+                            ),
                             child: AppText(
-                              !_isSecurityEnabled
-                                  ? 'No PIN / Pattern lock'
-                                  : 'Encrypted on device',
-                              maxLines: 1,
+                              _isSecurityEnabled ? 'Protected' : 'Unsecured',
                               style: context.text.labelSmall?.copyWith(
-                                color: palette.caption,
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w700,
+                                color: _isSecurityEnabled
+                                    ? AppColors.success
+                                    : AppColors.warning,
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(
+                            width: AppSpacing.xs - AppSpacing.xxxs,
+                          ),
+                          AppText(
+                            !_isSecurityEnabled
+                                ? 'No PIN / Pattern lock'
+                                : 'Encrypted on device',
+                            maxLines: 1,
+                            style: context.text.labelSmall?.copyWith(
+                              color: palette.caption,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
