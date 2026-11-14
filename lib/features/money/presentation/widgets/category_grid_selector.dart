@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../config/theme/app_colors.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../domain/entities/money_category.dart';
 
 /// Animated category selector supporting both compact horizontal strip
@@ -20,8 +20,6 @@ class CategoryGridSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     if (!isGrid) {
       // Sleek horizontal scrollable category pills
       return SizedBox(
@@ -37,7 +35,6 @@ class CategoryGridSelector extends StatelessWidget {
             return _CategoryPill(
               category: cat,
               isSelected: isSelected,
-              isDark: isDark,
               onTap: () => onSelect(cat),
             );
           },
@@ -62,7 +59,6 @@ class CategoryGridSelector extends StatelessWidget {
         return _CategoryTile(
           category: cat,
           isSelected: isSelected,
-          isDark: isDark,
           onTap: () => onSelect(cat),
         );
       },
@@ -73,13 +69,11 @@ class CategoryGridSelector extends StatelessWidget {
 class _CategoryPill extends StatefulWidget {
   final MoneyCategory category;
   final bool isSelected;
-  final bool isDark;
   final VoidCallback onTap;
 
   const _CategoryPill({
     required this.category,
     required this.isSelected,
-    required this.isDark,
     required this.onTap,
   });
 
@@ -92,9 +86,11 @@ class _CategoryPillState extends State<_CategoryPill> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
+    final text = context.text;
     final color = widget.category.color;
     final selected = widget.isSelected;
-    final isDark = widget.isDark;
+    final isDark = palette.isDark;
 
     return GestureDetector(
       onTapDown: (_) => setState(() => _pressed = true),
@@ -115,9 +111,7 @@ class _CategoryPillState extends State<_CategoryPill> {
                 : color.withValues(alpha: isDark ? 0.16 : 0.08),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: selected
-                  ? color
-                  : (isDark ? AppColors.darkDivider : AppColors.divider),
+              color: selected ? color : palette.divider,
               width: selected ? 1.5 : 0.8,
             ),
             boxShadow: selected
@@ -141,12 +135,10 @@ class _CategoryPillState extends State<_CategoryPill> {
               const SizedBox(width: 7),
               Text(
                 widget.category.shortLabel,
-                style: TextStyle(
+                style: text.labelMedium?.copyWith(
                   fontSize: 12,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                  color: selected
-                      ? Colors.white
-                      : (isDark ? Colors.white : AppColors.textHeading),
+                  color: selected ? Colors.white : palette.heading,
                 ),
               ),
             ],
@@ -160,13 +152,11 @@ class _CategoryPillState extends State<_CategoryPill> {
 class _CategoryTile extends StatefulWidget {
   final MoneyCategory category;
   final bool isSelected;
-  final bool isDark;
   final VoidCallback onTap;
 
   const _CategoryTile({
     required this.category,
     required this.isSelected,
-    required this.isDark,
     required this.onTap,
   });
 
@@ -179,9 +169,11 @@ class _CategoryTileState extends State<_CategoryTile> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
+    final text = context.text;
     final color = widget.category.color;
     final selected = widget.isSelected;
-    final isDark = widget.isDark;
+    final isDark = palette.isDark;
 
     return GestureDetector(
       onTapDown: (_) => setState(() => _pressed = true),
@@ -199,14 +191,10 @@ class _CategoryTileState extends State<_CategoryTile> {
           decoration: BoxDecoration(
             color: selected
                 ? color.withValues(alpha: isDark ? 0.20 : 0.10)
-                : (isDark
-                      ? AppColors.darkCardBackground
-                      : AppColors.cardBackground),
+                : palette.card,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: selected
-                  ? color
-                  : (isDark ? AppColors.darkDivider : AppColors.divider),
+              color: selected ? color : palette.divider,
               width: selected ? 1.8 : 1.0,
             ),
             boxShadow: selected
@@ -246,14 +234,12 @@ class _CategoryTileState extends State<_CategoryTile> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: text.labelSmall?.copyWith(
                     fontSize: 11,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                     color: selected
                         ? (isDark ? Colors.white : color)
-                        : (isDark
-                              ? AppColors.darkTextBody
-                              : AppColors.textHeading),
+                        : (isDark ? palette.body : palette.heading),
                   ),
                 ),
               ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
+import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
 import '../../domain/entities/timeline_item_entity.dart';
@@ -429,9 +430,10 @@ class _TimelineEditorSheetState extends State<TimelineEditorSheet> {
                 ),
                 label: Text(
                   isEditing ? 'Save Task Changes' : 'Add to Today\'s Timeline',
-                  style: const TextStyle(
+                  style: AppTextStyles.labelLarge.copyWith(
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
+                    color: Colors.white,
                   ),
                 ),
               ),

@@ -2,7 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
-import '../../../../config/theme/app_text_styles.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/utils/date_utils.dart';
@@ -18,16 +18,13 @@ class CategoryBreakdownCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final captionColor = isDark ? AppColors.darkTextMuted : AppColors.textMuted;
+    final palette = context.palette;
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.surface,
+        color: palette.card,
         borderRadius: AppRadius.borderLg,
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.border,
-        ),
+        border: Border.all(color: palette.border),
       ),
       child: Column(
         children: [
@@ -37,15 +34,11 @@ class CategoryBreakdownCard extends StatelessWidget {
                 height: 1,
                 indent: 16,
                 endIndent: 16,
-                color: isDark ? AppColors.darkBorder : AppColors.border,
+                color: palette.border,
               ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: _CategoryBreakdownRow(
-                budget: categoryBudgets[i],
-                isDark: isDark,
-                captionColor: captionColor,
-              ),
+              child: _CategoryBreakdownRow(budget: categoryBudgets[i]),
             ),
           ],
         ],
@@ -56,17 +49,13 @@ class CategoryBreakdownCard extends StatelessWidget {
 
 class _CategoryBreakdownRow extends StatelessWidget {
   final CategoryBudgetEntity budget;
-  final bool isDark;
-  final Color captionColor;
 
-  const _CategoryBreakdownRow({
-    required this.budget,
-    required this.isDark,
-    required this.captionColor,
-  });
+  const _CategoryBreakdownRow({required this.budget});
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
+    final text = context.text;
     final cat = budget.categoryInfo;
     final barColor = budget.isOverBudget
         ? AppColors.error
@@ -98,12 +87,10 @@ class _CategoryBreakdownRow extends StatelessWidget {
                       cat.label,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+                      style: text.bodyMedium?.copyWith(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w600,
-                        color: isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.textPrimary,
+                        color: palette.heading,
                       ),
                     ),
                   ),
@@ -119,14 +106,12 @@ class _CategoryBreakdownRow extends StatelessWidget {
                               budget.spent,
                               decimals: 2,
                             ),
-                            style: TextStyle(
+                            style: text.labelLarge?.copyWith(
                               fontSize: 12.5,
                               fontWeight: FontWeight.w700,
                               color: budget.isOverBudget
                                   ? AppColors.error
-                                  : (isDark
-                                        ? AppColors.darkTextPrimary
-                                        : AppColors.textPrimary),
+                                  : palette.heading,
                               fontFeatures: const [
                                 FontFeature.tabularFigures(),
                               ],
@@ -136,9 +121,9 @@ class _CategoryBreakdownRow extends StatelessWidget {
                             TextSpan(
                               text:
                                   ' / ${CurrencyUtils.format(budget.monthlyLimit)}',
-                              style: TextStyle(
+                              style: text.labelSmall?.copyWith(
                                 fontSize: 11.5,
-                                color: captionColor,
+                                color: palette.caption,
                               ),
                             ),
                         ],
@@ -157,9 +142,7 @@ class _CategoryBreakdownRow extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: value,
                     minHeight: 5,
-                    backgroundColor: isDark
-                        ? AppColors.darkSurfaceMuted
-                        : AppColors.surfaceElevated,
+                    backgroundColor: palette.surfaceSubtle,
                     valueColor: AlwaysStoppedAnimation<Color>(barColor),
                   ),
                 ),
@@ -168,7 +151,7 @@ class _CategoryBreakdownRow extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   'Over by ${CurrencyUtils.format(budget.overBy, decimals: 2)}',
-                  style: const TextStyle(
+                  style: text.labelSmall?.copyWith(
                     fontSize: 10.5,
                     fontWeight: FontWeight.w600,
                     color: AppColors.error,
@@ -192,18 +175,17 @@ class MonthlySpendingSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final palette = context.palette;
+    final text = context.text;
     final progress = insights.periodSpendProgress;
     final barColor = progress >= 0.85 ? AppColors.warning : AppColors.primary;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.surface,
+        color: palette.card,
         borderRadius: AppRadius.borderLg,
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.border,
-        ),
+        border: Border.all(color: palette.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -213,12 +195,10 @@ class MonthlySpendingSummaryCard extends StatelessWidget {
             children: [
               Text(
                 '${insights.period.label} Spending',
-                style: TextStyle(
+                style: text.bodyMedium?.copyWith(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w600,
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.textPrimary,
+                  color: palette.heading,
                 ),
               ),
               Container(
@@ -229,7 +209,7 @@ class MonthlySpendingSummaryCard extends StatelessWidget {
                 ),
                 child: Text(
                   AppDateUtils.formatMonthYear(insights.month),
-                  style: const TextStyle(
+                  style: text.labelSmall?.copyWith(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     color: AppColors.primary,
@@ -244,13 +224,11 @@ class MonthlySpendingSummaryCard extends StatelessWidget {
             children: [
               Text(
                 CurrencyUtils.format(insights.periodExpense, decimals: 2),
-                style: TextStyle(
+                style: text.headlineSmall?.copyWith(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
                   letterSpacing: -0.6,
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.textPrimary,
+                  color: palette.heading,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
@@ -259,11 +237,9 @@ class MonthlySpendingSummaryCard extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 3),
                 child: Text(
                   'of ${CurrencyUtils.format(insights.periodLimit)}',
-                  style: TextStyle(
+                  style: text.bodySmall?.copyWith(
                     fontSize: 12.5,
-                    color: isDark
-                        ? AppColors.darkTextSecondary
-                        : AppColors.textSecondary,
+                    color: palette.secondary,
                   ),
                 ),
               ),
@@ -275,9 +251,7 @@ class MonthlySpendingSummaryCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 7,
-              backgroundColor: isDark
-                  ? AppColors.darkSurfaceMuted
-                  : AppColors.surfaceElevated,
+              backgroundColor: palette.surfaceSubtle,
               valueColor: AlwaysStoppedAnimation<Color>(barColor),
             ),
           ),
@@ -287,16 +261,14 @@ class MonthlySpendingSummaryCard extends StatelessWidget {
             children: [
               Text(
                 '${(progress * 100).round()}% of ${insights.period.label.toLowerCase()} budget used',
-                style: TextStyle(
+                style: text.labelSmall?.copyWith(
                   fontSize: 11.5,
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.textSecondary,
+                  color: palette.secondary,
                 ),
               ),
               Text(
                 '${CurrencyUtils.format(insights.periodSaved)} ${StringConstants.saved}',
-                style: const TextStyle(
+                style: text.labelSmall?.copyWith(
                   fontSize: 11.5,
                   fontWeight: FontWeight.w600,
                   color: AppColors.success,
@@ -326,7 +298,8 @@ class _TopSpendingCategoriesCardState extends State<TopSpendingCategoriesCard> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final palette = context.palette;
+    final text = context.text;
     final items = widget.items;
     if (items.isEmpty) return const SizedBox.shrink();
 
@@ -339,11 +312,9 @@ class _TopSpendingCategoriesCardState extends State<TopSpendingCategoriesCard> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.surface,
+        color: palette.card,
         borderRadius: AppRadius.borderLg,
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.border,
-        ),
+        border: Border.all(color: palette.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -356,12 +327,10 @@ class _TopSpendingCategoriesCardState extends State<TopSpendingCategoriesCard> {
                   StringConstants.topCategories,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: text.titleSmall?.copyWith(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.textPrimary,
+                    color: palette.heading,
                   ),
                 ),
               ),
@@ -371,7 +340,7 @@ class _TopSpendingCategoriesCardState extends State<TopSpendingCategoriesCard> {
                   onTap: () => setState(() => _showAll = !_showAll),
                   child: Text(
                     _showAll ? 'Show top 4' : 'Show all (${items.length})',
-                    style: const TextStyle(
+                    style: text.labelSmall?.copyWith(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w700,
                       color: AppColors.primary,
@@ -437,12 +406,10 @@ class _TopSpendingCategoriesCardState extends State<TopSpendingCategoriesCard> {
                                   : 'Total',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
+                              style: text.labelSmall?.copyWith(
                                 fontSize: 9.5,
                                 fontWeight: FontWeight.w600,
-                                color: isDark
-                                    ? AppColors.darkTextMuted
-                                    : AppColors.textMuted,
+                                color: palette.caption,
                               ),
                             ),
                             FittedBox(
@@ -453,12 +420,10 @@ class _TopSpendingCategoriesCardState extends State<TopSpendingCategoriesCard> {
                                       ? touchedItem.amount
                                       : totalSpent,
                                 ),
-                                style: TextStyle(
+                                style: text.labelLarge?.copyWith(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w800,
-                                  color: isDark
-                                      ? AppColors.darkTextPrimary
-                                      : AppColors.textPrimary,
+                                  color: palette.heading,
                                   fontFeatures: const [
                                     FontFeature.tabularFigures(),
                                   ],
@@ -497,18 +462,16 @@ class _TopSpendingCategoriesCardState extends State<TopSpendingCategoriesCard> {
                                 cat.shortLabel,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
+                                style: text.labelMedium?.copyWith(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
-                                  color: isDark
-                                      ? AppColors.darkTextPrimary
-                                      : AppColors.textPrimary,
+                                  color: palette.heading,
                                 ),
                               ),
                             ),
                             Text(
                               '$pct%',
-                              style: TextStyle(
+                              style: text.labelSmall?.copyWith(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.w700,
                                 color: cat.color,
@@ -523,10 +486,7 @@ class _TopSpendingCategoriesCardState extends State<TopSpendingCategoriesCard> {
               ],
             ),
             const SizedBox(height: 12),
-            Divider(
-              height: 1,
-              color: isDark ? AppColors.darkBorder : AppColors.border,
-            ),
+            Divider(height: 1, color: palette.border),
             const SizedBox(height: 10),
           ],
 
@@ -553,11 +513,9 @@ class _TopSpendingCategoriesCardState extends State<TopSpendingCategoriesCard> {
                       Expanded(
                         child: Text(
                           cat.label,
-                          style: TextStyle(
+                          style: text.bodySmall?.copyWith(
                             fontSize: 12.5,
-                            color: isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.textSecondary,
+                            color: palette.secondary,
                           ),
                         ),
                       ),
@@ -568,9 +526,7 @@ class _TopSpendingCategoriesCardState extends State<TopSpendingCategoriesCard> {
                           child: LinearProgressIndicator(
                             value: entry.share.clamp(0.0, 1.0),
                             minHeight: 5,
-                            backgroundColor: isDark
-                                ? AppColors.darkSurfaceMuted
-                                : AppColors.surfaceElevated,
+                            backgroundColor: palette.surfaceSubtle,
                             valueColor: AlwaysStoppedAnimation<Color>(
                               cat.color,
                             ),
@@ -583,12 +539,10 @@ class _TopSpendingCategoriesCardState extends State<TopSpendingCategoriesCard> {
                         child: Text(
                           CurrencyUtils.format(entry.amount),
                           textAlign: TextAlign.right,
-                          style: TextStyle(
+                          style: text.labelMedium?.copyWith(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w600,
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.textPrimary,
+                            color: palette.heading,
                             fontFeatures: const [FontFeature.tabularFigures()],
                           ),
                         ),
@@ -660,15 +614,14 @@ class _KpiTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final palette = context.palette;
+    final text = context.text;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.surface,
+        color: palette.card,
         borderRadius: AppRadius.borderMd,
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.border,
-        ),
+        border: Border.all(color: palette.border),
       ),
       child: Column(
         children: [
@@ -688,11 +641,9 @@ class _KpiTile extends StatelessWidget {
             child: Text(
               value,
               maxLines: 1,
-              style: AppTextStyles.titleSmall.copyWith(
+              style: text.titleSmall?.copyWith(
                 fontSize: 15,
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.textPrimary,
+                color: palette.heading,
                 fontWeight: FontWeight.w700,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
@@ -703,9 +654,9 @@ class _KpiTile extends StatelessWidget {
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
+            style: text.labelSmall?.copyWith(
               fontSize: 11,
-              color: isDark ? AppColors.darkTextMuted : AppColors.textMuted,
+              color: palette.caption,
             ),
           ),
         ],

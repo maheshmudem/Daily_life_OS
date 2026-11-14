@@ -1,24 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/app_text_styles.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/widgets/app_dropdown_menu.dart';
 import '../../../../core/widgets/expandable_text_widget.dart';
 import '../../domain/entities/planner_item_entity.dart';
 
-/// Reminder card used in the Planner list.
+/// Editorial reminder & task card used in the Planner Agenda view.
 ///
-/// Layout (all cards share the same grid so lists line up vertically):
-///   [check]  Title ............................... [priority] [⋯]
-///            meta · meta · meta
-///            notes
-///            ─────────────────────────────────────────────
-///            Edit   Snooze +15m                 [✓ Mark Done]
-///
-/// The footer is a row of quiet text actions plus one tonal primary action,
-/// so a list of cards reads as content first and buttons second.
+/// Uses Daily Life OS design tokens (`AppRadius.radiusMd`, `AppSpacing`,
+/// `AppColors.moduleTime` / `routineMorning` / `routineAfternoon` / `routineEvening`)
+/// and sizes its vertical height strictly to actual item content (notes and
+/// checklists collapse to zero height when empty).
 class PlannerItemCard extends StatefulWidget {
   final PlannerItemEntity item;
   final bool isDark;
@@ -29,6 +27,7 @@ class PlannerItemCard extends StatefulWidget {
   final VoidCallback? onDuplicate;
   final VoidCallback? onPushTomorrow;
   final VoidCallback? onPushToTimeline;
+  final VoidCallback? onStartFocus;
   final ValueChanged<List<ChecklistItem>>? onChecklistChanged;
 
   const PlannerItemCard({
@@ -42,6 +41,7 @@ class PlannerItemCard extends StatefulWidget {
     this.onDuplicate,
     this.onPushTomorrow,
     this.onPushToTimeline,
+    this.onStartFocus,
     this.onChecklistChanged,
   });
 
@@ -50,116 +50,192 @@ class PlannerItemCard extends StatefulWidget {
 }
 
 class _PlannerItemCardState extends State<PlannerItemCard> {
-  static const double _checkSize = 22;
+  static const double _checkSize = 21;
   static const double _titleLineHeight = 20;
-  static const double _contentInset = _checkSize + 12;
-  static const double _actionHeight = 30;
+  static const double _contentInset = _checkSize + 10;
+  static const double _actionHeight = 28;
 
-  bool _isExpanded = false;
+  late bool _isExpanded =
+      !widget.item.isDone &&
+      widget.item.checklist.isNotEmpty &&
+      widget.item.checklist.length <= 3;
 
-  bool get _isDark => widget.isDark;
-  Color get _headingColor =>
-      _isDark ? AppColors.darkTextHeading : AppColors.textHeading;
-  Color get _bodyColor => _isDark ? AppColors.darkTextBody : AppColors.textBody;
-  Color get _captionColor =>
-      _isDark ? AppColors.darkTextCaption : AppColors.textCaption;
-  Color get _dividerColor =>
-      _isDark ? AppColors.darkDivider : AppColors.divider;
+  ({String label, Color color})? _dayPartInfo(String? rawTime) {
+    if (rawTime == null || rawTime.trim().isEmpty) return null;
+    final clean = rawTime.trim().toUpperCase();
+    final match = RegExp(
+      r'^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$',
+    ).firstMatch(clean);
+    if (match == null) return null;
+    var h = int.tryParse(match.group(1)!) ?? 0;
+    final period = match.group(3);
+    if (period == 'PM' && h < 12) h += 12;
+    if (period == 'AM' && h == 12) h = 0;
+    if (h < 12) return (label: 'Morning', color: AppColors.routineMorning);
+    if (h < 17) return (label: 'Afternoon', color: AppColors.routineAfternoon);
+    return (label: 'Evening', color: AppColors.routineEvening);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
     final item = widget.item;
+
+    final Color spineColor = item.isOverdue
+        ? AppColors.error
+        : (item.isDone ? AppColors.success : item.color);
 
     final Color borderColor;
     if (item.isOverdue) {
       borderColor = AppColors.error.withValues(alpha: 0.45);
     } else if (item.isDone) {
-      borderColor = AppColors.success.withValues(alpha: 0.35);
+      borderColor = AppColors.success.withValues(alpha: 0.32);
     } else {
-      borderColor = _dividerColor;
+      borderColor = palette.divider;
     }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.fromLTRB(14, 12, 12, 10),
+      margin: const EdgeInsets.only(bottom: AppSpacing.xs),
       decoration: BoxDecoration(
-        color: _isDark
-            ? AppColors.darkCardBackground
-            : AppColors.cardBackground,
-        borderRadius: AppRadius.radiusLg,
+        color: palette.card,
+        borderRadius: AppRadius.radiusMd,
         border: Border.all(color: borderColor),
+        boxShadow: palette.isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.025),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildCheck(item),
-              const SizedBox(width: 12),
-              Expanded(
-                child: InkWell(
-                  onTap: widget.onEdit,
-                  borderRadius: AppRadius.radiusXs,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildTitleRow(item),
-                      const SizedBox(height: 4),
-                      _buildMeta(item),
-                      if (item.notes.isNotEmpty) ...[
-                        const SizedBox(height: 6),
-                        ExpandableTextWidget(
-                          text: item.notes,
-                          collapsedMaxLines: 2,
-                          characterThreshold: 65,
-                          toggleColor: AppColors.moduleTime,
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            height: 1.35,
-                            color: _bodyColor,
+          Positioned(
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: 3.5,
+            child: ColoredBox(
+              color: item.isDone
+                  ? spineColor.withValues(alpha: 0.55)
+                  : spineColor,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 10, 12, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildCheck(palette, item),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: InkWell(
+                        onTap: widget.onEdit,
+                        borderRadius: AppRadius.radiusXs,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildTitleRow(palette, item),
+                            const SizedBox(height: 4),
+                            _buildMeta(palette, item),
+                            if (item.notes.trim().isNotEmpty) ...[
+                              const SizedBox(height: 5),
+                              ExpandableTextWidget(
+                                text: item.notes.trim(),
+                                collapsedMaxLines: 2,
+                                characterThreshold: 65,
+                                toggleColor: AppColors.moduleTime,
+                                style: context.text.bodySmall?.copyWith(
+                                  fontSize: 13,
+                                  height: 1.38,
+                                  color: palette.body,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (!item.isDone && widget.onStartFocus != null) ...[
+                      const SizedBox(width: 4),
+                      Tooltip(
+                        message: 'Start Focus Sprint',
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(7),
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            widget.onStartFocus!();
+                          },
+                          child: Container(
+                            width: 26,
+                            height: _titleLineHeight + 2,
+                            decoration: BoxDecoration(
+                              color: AppColors.moduleTime.withValues(
+                                alpha: palette.isDark ? 0.18 : 0.11,
+                              ),
+                              borderRadius: BorderRadius.circular(7),
+                            ),
+                            child: const Center(
+                              child: Icon(
+                                Icons.bolt_rounded,
+                                size: 15.5,
+                                color: AppColors.moduleTime,
+                              ),
+                            ),
                           ),
                         ),
-                      ],
+                      ),
                     ],
-                  ),
+                    const SizedBox(width: 2),
+                    _buildMenu(palette, item),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 4),
-              _buildMenu(item),
-            ],
-          ),
 
-          AnimatedSize(
-            duration: const Duration(milliseconds: 240),
-            curve: Curves.easeOutCubic,
-            alignment: Alignment.topCenter,
-            child: (_isExpanded && item.checklist.isNotEmpty)
-                ? Padding(
-                    padding: const EdgeInsets.only(top: 8, left: _contentInset),
-                    child: _buildChecklist(item),
-                  )
-                : const SizedBox.shrink(),
-          ),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOutCubic,
+                  alignment: Alignment.topCenter,
+                  child: (_isExpanded && item.checklist.isNotEmpty)
+                      ? Padding(
+                          padding: const EdgeInsets.only(
+                            top: AppSpacing.xs,
+                            left: _contentInset,
+                          ),
+                          child: _buildChecklist(palette, item),
+                        )
+                      : const SizedBox.shrink(),
+                ),
 
-          const SizedBox(height: 10),
-          Divider(height: 1, thickness: 1, color: _dividerColor),
-          const SizedBox(height: 4),
-          _buildActions(item),
+                const SizedBox(height: AppSpacing.xs),
+                Divider(height: 1, thickness: 1, color: palette.divider),
+                const SizedBox(height: 4),
+                _buildActions(palette, item),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
   // ── Leading check ─────────────────────────────────────────────────────────
-  Widget _buildCheck(PlannerItemEntity item) {
+  Widget _buildCheck(AppPalette palette, PlannerItemEntity item) {
     final isDone = item.isDone;
     return Semantics(
       checked: isDone,
       button: true,
       child: InkResponse(
-        onTap: () => widget.onToggle(!isDone),
-        radius: 20,
+        onTap: () {
+          HapticFeedback.selectionClick();
+          widget.onToggle(!isDone);
+        },
+        radius: 19,
         child: SizedBox(
           height: _titleLineHeight,
           child: Center(
@@ -173,18 +249,14 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
                 border: Border.all(
                   color: isDone
                       ? AppColors.moduleTime
-                      : (item.isOverdue
-                            ? AppColors.error
-                            : (_isDark
-                                  ? AppColors.darkBorder
-                                  : AppColors.border)),
+                      : (item.isOverdue ? AppColors.error : palette.border),
                   width: 1.8,
                 ),
               ),
               child: isDone
                   ? const Icon(
                       Icons.check_rounded,
-                      size: 14,
+                      size: 13.5,
                       color: Colors.white,
                     )
                   : null,
@@ -196,7 +268,7 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
   }
 
   // ── Title + priority ──────────────────────────────────────────────────────
-  Widget _buildTitleRow(PlannerItemEntity item) {
+  Widget _buildTitleRow(AppPalette palette, PlannerItemEntity item) {
     final showPriority = item.priority == 'urgent' || item.priority == 'high';
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -207,14 +279,14 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
             collapsedMaxLines: 2,
             characterThreshold: 60,
             toggleColor: AppColors.moduleTime,
-            style: TextStyle(
-              fontSize: 15,
+            style: context.text.bodyMedium?.copyWith(
+              fontSize: 14.5,
               height: 1.3,
               letterSpacing: -0.2,
-              fontWeight: FontWeight.w700,
-              color: item.isDone ? _captionColor : _headingColor,
+              fontWeight: FontWeight.w600,
+              color: item.isDone ? palette.caption : palette.heading,
               decoration: item.isDone ? TextDecoration.lineThrough : null,
-              decorationColor: _captionColor,
+              decorationColor: palette.caption,
             ),
           ),
         ),
@@ -236,10 +308,11 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
   }
 
   // ── Metadata line ─────────────────────────────────────────────────────────
-  Widget _buildMeta(PlannerItemEntity item) {
-    final metaColor = item.isOverdue ? AppColors.error : _captionColor;
+  Widget _buildMeta(AppPalette palette, PlannerItemEntity item) {
+    final metaColor = item.isOverdue ? AppColors.error : palette.caption;
+    final dayPart = _dayPartInfo(item.startTime);
     return Wrap(
-      spacing: 10,
+      spacing: 8,
       runSpacing: 4,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
@@ -255,21 +328,26 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
             label: item.timeRange,
             color: metaColor,
           ),
+        if (dayPart != null && !item.isDone)
+          _Pill(label: dayPart.label, color: dayPart.color),
         if (item.isRecurring)
           _MetaItem(
             icon: Icons.repeat_rounded,
             label: item.recurrenceSummary,
-            color: AppColors.moduleTime,
+            color: AppColors.moduleTimeDark,
           ),
         if (item.reminderOffsetMinutes > 0)
           _MetaItem(
             icon: Icons.notifications_none_rounded,
             label: '${item.reminderOffsetMinutes}m early',
-            color: _captionColor,
+            color: palette.caption,
           ),
         if (item.checklist.isNotEmpty)
           InkWell(
-            onTap: () => setState(() => _isExpanded = !_isExpanded),
+            onTap: () {
+              HapticFeedback.selectionClick();
+              setState(() => _isExpanded = !_isExpanded);
+            },
             borderRadius: AppRadius.radiusXs,
             child: _MetaItem(
               icon: Icons.checklist_rounded,
@@ -292,61 +370,86 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
     );
   }
 
-  // ── Expanded checklist ────────────────────────────────────────────────────
-  Widget _buildChecklist(PlannerItemEntity item) {
+  // ── Expanded checklist with progress bar ──────────────────────────────────
+  Widget _buildChecklist(AppPalette palette, PlannerItemEntity item) {
+    final total = item.checklist.length;
+    final done = item.checklistDoneCount;
+    final progress = total > 0 ? (done / total).clamp(0.0, 1.0) : 0.0;
+
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.xs,
-        vertical: AppSpacing.xxs,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: _isDark
-            ? AppColors.darkSurfaceSecondary
-            : AppColors.surfaceSecondary,
+        color: palette.surfaceMuted.withValues(
+          alpha: palette.isDark ? 0.55 : 0.75,
+        ),
         borderRadius: AppRadius.radiusSm,
+        border: Border.all(color: palette.divider),
       ),
       child: Column(
-        children: item.checklist.map((c) {
-          return InkWell(
-            borderRadius: AppRadius.radiusXs,
-            onTap: () => _setChecklistItem(item, c, !c.isDone),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 26,
-                    height: 26,
-                    child: Checkbox(
-                      value: c.isDone,
-                      activeColor: AppColors.moduleTime,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      visualDensity: VisualDensity.compact,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: AppRadius.radiusXs,
-                      ),
-                      onChanged: (val) =>
-                          _setChecklistItem(item, c, val ?? false),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: AppRadius.radiusFull,
+                  child: LinearProgressIndicator(
+                    minHeight: 3.5,
+                    value: progress,
+                    backgroundColor: palette.divider,
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      AppColors.moduleTime,
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      c.title,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        color: c.isDone ? _captionColor : _headingColor,
-                        decoration: c.isDone
-                            ? TextDecoration.lineThrough
-                            : null,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Text(
+                '$done/$total',
+                style: context.text.labelSmall?.copyWith(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  color: palette.caption,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          for (final c in item.checklist)
+            InkWell(
+              borderRadius: AppRadius.radiusXs,
+              onTap: () => _setChecklistItem(item, c, !c.isDone),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 3),
+                child: Row(
+                  children: [
+                    Icon(
+                      c.isDone
+                          ? Icons.check_circle_rounded
+                          : Icons.radio_button_unchecked_rounded,
+                      size: 15.5,
+                      color: c.isDone ? AppColors.moduleTime : palette.caption,
+                    ),
+                    const SizedBox(width: 7),
+                    Expanded(
+                      child: Text(
+                        c.title,
+                        style: context.text.bodySmall?.copyWith(
+                          fontSize: 12.5,
+                          color: c.isDone ? palette.caption : palette.heading,
+                          decoration: c.isDone
+                              ? TextDecoration.lineThrough
+                              : null,
+                          decorationColor: palette.caption,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          );
-        }).toList(),
+        ],
       ),
     );
   }
@@ -358,6 +461,7 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
   ) {
     final onChanged = widget.onChecklistChanged;
     if (onChanged == null) return;
+    HapticFeedback.selectionClick();
     onChanged(
       item.checklist
           .map((c) => c.id == target.id ? c.copyWith(isDone: isDone) : c)
@@ -366,81 +470,79 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
   }
 
   // ── Footer actions ────────────────────────────────────────────────────────
-  // Quiet text actions on the left, one tonal primary action on the right.
-  Widget _buildActions(PlannerItemEntity item) {
+  Widget _buildActions(AppPalette palette, PlannerItemEntity item) {
     final quietStyle = TextButton.styleFrom(
-      foregroundColor: _bodyColor,
+      foregroundColor: palette.body,
       minimumSize: const Size(0, _actionHeight),
       padding: const EdgeInsets.symmetric(horizontal: 8),
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       visualDensity: VisualDensity.compact,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      textStyle: const TextStyle(
-        fontFamily: AppTextStyles.fontFamily,
-        fontSize: 12.5,
+      textStyle: AppTextStyles.captionBold.copyWith(
+        fontSize: 12,
         fontWeight: FontWeight.w600,
       ),
     );
 
     return Row(
       children: [
-        // The quiet actions own the slack width (so "Mark Done" stays on the
-        // right edge) and the first label lines up with the title gutter.
         Expanded(
-          child: Row(
-            children: [
-              const SizedBox(width: _contentInset - 8),
-              if (widget.onEdit != null)
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(width: _contentInset - 8),
+                if (widget.onEdit != null)
+                  TextButton.icon(
+                    onPressed: widget.onEdit,
+                    style: quietStyle,
+                    icon: const Icon(Icons.edit_outlined, size: 13.5),
+                    label: const Text('Edit'),
+                  ),
                 TextButton.icon(
-                  onPressed: widget.onEdit,
-                  style: quietStyle,
-                  icon: const Icon(Icons.edit_outlined, size: 14),
-                  label: const Text('Edit'),
-                ),
-              Flexible(
-                child: TextButton.icon(
                   onPressed: widget.onSnooze,
                   style: quietStyle,
-                  icon: const Icon(Icons.snooze_rounded, size: 14),
-                  label: const Text(
-                    'Snooze +15m',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  icon: const Icon(Icons.snooze_rounded, size: 13.5),
+                  label: const Text('Snooze +15m', maxLines: 1),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppSpacing.xs),
         FilledButton.icon(
-          onPressed: () => widget.onToggle(!item.isDone),
+          onPressed: () {
+            HapticFeedback.selectionClick();
+            widget.onToggle(!item.isDone);
+          },
           style: FilledButton.styleFrom(
             minimumSize: const Size(0, _actionHeight),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             visualDensity: VisualDensity.compact,
-            padding: const EdgeInsets.fromLTRB(10, 0, 12, 0),
+            padding: const EdgeInsets.fromLTRB(9, 0, 11, 0),
             elevation: 0,
             backgroundColor: item.isDone
-                ? (_isDark
-                      ? AppColors.darkSurfaceSecondary
-                      : AppColors.surfaceSecondary)
-                : AppColors.moduleTime.withValues(alpha: _isDark ? 0.22 : 0.14),
+                ? palette.surfaceMuted
+                : AppColors.moduleTime.withValues(
+                    alpha: palette.isDark ? 0.22 : 0.13,
+                  ),
             foregroundColor: item.isDone
-                ? _captionColor
-                : (_isDark ? AppColors.moduleTimeLight : AppColors.moduleTime),
+                ? palette.caption
+                : (palette.isDark
+                      ? AppColors.moduleTimeLight
+                      : AppColors.moduleTimeDark),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
             ),
-            textStyle: const TextStyle(
-              fontFamily: AppTextStyles.fontFamily,
-              fontSize: 12.5,
+            textStyle: AppTextStyles.captionBold.copyWith(
+              fontSize: 12,
               fontWeight: FontWeight.w700,
             ),
           ),
           icon: Icon(
             item.isDone ? Icons.undo_rounded : Icons.check_rounded,
-            size: 15,
+            size: 14.5,
           ),
           label: Text(item.isDone ? 'Undo' : 'Mark Done'),
         ),
@@ -449,14 +551,18 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
   }
 
   // ── Overflow menu ─────────────────────────────────────────────────────────
-  Widget _buildMenu(PlannerItemEntity item) {
+  Widget _buildMenu(AppPalette palette, PlannerItemEntity item) {
     return AppDropdownMenu<String>(
       tooltip: 'More actions',
       offset: const Offset(0, 6),
+      menuConstraints: const BoxConstraints(minWidth: 168, maxWidth: 215),
       onSelected: (value) {
         switch (value) {
           case 'edit':
             widget.onEdit?.call();
+            break;
+          case 'focus':
+            widget.onStartFocus?.call();
             break;
           case 'snooze':
             widget.onSnooze();
@@ -481,6 +587,13 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
             value: 'edit',
             icon: Icons.edit_outlined,
             label: 'Edit Reminder',
+          ),
+        if (widget.onStartFocus != null && !item.isDone)
+          AppDropdownItem(
+            value: 'focus',
+            icon: Icons.bolt_rounded,
+            label: 'Focus Sprint',
+            tintColor: AppColors.moduleTime,
           ),
         AppDropdownItem(
           value: 'snooze',
@@ -520,18 +633,13 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
         height: _titleLineHeight,
         child: Align(
           alignment: Alignment.centerRight,
-          child: Icon(
-            Icons.more_horiz_rounded,
-            size: 20,
-            color: _isDark ? AppColors.darkIconColor : AppColors.iconColor,
-          ),
+          child: Icon(Icons.more_horiz_rounded, size: 19, color: palette.icon),
         ),
       ),
     );
   }
 }
 
-/// Icon + text metadata used under the title (no box, so the line stays calm).
 class _MetaItem extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -550,15 +658,19 @@ class _MetaItem extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 13, color: color),
+        Icon(icon, size: 12.5, color: color),
         const SizedBox(width: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            height: 1.3,
-            fontWeight: FontWeight.w500,
-            color: color,
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: context.text.bodySmall?.copyWith(
+              fontSize: 12,
+              height: 1.25,
+              fontWeight: FontWeight.w500,
+              color: color,
+            ),
           ),
         ),
         ?trailing,
@@ -567,7 +679,6 @@ class _MetaItem extends StatelessWidget {
   }
 }
 
-/// Small tinted label (category, priority, overdue).
 class _Pill extends StatelessWidget {
   final String label;
   final Color color;
@@ -582,14 +693,14 @@ class _Pill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 6.5, vertical: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(5.5),
       ),
       child: Text(
         label,
-        style: TextStyle(
+        style: context.text.labelSmall?.copyWith(
           fontSize: 10.5,
           height: 1.2,
           fontWeight: FontWeight.w700,

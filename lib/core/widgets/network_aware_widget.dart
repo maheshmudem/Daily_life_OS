@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../config/theme/app_colors.dart';
+import '../../config/theme/app_spacing.dart';
+import '../../config/theme/theme_context.dart';
 import '../constants/string_constants.dart';
 
 class NetworkAwareWidget extends StatelessWidget {
@@ -18,16 +21,26 @@ class NetworkAwareWidget extends StatelessWidget {
         if (!isConnected)
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            color: Colors.orange.shade700,
-            child: const Row(
+            padding: const EdgeInsets.symmetric(
+              vertical: AppSpacing.sm,
+              horizontal: AppSpacing.lg,
+            ),
+            color: AppColors.warning,
+            child: Row(
               children: [
-                Icon(Icons.wifi_off, color: Colors.white, size: 16),
-                SizedBox(width: 8),
+                const Icon(
+                  Icons.wifi_off,
+                  color: AppColors.textWhite,
+                  size: 16,
+                ),
+                AppSpacing.gapW8,
                 Expanded(
                   child: Text(
                     StringConstants.networkError,
-                    style: TextStyle(color: Colors.white, fontSize: 13),
+                    style: context.text.bodySmall?.copyWith(
+                      color: AppColors.textWhite,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
               ],

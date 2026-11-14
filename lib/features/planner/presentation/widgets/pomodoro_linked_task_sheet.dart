@@ -3,6 +3,7 @@ import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/app_text_styles.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../domain/entities/planner_item_entity.dart';
 import '../../domain/entities/pomodoro_entities.dart';
 
@@ -98,13 +99,11 @@ class _PomodoroLinkedTaskSheetState extends State<PomodoroLinkedTaskSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final cardBg = widget.isDark ? AppColors.darkCardBackground : Colors.white;
-    final headingColor = widget.isDark
-        ? AppColors.darkTextHeading
-        : AppColors.textHeading;
-    final captionColor = widget.isDark
-        ? AppColors.darkTextCaption
-        : AppColors.textCaption;
+    final palette = context.palette;
+    final textTheme = context.text;
+    final cardBg = palette.card;
+    final headingColor = palette.heading;
+    final captionColor = palette.caption;
     final pendingTasks = widget.todayTasks
         .where((it) => !it.isDone)
         .take(6)
@@ -131,9 +130,7 @@ class _PomodoroLinkedTaskSheetState extends State<PomodoroLinkedTaskSheet> {
                     width: 36,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: widget.isDark
-                          ? AppColors.darkDivider
-                          : AppColors.divider,
+                      color: palette.divider,
                       borderRadius: AppRadius.radiusFull,
                     ),
                   ),
@@ -199,15 +196,13 @@ class _PomodoroLinkedTaskSheetState extends State<PomodoroLinkedTaskSheet> {
                       visualDensity: VisualDensity.compact,
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       selectedColor: catColor.withValues(alpha: 0.14),
-                      backgroundColor: widget.isDark
-                          ? AppColors.darkSurfaceSecondary
-                          : AppColors.surfaceSecondary,
+                      backgroundColor: palette.surfaceMuted,
                       side: BorderSide(
                         color: isSelected
                             ? catColor.withValues(alpha: 0.6)
                             : Colors.transparent,
                       ),
-                      labelStyle: TextStyle(
+                      labelStyle: textTheme.labelSmall?.copyWith(
                         fontSize: 11.5,
                         fontWeight: isSelected
                             ? FontWeight.w700
@@ -247,14 +242,12 @@ class _PomodoroLinkedTaskSheetState extends State<PomodoroLinkedTaskSheet> {
                             decoration: BoxDecoration(
                               color: selected
                                   ? AppColors.moduleTime
-                                  : (widget.isDark
-                                        ? AppColors.darkSurfaceSecondary
-                                        : AppColors.surfaceSecondary),
+                                  : palette.surfaceMuted,
                               borderRadius: BorderRadius.circular(7),
                             ),
                             child: Text(
                               '$count',
-                              style: TextStyle(
+                              style: textTheme.bodySmall?.copyWith(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
                                 color: selected ? Colors.white : headingColor,
@@ -296,7 +289,7 @@ class _PomodoroLinkedTaskSheetState extends State<PomodoroLinkedTaskSheet> {
                           task.checklist.isNotEmpty
                               ? '${task.title} (${task.checklistDoneCount}/${task.checklist.length})'
                               : task.title,
-                          style: TextStyle(
+                          style: textTheme.labelSmall?.copyWith(
                             fontSize: 11.5,
                             fontWeight: isLinked
                                 ? FontWeight.w700
@@ -346,9 +339,12 @@ class _PomodoroLinkedTaskSheetState extends State<PomodoroLinkedTaskSheet> {
                       }
                       Navigator.of(context).pop();
                     },
-                    child: const Text(
+                    child: Text(
                       'Update Focus Task',
-                      style: TextStyle(fontWeight: FontWeight.w700),
+                      style: AppTextStyles.buttonLabel.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),

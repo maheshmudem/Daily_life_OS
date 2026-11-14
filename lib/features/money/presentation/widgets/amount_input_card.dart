@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
-import '../../../../config/theme/app_text_styles.dart';
+import '../../../../config/theme/app_spacing.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/utils/validators.dart';
@@ -31,19 +32,20 @@ class AmountInputCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = context.palette;
+    final text = context.text;
     final presets = quickAmounts ?? _defaultChips();
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 14, AppSpacing.lg, 14),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCardBackground : Colors.white,
+        color: p.card,
         borderRadius: AppRadius.radiusXl,
         border: Border.all(
-          color: accentColor.withValues(alpha: isDark ? 0.35 : 0.25),
+          color: accentColor.withValues(alpha: p.isDark ? 0.35 : 0.25),
           width: 1.2,
         ),
-        boxShadow: isDark
+        boxShadow: p.isDark
             ? null
             : [
                 BoxShadow(
@@ -61,13 +63,11 @@ class AmountInputCard extends StatelessWidget {
             children: [
               Text(
                 StringConstants.amountLabel.toUpperCase(),
-                style: AppTextStyles.overline.copyWith(
+                style: text.labelSmall?.copyWith(
                   fontSize: 11,
                   letterSpacing: 1.1,
                   fontWeight: FontWeight.w700,
-                  color: isDark
-                      ? AppColors.darkTextCaption
-                      : AppColors.textCaption,
+                  color: p.caption,
                 ),
               ),
               ValueListenableBuilder<TextEditingValue>(
@@ -78,23 +78,19 @@ class AmountInputCard extends StatelessWidget {
                     onTap: controller.clear,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
+                        horizontal: AppSpacing.sm,
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? AppColors.darkSurfaceSecondary
-                            : AppColors.surfaceSecondary,
-                        borderRadius: BorderRadius.circular(6),
+                        color: p.surfaceMuted,
+                        borderRadius: AppRadius.radiusXs,
                       ),
                       child: Text(
                         'Clear',
-                        style: TextStyle(
+                        style: text.labelSmall?.copyWith(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: isDark
-                              ? AppColors.darkTextCaption
-                              : AppColors.textCaption,
+                          color: p.caption,
                         ),
                       ),
                     ),
@@ -103,20 +99,20 @@ class AmountInputCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          AppSpacing.gapH8,
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
                 CurrencyUtils.symbol,
-                style: TextStyle(
+                style: text.displaySmall?.copyWith(
                   fontSize: 34,
                   fontWeight: FontWeight.w700,
                   color: accentColor,
                   letterSpacing: -0.5,
                 ),
               ),
-              const SizedBox(width: 8),
+              AppSpacing.gapW8,
               Expanded(
                 child: TextFormField(
                   controller: controller,
@@ -129,26 +125,20 @@ class AmountInputCard extends StatelessWidget {
                     ),
                   ],
                   validator: Validators.validateAmount,
-                  style: TextStyle(
+                  style: text.displayMedium?.copyWith(
                     fontSize: 38,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -1,
-                    color: isDark
-                        ? AppColors.darkTextHeading
-                        : AppColors.textHeading,
+                    color: p.heading,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                   decoration: InputDecoration(
                     hintText: '0.00',
-                    hintStyle: TextStyle(
+                    hintStyle: text.displayMedium?.copyWith(
                       fontSize: 38,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -1,
-                      color:
-                          (isDark
-                                  ? AppColors.darkTextCaption
-                                  : AppColors.textCaption)
-                              .withValues(alpha: 0.35),
+                      color: p.caption.withValues(alpha: 0.35),
                       fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                     filled: false,
@@ -164,13 +154,13 @@ class AmountInputCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          AppSpacing.gapH12,
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: presets.map((val) {
                 return Padding(
-                  padding: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.only(right: AppSpacing.sm),
                   child: InkWell(
                     borderRadius: BorderRadius.circular(9),
                     onTap: () {
@@ -186,19 +176,19 @@ class AmountInputCard extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: accentColor.withValues(
-                          alpha: isDark ? 0.16 : 0.08,
+                          alpha: p.isDark ? 0.16 : 0.08,
                         ),
                         borderRadius: BorderRadius.circular(9),
                         border: Border.all(
                           color: accentColor.withValues(
-                            alpha: isDark ? 0.3 : 0.2,
+                            alpha: p.isDark ? 0.3 : 0.2,
                           ),
                           width: 0.8,
                         ),
                       ),
                       child: Text(
                         '${CurrencyUtils.symbol}$val',
-                        style: TextStyle(
+                        style: text.labelMedium?.copyWith(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                           color: accentColor,

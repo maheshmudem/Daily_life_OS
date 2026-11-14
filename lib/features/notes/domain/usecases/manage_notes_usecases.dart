@@ -10,11 +10,13 @@ class AddNoteUseCase {
     required String content,
     required int colorValue,
     String tags = '',
+    bool isPinned = false,
   }) => _repository.addNote(
     title: title,
     content: content,
     colorValue: colorValue,
     tags: tags,
+    isPinned: isPinned,
   );
 }
 
@@ -29,12 +31,14 @@ class UpdateNoteUseCase {
     String? content,
     int? colorValue,
     String? tags,
+    bool? isPinned,
   }) => _repository.updateNote(
     id,
     title: title,
     content: content,
     colorValue: colorValue,
     tags: tags,
+    isPinned: isPinned,
   );
 }
 

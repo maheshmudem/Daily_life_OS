@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
+import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../di/injection_container.dart';
 import '../../../notes/domain/usecases/manage_notes_usecases.dart';
@@ -303,9 +304,11 @@ class _EveningWrapUpSheetState extends State<EveningWrapUpSheet> {
                               ),
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
-                            child: const Text(
+                            child: Text(
                               'Skip',
-                              style: TextStyle(fontSize: 11.5),
+                              style: AppTextStyles.labelSmall.copyWith(
+                                fontSize: 11.5,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 4),
@@ -323,9 +326,9 @@ class _EveningWrapUpSheetState extends State<EveningWrapUpSheet> {
                               ),
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
-                            child: const Text(
+                            child: Text(
                               'Complete',
-                              style: TextStyle(
+                              style: AppTextStyles.labelSmall.copyWith(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -390,9 +393,9 @@ class _EveningWrapUpSheetState extends State<EveningWrapUpSheet> {
                               ),
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
-                            child: const Text(
+                            child: Text(
                               'Mark Done',
-                              style: TextStyle(
+                              style: AppTextStyles.labelSmall.copyWith(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -502,9 +505,10 @@ class _EveningWrapUpSheetState extends State<EveningWrapUpSheet> {
                       _savingReflection
                           ? 'Saving Reflection...'
                           : 'Complete Wrap-Up & Save Reflection',
-                      style: const TextStyle(
+                      style: AppTextStyles.labelLarge.copyWith(
                         fontWeight: FontWeight.w700,
                         fontSize: 13.5,
+                        color: Colors.white,
                       ),
                     ),
                   ),

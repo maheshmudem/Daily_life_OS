@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
+import '../../../../config/theme/app_spacing.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../domain/entities/money_account_entity.dart';
@@ -21,20 +23,19 @@ class TotalAssetsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = context.palette;
+    final text = context.text;
     final total = insights.totalAssets;
     final cash = insights.assetsByType[MoneyAccountType.cash] ?? 0;
     final savings = insights.assetsByType[MoneyAccountType.savings] ?? 0;
     final invest = insights.assetsByType[MoneyAccountType.investment] ?? 0;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.surface,
+        color: p.card,
         borderRadius: AppRadius.borderLg,
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.border,
-        ),
+        border: Border.all(color: p.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -44,12 +45,10 @@ class TotalAssetsCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   StringConstants.totalAssets,
-                  style: TextStyle(
+                  style: text.labelLarge?.copyWith(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: isDark
-                        ? AppColors.darkTextSecondary
-                        : AppColors.textSecondary,
+                    color: p.secondary,
                   ),
                 ),
               ),
@@ -58,23 +57,24 @@ class TotalAssetsCard extends StatelessWidget {
                 alignment: Alignment.centerRight,
                 child: Text(
                   CurrencyUtils.format(total, decimals: 2),
-                  style: TextStyle(
+                  style: text.titleMedium?.copyWith(
                     fontSize: 17,
                     fontWeight: FontWeight.w700,
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.textPrimary,
+                    color: p.heading,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
               ),
               if (onManageAccounts != null) ...[
-                const SizedBox(width: 8),
+                AppSpacing.gapW8,
                 InkWell(
                   onTap: onManageAccounts,
                   borderRadius: AppRadius.radiusSm,
                   child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xs,
+                      vertical: 2,
+                    ),
                     child: Icon(
                       Icons.edit_outlined,
                       size: 15,
@@ -85,7 +85,7 @@ class TotalAssetsCard extends StatelessWidget {
               ],
             ],
           ),
-          const SizedBox(height: 12),
+          AppSpacing.gapH12,
 
           TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: 1),
@@ -96,9 +96,7 @@ class TotalAssetsCard extends StatelessWidget {
                 return Container(
                   height: 10,
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.darkSurfaceMuted
-                        : AppColors.surfaceMuted,
+                    color: p.surfaceSubtle,
                     borderRadius: BorderRadius.circular(5),
                   ),
                 );
@@ -141,11 +139,7 @@ class TotalAssetsCard extends StatelessWidget {
                       if (remainder > 0)
                         Flexible(
                           flex: remainder,
-                          child: Container(
-                            color: isDark
-                                ? AppColors.darkSurfaceMuted
-                                : AppColors.surfaceMuted,
-                          ),
+                          child: Container(color: p.surfaceSubtle),
                         ),
                     ],
                   ),
@@ -153,7 +147,7 @@ class TotalAssetsCard extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 12),
+          AppSpacing.gapH12,
 
           Wrap(
             spacing: 14,
@@ -195,7 +189,8 @@ class _AssetLegend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = context.palette;
+    final text = context.text;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -207,19 +202,14 @@ class _AssetLegend extends StatelessWidget {
         const SizedBox(width: 5),
         Text(
           '$label ',
-          style: TextStyle(
-            fontSize: 11.5,
-            color: isDark
-                ? AppColors.darkTextSecondary
-                : AppColors.textSecondary,
-          ),
+          style: text.labelSmall?.copyWith(fontSize: 11.5, color: p.secondary),
         ),
         Text(
           amount,
-          style: TextStyle(
+          style: text.labelSmall?.copyWith(
             fontSize: 11.5,
             fontWeight: FontWeight.w600,
-            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+            color: p.heading,
           ),
         ),
       ],

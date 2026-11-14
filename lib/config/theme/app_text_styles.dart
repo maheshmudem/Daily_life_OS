@@ -210,12 +210,24 @@ class AppTextStyles {
 
   static const TextStyle labelSmall = label;
 
+  static const TextStyle labelMedium = caption;
+
+  static const TextStyle labelLarge = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textHeading,
+    letterSpacing: 0.1,
+  );
+
   static const TextStyle buttonText = TextStyle(
     fontFamily: fontFamily,
     fontSize: 15,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.1,
   );
+
+  static const TextStyle buttonLabel = buttonText;
 
   static const TextStyle linkText = TextStyle(
     fontFamily: fontFamily,

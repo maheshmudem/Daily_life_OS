@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
-import '../../../../config/theme/app_text_styles.dart';
+import '../../../../config/theme/app_spacing.dart';
+import '../../../../config/theme/theme_context.dart';
 
 class PinDialpadWidget extends StatelessWidget {
   final int pinLength;
@@ -44,7 +45,7 @@ class PinDialpadWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final palette = context.palette;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -57,28 +58,30 @@ class PinDialpadWidget extends StatelessWidget {
             return AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeOutCubic,
-              margin: const EdgeInsets.symmetric(horizontal: 10),
-              width: isFilled ? 18 : 14,
-              height: isFilled ? 18 : 14,
+              margin: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.xs + AppSpacing.xxxs,
+              ),
+              width: isFilled ? 16 : 13,
+              height: isFilled ? 16 : 13,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: hasError
                     ? AppColors.error
                     : isFilled
                     ? AppColors.moduleVault
-                    : (isDark ? AppColors.darkDivider : AppColors.surfaceMuted),
+                    : palette.surfaceMuted,
                 border: Border.all(
                   color: hasError
                       ? AppColors.error
                       : isFilled
                       ? AppColors.moduleVault
-                      : (isDark ? AppColors.darkBorder : AppColors.border),
-                  width: 2,
+                      : palette.border,
+                  width: 1.8,
                 ),
                 boxShadow: isFilled && !hasError
                     ? [
                         BoxShadow(
-                          color: AppColors.moduleVault.withValues(alpha: 0.4),
+                          color: AppColors.moduleVault.withValues(alpha: 0.35),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -90,52 +93,49 @@ class PinDialpadWidget extends StatelessWidget {
         ),
 
         if (errorMessage != null && errorMessage!.isNotEmpty) ...[
-          const SizedBox(height: 12),
+          AppSpacing.gapH12,
           Text(
             errorMessage!,
-            style: AppTextStyles.caption.copyWith(
+            style: context.text.bodySmall?.copyWith(
               color: AppColors.error,
               fontWeight: FontWeight.w600,
             ),
           ),
         ] else
-          const SizedBox(height: 20),
+          AppSpacing.gapH20,
 
         // ── 3x4 Dialpad Grid ──────────────────────────────────────────────
         ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 280),
+          constraints: const BoxConstraints(maxWidth: 272),
           child: Column(
             children: [
-              _buildRow(['1', '2', '3'], isDark),
-              const SizedBox(height: 12),
-              _buildRow(['4', '5', '6'], isDark),
-              const SizedBox(height: 12),
-              _buildRow(['7', '8', '9'], isDark),
-              const SizedBox(height: 12),
+              _buildRow(context, ['1', '2', '3']),
+              AppSpacing.gapH12,
+              _buildRow(context, ['4', '5', '6']),
+              AppSpacing.gapH12,
+              _buildRow(context, ['7', '8', '9']),
+              AppSpacing.gapH12,
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  // Biometric or empty
                   if (showBiometrics)
                     _buildIconButton(
+                      context,
                       icon: Icons.fingerprint_rounded,
                       color: AppColors.moduleVault,
                       onTap: onBiometricTap,
-                      isDark: isDark,
                       tooltip: 'Fingerprint / Biometric',
                     )
                   else
-                    const SizedBox(width: 64, height: 64),
+                    const SizedBox(width: 62, height: 62),
 
-                  _buildNumberButton('0', isDark),
+                  _buildNumberButton(context, '0'),
 
                   _buildIconButton(
+                    context,
                     icon: Icons.backspace_outlined,
-                    color: isDark
-                        ? AppColors.darkTextCaption
-                        : AppColors.textCaption,
+                    color: palette.caption,
                     onTap: _onBackspace,
-                    isDark: isDark,
                     tooltip: 'Backspace',
                   ),
                 ],
@@ -147,64 +147,65 @@ class PinDialpadWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildRow(List<String> digits, bool isDark) {
+  Widget _buildRow(BuildContext context, List<String> digits) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: digits.map((d) => _buildNumberButton(d, isDark)).toList(),
+      children: digits.map((d) => _buildNumberButton(context, d)).toList(),
     );
   }
 
-  Widget _buildNumberButton(String digit, bool isDark) {
+  Widget _buildNumberButton(BuildContext context, String digit) {
+    final palette = context.palette;
+
     return InkWell(
       onTap: () => _onDigitTap(digit),
       borderRadius: AppRadius.radiusFull,
       child: Container(
-        width: 64,
-        height: 64,
+        width: 62,
+        height: 62,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: isDark
-              ? AppColors.darkSurfaceSecondary
-              : AppColors.surfaceSecondary,
-          border: Border.all(
-            color: isDark ? AppColors.darkDivider : AppColors.divider,
-            width: 1,
-          ),
+          color: palette.surfaceMuted,
+          border: Border.all(color: palette.border),
         ),
         child: Text(
           digit,
-          style: TextStyle(
-            fontSize: 24,
+          style: context.text.headlineMedium?.copyWith(
+            fontSize: 22,
             fontWeight: FontWeight.w700,
-            color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
+            color: palette.heading,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildIconButton({
+  Widget _buildIconButton(
+    BuildContext context, {
     required IconData icon,
     required Color color,
     required VoidCallback onTap,
-    required bool isDark,
     required String tooltip,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: AppRadius.radiusFull,
-      child: Container(
-        width: 64,
-        height: 64,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: isDark
-              ? AppColors.darkSurfaceSecondary.withValues(alpha: 0.5)
-              : AppColors.surfaceSecondary.withValues(alpha: 0.5),
+    final palette = context.palette;
+
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppRadius.radiusFull,
+        child: Container(
+          width: 62,
+          height: 62,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: palette.surfaceMuted.withValues(alpha: 0.6),
+            border: Border.all(color: palette.border.withValues(alpha: 0.5)),
+          ),
+          child: Icon(icon, color: color, size: AppSpacing.xl),
         ),
-        child: Icon(icon, color: color, size: 28),
       ),
     );
   }

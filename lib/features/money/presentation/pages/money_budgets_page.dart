@@ -6,7 +6,6 @@ import '../../../../config/theme/theme_context.dart';
 import '../../../../core/widgets/feature_scaffold.dart';
 import '../../../../config/theme/app_decorations.dart';
 import '../../../../config/theme/app_radius.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/utils/date_utils.dart';
@@ -39,7 +38,8 @@ class _MoneyBudgetsPageState extends State<MoneyBudgetsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = context.palette;
+    final text = context.text;
 
     return BlocBuilder<MoneyBloc, MoneyState>(
       builder: (context, moneyState) => FeatureScaffold(
@@ -79,7 +79,12 @@ class _MoneyBudgetsPageState extends State<MoneyBudgetsPage> {
           final okCount = budgets.length - overCount;
 
           return ListView(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl,
+              AppSpacing.sm,
+              AppSpacing.xl,
+              AppSpacing.xxl,
+            ),
             children: [
               // 1. Period header with month selector
               Row(
@@ -87,9 +92,9 @@ class _MoneyBudgetsPageState extends State<MoneyBudgetsPage> {
                 children: [
                   Text(
                     'Budget Period',
-                    style: context.text.titleSmall?.copyWith(
+                    style: text.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: context.palette.heading,
+                      color: p.heading,
                     ),
                   ),
                   MonthSelectorChip(
@@ -99,15 +104,15 @@ class _MoneyBudgetsPageState extends State<MoneyBudgetsPage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              AppSpacing.gapH8,
 
               // 2. Multi-period switcher (Weekly · Monthly · 6 Months · Yearly)
               PeriodSelectorBar(
                 selected: period,
-                onChanged: (p) =>
-                    context.read<MoneyBloc>().add(ChangeMoneyPeriod(p)),
+                onChanged: (periodVal) =>
+                    context.read<MoneyBloc>().add(ChangeMoneyPeriod(periodVal)),
               ),
-              const SizedBox(height: 12),
+              AppSpacing.gapH12,
 
               // 2. Overview gradient card (scaled to active period)
               _BudgetOverviewCard(
@@ -121,7 +126,7 @@ class _MoneyBudgetsPageState extends State<MoneyBudgetsPage> {
                 onEditBudget: () =>
                     SalaryPlanSetupSheet.show(context, state: state),
               ),
-              const SizedBox(height: 12),
+              AppSpacing.gapH12,
 
               // 3. Alert banner (over-budget red takes priority over near-limit orange)
               if (overCount > 0)
@@ -140,7 +145,7 @@ class _MoneyBudgetsPageState extends State<MoneyBudgetsPage> {
                       ? '1 category is approaching the ${period.label.toLowerCase()} limit.'
                       : '$nearCount categories are approaching the ${period.label.toLowerCase()} limit.',
                 ),
-              if (overCount > 0 || nearCount > 0) const SizedBox(height: 12),
+              if (overCount > 0 || nearCount > 0) AppSpacing.gapH12,
 
               // 4. Salary & Smart Budget Plan Allocator (50/30/20 · 60/20/20 · 45/20/35)
               SalaryPlanAllocatorCard(
@@ -152,8 +157,9 @@ class _MoneyBudgetsPageState extends State<MoneyBudgetsPage> {
                           ? state.budget.monthlyBudget
                           : 50000.0),
                 initialFixedBills: state.budget.fixedBills,
-                isDark: isDark,
-                onSelectPreset: (p) => setState(() => _selectedPreset = p),
+                isDark: p.isDark,
+                onSelectPreset: (presetVal) =>
+                    setState(() => _selectedPreset = presetVal),
                 onApplyPlan: (salary, fixedBills, logSalaryIncome) {
                   final bloc = context.read<MoneyBloc>();
                   bloc.add(
@@ -181,7 +187,7 @@ class _MoneyBudgetsPageState extends State<MoneyBudgetsPage> {
                   );
                 },
               ),
-              const SizedBox(height: 12),
+              AppSpacing.gapH12,
 
               // 5. Budget & Savings Report (Where you spend most, Savings, How to improve)
               BudgetExpenseReportCard(
@@ -194,7 +200,7 @@ class _MoneyBudgetsPageState extends State<MoneyBudgetsPage> {
                     )
                     .fold<double>(0, (s, t) => s + t.amount),
               ),
-              const SizedBox(height: 12),
+              AppSpacing.gapH12,
 
               // 5. Safe-to-Spend Settings row (existing Monthly Budget & Fixed Bills)
               Container(
@@ -203,11 +209,9 @@ class _MoneyBudgetsPageState extends State<MoneyBudgetsPage> {
                   vertical: 11,
                 ),
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurface : AppColors.surface,
+                  color: p.card,
                   borderRadius: AppRadius.borderLg,
-                  border: Border.all(
-                    color: isDark ? AppColors.darkBorder : AppColors.border,
-                  ),
+                  border: Border.all(color: p.border),
                 ),
                 child: Row(
                   children: [
@@ -231,22 +235,18 @@ class _MoneyBudgetsPageState extends State<MoneyBudgetsPage> {
                         children: [
                           Text(
                             StringConstants.safeSpendSettings,
-                            style: TextStyle(
+                            style: text.labelLarge?.copyWith(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: isDark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.textPrimary,
+                              color: p.heading,
                             ),
                           ),
                           Text(
                             '${StringConstants.monthlyBudget}: ${CurrencyUtils.format(state.budget.monthlyBudget)} • '
                             '${StringConstants.fixedBills}: ${CurrencyUtils.format(state.budget.fixedBills)}',
-                            style: TextStyle(
+                            style: text.labelSmall?.copyWith(
                               fontSize: 11,
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.textSecondary,
+                              color: p.secondary,
                             ),
                           ),
                         ],
@@ -269,18 +269,15 @@ class _MoneyBudgetsPageState extends State<MoneyBudgetsPage> {
                 title: StringConstants.categoryLimits,
                 trailing: Text(
                   '${period.shortTag} · ${StringConstants.tapToEdit}',
-                  style: TextStyle(
+                  style: text.labelSmall?.copyWith(
                     fontSize: 11.5,
-                    color: isDark
-                        ? AppColors.darkTextMuted
-                        : AppColors.textMuted,
+                    color: p.caption,
                   ),
                 ),
               ),
               ...budgets.map(
                 (b) => _CategoryBudgetCard(
                   budget: b,
-                  isDark: isDark,
                   onTap: () {
                     final rawMonthly =
                         state.categoryLimits[b.category] ??
@@ -304,11 +301,11 @@ class _MoneyBudgetsPageState extends State<MoneyBudgetsPage> {
   }
 
   static void _showBudgetTipsDialog(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = context.palette;
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? AppColors.darkSurface : AppColors.surface,
+        backgroundColor: p.card,
         shape: const RoundedRectangleBorder(borderRadius: AppRadius.radiusXl),
         title: const Row(
           children: [
@@ -324,12 +321,12 @@ class _MoneyBudgetsPageState extends State<MoneyBudgetsPage> {
               title: StringConstants.budgetTipRuleTitle,
               body: StringConstants.budgetTipRuleBody,
             ),
-            SizedBox(height: 12),
+            AppSpacing.gapH12,
             _TipRow(
               title: StringConstants.budgetTipWeeklyTitle,
               body: StringConstants.budgetTipWeeklyBody,
             ),
-            SizedBox(height: 12),
+            AppSpacing.gapH12,
             _TipRow(
               title: StringConstants.budgetTipBufferTitle,
               body: StringConstants.budgetTipBufferBody,
@@ -340,7 +337,7 @@ class _MoneyBudgetsPageState extends State<MoneyBudgetsPage> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.textWhite,
             ),
             onPressed: () => Navigator.of(ctx).pop(),
             child: const Text(StringConstants.gotIt),
@@ -374,12 +371,13 @@ class _BudgetOverviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final text = context.text;
     final pct = (overallProgress * 100).round();
     final barColor = overallProgress >= 1.0
         ? Colors.redAccent
         : overallProgress >= 0.85
         ? Colors.orangeAccent
-        : Colors.white;
+        : AppColors.textWhite;
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -394,7 +392,7 @@ class _BudgetOverviewCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
+                  style: text.labelMedium?.copyWith(
                     color: Colors.white70,
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
@@ -411,18 +409,22 @@ class _BudgetOverviewCard extends StatelessWidget {
                       vertical: 3,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.22),
+                      color: AppColors.textWhite.withValues(alpha: 0.22),
                       borderRadius: AppRadius.radiusFull,
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.edit_rounded, size: 11, color: Colors.white),
-                        SizedBox(width: 4),
+                        const Icon(
+                          Icons.edit_rounded,
+                          size: 11,
+                          color: AppColors.textWhite,
+                        ),
+                        AppSpacing.gapW4,
                         Text(
                           'Set Budget',
-                          style: TextStyle(
-                            color: Colors.white,
+                          style: text.labelSmall?.copyWith(
+                            color: AppColors.textWhite,
                             fontSize: 10.5,
                             fontWeight: FontWeight.w700,
                           ),
@@ -436,13 +438,13 @@ class _BudgetOverviewCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.22),
+                  color: AppColors.textWhite.withValues(alpha: 0.22),
                   borderRadius: AppRadius.radiusFull,
                 ),
                 child: Text(
                   '$pct% used',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: text.labelSmall?.copyWith(
+                    color: AppColors.textWhite,
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                   ),
@@ -450,24 +452,24 @@ class _BudgetOverviewCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          AppSpacing.gapH4,
           Text(
             CurrencyUtils.format(totalBudget),
-            style: const TextStyle(
-              color: Colors.white,
+            style: text.headlineMedium?.copyWith(
+              color: AppColors.textWhite,
               fontSize: 28,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.8,
-              fontFeatures: [FontFeature.tabularFigures()],
+              fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
-          const SizedBox(height: 12),
+          AppSpacing.gapH12,
           ClipRRect(
             borderRadius: AppRadius.radiusFull,
             child: LinearProgressIndicator(
               value: overallProgress,
               minHeight: 7,
-              backgroundColor: Colors.white.withValues(alpha: 0.22),
+              backgroundColor: AppColors.textWhite.withValues(alpha: 0.22),
               valueColor: AlwaysStoppedAnimation<Color>(barColor),
             ),
           ),
@@ -483,7 +485,7 @@ class _BudgetOverviewCard extends StatelessWidget {
               Container(width: 1, height: 26, color: Colors.white24),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.only(left: 12),
+                  padding: const EdgeInsets.only(left: AppSpacing.md),
                   child: _OverviewStat(
                     label: StringConstants.remaining,
                     value: CurrencyUtils.format(totalRemaining),
@@ -493,7 +495,7 @@ class _BudgetOverviewCard extends StatelessWidget {
               Container(width: 1, height: 26, color: Colors.white24),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.only(left: 12),
+                  padding: const EdgeInsets.only(left: AppSpacing.md),
                   child: _OverviewStat(
                     label: StringConstants.categoriesOk,
                     value: '$okCategoriesCount / $totalCategoriesCount OK',
@@ -516,20 +518,24 @@ class _OverviewStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final text = context.text;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(color: Colors.white70, fontSize: 10.5),
+          style: text.labelSmall?.copyWith(
+            color: Colors.white70,
+            fontSize: 10.5,
+          ),
         ),
         const SizedBox(height: 2),
         Text(
           value,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: Colors.white,
+          style: text.labelMedium?.copyWith(
+            color: AppColors.textWhite,
             fontWeight: FontWeight.w700,
             fontSize: 12.5,
           ),
@@ -566,7 +572,7 @@ class _AlertBanner extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: TextStyle(
+              style: context.text.labelMedium?.copyWith(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: color,
@@ -581,14 +587,9 @@ class _AlertBanner extends StatelessWidget {
 
 class _CategoryBudgetCard extends StatelessWidget {
   final CategoryBudgetEntity budget;
-  final bool isDark;
   final VoidCallback onTap;
 
-  const _CategoryBudgetCard({
-    required this.budget,
-    required this.isDark,
-    required this.onTap,
-  });
+  const _CategoryBudgetCard({required this.budget, required this.onTap});
 
   Color _statusColor() {
     switch (budget.status) {
@@ -604,6 +605,8 @@ class _CategoryBudgetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
+    final text = context.text;
     final cat = budget.categoryInfo;
     final statusColor = _statusColor();
     final barColor = budget.isOverBudget
@@ -611,17 +614,16 @@ class _CategoryBudgetCard extends StatelessWidget {
         : budget.isNearLimit
         ? AppColors.warning
         : cat.color;
-    final captionColor = isDark ? AppColors.darkTextMuted : AppColors.textMuted;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.surface,
+        color: p.card,
         borderRadius: AppRadius.borderLg,
         border: Border.all(
           color: budget.isOverBudget
               ? AppColors.error.withValues(alpha: 0.4)
-              : (isDark ? AppColors.darkBorder : AppColors.border),
+              : p.border,
         ),
       ),
       child: Material(
@@ -641,7 +643,7 @@ class _CategoryBudgetCard extends StatelessWidget {
                       height: 36,
                       decoration: BoxDecoration(
                         color: cat.color.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: AppRadius.radiusMd,
                       ),
                       child: Icon(cat.icon, size: 18, color: cat.color),
                     ),
@@ -651,16 +653,14 @@ class _CategoryBudgetCard extends StatelessWidget {
                         cat.label,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
+                        style: text.titleSmall?.copyWith(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.textPrimary,
+                          color: p.heading,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    AppSpacing.gapW8,
                     FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerRight,
@@ -669,13 +669,11 @@ class _CategoryBudgetCard extends StatelessWidget {
                           children: [
                             TextSpan(
                               text: CurrencyUtils.format(budget.spent),
-                              style: TextStyle(
+                              style: text.labelLarge?.copyWith(
                                 fontSize: 13.5,
                                 color: budget.isOverBudget
                                     ? AppColors.error
-                                    : (isDark
-                                          ? AppColors.darkTextPrimary
-                                          : AppColors.textPrimary),
+                                    : p.heading,
                                 fontWeight: FontWeight.w700,
                                 fontFeatures: const [
                                   FontFeature.tabularFigures(),
@@ -686,9 +684,9 @@ class _CategoryBudgetCard extends StatelessWidget {
                               TextSpan(
                                 text:
                                     ' / ${CurrencyUtils.format(budget.monthlyLimit)}',
-                                style: TextStyle(
+                                style: text.labelSmall?.copyWith(
                                   fontSize: 11.5,
-                                  color: captionColor,
+                                  color: p.caption,
                                 ),
                               ),
                           ],
@@ -696,18 +694,18 @@ class _CategoryBudgetCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    Icon(Icons.edit_outlined, size: 15, color: captionColor),
+                    Icon(Icons.edit_outlined, size: 15, color: p.caption),
                   ],
                 ),
                 const SizedBox(height: 10),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: AppRadius.radiusXs,
                   child: LinearProgressIndicator(
                     value: budget.progress,
                     minHeight: 5,
-                    backgroundColor: isDark
-                        ? AppColors.darkSurfaceMuted
-                        : AppColors.surfaceElevated,
+                    backgroundColor: p.isDark
+                        ? p.surfaceSubtle
+                        : p.surfaceMuted,
                     valueColor: AlwaysStoppedAnimation<Color>(barColor),
                   ),
                 ),
@@ -725,7 +723,7 @@ class _CategoryBudgetCard extends StatelessWidget {
                     const SizedBox(width: 5),
                     Text(
                       budget.statusLabel,
-                      style: TextStyle(
+                      style: text.labelSmall?.copyWith(
                         color: statusColor,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -738,11 +736,11 @@ class _CategoryBudgetCard extends StatelessWidget {
                           : budget.isOverBudget
                           ? '-${CurrencyUtils.format(budget.overBy)} over'
                           : '${CurrencyUtils.format(budget.remaining)} left',
-                      style: TextStyle(
+                      style: text.labelSmall?.copyWith(
                         fontSize: 11,
                         color: budget.isOverBudget
                             ? AppColors.error
-                            : captionColor,
+                            : p.caption,
                       ),
                     ),
                   ],
@@ -764,7 +762,8 @@ class _TipRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = context.palette;
+    final text = context.text;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -778,22 +777,8 @@ class _TipRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: AppTextStyles.titleSmall.copyWith(
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.textPrimary,
-                ),
-              ),
-              Text(
-                body,
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.textSecondary,
-                ),
-              ),
+              Text(title, style: text.titleSmall?.copyWith(color: p.heading)),
+              Text(body, style: text.bodySmall?.copyWith(color: p.secondary)),
             ],
           ),
         ),

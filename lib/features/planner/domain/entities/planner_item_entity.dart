@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../config/theme/app_colors.dart';
+
 class ChecklistItem extends Equatable {
   final String id;
   final String title;
@@ -183,14 +185,14 @@ class PlannerItemEntity extends Equatable {
   Color get priorityColor {
     switch (priority) {
       case 'urgent':
-        return const Color(0xFFDC2626); // Red
+        return AppColors.error; // Red
       case 'high':
-        return const Color(0xFFF97316); // Tangerine/Orange
+        return AppColors.focusPomodoro; // Tangerine/Orange
       case 'medium':
-        return const Color(0xFF6366F1); // Indigo
+        return AppColors.primary; // Indigo
       case 'low':
       default:
-        return const Color(0xFF10B981); // Emerald
+        return AppColors.success; // Emerald
     }
   }
 

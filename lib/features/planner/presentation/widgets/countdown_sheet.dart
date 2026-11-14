@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/app_text_styles.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../domain/entities/countdown_item_entity.dart';
 
 class CountdownSheet extends StatefulWidget {
@@ -77,11 +80,11 @@ class _CountdownSheetState extends State<CountdownSheet> {
   Color _getCategoryColor(String category) {
     switch (category) {
       case 'Anniversary':
-        return const Color(0xFFEC4899);
+        return AppColors.chartRose;
       case 'Renewal':
         return AppColors.moduleTime;
       case 'Travel':
-        return const Color(0xFF06B6D4);
+        return AppColors.chartCyan;
       case 'Milestone':
         return AppColors.success;
       case 'Event':
@@ -130,253 +133,409 @@ class _CountdownSheetState extends State<CountdownSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final cardBg = widget.isDark ? AppColors.darkCardBackground : Colors.white;
+    final palette = context.palette;
+    final textTheme = context.text;
+    final isDark = palette.isDark;
+    final cardBg = palette.card;
+    final dividerColor = palette.divider;
+    final headingColor = palette.heading;
+    final captionColor = palette.caption;
+    final surfaceFill = palette.surfaceMuted.withValues(
+      alpha: isDark ? 0.45 : 0.65,
+    );
+    final accentColor = _getCategoryColor(_selectedCategory);
 
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: cardBg,
-          borderRadius: AppRadius.topXxl,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: widget.isDark
-                        ? AppColors.darkDivider
-                        : AppColors.divider,
-                    borderRadius: AppRadius.radiusFull,
-                  ),
-                ),
-              ),
-              AppSpacing.gapH16,
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 580),
+        child: Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 22),
+            decoration: BoxDecoration(
+              color: cardBg,
+              borderRadius: AppRadius.topXl,
+              border: Border.all(color: dividerColor),
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    widget.editItem == null
-                        ? 'Create Countdown'
-                        : 'Edit Countdown',
-                    style: AppTextStyles.titleMedium.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: widget.isDark
-                          ? AppColors.darkTextHeading
-                          : AppColors.textHeading,
+                  Center(
+                    child: Container(
+                      width: 36,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: dividerColor,
+                        borderRadius: AppRadius.radiusFull,
+                      ),
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 20),
-                    onPressed: () => Navigator.of(context).pop(),
+                  AppSpacing.gapH12,
+                  Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: accentColor.withValues(
+                            alpha: isDark ? 0.22 : 0.14,
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          _getCategoryIcon(_selectedCategory),
+                          color: accentColor,
+                          size: 19,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          widget.editItem == null
+                              ? 'Create Countdown'
+                              : 'Edit Countdown',
+                          style: AppTextStyles.titleMedium.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: headingColor,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.close_rounded,
+                          size: 20,
+                          color: captionColor,
+                        ),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Event Title
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: surfaceFill,
+                      borderRadius: AppRadius.radiusMd,
+                      border: Border.all(color: dividerColor),
+                    ),
+                    child: TextField(
+                      controller: _titleController,
+                      autofocus: true,
+                      style: textTheme.bodyMedium?.copyWith(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w600,
+                        color: headingColor,
+                      ),
+                      decoration: InputDecoration(
+                        filled: false,
+                        isDense: true,
+                        labelText: 'Event Title',
+                        labelStyle: textTheme.bodySmall?.copyWith(
+                          fontSize: 12,
+                          color: captionColor,
+                        ),
+                        hintText: 'e.g., Mom\'s 50th Birthday, Trip to Paris',
+                        hintStyle: textTheme.bodySmall?.copyWith(
+                          fontSize: 13.5,
+                          color: captionColor,
+                        ),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Target Date Picker + Quick Jump Presets
+                  Text(
+                    'Target Event Date:',
+                    style: AppTextStyles.captionBold.copyWith(
+                      color: captionColor,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: _selectedDate,
+                            firstDate: DateTime.now().subtract(
+                              const Duration(days: 30),
+                            ),
+                            lastDate: DateTime.now().add(
+                              const Duration(days: 365 * 10),
+                            ),
+                          );
+                          if (picked != null) {
+                            setState(() => _selectedDate = picked);
+                          }
+                        },
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: AppRadius.radiusMd,
+                          ),
+                          side: BorderSide(color: dividerColor),
+                        ),
+                        icon: const Icon(
+                          Icons.calendar_today_rounded,
+                          size: 15,
+                          color: AppColors.moduleTime,
+                        ),
+                        label: Text(
+                          _formatDate(_selectedDate),
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: headingColor,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              for (final preset in const [
+                                ('+7d', 7),
+                                ('+30d', 30),
+                                ('+90d', 90),
+                                ('+1y', 365),
+                              ])
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 6),
+                                  child: InkWell(
+                                    borderRadius: AppRadius.radiusFull,
+                                    onTap: () {
+                                      HapticFeedback.selectionClick();
+                                      setState(() {
+                                        _selectedDate = DateTime.now().add(
+                                          Duration(days: preset.$2),
+                                        );
+                                      });
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 9,
+                                        vertical: 5,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: surfaceFill,
+                                        borderRadius: AppRadius.radiusFull,
+                                        border: Border.all(color: dividerColor),
+                                      ),
+                                      child: Text(
+                                        preset.$1,
+                                        style: textTheme.labelSmall?.copyWith(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w700,
+                                          color: captionColor,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Category Selector
+                  Text(
+                    'Category:',
+                    style: AppTextStyles.captionBold.copyWith(
+                      color: captionColor,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: _categories.map((cat) {
+                      final isSelected = _selectedCategory == cat;
+                      final color = _getCategoryColor(cat);
+
+                      return ChoiceChip(
+                        label: Text(cat),
+                        selected: isSelected,
+                        showCheckmark: false,
+                        selectedColor: color.withValues(
+                          alpha: isDark ? 0.24 : 0.16,
+                        ),
+                        backgroundColor: surfaceFill,
+                        side: BorderSide(
+                          color: isSelected ? color : dividerColor,
+                        ),
+                        shape: const StadiumBorder(),
+                        labelStyle: textTheme.bodySmall?.copyWith(
+                          fontSize: 12,
+                          fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          color: isSelected ? color : captionColor,
+                        ),
+                        onSelected: (val) {
+                          if (val) setState(() => _selectedCategory = cat);
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Notes / Gift Ideas
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: surfaceFill,
+                      borderRadius: AppRadius.radiusMd,
+                      border: Border.all(color: dividerColor),
+                    ),
+                    child: TextField(
+                      controller: _notesController,
+                      minLines: 1,
+                      maxLines: 3,
+                      style: textTheme.bodySmall?.copyWith(
+                        fontSize: 13.5,
+                        color: headingColor,
+                      ),
+                      decoration: InputDecoration(
+                        filled: false,
+                        isDense: true,
+                        labelText: 'Notes or Gift Ideas (Optional)',
+                        labelStyle: textTheme.bodySmall?.copyWith(
+                          fontSize: 12,
+                          color: captionColor,
+                        ),
+                        hintText: 'e.g., Hotel booking code, gift wishlist...',
+                        hintStyle: textTheme.bodySmall?.copyWith(
+                          fontSize: 13,
+                          color: captionColor,
+                        ),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+
+                  // Remind advance toggle
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: surfaceFill,
+                      borderRadius: AppRadius.radiusMd,
+                      border: Border.all(color: dividerColor),
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: SwitchListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
+                          'Advance Alert Reminders',
+                          style: textTheme.bodySmall?.copyWith(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: headingColor,
+                          ),
+                        ),
+                        subtitle: Text(
+                          'Notify 7 days & 1 day before event',
+                          style: textTheme.labelSmall?.copyWith(
+                            fontSize: 11,
+                            color: captionColor,
+                          ),
+                        ),
+                        value: _remindAdvance,
+                        activeThumbColor: AppColors.moduleTime,
+                        onChanged: (val) =>
+                            setState(() => _remindAdvance = val),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Save Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 46,
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.moduleTime,
+                        foregroundColor: Colors.white,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: AppRadius.radiusMd,
+                        ),
+                      ),
+                      onPressed: () {
+                        final title = _titleController.text.trim();
+                        if (title.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Please enter an event title.'),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                          return;
+                        }
+
+                        final color = _getCategoryColor(_selectedCategory);
+                        final icon = _getCategoryIcon(_selectedCategory);
+
+                        final item = CountdownItemEntity(
+                          id:
+                              widget.editItem?.id ??
+                              DateTime.now().millisecondsSinceEpoch.toString(),
+                          title: title,
+                          date: _selectedDate,
+                          category: _selectedCategory,
+                          colorValue: color.toARGB32(),
+                          iconCodePoint: icon.codePoint,
+                          notes: _notesController.text.trim(),
+                          remindAdvance: _remindAdvance,
+                        );
+
+                        widget.onSave(item);
+                        Navigator.of(context).pop();
+                      },
+                      child: Text(
+                        widget.editItem == null
+                            ? 'Create Countdown'
+                            : 'Update Countdown',
+                        style: AppTextStyles.buttonLabel.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
-
-              // Event Title
-              TextField(
-                controller: _titleController,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  labelText: 'Event Title',
-                  hintText: 'e.g., Mom\'s 50th Birthday, Trip to Paris',
-                  prefixIcon: Icon(Icons.event_note_rounded),
-                  border: OutlineInputBorder(borderRadius: AppRadius.radiusMd),
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              // Target Date Picker
-              Text(
-                'Target Event Date:',
-                style: AppTextStyles.captionBold.copyWith(
-                  color: widget.isDark
-                      ? AppColors.darkTextCaption
-                      : AppColors.textCaption,
-                ),
-              ),
-              const SizedBox(height: 6),
-              OutlinedButton.icon(
-                onPressed: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: _selectedDate,
-                    firstDate: DateTime.now().subtract(
-                      const Duration(days: 30),
-                    ),
-                    lastDate: DateTime.now().add(
-                      const Duration(days: 365 * 10),
-                    ),
-                  );
-                  if (picked != null) {
-                    setState(() => _selectedDate = picked);
-                  }
-                },
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
-                  ),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: AppRadius.radiusMd,
-                  ),
-                  side: BorderSide(
-                    color: widget.isDark
-                        ? AppColors.darkDivider
-                        : AppColors.divider,
-                  ),
-                ),
-                icon: const Icon(
-                  Icons.calendar_today_rounded,
-                  size: 16,
-                  color: AppColors.moduleTime,
-                ),
-                label: Text(
-                  _formatDate(_selectedDate),
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: widget.isDark
-                        ? AppColors.darkTextHeading
-                        : AppColors.textHeading,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              // Category Selector
-              Text(
-                'Category:',
-                style: AppTextStyles.captionBold.copyWith(
-                  color: widget.isDark
-                      ? AppColors.darkTextCaption
-                      : AppColors.textCaption,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Wrap(
-                spacing: 8,
-                children: _categories.map((cat) {
-                  final isSelected = _selectedCategory == cat;
-                  final color = _getCategoryColor(cat);
-
-                  return ChoiceChip(
-                    label: Text(cat),
-                    selected: isSelected,
-                    selectedColor: color.withValues(alpha: 0.2),
-                    labelStyle: TextStyle(
-                      fontSize: 12,
-                      fontWeight: isSelected
-                          ? FontWeight.w700
-                          : FontWeight.w500,
-                      color: isSelected
-                          ? color
-                          : (widget.isDark
-                                ? AppColors.darkTextCaption
-                                : AppColors.textCaption),
-                    ),
-                    onSelected: (val) {
-                      if (val) setState(() => _selectedCategory = cat);
-                    },
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 14),
-
-              // Notes / Gift Ideas
-              TextField(
-                controller: _notesController,
-                decoration: const InputDecoration(
-                  labelText: 'Notes or Gift Ideas (Optional)',
-                  hintText: 'e.g., Hotel booking code, gift wishlist...',
-                  prefixIcon: Icon(Icons.card_giftcard_rounded),
-                  border: OutlineInputBorder(borderRadius: AppRadius.radiusMd),
-                ),
-              ),
-              const SizedBox(height: 10),
-
-              // Remind advance toggle (wrapped in Material to avoid ink splash warning)
-              Material(
-                color: Colors.transparent,
-                child: SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text(
-                    'Advance Alert Reminders',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: const Text(
-                    'Notify 7 days & 1 day before event',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: AppColors.textCaption,
-                    ),
-                  ),
-                  value: _remindAdvance,
-                  activeThumbColor: AppColors.moduleTime,
-                  onChanged: (val) => setState(() => _remindAdvance = val),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Save Button
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.moduleTime,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: AppRadius.radiusMd,
-                    ),
-                  ),
-                  onPressed: () {
-                    final title = _titleController.text.trim();
-                    if (title.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Please enter an event title.'),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                      return;
-                    }
-
-                    final color = _getCategoryColor(_selectedCategory);
-                    final icon = _getCategoryIcon(_selectedCategory);
-
-                    final item = CountdownItemEntity(
-                      id:
-                          widget.editItem?.id ??
-                          DateTime.now().millisecondsSinceEpoch.toString(),
-                      title: title,
-                      date: _selectedDate,
-                      category: _selectedCategory,
-                      colorValue: color.toARGB32(),
-                      iconCodePoint: icon.codePoint,
-                      notes: _notesController.text.trim(),
-                      remindAdvance: _remindAdvance,
-                    );
-
-                    widget.onSave(item);
-                    Navigator.of(context).pop();
-                  },
-                  child: Text(
-                    widget.editItem == null
-                        ? 'Create Countdown'
-                        : 'Update Countdown',
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

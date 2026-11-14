@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_text_styles.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 
 /// Inline "quick add" card at the top of the Reminders tab.
 ///
-/// Three rows on an 8pt grid: a plain title with a "Full options" link, a
-/// 40dp input, and a 32dp control row (time · category · submit).
+/// Three rows on an 8pt grid: a header row (with optional active date target
+/// badge + "Full options" link), a 40dp borderless input, and an adaptive
+/// 32dp control row (time · category · priority · submit).
 class SetReminderCard extends StatelessWidget {
   static const double _controlHeight = 32;
 
@@ -16,9 +20,13 @@ class SetReminderCard extends StatelessWidget {
   final String selectedCategory;
   final Color categoryColor;
   final IconData categoryIcon;
+  final String selectedPriority;
+  final String? targetDateLabel;
   final bool isDark;
   final VoidCallback onPickTime;
   final VoidCallback onCycleCategory;
+  final VoidCallback? onCyclePriority;
+  final VoidCallback? onClearTargetDate;
   final VoidCallback onSubmit;
   final VoidCallback onOpenFullOptions;
 
@@ -29,9 +37,13 @@ class SetReminderCard extends StatelessWidget {
     required this.selectedCategory,
     required this.categoryColor,
     required this.categoryIcon,
+    this.selectedPriority = 'medium',
+    this.targetDateLabel,
     required this.isDark,
     required this.onPickTime,
     required this.onCycleCategory,
+    this.onCyclePriority,
+    this.onClearTargetDate,
     required this.onSubmit,
     required this.onOpenFullOptions,
   });
@@ -43,45 +55,112 @@ class SetReminderCard extends StatelessWidget {
     return '$hour:$minute $period';
   }
 
+  ({String label, Color color}) _priorityVisual(String p) {
+    switch (p) {
+      case 'urgent':
+        return (label: 'Urgent', color: AppColors.error);
+      case 'high':
+        return (label: 'High', color: AppColors.focusPomodoro);
+      case 'low':
+        return (label: 'Low', color: AppColors.success);
+      case 'medium':
+      default:
+        return (label: 'Med', color: AppColors.primary);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final headingColor = isDark
-        ? AppColors.darkTextHeading
-        : AppColors.textHeading;
-    final captionColor = isDark
-        ? AppColors.darkTextCaption
-        : AppColors.textCaption;
-    final borderColor = isDark ? AppColors.darkDivider : AppColors.divider;
-    final fieldFill = isDark
-        ? AppColors.darkSurfaceSecondary
-        : AppColors.surfaceSecondary;
+    final palette = context.palette;
+    final textTheme = context.text;
+    final headingColor = palette.heading;
+    final captionColor = palette.caption;
+    final borderColor = palette.divider;
+    final fieldFill = palette.surfaceMuted;
+    final prio = _priorityVisual(selectedPriority);
 
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
+        color: palette.card,
         borderRadius: AppRadius.radiusLg,
         border: Border.all(color: borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Title · Full options
+          // ── Title · Active Date Pill · Full options ──────────────────────
           Row(
             children: [
               Expanded(
-                child: Text(
-                  StringConstants.setReminder,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.2,
-                    color: headingColor,
-                  ),
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        StringConstants.setReminder,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.bodyMedium?.copyWith(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.2,
+                          color: headingColor,
+                        ),
+                      ),
+                    ),
+                    if (targetDateLabel != null) ...[
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: InkWell(
+                          borderRadius: AppRadius.radiusFull,
+                          onTap: onClearTargetDate,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.moduleTime.withValues(
+                                alpha: palette.isDark ? 0.22 : 0.12,
+                              ),
+                              borderRadius: AppRadius.radiusFull,
+                              border: Border.all(
+                                color: AppColors.moduleTime.withValues(
+                                  alpha: 0.4,
+                                ),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.event_rounded,
+                                  size: 11,
+                                  color: AppColors.moduleTime,
+                                ),
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(
+                                    targetDateLabel!,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTextStyles.captionBold.copyWith(
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.moduleTime,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
+              const SizedBox(width: 6),
               InkWell(
                 borderRadius: AppRadius.radiusXs,
                 onTap: onOpenFullOptions,
@@ -90,9 +169,9 @@ class SetReminderCard extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text(
+                      Text(
                         'Full options',
-                        style: TextStyle(
+                        style: AppTextStyles.captionBold.copyWith(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w600,
                           color: AppColors.moduleTime,
@@ -112,23 +191,31 @@ class SetReminderCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
 
-          // Input
-          SizedBox(
+          // ── Input ────────────────────────────────────────────────────────
+          Container(
             height: 40,
+            decoration: BoxDecoration(
+              color: fieldFill,
+              borderRadius: AppRadius.radiusSm,
+              border: Border.all(color: borderColor.withValues(alpha: 0.7)),
+            ),
+            alignment: Alignment.center,
             child: TextField(
               controller: controller,
               textInputAction: TextInputAction.done,
-              style: TextStyle(
+              style: textTheme.bodySmall?.copyWith(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w500,
                 color: headingColor,
               ),
               decoration: InputDecoration(
                 isDense: true,
-                filled: true,
-                fillColor: fieldFill,
+                filled: false,
                 hintText: StringConstants.reminderHint,
-                hintStyle: TextStyle(fontSize: 13, color: captionColor),
+                hintStyle: textTheme.bodySmall?.copyWith(
+                  fontSize: 13,
+                  color: captionColor,
+                ),
                 prefixIcon: const Icon(
                   Icons.alarm_add_rounded,
                   size: 17,
@@ -138,58 +225,57 @@ class SetReminderCard extends StatelessWidget {
                   minWidth: 38,
                   minHeight: 38,
                 ),
-                contentPadding: const EdgeInsets.fromLTRB(0, 10, 12, 10),
-                border: const OutlineInputBorder(
-                  borderRadius: AppRadius.radiusSm,
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: const OutlineInputBorder(
-                  borderRadius: AppRadius.radiusSm,
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: const OutlineInputBorder(
-                  borderRadius: AppRadius.radiusSm,
-                  borderSide: BorderSide(
-                    color: AppColors.moduleTime,
-                    width: 1.2,
-                  ),
-                ),
+                contentPadding: const EdgeInsets.fromLTRB(0, 9, 12, 9),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
               ),
               onSubmitted: (_) => onSubmit(),
             ),
           ),
           const SizedBox(height: 10),
 
-          // Time · Category · Submit
-          Row(
-            children: [
-              // The chip group owns the slack width; the category chip keeps
-              // its natural width and only truncates when the row is too narrow.
-              Expanded(
+          // ── Time · Category · Priority · Submit (Narrow-Safe) ────────────
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final chipsScroll = SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     _OptionChip(
                       icon: Icons.schedule_rounded,
                       label: _formatTimeOfDay(selectedTime),
                       color: AppColors.moduleTime,
-                      isDark: isDark,
+                      isDark: palette.isDark,
                       onTap: onPickTime,
                     ),
                     const SizedBox(width: 8),
-                    Flexible(
-                      child: _OptionChip(
-                        icon: categoryIcon,
-                        label: selectedCategory,
-                        color: categoryColor,
-                        isDark: isDark,
-                        onTap: onCycleCategory,
-                      ),
+                    _OptionChip(
+                      icon: categoryIcon,
+                      label: selectedCategory,
+                      color: categoryColor,
+                      isDark: palette.isDark,
+                      onTap: onCycleCategory,
                     ),
+                    if (onCyclePriority != null) ...[
+                      const SizedBox(width: 8),
+                      _OptionChip(
+                        icon: Icons.flag_rounded,
+                        label: prio.label,
+                        color: prio.color,
+                        isDark: palette.isDark,
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          onCyclePriority!();
+                        },
+                      ),
+                    ],
                   ],
                 ),
-              ),
-              const SizedBox(width: 8),
-              FilledButton(
+              );
+
+              final submitBtn = FilledButton(
                 onPressed: onSubmit,
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.moduleTime,
@@ -202,15 +288,29 @@ class SetReminderCard extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(9),
                   ),
-                  textStyle: const TextStyle(
-                    fontFamily: AppTextStyles.fontFamily,
+                  textStyle: AppTextStyles.captionBold.copyWith(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 child: const Text(StringConstants.setReminder),
-              ),
-            ],
+              );
+
+              if (constraints.maxWidth < 300) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [chipsScroll, const SizedBox(height: 8), submitBtn],
+                );
+              }
+
+              return Row(
+                children: [
+                  Expanded(child: chipsScroll),
+                  const SizedBox(width: 8),
+                  submitBtn,
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -249,16 +349,14 @@ class _OptionChip extends StatelessWidget {
             children: [
               Icon(icon, size: 14, color: color),
               const SizedBox(width: 5),
-              Flexible(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: color,
-                  ),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: context.text.bodySmall?.copyWith(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: color,
                 ),
               ),
             ],

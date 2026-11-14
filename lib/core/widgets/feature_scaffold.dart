@@ -179,7 +179,8 @@ class FeatureScaffold extends StatelessWidget {
             leading!,
             const SizedBox(width: AppSpacing.sm),
           ],
-          Expanded(
+          Flexible(
+            fit: titleTrailing == null ? FlexFit.tight : FlexFit.loose,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: onTitleTap,
@@ -224,7 +225,10 @@ class FeatureScaffold extends StatelessWidget {
               ),
             ),
           ),
-          if (titleTrailing != null) ...[AppSpacing.gapW8, titleTrailing!],
+          if (titleTrailing != null) ...[
+            AppSpacing.gapW8,
+            Flexible(child: titleTrailing!),
+          ],
         ],
       ),
       actions: actions,

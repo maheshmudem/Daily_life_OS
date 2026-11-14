@@ -263,9 +263,9 @@ class _FloatingQuickBallState extends State<FloatingQuickBall>
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                   colors: [
-                                    AppColors.darkScaffoldBackground,
+                                    AppColors.floatingBarBackground,
                                     AppColors.primaryDark,
-                                    AppColors.darkScaffoldBackground,
+                                    AppColors.floatingBarBackground,
                                   ],
                                 ),
                                 borderRadius: AppRadius.radiusFull,
@@ -281,7 +281,7 @@ class _FloatingQuickBallState extends State<FloatingQuickBall>
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.darkScaffoldBackground
+                                    color: AppColors.floatingBarBackground
                                         .withValues(
                                           alpha: _isDragging ? 0.55 : 0.38,
                                         ),

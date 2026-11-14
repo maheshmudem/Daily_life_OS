@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
-import '../../../../config/theme/app_text_styles.dart';
+import '../../../../config/theme/app_spacing.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/date_utils.dart';
 
@@ -18,7 +19,7 @@ class MonthSelectorChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = context.palette;
     return GestureDetector(
       onTap: () async {
         final picked = await MonthPickerSheet.show(
@@ -28,9 +29,12 @@ class MonthSelectorChip extends StatelessWidget {
         if (picked != null) onChanged(picked);
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: 7,
+        ),
         decoration: BoxDecoration(
-          color: AppColors.moduleMoney.withValues(alpha: isDark ? 0.2 : 0.1),
+          color: AppColors.moduleMoney.withValues(alpha: p.isDark ? 0.2 : 0.1),
           borderRadius: AppRadius.radiusFull,
         ),
         child: Row(
@@ -44,7 +48,8 @@ class MonthSelectorChip extends StatelessWidget {
             const SizedBox(width: 6),
             Text(
               AppDateUtils.formatMonthYear(selectedMonth),
-              style: AppTextStyles.captionBold.copyWith(
+              style: context.text.labelSmall?.copyWith(
+                fontWeight: FontWeight.w600,
                 color: AppColors.moduleMoney,
               ),
             ),
@@ -80,7 +85,8 @@ class MonthPickerSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = context.palette;
+    final text = context.text;
     final now = DateTime.now();
     final months = List.generate(
       12,
@@ -88,11 +94,13 @@ class MonthPickerSheet extends StatelessWidget {
     );
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
-        borderRadius: AppRadius.topXxl,
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.xl,
+        AppSpacing.md,
+        AppSpacing.xl,
+        28,
       ),
+      decoration: BoxDecoration(color: p.card, borderRadius: AppRadius.topXxl),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -102,22 +110,20 @@ class MonthPickerSheet extends StatelessWidget {
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: isDark ? AppColors.darkDivider : AppColors.divider,
+                color: p.divider,
                 borderRadius: AppRadius.radiusFull,
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          AppSpacing.gapH16,
           Text(
             StringConstants.selectMonth,
-            style: AppTextStyles.headingSmall.copyWith(
-              color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
-            ),
+            style: text.titleLarge?.copyWith(color: p.heading),
           ),
-          const SizedBox(height: 16),
+          AppSpacing.gapH16,
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
             children: months.map((m) {
               final selected = AppDateUtils.isSameMonth(m, selectedMonth);
               final label = m.year == now.year
@@ -128,10 +134,9 @@ class MonthPickerSheet extends StatelessWidget {
                 selected: selected,
                 showCheckmark: false,
                 selectedColor: AppColors.moduleMoney,
-                labelStyle: AppTextStyles.captionBold.copyWith(
-                  color: selected
-                      ? Colors.white
-                      : (isDark ? AppColors.darkTextBody : AppColors.textBody),
+                labelStyle: text.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: selected ? AppColors.textWhite : p.body,
                 ),
                 onSelected: (_) => Navigator.of(context).pop(m),
               );

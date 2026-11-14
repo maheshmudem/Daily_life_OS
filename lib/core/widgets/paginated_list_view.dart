@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
+import '../../config/theme/app_spacing.dart';
+import '../../config/theme/theme_context.dart';
 
 class PaginatedListView<T> extends StatefulWidget {
   final List<T> items;
@@ -73,24 +75,26 @@ class _PaginatedListViewState<T> extends State<PaginatedListView<T>> {
 
     if (widget.items.isEmpty) {
       return widget.emptyWidget ??
-          const Center(
+          Center(
             child: Text(
               'No items found',
-              style: TextStyle(color: AppColors.textCaption),
+              style: context.text.bodyMedium?.copyWith(
+                color: context.palette.caption,
+              ),
             ),
           );
     }
 
     Widget listView = ListView.separated(
       controller: _scrollController,
-      padding: widget.padding ?? const EdgeInsets.all(16),
+      padding: widget.padding ?? const EdgeInsets.all(AppSpacing.lg),
       itemCount: widget.items.length + (widget.hasMore ? 1 : 0),
       separatorBuilder: (context, index) =>
-          widget.separator ?? const SizedBox(height: 12),
+          widget.separator ?? AppSpacing.gapH12,
       itemBuilder: (context, index) {
         if (index >= widget.items.length) {
           return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
             child: Center(
               child: SizedBox(
                 width: 24,

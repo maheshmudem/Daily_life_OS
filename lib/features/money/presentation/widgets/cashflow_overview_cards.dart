@@ -3,6 +3,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
+import '../../../../config/theme/app_spacing.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../domain/entities/money_insights.dart';
@@ -20,7 +22,7 @@ class CashflowOverviewCards extends StatelessWidget {
     return Row(
       children: [
         Expanded(child: _IncomeMiniCard(insights: insights)),
-        const SizedBox(width: 12),
+        AppSpacing.gapW12,
         Expanded(child: _NetCashflowMiniCard(insights: insights)),
       ],
     );
@@ -34,50 +36,45 @@ class _IncomeMiniCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = context.palette;
+    final text = context.text;
     final values = insights.incomeSeries.map((e) => e.value).toList();
     final maxVal = [...values, 100.0].reduce(math.max) * 1.2;
 
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.surface,
+        color: p.card,
         borderRadius: AppRadius.borderLg,
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.border,
-        ),
+        border: Border.all(color: p.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             StringConstants.income,
-            style: TextStyle(
+            style: text.labelMedium?.copyWith(
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.textSecondary,
+              color: p.secondary,
             ),
           ),
-          const SizedBox(height: 4),
+          AppSpacing.gapH4,
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
             child: Text(
               CurrencyUtils.format(insights.periodIncome, decimals: 2),
               maxLines: 1,
-              style: TextStyle(
+              style: text.titleMedium?.copyWith(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.textPrimary,
+                color: p.heading,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          AppSpacing.gapH12,
           SizedBox(
             height: 70,
             child: BarChart(
@@ -122,7 +119,8 @@ class _NetCashflowMiniCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = context.palette;
+    final text = context.text;
     final net = insights.periodNet;
     final isPositive = net >= 0;
     final values = insights.netSeries.map((e) => e.value).toList();
@@ -140,33 +138,29 @@ class _NetCashflowMiniCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.surface,
+        color: p.card,
         borderRadius: AppRadius.borderLg,
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.border,
-        ),
+        border: Border.all(color: p.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             StringConstants.netCashflow,
-            style: TextStyle(
+            style: text.labelMedium?.copyWith(
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.textSecondary,
+              color: p.secondary,
             ),
           ),
-          const SizedBox(height: 4),
+          AppSpacing.gapH4,
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
             child: Text(
               CurrencyUtils.signed(net, isCredit: isPositive, decimals: 2),
               maxLines: 1,
-              style: TextStyle(
+              style: text.titleMedium?.copyWith(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: isPositive ? AppColors.success : AppColors.error,
@@ -174,7 +168,7 @@ class _NetCashflowMiniCard extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          AppSpacing.gapH12,
           SizedBox(
             height: 70,
             child: LineChart(

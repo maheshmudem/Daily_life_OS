@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
+import '../../config/theme/app_radius.dart';
+import '../../config/theme/app_spacing.dart';
+import '../../config/theme/theme_context.dart';
 
 class AppTextField extends StatefulWidget {
   final TextEditingController controller;
@@ -48,6 +51,9 @@ class _AppTextFieldState extends State<AppTextField> {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
+    final text = context.text;
+
     return TextFormField(
       controller: widget.controller,
       obscureText: widget.isPassword && _obscureText,
@@ -60,7 +66,7 @@ class _AppTextFieldState extends State<AppTextField> {
       textInputAction: widget.textInputAction,
       onFieldSubmitted: widget.onFieldSubmitted,
       focusNode: widget.focusNode,
-      style: const TextStyle(fontSize: 15, color: AppColors.textHeading),
+      style: text.bodyMedium?.copyWith(fontSize: 15, color: p.heading),
       decoration: InputDecoration(
         labelText: widget.label,
         hintText: widget.hint,
@@ -72,42 +78,42 @@ class _AppTextFieldState extends State<AppTextField> {
                   _obscureText
                       ? Icons.visibility_off_outlined
                       : Icons.visibility_outlined,
-                  color: AppColors.textCaption,
+                  color: p.caption,
                 ),
                 onPressed: () => setState(() => _obscureText = !_obscureText),
               )
             : widget.suffixIcon,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: p.card,
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
+          horizontal: AppSpacing.lg,
           vertical: 14,
         ),
-        labelStyle: const TextStyle(color: AppColors.textBody, fontSize: 14),
-        hintStyle: const TextStyle(color: AppColors.textCaption, fontSize: 14),
+        labelStyle: text.bodyMedium?.copyWith(color: p.body),
+        hintStyle: text.bodyMedium?.copyWith(color: p.caption),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+          borderRadius: AppRadius.radiusMd,
+          borderSide: BorderSide(color: p.border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+          borderRadius: AppRadius.radiusMd,
+          borderSide: BorderSide(color: p.border),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+        focusedBorder: const OutlineInputBorder(
+          borderRadius: AppRadius.radiusMd,
+          borderSide: BorderSide(color: AppColors.primary, width: 1.5),
         ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primary),
+        errorBorder: const OutlineInputBorder(
+          borderRadius: AppRadius.radiusMd,
+          borderSide: BorderSide(color: AppColors.error),
         ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+        focusedErrorBorder: const OutlineInputBorder(
+          borderRadius: AppRadius.radiusMd,
+          borderSide: BorderSide(color: AppColors.error, width: 1.5),
         ),
         disabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+          borderRadius: AppRadius.radiusMd,
+          borderSide: BorderSide(color: p.divider),
         ),
       ),
     );

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
+import '../../config/theme/app_radius.dart';
+import '../../config/theme/app_spacing.dart';
+import '../../config/theme/theme_context.dart';
 
 class AppLoader extends StatelessWidget {
   final String? message;
@@ -8,17 +11,21 @@ class AppLoader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Container(
       color: Colors.black54,
       child: Center(
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xxl,
+            vertical: AppSpacing.xl,
+          ),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            color: p.card,
+            borderRadius: AppRadius.radiusLg,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
+                color: Colors.black.withValues(alpha: p.isDark ? 0.35 : 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 4),
               ),
@@ -31,13 +38,10 @@ class AppLoader extends StatelessWidget {
                 valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
               ),
               if (message != null) ...[
-                const SizedBox(height: 16),
+                AppSpacing.gapH16,
                 Text(
                   message!,
-                  style: const TextStyle(
-                    color: AppColors.textBody,
-                    fontSize: 14,
-                  ),
+                  style: context.text.bodyMedium?.copyWith(color: p.body),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -56,7 +60,7 @@ class InlineLoader extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Center(
       child: Padding(
-        padding: EdgeInsets.all(24),
+        padding: EdgeInsets.all(AppSpacing.xl),
         child: CircularProgressIndicator(
           valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
         ),
@@ -72,8 +76,9 @@ class FullScreenLoader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: p.scaffold,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -82,10 +87,10 @@ class FullScreenLoader extends StatelessWidget {
               valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
             ),
             if (message != null) ...[
-              const SizedBox(height: 16),
+              AppSpacing.gapH16,
               Text(
                 message!,
-                style: const TextStyle(color: AppColors.textBody, fontSize: 14),
+                style: context.text.bodyMedium?.copyWith(color: p.body),
               ),
             ],
           ],

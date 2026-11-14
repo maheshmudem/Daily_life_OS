@@ -466,34 +466,24 @@ Standard 8pt/16pt/24pt grid rhythm: `AppSpacing.sm` top clearance, `gapH16` betw
 - `PlannerLoaded{items, date}` + `completedCount`.
 
 #### Page: 3 tabs (`TabController(length: 3)`)
+All three tabs constrain content inside centered `ConstrainedBox(maxWidth: 1080)` layouts and switch to balanced 2-column desktop studio grids on wide viewports (`>= 880–940px`).
 1. **Reminders tab**
-   - Productivity metrics bar (four stacked value-over-label stats), controls bar (38px search +
-     filter/sort squares), segmented status bar (All / Pending / Completed), plain 17px section
-     headers (title owns the slack width so it never wraps; tinted count pill; text actions on the
-     gutter). Cards use `AppRadius.radiusLg` + 1px `divider` border like the Today tab.
-   - `SetReminderCard`: quick inline add (title + time + category cycle) → `_submitQuickReminder`:
-     dispatches `AddPlannerItem` for today, then schedules a notification.
-   - Full sheet: `SetReminderSheet.show(...)` with recurrence, priority, offset, checklist and notes.
-     `onSubmit` dispatches `AddPlannerItem`/`UpdatePlannerItem`, then calls `_scheduleReminderNotification`.
-     Editing cancels the old notification first.
-   - `PlannerItemCard` layout: 22px check · title (priority pill) · `⋯` menu; icon meta line;
-     notes; divider; footer = quiet `Edit` / `Snooze +15m` text actions + one tonal `Mark Done`.
-   - `PlannerItemCard`: toggle, checklist toggles (via `UpdatePlannerItem`), delete (cancel notification,
-     then `DeletePlannerItem`), snooze (15 min / 1 h / tomorrow → schedules a notification only),
-     duplicate, push to tomorrow, mark all done, clear completed (with `ConfirmationDialog`), quick templates.
+   - **Unified Theme-Adaptive Command Card (`PlannerHeroCard` + Embedded `PlannerWeekStrip`)**: Built on `AppDecorations.card(context)` + `context.palette` + Sunrise Amber (`AppColors.moduleTime` `#F59E0B`) top wash. Combines a `50×50` circular completion ring (`TweenAnimationBuilder`), data-driven status headline, optional 1-tap `'Up Next · <title>'` Focus Sprint pill (collapses when empty), `palette.surfaceMuted` 4-metric interactive filter strip (`Active`, `Today`, `Overdue`, `Done`), and hairline-divided Monday–Sunday `PlannerWeekStrip(embeddedInHero: true)` with week navigation (`<`, `>`), `"All Dates"` reset pill, and recurrence-aware status dots.
+   - **3-Mode Segmented Workspace Switcher (`Agenda` · `Day Flow` · `Priority Matrix`)**: Uses `palette.surfaceMuted` + `palette.card` segmented pills and pairs side-by-side in a single `36px` row with the `All` / `Pending` / `Completed` status track on viewports `>= 580px`:
+     - **Agenda (`PlannerViewMode.agenda`)**: Content-proportional `PlannerItemCard`s (`AppRadius.radiusMd`, `3.5px` left category/status spine, `AppColors.routineMorning`/`routineAfternoon`/`routineEvening` day-part pills, optional notes & inline checklist progress bar, compact `28px` footer actions, and 1-tap `Start Focus Sprint` bolt button).
+     - **Day Flow (`PlannerTimelineView`)**: Chronological time-blocked vertical rail with category-tinted axis nodes, day-part distribution chips (`AM` / `PM` / `Eve` / `Flex`), content-adaptive block heights, and a live `NOW` horizontal indicator needle.
+     - **Priority Matrix (`PlannerMatrixView`)**: Responsive 2×2 Eisenhower Matrix (`Do First · Urgent`, `Schedule · High`, `Focus Plan · Medium`, `Light / Later · Low`) using `AppColors.error` / `focusPomodoro` / `primary` / `success` and dynamic content sizing (empty quadrants collapse cleanly).
+   - `SetReminderCard` & `SetReminderSheet.show(...)` (`maxWidth: 600`): inline date-targeted quick add + full modal composer with `Now`/`+1d`/`+7d` schedule presets, recurrence, priority, offset, checklist, and notes.
+   - **1-Tap Task-to-Pomodoro Bridge** & **`PlannerSnoozeSheet`**: tapping `Start Focus Sprint` links the reminder (`_linkedTaskId`, `_linkedTask`, `_focusCategory`) and animates to **Pomodoro Focus**; tapping `Snooze +15m` opens `PlannerSnoozeSheet` (`15 Minutes`, `1 Hour`, `Tonight` / `In 3 Hours`, `Tomorrow Morning`).
 2. **Focus (Pomodoro) tab**: persisted via **SharedPreferences** (`PomodoroSettingsEntity`, `FocusSessionEntity`, `FocusDistractionItem` in `pomodoro_entities.dart`):
    - Modes: Work 25 / Short break 5 / Long break 15 / Flowtime Stopwatch (`Flow ⏱`), customisable via `PomodoroCustomDurationSheet` (including rounds, daily goal, auto-start breaks/work, strict focus mode, and TTS voice coach cues).
-   - `PomodoroFocusCard` renders a custom radial 60-tick dial (`_FocusDialPainter`) with breathing aura animation, `+1m`/`+5m` quick boosts, Full-Screen `PomodoroZenScreen`, and live Planner subtask checklist toggling & task completion.
-   - `PomodoroAnalyticsDashboard` provides a Daily Focus Goal ring, 7-day interactive Focus Trend bar chart, category distribution bar, Distraction Blocker ("Brain Dump") pad with 1-tap conversion to Planner tasks, manual session logger, and recent session history.
-     All four analytics cards share a plain `_CardHeader` (title + one-line subtitle, no icon tile);
-     stat tiles keep value + label on one line and session rows show `Category · Today, 09:30 AM · 5★`.
+   - **Theme-Adaptive Focus Studio (`PomodoroFocusCard`)**: Light/Dark adaptive `palette.card` surface (`AppRadius.radiusLg`) with mode-tinted top radial wash and precision 60-tick `_FocusDialPainter` (`AppColors.moduleTime` amber Deep Work, `AppColors.focusBreak` emerald Short Break, `AppColors.moduleNotes` sky Long Break, `AppColors.moduleVault` violet Flow Stopwatch), `+1m`/`+5m` quick boosts, Full-Screen `PomodoroZenScreen`, and live Planner subtask checklist toggling & task completion.
+   - `PomodoroAnalyticsDashboard` provides a Daily Focus Goal ring, 7-day interactive Focus Trend bar chart, category distribution bar, Distraction Blocker ("Brain Dump") pad with 1-tap conversion to Planner tasks, manual session logger, and recent session history (rendered side-by-side in a 2-column Focus Studio on wide screens `>= 940px`).
 3. **Countdowns tab**
-   - List stored in **SharedPreferences** (`planner_saved_countdowns`). There are default examples
-     if nothing is saved.
-   - `CountdownSheet` adds/edits → `_saveCountdowns` + `_syncCountdownNotifications`
-     (9:00 AM on the day, 1 day before, 7 days before).
-   - `CountdownCard`; "add to planner" dispatches `AddPlannerItem` and schedules a notification.
-   - Category filter chips.
+   - List stored in **SharedPreferences** (`planner_saved_countdowns`), sorted chronologically (`upcoming` ascending by days remaining first, `past` milestones separated under `'Past Events'`).
+   - **Theme-Adaptive Milestone Spotlight (`CountdownSpotlightCard`)**: Built on `AppDecorations.card(context)` + `context.palette` displaying `'Next Up · <title>'` with tabular `DAYS · HRS · MIN` digital tiles + `palette.surfaceMuted` 4-stat Milestone Overview (`Upcoming`, `Next 30d`, `Alerts On`, `Next In`).
+   - `CountdownSheet` (`maxWidth: 580`): editorial modal composer with `+7d`/`+30d`/`+90d`/`+1y` target date presets → `_saveCountdowns` + `_syncCountdownNotifications` (9:00 AM on the day, 1 day before, 7 days before).
+   - `CountdownCard`: `3.5px` left category accent spine, `AppRadius.radiusMd`, squircle category icon, urgency-tinted border for `Today`/`Tomorrow`, content-proportional 60-day proximity progress bar & hairline notes box, and 1-tap `Add to Planner`.
 
 ---
 
@@ -529,20 +519,20 @@ All filters and temporal controls (`MonthSelectorChip`, `All time` filter chip, 
 
 | Layer | Items |
 |---|---|
-| Entity | `NoteEntity` (`tags: List<String>`, `color`, `previewContent` = first 3 lines) |
-| Use cases | `GetNotes`, `AddNote`, `UpdateNote`, `DeleteNote`, `TogglePinNote` |
+| Entity | `NoteEntity` (`tags: List<String>`, `color`, `previewContent`, `hasChecklist`, `checklistTotalCount`, `checklistDoneCount`, `checklistProgress`, `wordCount`, `copyWith`) |
+| Use cases | `GetNotes`, `AddNote` (supports `isPinned`), `UpdateNote` (supports `isPinned`), `DeleteNote`, `TogglePinNote` |
 | Events | `LoadNotes`, `AddNote`, `UpdateNote`, `DeleteNote`, `TogglePinNote` |
-| State | `NotesLoaded(notes)` + `pinned` / `unpinned` getters |
+| State | `NotesLoaded(notes)` + `pinned` / `unpinned` getters (optimistic UI updates on `UpdateNote` & `TogglePinNote`) |
+| Widgets | `NotesPage`, `NotesScratchpadCard`, `NoteCardWidget`, `NoteEditorSheet`, `NoteExpenseConverterSheet` |
 
-- Notes are ordered **pinned first, then newest `updatedAt`**.
-- Tags are stored as a comma string and split in `NoteModel.fromDrift`.
-- `updateNote` only writes the fields you pass and always bumps `updatedAt`.
-- **Scratchpad:** auto-saved to SharedPreferences, with a "save as note" button that dispatches `AddNote`.
-  It contains cleanup code that removes an old hardcoded "Locksmith phone" text.
-- **Convert note → planner task:** `_convertToPlannerTask` inserts **directly into
-  `db.plannerItems`** (today, 09:00 AM, category `'Notes'`) and skips the Planner Bloc and repository.
-  The Planner tab won't show it until it reloads.
-- Editor bottom sheet uses `BlocProvider.value` to pass the existing bloc into the sheet.
+- Notes are ordered **pinned first, then newest `updatedAt`** (with in-page sort cycling: `Recent` → `Title A–Z` → `Color`, plus smart filter pills for `All`, `Pinned`, `Checklists`, and `@tags`).
+- **Layout:** Editorial 4-stat overview bar (`Total`, `Pinned`, `Lists`, `@Tags`), single-surface collapsible `NotesScratchpadCard` (auto-saved to `SharedPreferences` with cursor-preserving `Todo` / `Bullet` / `Time` tokens), responsive 2-column list on wide screens (`>= 820px`), and height-balanced 2/3-column Masonry grid mode.
+- **Interactive Checklists:** Lines prefixed with `[ ] ` or `[x] ` render inside an inset progress block on `NoteCardWidget` and toggle inline via `UpdateNote` without opening the composer.
+- **Cross-module actions:**
+  - **Add to Planner (`+ Task`):** inserts directly into `db.plannerItems` (today, `09:00 AM`, category `'Notes'`).
+  - **Add to Today's Timeline:** inserts directly into `db.timelineItems`.
+  - **Convert to Expense (`Expense`):** opens `NoteExpenseConverterSheet` (auto-extracts amount & infers `MoneyCategory`, lets user pick category & `UPI`/`Card`/`Cash` mode) and logs via `AddTransactionUseCase`.
+- `NoteEditorSheet` uses `BlocProvider.value` to pass the existing `NotesBloc` into the modal composer, supports direct pinning on create/edit, cursor-preserving formatting shortcuts, and custom `@tag` creation.
 
 ---
 

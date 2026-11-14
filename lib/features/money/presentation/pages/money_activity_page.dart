@@ -6,6 +6,7 @@ import '../../../../config/theme/app_colors.dart';
 import '../../../../core/widgets/feature_scaffold.dart';
 import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/app_radius.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/utils/date_utils.dart';
@@ -96,7 +97,8 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = context.palette;
+    final text = context.text;
 
     return BlocBuilder<MoneyBloc, MoneyState>(
       builder: (context, moneyState) => FeatureScaffold(
@@ -185,31 +187,29 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
                             context.read<MoneyBloc>().add(ChangeMonth(m)),
                       ),
                     ],
-                    const SizedBox(width: 8),
-                    Container(
-                      width: 1,
-                      height: 18,
-                      color: isDark ? AppColors.darkDivider : AppColors.divider,
+                    AppSpacing.gapW8,
+                    Container(width: 1, height: 18, color: p.divider),
+                    AppSpacing.gapW8,
+                    _buildTypeChip(StringConstants.allTypes, 'all', p, text),
+                    const SizedBox(width: 6),
+                    _buildTypeChip(
+                      StringConstants.expenses,
+                      'expense',
+                      p,
+                      text,
                     ),
-                    const SizedBox(width: 8),
-                    _buildTypeChip(StringConstants.allTypes, 'all', isDark),
                     const SizedBox(width: 6),
-                    _buildTypeChip(StringConstants.expenses, 'expense', isDark),
-                    const SizedBox(width: 6),
-                    _buildTypeChip(StringConstants.income, 'income', isDark),
+                    _buildTypeChip(StringConstants.income, 'income', p, text),
                     const SizedBox(width: 6),
                     _buildTypeChip(
                       StringConstants.transfer,
                       'transfer',
-                      isDark,
+                      p,
+                      text,
                     ),
-                    const SizedBox(width: 8),
-                    Container(
-                      width: 1,
-                      height: 18,
-                      color: isDark ? AppColors.darkDivider : AppColors.divider,
-                    ),
-                    const SizedBox(width: 8),
+                    AppSpacing.gapW8,
+                    Container(width: 1, height: 18, color: p.divider),
+                    AppSpacing.gapW8,
                     ...MoneyCategory.all.map((cat) {
                       final selected = _categoryFilter == cat.key;
                       return Padding(
@@ -219,20 +219,16 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
                           avatar: Icon(
                             cat.icon,
                             size: 13,
-                            color: selected ? Colors.white : cat.color,
+                            color: selected ? AppColors.textWhite : cat.color,
                           ),
                           label: Text(cat.shortLabel),
                           selected: selected,
                           showCheckmark: false,
                           selectedColor: cat.color,
-                          labelStyle: TextStyle(
+                          labelStyle: text.labelSmall?.copyWith(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w600,
-                            color: selected
-                                ? Colors.white
-                                : (isDark
-                                      ? AppColors.darkTextPrimary
-                                      : AppColors.textPrimary),
+                            color: selected ? AppColors.textWhite : p.heading,
                           ),
                           onSelected: (_) => setState(
                             () => _categoryFilter = selected ? 'all' : cat.key,
@@ -248,17 +244,15 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
               // Cashflow Summary Card with Visual Income-vs-Expense Bar
               Padding(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 4,
+                  horizontal: AppSpacing.xl,
+                  vertical: AppSpacing.xs,
                 ),
                 child: Container(
                   padding: const EdgeInsets.fromLTRB(14, 11, 14, 11),
                   decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkSurface : AppColors.surface,
+                    color: p.card,
                     borderRadius: AppRadius.borderLg,
-                    border: Border.all(
-                      color: isDark ? AppColors.darkBorder : AppColors.border,
-                    ),
+                    border: Border.all(color: p.border),
                   ),
                   child: Column(
                     children: [
@@ -271,13 +265,7 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
                               color: AppColors.success,
                             ),
                           ),
-                          Container(
-                            width: 1,
-                            height: 26,
-                            color: isDark
-                                ? AppColors.darkBorder
-                                : AppColors.border,
-                          ),
+                          Container(width: 1, height: 26, color: p.border),
                           Expanded(
                             child: _SummaryPair(
                               label: StringConstants.expenses,
@@ -285,13 +273,7 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
                               color: AppColors.error,
                             ),
                           ),
-                          Container(
-                            width: 1,
-                            height: 26,
-                            color: isDark
-                                ? AppColors.darkBorder
-                                : AppColors.border,
-                          ),
+                          Container(width: 1, height: 26, color: p.border),
                           Expanded(
                             child: _SummaryPair(
                               label: StringConstants.netCashflow,
@@ -355,7 +337,12 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
                         onAction: () => AddTransactionSheet.show(context),
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(20, 6, 20, 32),
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.xl,
+                          6,
+                          AppSpacing.xl,
+                          AppSpacing.xxl,
+                        ),
                         itemCount: days.length,
                         itemBuilder: (context, dayIdx) {
                           final day = days[dayIdx];
@@ -371,7 +358,7 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
                             children: [
                               Padding(
                                 padding: const EdgeInsets.only(
-                                  top: 12,
+                                  top: AppSpacing.md,
                                   bottom: 6,
                                   left: 2,
                                   right: 2,
@@ -382,12 +369,10 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
                                   children: [
                                     Text(
                                       AppDateUtils.formatDayHeader(day),
-                                      style: TextStyle(
+                                      style: text.labelMedium?.copyWith(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w700,
-                                        color: isDark
-                                            ? AppColors.darkTextSecondary
-                                            : AppColors.textSecondary,
+                                        color: p.secondary,
                                       ),
                                     ),
                                     Text(
@@ -396,14 +381,12 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
                                         isCredit: isDayPositive,
                                         decimals: 2,
                                       ),
-                                      style: TextStyle(
+                                      style: text.labelSmall?.copyWith(
                                         fontSize: 11.5,
                                         fontWeight: FontWeight.w700,
                                         color: isDayPositive
                                             ? AppColors.success
-                                            : (isDark
-                                                  ? AppColors.darkTextMuted
-                                                  : AppColors.textMuted),
+                                            : p.caption,
                                         fontFeatures: const [
                                           FontFeature.tabularFigures(),
                                         ],
@@ -414,15 +397,9 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
                               ),
                               Container(
                                 decoration: BoxDecoration(
-                                  color: isDark
-                                      ? AppColors.darkSurface
-                                      : AppColors.surface,
+                                  color: p.card,
                                   borderRadius: AppRadius.borderLg,
-                                  border: Border.all(
-                                    color: isDark
-                                        ? AppColors.darkBorder
-                                        : AppColors.border,
-                                  ),
+                                  border: Border.all(color: p.border),
                                 ),
                                 clipBehavior: Clip.antiAlias,
                                 child: Column(
@@ -432,22 +409,20 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
                                         Divider(
                                           height: 1,
                                           indent: 70,
-                                          color: isDark
-                                              ? AppColors.darkBorder
-                                              : AppColors.border,
+                                          color: p.border,
                                         ),
                                       Dismissible(
                                         key: ValueKey('tx_${items[i].id}'),
                                         direction: DismissDirection.endToStart,
                                         background: Container(
                                           padding: const EdgeInsets.symmetric(
-                                            horizontal: 20,
+                                            horizontal: AppSpacing.xl,
                                           ),
                                           alignment: Alignment.centerRight,
                                           color: AppColors.error,
                                           child: const Icon(
                                             Icons.delete_outline_rounded,
-                                            color: Colors.white,
+                                            color: AppColors.textWhite,
                                           ),
                                         ),
                                         confirmDismiss: (_) =>
@@ -495,7 +470,12 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
     );
   }
 
-  Widget _buildTypeChip(String label, String value, bool isDark) {
+  Widget _buildTypeChip(
+    String label,
+    String value,
+    AppPalette p,
+    TextTheme text,
+  ) {
     final selected = _typeFilter == value;
     return ChoiceChip(
       visualDensity: VisualDensity.compact,
@@ -503,12 +483,10 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
       selected: selected,
       showCheckmark: false,
       selectedColor: AppColors.primary,
-      labelStyle: TextStyle(
+      labelStyle: text.labelSmall?.copyWith(
         fontSize: 11.5,
         fontWeight: FontWeight.w600,
-        color: selected
-            ? Colors.white
-            : (isDark ? AppColors.darkTextPrimary : AppColors.textPrimary),
+        color: selected ? AppColors.textWhite : p.heading,
       ),
       onSelected: (_) => setState(() => _typeFilter = value),
     );
@@ -528,15 +506,16 @@ class _SummaryPair extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = context.palette;
+    final text = context.text;
     return Column(
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: text.labelSmall?.copyWith(
             fontSize: 10.5,
             fontWeight: FontWeight.w500,
-            color: isDark ? AppColors.darkTextMuted : AppColors.textMuted,
+            color: p.caption,
           ),
         ),
         const SizedBox(height: 2),
@@ -545,7 +524,7 @@ class _SummaryPair extends StatelessWidget {
           child: Text(
             value,
             maxLines: 1,
-            style: TextStyle(
+            style: text.labelMedium?.copyWith(
               fontSize: 13,
               fontWeight: FontWeight.w800,
               color: color,

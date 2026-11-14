@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
-import '../../../../config/theme/app_text_styles.dart';
+import '../../../../config/theme/app_spacing.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../domain/entities/money_insights.dart';
 
 /// Compact segmented selector for switching between Weekly, Monthly,
@@ -20,15 +21,14 @@ class PeriodSelectorBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = context.palette;
+    final text = context.text;
     return Container(
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(AppSpacing.xs),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.surfaceElevated,
+        color: p.isDark ? p.card : p.surfaceMuted,
         borderRadius: AppRadius.borderMd,
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.border,
-        ),
+        border: Border.all(color: p.border),
       ),
       child: Row(
         children: MoneyPeriod.values.map((period) {
@@ -42,13 +42,16 @@ class PeriodSelectorBar extends StatelessWidget {
               onTap: () => onChanged(period),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 160),
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppSpacing.sm,
+                  horizontal: AppSpacing.xs,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? (isDark ? AppColors.primary : AppColors.surface)
+                      ? (p.isDark ? AppColors.primary : p.card)
                       : Colors.transparent,
                   borderRadius: AppRadius.borderSm,
-                  boxShadow: isSelected && !isDark
+                  boxShadow: isSelected && !p.isDark
                       ? [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.06),
@@ -64,16 +67,14 @@ class PeriodSelectorBar extends StatelessWidget {
                   child: Text(
                     label,
                     maxLines: 1,
-                    style: AppTextStyles.labelSmall.copyWith(
+                    style: text.labelSmall?.copyWith(
                       fontSize: 12,
                       fontWeight: isSelected
                           ? FontWeight.w700
                           : FontWeight.w600,
                       color: isSelected
-                          ? (isDark ? Colors.white : AppColors.primary)
-                          : (isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.textSecondary),
+                          ? (p.isDark ? AppColors.textWhite : AppColors.primary)
+                          : p.secondary,
                     ),
                   ),
                 ),

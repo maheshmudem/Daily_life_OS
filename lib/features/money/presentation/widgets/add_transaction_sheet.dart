@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
-import '../../../../config/theme/app_text_styles.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/utils/date_utils.dart';
@@ -343,81 +343,78 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     required double amount,
     required MoneyCategory category,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return showDialog<bool>(
       context: context,
-      builder: (dialogCtx) => AlertDialog(
-        backgroundColor: isDark
-            ? AppColors.darkCardBackground
-            : AppColors.cardBackground,
-        shape: const RoundedRectangleBorder(borderRadius: AppRadius.radiusXl),
-        contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: AppColors.moduleMoney.withValues(alpha: 0.14),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.check_rounded,
-                color: AppColors.moduleMoney,
-                size: 30,
-              ),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              _isIncome
-                  ? StringConstants.incomeAdded
-                  : StringConstants.expenseAdded,
-              style: AppTextStyles.headingSmall.copyWith(
-                color: isDark
-                    ? AppColors.darkTextHeading
-                    : AppColors.textHeading,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              '${CurrencyUtils.format(amount, decimals: 2)} in ${category.label} has been logged.',
-              textAlign: TextAlign.center,
-              style: AppTextStyles.bodySmall.copyWith(
-                color: isDark ? AppColors.darkTextBody : AppColors.textBody,
-              ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.of(dialogCtx).pop(true),
-                    child: const Text(StringConstants.addAnother),
-                  ),
+      builder: (dialogCtx) {
+        final palette = dialogCtx.palette;
+        final text = dialogCtx.text;
+        return AlertDialog(
+          backgroundColor: palette.card,
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.radiusXl),
+          contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: AppColors.moduleMoney.withValues(alpha: 0.14),
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.moduleMoney,
-                      foregroundColor: Colors.white,
+                child: const Icon(
+                  Icons.check_rounded,
+                  color: AppColors.moduleMoney,
+                  size: 30,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                _isIncome
+                    ? StringConstants.incomeAdded
+                    : StringConstants.expenseAdded,
+                style: text.headlineSmall?.copyWith(color: palette.heading),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '${CurrencyUtils.format(amount, decimals: 2)} in ${category.label} has been logged.',
+                textAlign: TextAlign.center,
+                style: text.bodySmall?.copyWith(color: palette.body),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(dialogCtx).pop(true),
+                      child: const Text(StringConstants.addAnother),
                     ),
-                    onPressed: () => Navigator.of(dialogCtx).pop(false),
-                    child: const Text(StringConstants.done),
                   ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.moduleMoney,
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: () => Navigator.of(dialogCtx).pop(false),
+                      child: const Text(StringConstants.done),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final palette = context.palette;
+    final text = context.text;
+    final isDark = palette.isDark;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     final accent = _isIncome ? AppColors.success : AppColors.moduleMoney;
 
@@ -427,9 +424,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
       ),
       padding: EdgeInsets.only(bottom: bottomInset),
       decoration: BoxDecoration(
-        color: isDark
-            ? AppColors.darkScaffoldBackground
-            : AppColors.scaffoldBackground,
+        color: palette.scaffold,
         borderRadius: AppRadius.topXxl,
       ),
       child: Column(
@@ -441,7 +436,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
             height: 4,
             margin: const EdgeInsets.only(top: 10, bottom: 4),
             decoration: BoxDecoration(
-              color: isDark ? AppColors.darkDivider : AppColors.divider,
+              color: palette.divider,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -462,13 +457,11 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                             : (_isIncome
                                   ? StringConstants.addIncome
                                   : StringConstants.addExpense),
-                        style: TextStyle(
+                        style: text.titleLarge?.copyWith(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.4,
-                          color: isDark
-                              ? AppColors.darkTextHeading
-                              : AppColors.textHeading,
+                          color: palette.heading,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -478,12 +471,10 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                             : (_isIncome
                                   ? 'Log incoming money or salary'
                                   : 'Track where your money went'),
-                        style: TextStyle(
+                        style: text.labelMedium?.copyWith(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          color: isDark
-                              ? AppColors.darkTextCaption
-                              : AppColors.textCaption,
+                          color: palette.caption,
                         ),
                       ),
                     ],
@@ -504,7 +495,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                     icon: Icon(Icons.copy_rounded, size: 14, color: accent),
                     label: Text(
                       StringConstants.repeatTodayLabel,
-                      style: TextStyle(
+                      style: text.labelMedium?.copyWith(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: accent,
@@ -525,12 +516,10 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                     ),
                     child: Text(
                       'Clear',
-                      style: TextStyle(
+                      style: text.labelMedium?.copyWith(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w600,
-                        color: isDark
-                            ? AppColors.darkTextCaption
-                            : AppColors.textCaption,
+                        color: palette.caption,
                       ),
                     ),
                   ),
@@ -543,17 +532,13 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: isDark
-                          ? AppColors.darkSurfaceSecondary
-                          : AppColors.surfaceSecondary,
+                      color: palette.surfaceMuted,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       Icons.close_rounded,
                       size: 18,
-                      color: isDark
-                          ? AppColors.darkTextBody
-                          : AppColors.textHeading,
+                      color: isDark ? palette.body : palette.heading,
                     ),
                   ),
                 ),
@@ -574,16 +559,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                       height: 44,
                       padding: const EdgeInsets.all(3),
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? AppColors.darkCardBackground
-                            : AppColors.surfaceSecondary,
+                        color: isDark ? palette.card : palette.surfaceMuted,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isDark
-                              ? AppColors.darkDivider
-                              : AppColors.divider,
-                          width: 0.8,
-                        ),
+                        border: Border.all(color: palette.divider, width: 0.8),
                       ),
                       child: Row(
                         children: [
@@ -637,13 +615,11 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                           children: [
                             Text(
                               StringConstants.categoryLabel.toUpperCase(),
-                              style: TextStyle(
+                              style: text.labelSmall?.copyWith(
                                 fontSize: 11,
                                 letterSpacing: 1.1,
                                 fontWeight: FontWeight.w700,
-                                color: isDark
-                                    ? AppColors.darkTextCaption
-                                    : AppColors.textCaption,
+                                color: palette.caption,
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -657,9 +633,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                                   vertical: 3,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: isDark
-                                      ? AppColors.darkSurfaceSecondary
-                                      : AppColors.surfaceSecondary,
+                                  color: palette.surfaceMuted,
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Row(
@@ -670,19 +644,15 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                                           ? Icons.view_carousel_rounded
                                           : Icons.grid_view_rounded,
                                       size: 13,
-                                      color: isDark
-                                          ? AppColors.darkTextCaption
-                                          : AppColors.textCaption,
+                                      color: palette.caption,
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
                                       _isCategoryGrid ? 'Strip' : 'Grid',
-                                      style: TextStyle(
+                                      style: text.labelSmall?.copyWith(
                                         fontSize: 10.5,
                                         fontWeight: FontWeight.w600,
-                                        color: isDark
-                                            ? AppColors.darkTextCaption
-                                            : AppColors.textCaption,
+                                        color: palette.caption,
                                       ),
                                     ),
                                   ],
@@ -708,7 +678,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                                 _selectedCategoryKey,
                                 isIncome: _isIncome,
                               ).label,
-                              style: TextStyle(
+                              style: text.labelSmall?.copyWith(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.w700,
                                 color: accent,
@@ -734,13 +704,11 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                     // Details Section Header
                     Text(
                       StringConstants.detailsLabel.toUpperCase(),
-                      style: TextStyle(
+                      style: text.labelSmall?.copyWith(
                         fontSize: 11,
                         letterSpacing: 1.1,
                         fontWeight: FontWeight.w700,
-                        color: isDark
-                            ? AppColors.darkTextCaption
-                            : AppColors.textCaption,
+                        color: palette.caption,
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -749,15 +717,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? AppColors.darkCardBackground
-                            : Colors.white,
+                        color: palette.card,
                         borderRadius: AppRadius.radiusLg,
-                        border: Border.all(
-                          color: isDark
-                              ? AppColors.darkDivider
-                              : AppColors.divider,
-                        ),
+                        border: Border.all(color: palette.divider),
                         boxShadow: isDark
                             ? null
                             : [
@@ -794,10 +756,8 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                                   ? StringConstants.incomeSourceLabel
                                   : StringConstants.merchantLabel,
                             ),
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: isDark
-                                  ? AppColors.darkTextHeading
-                                  : AppColors.textHeading,
+                            style: text.bodyMedium?.copyWith(
+                              color: palette.heading,
                             ),
                             decoration: InputDecoration(
                               labelText: _isIncome
@@ -829,14 +789,10 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                                       vertical: 10,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: isDark
-                                          ? AppColors.darkSurfaceSecondary
-                                          : AppColors.surfaceSecondary,
+                                      color: palette.surfaceMuted,
                                       borderRadius: BorderRadius.circular(10),
                                       border: Border.all(
-                                        color: isDark
-                                            ? AppColors.darkDivider
-                                            : AppColors.divider,
+                                        color: palette.divider,
                                       ),
                                     ),
                                     child: Row(
@@ -852,12 +808,10 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                                             AppDateUtils.formatDate(
                                               _selectedDate,
                                             ),
-                                            style: TextStyle(
+                                            style: text.labelLarge?.copyWith(
                                               fontSize: 12.5,
                                               fontWeight: FontWeight.w600,
-                                              color: isDark
-                                                  ? Colors.white
-                                                  : AppColors.textHeading,
+                                              color: palette.heading,
                                             ),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
@@ -876,15 +830,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                                 child: Container(
                                   padding: const EdgeInsets.all(2),
                                   decoration: BoxDecoration(
-                                    color: isDark
-                                        ? AppColors.darkSurfaceSecondary
-                                        : AppColors.surfaceSecondary,
+                                    color: palette.surfaceMuted,
                                     borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                      color: isDark
-                                          ? AppColors.darkDivider
-                                          : AppColors.divider,
-                                    ),
+                                    border: Border.all(color: palette.divider),
                                   ),
                                   child: Row(
                                     children: _paymentModes.map((m) {
@@ -925,7 +873,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                                             alignment: Alignment.center,
                                             child: Text(
                                               m,
-                                              style: TextStyle(
+                                              style: text.labelSmall?.copyWith(
                                                 fontSize: 11,
                                                 fontWeight: isSelected
                                                     ? FontWeight.w700
@@ -933,9 +881,8 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                                                 color: isSelected
                                                     ? Colors.white
                                                     : (isDark
-                                                          ? AppColors
-                                                                .darkTextCaption
-                                                          : AppColors.textBody),
+                                                          ? palette.caption
+                                                          : palette.body),
                                               ),
                                             ),
                                           ),
@@ -953,10 +900,8 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                           TextFormField(
                             controller: _noteCtrl,
                             maxLines: 2,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: isDark
-                                  ? AppColors.darkTextHeading
-                                  : AppColors.textHeading,
+                            style: text.bodyMedium?.copyWith(
+                              color: palette.heading,
                             ),
                             decoration: const InputDecoration(
                               labelText: StringConstants.noteLabel,
@@ -1003,9 +948,10 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                                       : (_isIncome
                                             ? StringConstants.addIncome
                                             : StringConstants.addExpense),
-                                  style: const TextStyle(
+                                  style: text.labelLarge?.copyWith(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w700,
+                                    color: Colors.white,
                                   ),
                                 ),
                         ),
@@ -1028,7 +974,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     required Color color,
     required VoidCallback onTap,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final palette = context.palette;
+    final text = context.text;
+    final isDark = palette.isDark;
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -1055,21 +1003,15 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
               Icon(
                 icon,
                 size: 15,
-                color: selected
-                    ? Colors.white
-                    : (isDark
-                          ? AppColors.darkTextCaption
-                          : AppColors.textCaption),
+                color: selected ? Colors.white : palette.caption,
               ),
               const SizedBox(width: 6),
               Text(
                 label,
-                style: TextStyle(
+                style: text.labelLarge?.copyWith(
                   fontSize: 13,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                  color: selected
-                      ? Colors.white
-                      : (isDark ? AppColors.darkTextBody : AppColors.textBody),
+                  color: selected ? Colors.white : palette.body,
                 ),
               ),
             ],

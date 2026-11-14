@@ -2,7 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
-import '../../../../config/theme/app_text_styles.dart';
+import '../../../../config/theme/app_spacing.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../domain/entities/security_config_entity.dart';
 import '../../domain/repositories/security_repository.dart';
 import 'pattern_lock_grid_widget.dart';
@@ -60,12 +61,14 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBg = isDark ? AppColors.darkCardBackground : Colors.white;
+    final palette = context.palette;
 
     return Container(
-      decoration: BoxDecoration(color: cardBg, borderRadius: AppRadius.topXxl),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: palette.card,
+        borderRadius: AppRadius.topXxl,
+      ),
+      padding: AppSpacing.edgeInsetsScreen,
       child: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -75,106 +78,120 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
               // Handle
               Center(
                 child: Container(
-                  width: 36,
-                  height: 4,
+                  width: AppSpacing.xxl + AppSpacing.xxs,
+                  height: AppSpacing.xxs,
                   decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkDivider : AppColors.divider,
+                    color: palette.divider,
                     borderRadius: AppRadius.radiusFull,
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              AppSpacing.gapH16,
 
-              // Title
+              // Title Header
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.moduleVault.withValues(alpha: 0.15),
-                          borderRadius: AppRadius.radiusSm,
-                        ),
-                        child: const Icon(
-                          Icons.security_rounded,
-                          size: 20,
-                          color: AppColors.moduleVault,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Security & Vault Lock',
-                        style: AppTextStyles.titleLarge.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: isDark
-                              ? AppColors.darkTextHeading
-                              : AppColors.textHeading,
-                        ),
-                      ),
-                    ],
+                  Container(
+                    width: AppSpacing.xxl + AppSpacing.xxs,
+                    height: AppSpacing.xxl + AppSpacing.xxs,
+                    decoration: BoxDecoration(
+                      color: AppColors.moduleVault.withValues(alpha: 0.14),
+                      borderRadius: AppRadius.radiusSm,
+                    ),
+                    child: const Icon(
+                      Icons.security_rounded,
+                      size: AppSpacing.lg - AppSpacing.xxxs,
+                      color: AppColors.moduleVault,
+                    ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded),
-                    onPressed: () => Navigator.pop(context),
+                  AppSpacing.gapW12,
+                  Expanded(
+                    child: Text(
+                      'Security & Vault Lock',
+                      style: context.text.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: palette.heading,
+                      ),
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () => Navigator.pop(context),
+                    borderRadius: AppRadius.radiusSm,
+                    child: Container(
+                      width: AppSpacing.xxl,
+                      height: AppSpacing.xxl,
+                      decoration: BoxDecoration(
+                        color: palette.surfaceMuted,
+                        borderRadius: AppRadius.radiusSm,
+                        border: Border.all(color: palette.border),
+                      ),
+                      child: Icon(
+                        Icons.close_rounded,
+                        size: AppSpacing.lg - AppSpacing.xxxs,
+                        color: palette.caption,
+                      ),
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              AppSpacing.gapH16,
 
               if (_isLoading)
                 const Center(
                   child: Padding(
-                    padding: EdgeInsets.all(32),
+                    padding: AppSpacing.edgeInsetsAllXl,
                     child: CircularProgressIndicator(),
                   ),
                 )
               else if (_config != null && !_config!.isSecurityEnabled) ...[
                 // ── UNPROTECTED VAULT STATE ────────────────────────────────
                 Container(
-                  padding: const EdgeInsets.all(18),
+                  padding: AppSpacing.edgeInsetsAllLg,
                   decoration: BoxDecoration(
                     color: AppColors.warning.withValues(
-                      alpha: isDark ? 0.15 : 0.08,
+                      alpha: palette.isDark ? 0.14 : 0.08,
                     ),
                     borderRadius: AppRadius.radiusLg,
                     border: Border.all(
-                      color: AppColors.warning.withValues(alpha: 0.4),
-                      width: 1.5,
+                      color: AppColors.warning.withValues(alpha: 0.35),
                     ),
                   ),
                   child: Column(
                     children: [
-                      const Icon(
-                        Icons.lock_open_rounded,
-                        size: 40,
-                        color: AppColors.warning,
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        'Vault Security is Disabled',
-                        style: AppTextStyles.titleMedium.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: isDark
-                              ? AppColors.darkTextHeading
-                              : AppColors.textHeading,
+                      Container(
+                        width: AppSpacing.huge,
+                        height: AppSpacing.huge,
+                        decoration: BoxDecoration(
+                          color: AppColors.warning.withValues(alpha: 0.15),
+                          borderRadius: AppRadius.radiusMd,
+                        ),
+                        child: const Icon(
+                          Icons.lock_open_rounded,
+                          size: AppSpacing.xl + AppSpacing.xxxs,
+                          color: AppColors.warning,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      AppSpacing.gapH12,
+                      Text(
+                        'Vault Security is Disabled',
+                        style: context.text.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: palette.heading,
+                        ),
+                      ),
+                      AppSpacing.gapH8,
                       Text(
                         'Anyone using this phone can view your saved passwords, bank logins, and sensitive documents. Set up a PIN or Pattern to protect your data.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          color: isDark
-                              ? AppColors.darkTextCaption
-                              : AppColors.textCaption,
+                        style: context.text.bodySmall?.copyWith(
+                          color: palette.caption,
+                          height: 1.4,
                         ),
                       ),
-                      const SizedBox(height: 18),
+                      AppSpacing.gapH16,
                       SizedBox(
                         width: double.infinity,
+                        height: AppSpacing.xxxl + AppSpacing.xs,
                         child: FilledButton.icon(
                           onPressed: () {
                             Navigator.pop(context);
@@ -195,15 +212,21 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                           },
                           style: FilledButton.styleFrom(
                             backgroundColor: AppColors.moduleVault,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            foregroundColor: AppColors.textWhite,
                             shape: const RoundedRectangleBorder(
                               borderRadius: AppRadius.radiusMd,
                             ),
                           ),
-                          icon: const Icon(Icons.shield_rounded, size: 18),
-                          label: const Text(
+                          icon: const Icon(
+                            Icons.shield_rounded,
+                            size: AppSpacing.lg - AppSpacing.xxxs,
+                          ),
+                          label: Text(
                             'Set Up Security Now',
-                            style: TextStyle(fontWeight: FontWeight.w700),
+                            style: context.text.titleSmall?.copyWith(
+                              color: AppColors.textWhite,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ),
@@ -212,9 +235,9 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                 ),
               ] else if (_config != null && _config!.isSecurityEnabled) ...[
                 // ── SECURITY ENABLED STATE ─────────────────────────────────
-                // Lock Vault Now Button
                 SizedBox(
                   width: double.infinity,
+                  height: AppSpacing.xxxl + AppSpacing.xs,
                   child: FilledButton.icon(
                     onPressed: () {
                       Navigator.pop(context);
@@ -222,28 +245,33 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                     },
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.moduleVault,
-                      foregroundColor: Colors.white,
+                      foregroundColor: AppColors.textWhite,
                       shape: const RoundedRectangleBorder(
                         borderRadius: AppRadius.radiusMd,
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    icon: const Icon(Icons.lock_rounded, size: 18),
-                    label: const Text(
+                    icon: const Icon(
+                      Icons.lock_rounded,
+                      size: AppSpacing.lg - AppSpacing.xxxs,
+                    ),
+                    label: Text(
                       'Lock Vault Immediately',
-                      style: TextStyle(fontWeight: FontWeight.w700),
+                      style: context.text.titleSmall?.copyWith(
+                        color: AppColors.textWhite,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                AppSpacing.gapH16,
 
                 // Enable Security Toggle (Requires authentication to disable!)
                 _buildSwitchTile(
+                  context,
                   icon: Icons.shield_rounded,
                   title: 'Vault Security Lock',
                   subtitle: 'Requires PIN or Pattern to unlock',
                   value: _config!.isSecurityEnabled,
-                  isDark: isDark,
                   onChanged: (val) {
                     if (!val) {
                       _confirmCurrentCredential(
@@ -260,21 +288,21 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                     }
                   },
                 ),
-                const Divider(),
+                Divider(height: 1, color: palette.divider),
 
                 // Biometrics Switch
                 _buildSwitchTile(
+                  context,
                   icon: Icons.fingerprint_rounded,
                   title: 'Biometric Unlock (Fingerprint / Face)',
                   subtitle: 'Unlock instantly with hardware biometric sensor',
                   value: _config!.isBiometricEnabled,
-                  isDark: isDark,
                   onChanged: (val) async {
                     await widget.securityRepository.setBiometricsEnabled(val);
                     unawaited(_loadConfig());
                   },
                 ),
-                const Divider(),
+                Divider(height: 1, color: palette.divider),
 
                 // Preferred Lock Mode (PIN vs Pattern)
                 ListTile(
@@ -285,29 +313,22 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                   ),
                   title: Text(
                     'Default Unlock Method',
-                    style: TextStyle(
+                    style: context.text.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: isDark
-                          ? AppColors.darkTextHeading
-                          : AppColors.textHeading,
+                      color: palette.heading,
                     ),
                   ),
                   subtitle: Text(
                     _config!.activeMode == SecurityLockMode.pin
                         ? '4-Digit PIN Code'
                         : '3x3 Pattern Lock',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDark
-                          ? AppColors.darkTextCaption
-                          : AppColors.textCaption,
+                    style: context.text.labelSmall?.copyWith(
+                      color: palette.caption,
                     ),
                   ),
                   trailing: DropdownButton<SecurityLockMode>(
                     value: _config!.activeMode,
-                    dropdownColor: isDark
-                        ? AppColors.darkCardBackground
-                        : Colors.white,
+                    dropdownColor: palette.card,
                     underline: const SizedBox.shrink(),
                     items: [
                       if (_config!.hasPin)
@@ -329,10 +350,11 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                     },
                   ),
                 ),
-                const Divider(),
+                Divider(height: 1, color: palette.divider),
 
                 // Change Master PIN
                 _buildActionTile(
+                  context,
                   icon: Icons.pin_rounded,
                   title: _config!.hasPin
                       ? 'Change Master PIN'
@@ -340,7 +362,6 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                   subtitle: _config!.hasPin
                       ? 'Update your 4-digit numeric passcode'
                       : 'Add a numeric PIN unlock method',
-                  isDark: isDark,
                   onTap: () {
                     if (_config!.hasPin) {
                       _confirmCurrentCredential(
@@ -357,6 +378,7 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
 
                 // Set Decoy / Panic PIN
                 _buildActionTile(
+                  context,
                   icon: Icons.warning_amber_rounded,
                   iconColor: AppColors.error,
                   title: _config!.hasDecoyPin
@@ -364,7 +386,6 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                       : 'Set Decoy / Panic PIN',
                   subtitle:
                       'Emergency PIN that displays a safe decoy screen under duress',
-                  isDark: isDark,
                   onTap: () {
                     _confirmCurrentCredential(
                       title: 'Verify Current Access',
@@ -374,10 +395,11 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                     );
                   },
                 ),
-                const Divider(),
+                Divider(height: 1, color: palette.divider),
 
                 // Set Master Pattern
                 _buildActionTile(
+                  context,
                   icon: Icons.pattern_rounded,
                   title: _config!.hasPattern
                       ? 'Change Master Pattern'
@@ -385,7 +407,6 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                   subtitle: _config!.hasPattern
                       ? 'Draw a new 3x3 gesture unlock pattern'
                       : 'Add a gesture pattern unlock method',
-                  isDark: isDark,
                   onTap: () {
                     if (_config!.hasPattern || _config!.hasPin) {
                       _confirmCurrentCredential(
@@ -403,6 +424,7 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
 
                 // Set Decoy Pattern
                 _buildActionTile(
+                  context,
                   icon: Icons.shield_moon_rounded,
                   iconColor: AppColors.error,
                   title: _config!.hasDecoyPattern
@@ -410,7 +432,6 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                       : 'Set Decoy Pattern',
                   subtitle:
                       'Emergency gesture pattern that opens a decoy vault',
-                  isDark: isDark,
                   onTap: () {
                     _confirmCurrentCredential(
                       title: 'Verify Current Access',
@@ -420,7 +441,7 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                     );
                   },
                 ),
-                const Divider(),
+                Divider(height: 1, color: palette.divider),
 
                 // Reset / Clear Security
                 ListTile(
@@ -429,20 +450,17 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                     Icons.delete_outline_rounded,
                     color: AppColors.error,
                   ),
-                  title: const Text(
+                  title: Text(
                     'Remove All Security',
-                    style: TextStyle(
+                    style: context.text.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppColors.error,
                     ),
                   ),
                   subtitle: Text(
                     'Delete all stored PINs and patterns from hardware storage',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDark
-                          ? AppColors.darkTextCaption
-                          : AppColors.textCaption,
+                    style: context.text.labelSmall?.copyWith(
+                      color: palette.caption,
                     ),
                   ),
                   onTap: () {
@@ -475,30 +493,29 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
     );
   }
 
-  Widget _buildSwitchTile({
+  Widget _buildSwitchTile(
+    BuildContext context, {
     required IconData icon,
     required String title,
     required String subtitle,
     required bool value,
-    required bool isDark,
     required ValueChanged<bool> onChanged,
   }) {
+    final palette = context.palette;
+
     return SwitchListTile.adaptive(
       contentPadding: EdgeInsets.zero,
       secondary: Icon(icon, color: AppColors.moduleVault),
       title: Text(
         title,
-        style: TextStyle(
+        style: context.text.titleSmall?.copyWith(
           fontWeight: FontWeight.w600,
-          color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
+          color: palette.heading,
         ),
       ),
       subtitle: Text(
         subtitle,
-        style: TextStyle(
-          fontSize: 12,
-          color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
-        ),
+        style: context.text.labelSmall?.copyWith(color: palette.caption),
       ),
       value: value,
       activeTrackColor: AppColors.moduleVault,
@@ -506,33 +523,36 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
     );
   }
 
-  Widget _buildActionTile({
+  Widget _buildActionTile(
+    BuildContext context, {
     required IconData icon,
     Color color = AppColors.moduleVault,
     Color? iconColor,
     required String title,
     required String subtitle,
-    required bool isDark,
     required VoidCallback onTap,
   }) {
+    final palette = context.palette;
+
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: Icon(icon, color: iconColor ?? color),
       title: Text(
         title,
-        style: TextStyle(
+        style: context.text.titleSmall?.copyWith(
           fontWeight: FontWeight.w600,
-          color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
+          color: palette.heading,
         ),
       ),
       subtitle: Text(
         subtitle,
-        style: TextStyle(
-          fontSize: 12,
-          color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
-        ),
+        style: context.text.labelSmall?.copyWith(color: palette.caption),
       ),
-      trailing: const Icon(Icons.chevron_right_rounded, size: 20),
+      trailing: Icon(
+        Icons.chevron_right_rounded,
+        size: AppSpacing.lg,
+        color: palette.caption,
+      ),
       onTap: onTap,
     );
   }
@@ -555,8 +575,13 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(subtitle, style: const TextStyle(fontSize: 13)),
-              const SizedBox(height: 16),
+              Text(
+                subtitle,
+                style: context.text.bodySmall?.copyWith(
+                  color: context.palette.body,
+                ),
+              ),
+              AppSpacing.gapH16,
               TextField(
                 controller: controller,
                 keyboardType: TextInputType.number,
@@ -618,9 +643,11 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                 isDecoy
                     ? 'Enter a 4-digit emergency PIN. When entered at the lock screen, it displays an empty decoy vault.'
                     : 'Enter and confirm a 4-digit numeric PIN.',
-                style: const TextStyle(fontSize: 13),
+                style: context.text.bodySmall?.copyWith(
+                  color: context.palette.body,
+                ),
               ),
-              const SizedBox(height: 16),
+              AppSpacing.gapH16,
               TextField(
                 controller: pinController,
                 keyboardType: TextInputType.number,
@@ -636,7 +663,7 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                   counterText: '',
                 ),
               ),
-              const SizedBox(height: 12),
+              AppSpacing.gapH12,
               TextField(
                 controller: confirmController,
                 keyboardType: TextInputType.number,
@@ -715,9 +742,11 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                   isDecoy
                       ? 'Connect at least 4 dots for your Decoy Pattern.'
                       : 'Connect at least 4 dots to set your new unlock gesture.',
-                  style: const TextStyle(fontSize: 13),
+                  style: context.text.bodySmall?.copyWith(
+                    color: context.palette.body,
+                  ),
                 ),
-                const SizedBox(height: 12),
+                AppSpacing.gapH12,
                 PatternLockGridWidget(
                   size: 240,
                   onPatternComplete: (pattern) {
@@ -729,7 +758,7 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                 if (recordedPattern != null)
                   Text(
                     'Recorded ${recordedPattern!.length} dots',
-                    style: const TextStyle(
+                    style: context.text.labelMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: AppColors.moduleVault,
                     ),

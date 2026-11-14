@@ -11,6 +11,8 @@ class AppPalette {
   final Color scaffold;
   final Color card;
   final Color surfaceMuted;
+  final Color surfaceSubtle;
+  final Color primaryContainer;
   final Color divider;
   final Color border;
   final Color heading;
@@ -24,6 +26,8 @@ class AppPalette {
     required this.scaffold,
     required this.card,
     required this.surfaceMuted,
+    required this.surfaceSubtle,
+    required this.primaryContainer,
     required this.divider,
     required this.border,
     required this.heading,
@@ -38,6 +42,8 @@ class AppPalette {
     scaffold: AppColors.scaffoldBackground,
     card: AppColors.cardBackground,
     surfaceMuted: AppColors.surfaceSecondary,
+    surfaceSubtle: AppColors.surfaceMuted,
+    primaryContainer: AppColors.primaryContainer,
     divider: AppColors.divider,
     border: AppColors.border,
     heading: AppColors.textHeading,
@@ -52,6 +58,8 @@ class AppPalette {
     scaffold: AppColors.darkScaffoldBackground,
     card: AppColors.darkCardBackground,
     surfaceMuted: AppColors.darkSurfaceSecondary,
+    surfaceSubtle: AppColors.darkSurfaceMuted,
+    primaryContainer: AppColors.darkPrimaryContainer,
     divider: AppColors.darkDivider,
     border: AppColors.darkBorder,
     heading: AppColors.darkTextHeading,

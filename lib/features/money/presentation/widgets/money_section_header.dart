@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../config/theme/app_colors.dart';
+import '../../../../config/theme/theme_context.dart';
 
 /// Compact section header row matching `docs/expensetracker-main` (`15px w600`
 /// title + `13px w600` primary action link).
@@ -19,7 +20,8 @@ class MoneySectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = context.palette;
+    final text = context.text;
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
@@ -29,13 +31,11 @@ class MoneySectionHeader extends StatelessWidget {
             child: Text(
               title,
               softWrap: true,
-              style: TextStyle(
+              style: text.titleMedium?.copyWith(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
                 letterSpacing: -0.2,
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.textPrimary,
+                color: p.heading,
               ),
             ),
           ),
@@ -45,7 +45,7 @@ class MoneySectionHeader extends StatelessWidget {
               onTap: onAction,
               child: Text(
                 actionLabel!,
-                style: const TextStyle(
+                style: text.labelMedium?.copyWith(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: AppColors.primary,

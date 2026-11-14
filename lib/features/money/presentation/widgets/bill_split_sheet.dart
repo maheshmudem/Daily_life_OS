@@ -438,9 +438,13 @@ class _BillSplitSheetState extends State<BillSplitSheet> {
                   ),
                   onPressed: _submitSplit,
                   icon: const Icon(Icons.call_split_rounded, size: 19),
-                  label: const Text(
+                  label: Text(
                     StringConstants.billSplitLogAction,
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                    style: text.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),

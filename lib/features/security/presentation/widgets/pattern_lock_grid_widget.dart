@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../config/theme/app_colors.dart';
+import '../../../../config/theme/app_spacing.dart';
+import '../../../../config/theme/theme_context.dart';
 
 class PatternLockGridWidget extends StatefulWidget {
   final int dimension;
@@ -78,25 +80,24 @@ class _PatternLockGridWidgetState extends State<PatternLockGridWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final palette = context.palette;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         if (widget.errorMessage != null && widget.errorMessage!.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
             child: Text(
               widget.errorMessage!,
-              style: const TextStyle(
+              style: context.text.bodySmall?.copyWith(
                 color: AppColors.error,
                 fontWeight: FontWeight.w600,
-                fontSize: 13,
               ),
             ),
           )
         else
-          const SizedBox(height: 16),
+          AppSpacing.gapH16,
 
         Center(
           child: SizedBox(
@@ -125,7 +126,7 @@ class _PatternLockGridWidgetState extends State<PatternLockGridWidget> {
                   selectedNodes: _selectedNodes,
                   currentPosition: _currentTouchPosition,
                   hasError: widget.hasError,
-                  isDark: isDark,
+                  palette: palette,
                   accentColor: AppColors.moduleVault,
                 ),
               ),
@@ -142,7 +143,7 @@ class _PatternPainter extends CustomPainter {
   final List<int> selectedNodes;
   final Offset? currentPosition;
   final bool hasError;
-  final bool isDark;
+  final AppPalette palette;
   final Color accentColor;
 
   _PatternPainter({
@@ -150,7 +151,7 @@ class _PatternPainter extends CustomPainter {
     required this.selectedNodes,
     required this.currentPosition,
     required this.hasError,
-    required this.isDark,
+    required this.palette,
     required this.accentColor,
   });
 
@@ -222,14 +223,12 @@ class _PatternPainter extends CustomPainter {
           canvas.drawCircle(center, 7.0, dotPaint);
         } else {
           // Unselected dot
-          dotPaint.color = isDark
-              ? AppColors.darkDivider
-              : AppColors.surfaceMuted;
+          dotPaint.color = palette.surfaceMuted;
           canvas.drawCircle(center, 6.0, dotPaint);
 
           // Inner subtle point
           final innerDotPaint = Paint()
-            ..color = isDark ? AppColors.darkTextCaption : AppColors.textCaption
+            ..color = palette.caption
             ..style = PaintingStyle.fill;
           canvas.drawCircle(center, 2.5, innerDotPaint);
         }
@@ -241,6 +240,7 @@ class _PatternPainter extends CustomPainter {
   bool shouldRepaint(covariant _PatternPainter oldDelegate) {
     return oldDelegate.selectedNodes.length != selectedNodes.length ||
         oldDelegate.currentPosition != currentPosition ||
-        oldDelegate.hasError != hasError;
+        oldDelegate.hasError != hasError ||
+        oldDelegate.palette.isDark != palette.isDark;
   }
 }

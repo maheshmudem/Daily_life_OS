@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
+import '../../config/theme/app_radius.dart';
+import '../../config/theme/app_spacing.dart';
+import '../../config/theme/theme_context.dart';
 
 /// A reusable chip input widget that allows users to add/remove string items.
 ///
@@ -79,29 +82,35 @@ class _ChipInputWidgetState extends State<ChipInputWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
+    final text = context.text;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           widget.label,
-          style: const TextStyle(
+          style: text.labelMedium?.copyWith(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: AppColors.textCaption,
+            color: p.caption,
           ),
         ),
-        const SizedBox(height: 8),
+        AppSpacing.gapH8,
         // Chips area
         if (widget.values.isNotEmpty)
           Wrap(
-            spacing: 8,
+            spacing: AppSpacing.sm,
             runSpacing: 6,
             children: List.generate(widget.values.length, (index) {
               return Chip(
                 label: Text(
                   widget.values[index],
-                  style: const TextStyle(fontSize: 13),
+                  style: text.bodySmall?.copyWith(
+                    fontSize: 13,
+                    color: p.heading,
+                  ),
                 ),
                 deleteIcon: widget.enabled
                     ? const Icon(Icons.close, size: 16)
@@ -111,8 +120,8 @@ class _ChipInputWidgetState extends State<ChipInputWidget> {
                 side: BorderSide(
                   color: AppColors.primary.withValues(alpha: 0.2),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: AppRadius.radiusXl,
                 ),
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               );
@@ -124,40 +133,45 @@ class _ChipInputWidgetState extends State<ChipInputWidget> {
             controller: _controller,
             focusNode: _focusNode,
             maxLength: widget.maxLength,
+            style: text.bodyMedium?.copyWith(color: p.heading),
             decoration: InputDecoration(
               hintText: widget.hintText,
+              hintStyle: text.bodyMedium?.copyWith(color: p.caption),
               counterText: '',
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
+                horizontal: AppSpacing.md,
                 vertical: 10,
               ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: AppColors.border, width: 1),
+                borderRadius: AppRadius.radiusSm,
+                borderSide: BorderSide(color: p.border, width: 1),
               ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(
-                  color: AppColors.primary,
-                  width: 1.5,
-                ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: AppRadius.radiusSm,
+                borderSide: BorderSide(color: p.border, width: 1),
+              ),
+              focusedBorder: const OutlineInputBorder(
+                borderRadius: AppRadius.radiusSm,
+                borderSide: BorderSide(color: AppColors.primary, width: 1.5),
               ),
               suffixIcon: GestureDetector(
                 onTap: _addItem,
                 child: Container(
-                  margin: const EdgeInsets.all(4),
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(6),
+                  margin: const EdgeInsets.all(AppSpacing.xs),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
                   ),
-                  child: const Center(
+                  decoration: const BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: AppRadius.radiusXs,
+                  ),
+                  child: Center(
                     widthFactor: 1,
                     child: Text(
                       'Add',
-                      style: TextStyle(
-                        color: Colors.white,
+                      style: text.labelMedium?.copyWith(
+                        color: AppColors.textWhite,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),

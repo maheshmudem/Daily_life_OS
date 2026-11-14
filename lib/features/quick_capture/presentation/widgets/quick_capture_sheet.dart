@@ -7,6 +7,7 @@ import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/app_text_styles.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/widgets/bloc_effect_listener.dart';
 import '../../../../di/injection_container.dart';
@@ -271,14 +272,11 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final headingColor = isDark
-        ? AppColors.darkTextHeading
-        : AppColors.textHeading;
-    final captionColor = isDark
-        ? AppColors.darkTextCaption
-        : AppColors.textCaption;
-    final dividerColor = isDark ? AppColors.darkDivider : AppColors.divider;
+    final palette = context.palette;
+    final isDark = palette.isDark;
+    final headingColor = palette.heading;
+    final captionColor = palette.caption;
+    final dividerColor = palette.divider;
 
     return BlocProvider<QuickCaptureBloc>.value(
       value: _bloc,
@@ -310,15 +308,11 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                     AppSpacing.lg,
                   ),
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.darkCardBackground
-                        : AppColors.cardBackground,
+                    color: palette.card,
                     borderRadius: AppRadius.topXxl,
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.darkScaffoldBackground.withValues(
-                          alpha: 0.35,
-                        ),
+                        color: AppColors.shadowColor.withValues(alpha: 0.35),
                         blurRadius: AppSpacing.xxl,
                         offset: const Offset(0, -AppSpacing.xxs),
                       ),
@@ -458,9 +452,7 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                                       : headingColor,
                                 ),
                                 selectedColor: color,
-                                backgroundColor: isDark
-                                    ? AppColors.darkSurfaceSecondary
-                                    : AppColors.surfaceSecondary,
+                                backgroundColor: palette.surfaceMuted,
                                 visualDensity: VisualDensity.compact,
                                 materialTapTargetSize:
                                     MaterialTapTargetSize.shrinkWrap,
@@ -625,15 +617,12 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
     Color headingColor,
     Color captionColor,
   ) {
+    final palette = context.palette;
     return Container(
       decoration: BoxDecoration(
-        color: isDark
-            ? AppColors.darkSurfaceSecondary
-            : AppColors.surfaceSecondary,
+        color: palette.surfaceMuted,
         borderRadius: AppRadius.radiusLg,
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.border,
-        ),
+        border: Border.all(color: palette.border),
       ),
       child: TextField(
         controller: _textController,
@@ -788,9 +777,7 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
               return ActionChip(
                 visualDensity: VisualDensity.compact,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                backgroundColor: isDark
-                    ? AppColors.darkCardBackground
-                    : AppColors.cardBackground,
+                backgroundColor: context.palette.card,
                 side: BorderSide(
                   color: AppColors.voiceWaveform.withValues(alpha: 0.3),
                 ),
@@ -891,9 +878,7 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                       decoration: BoxDecoration(
                         color: isSelected
                             ? AppColors.moduleMoney
-                            : (isDark
-                                  ? AppColors.darkCardBackground
-                                  : AppColors.cardBackground),
+                            : context.palette.card,
                         borderRadius: AppRadius.radiusMd,
                         border: Border.all(
                           color: isSelected
@@ -954,15 +939,14 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
     required Color captionColor,
     required Color dividerColor,
   }) {
+    final palette = context.palette;
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
         vertical: AppSpacing.xs + AppSpacing.xxxs,
       ),
       decoration: BoxDecoration(
-        color: isDark
-            ? AppColors.darkSurfaceSecondary
-            : AppColors.surfaceSecondary,
+        color: palette.surfaceMuted,
         borderRadius: AppRadius.radiusMd,
         border: Border.all(color: dividerColor, width: 0.8),
       ),
@@ -1236,6 +1220,7 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
     QuickCaptureMode mode,
     bool isDark,
   ) {
+    final palette = context.palette;
     final isSelected = _mode == mode;
     return GestureDetector(
       onTap: () {
@@ -1256,11 +1241,7 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
           vertical: AppSpacing.xxs + AppSpacing.xxxs,
         ),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary
-              : (isDark
-                    ? AppColors.darkSurfaceSecondary
-                    : AppColors.surfaceSecondary),
+          color: isSelected ? AppColors.primary : palette.surfaceMuted,
           borderRadius: AppRadius.radiusMd,
         ),
         child: Row(
@@ -1269,16 +1250,14 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
             Icon(
               icon,
               size: AppSpacing.md - 1,
-              color: isSelected ? AppColors.textWhite : AppColors.iconColor,
+              color: isSelected ? AppColors.textWhite : palette.icon,
             ),
             AppSpacing.gapW4,
             Text(
               label,
               style: AppTextStyles.label.copyWith(
                 fontWeight: FontWeight.w700,
-                color: isSelected
-                    ? AppColors.textWhite
-                    : (isDark ? AppColors.darkTextBody : AppColors.textBody),
+                color: isSelected ? AppColors.textWhite : palette.body,
               ),
             ),
           ],
@@ -1288,6 +1267,7 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
   }
 
   Widget _buildQuickChip(String label, bool isDark, VoidCallback onTap) {
+    final palette = context.palette;
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
@@ -1299,19 +1279,13 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
           vertical: AppSpacing.xxs + AppSpacing.xxxs,
         ),
         decoration: BoxDecoration(
-          color: isDark
-              ? AppColors.darkSurfaceSecondary
-              : AppColors.surfaceSecondary,
+          color: palette.surfaceMuted,
           borderRadius: AppRadius.radiusFull,
-          border: Border.all(
-            color: isDark ? AppColors.darkDivider : AppColors.divider,
-          ),
+          border: Border.all(color: palette.divider),
         ),
         child: Text(
           label,
-          style: AppTextStyles.captionBold.copyWith(
-            color: isDark ? AppColors.darkTextBody : AppColors.textBody,
-          ),
+          style: AppTextStyles.captionBold.copyWith(color: palette.body),
         ),
       ),
     );

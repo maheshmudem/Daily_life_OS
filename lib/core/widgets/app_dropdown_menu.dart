@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_radius.dart';
 import '../../config/theme/app_spacing.dart';
-import '../../config/theme/app_text_styles.dart';
+import '../../config/theme/theme_context.dart';
 
 /// Compact, pixel-perfect dropdown item for [AppDropdownMenu].
 /// Inspired by Apple Notes, Notion, and Linear menus.
@@ -61,11 +61,11 @@ class _AppDropdownItemContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = context.palette;
+    final text = context.text;
     final effectiveColor = isDestructive
         ? AppColors.error
-        : (tintColor ??
-              (isDark ? AppColors.darkTextHeading : AppColors.textHeading));
+        : (tintColor ?? p.heading);
 
     return Row(
       children: [
@@ -80,7 +80,7 @@ class _AppDropdownItemContent extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: AppTextStyles.bodySmall.copyWith(
+                style: text.bodySmall?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: effectiveColor,
                   letterSpacing: -0.1,
@@ -90,11 +90,9 @@ class _AppDropdownItemContent extends StatelessWidget {
                 const SizedBox(height: 1),
                 Text(
                   subtitle!,
-                  style: AppTextStyles.caption.copyWith(
+                  style: text.labelSmall?.copyWith(
                     fontSize: 10,
-                    color: isDark
-                        ? AppColors.darkTextCaption
-                        : AppColors.textCaption,
+                    color: p.caption,
                   ),
                 ),
               ],
@@ -132,18 +130,14 @@ class AppDropdownDivider extends PopupMenuEntry<Never> {
 class _AppDropdownDividerState extends State<AppDropdownDivider> {
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = context.palette;
     return Container(
       height: widget.height,
       padding: EdgeInsets.symmetric(
         horizontal: widget.indent,
         vertical: (widget.height - 1) / 2,
       ),
-      child: Divider(
-        height: 1,
-        thickness: 0.6,
-        color: isDark ? AppColors.darkDivider : AppColors.divider,
-      ),
+      child: Divider(height: 1, thickness: 0.6, color: p.divider),
     );
   }
 }
@@ -174,7 +168,8 @@ class AppDropdownHeader extends PopupMenuEntry<Never> {
 class _AppDropdownHeaderState extends State<AppDropdownHeader> {
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = context.palette;
+    final text = context.text;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       child: Row(
@@ -189,10 +184,9 @@ class _AppDropdownHeaderState extends State<AppDropdownHeader> {
                   widget.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.captionBold.copyWith(
-                    color: isDark
-                        ? AppColors.darkTextHeading
-                        : AppColors.textHeading,
+                  style: text.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: p.heading,
                   ),
                 ),
                 if (widget.subtitle != null) ...[
@@ -201,11 +195,9 @@ class _AppDropdownHeaderState extends State<AppDropdownHeader> {
                     widget.subtitle!,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.caption.copyWith(
+                    style: text.labelSmall?.copyWith(
                       fontSize: 10,
-                      color: isDark
-                          ? AppColors.darkTextCaption
-                          : AppColors.textCaption,
+                      color: p.caption,
                     ),
                   ),
                 ],
@@ -249,9 +241,7 @@ class AppDropdownMenu<T> extends StatelessWidget {
     BoxConstraints? constraints,
   }) {
     HapticFeedback.lightImpact();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? AppColors.darkCardBackground : Colors.white;
-    final borderColor = isDark ? AppColors.darkDivider : AppColors.divider;
+    final p = context.palette;
 
     return showMenu<T>(
       context: context,
@@ -259,9 +249,9 @@ class AppDropdownMenu<T> extends StatelessWidget {
       items: items,
       initialValue: initialValue,
       elevation: 8,
-      shadowColor: Colors.black.withValues(alpha: isDark ? 0.5 : 0.15),
+      shadowColor: Colors.black.withValues(alpha: p.isDark ? 0.5 : 0.15),
       surfaceTintColor: Colors.transparent,
-      color: bgColor,
+      color: p.card,
       constraints:
           constraints ?? const BoxConstraints(minWidth: 155, maxWidth: 195),
       menuPadding: const EdgeInsets.symmetric(
@@ -270,16 +260,14 @@ class AppDropdownMenu<T> extends StatelessWidget {
       ),
       shape: RoundedRectangleBorder(
         borderRadius: AppRadius.radiusMd,
-        side: BorderSide(color: borderColor, width: 0.8),
+        side: BorderSide(color: p.divider, width: 0.8),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? AppColors.darkCardBackground : Colors.white;
-    final borderColor = isDark ? AppColors.darkDivider : AppColors.divider;
+    final p = context.palette;
 
     final effectiveChild =
         child ??
@@ -290,21 +278,15 @@ class AppDropdownMenu<T> extends StatelessWidget {
           decoration: const BoxDecoration(borderRadius: AppRadius.radiusXs),
           child:
               icon ??
-              Icon(
-                Icons.more_horiz_rounded,
-                size: 18,
-                color: isDark
-                    ? AppColors.darkTextCaption
-                    : AppColors.textCaption,
-              ),
+              Icon(Icons.more_horiz_rounded, size: 18, color: p.caption),
         );
 
     return Theme(
       data: Theme.of(context).copyWith(
-        splashColor: isDark
+        splashColor: p.isDark
             ? Colors.white.withValues(alpha: 0.06)
             : Colors.black.withValues(alpha: 0.04),
-        highlightColor: isDark
+        highlightColor: p.isDark
             ? Colors.white.withValues(alpha: 0.04)
             : Colors.black.withValues(alpha: 0.02),
       ),
@@ -313,9 +295,9 @@ class AppDropdownMenu<T> extends StatelessWidget {
         position: PopupMenuPosition.under,
         offset: offset,
         elevation: 8,
-        shadowColor: Colors.black.withValues(alpha: isDark ? 0.5 : 0.15),
+        shadowColor: Colors.black.withValues(alpha: p.isDark ? 0.5 : 0.15),
         surfaceTintColor: Colors.transparent,
-        color: bgColor,
+        color: p.card,
         constraints:
             menuConstraints ??
             const BoxConstraints(minWidth: 155, maxWidth: 195),
@@ -325,7 +307,7 @@ class AppDropdownMenu<T> extends StatelessWidget {
         ),
         shape: RoundedRectangleBorder(
           borderRadius: AppRadius.radiusMd,
-          side: BorderSide(color: borderColor, width: 0.8),
+          side: BorderSide(color: p.divider, width: 0.8),
         ),
         onSelected: (val) {
           HapticFeedback.selectionClick();

@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
-import '../../../../config/theme/app_text_styles.dart';
+import '../../../../config/theme/app_spacing.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../domain/entities/security_config_entity.dart';
 import '../../domain/repositories/security_repository.dart';
 import 'pattern_lock_grid_widget.dart';
@@ -102,16 +103,18 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBg = isDark ? AppColors.darkCardBackground : Colors.white;
+    final palette = context.palette;
 
     return Container(
-      decoration: BoxDecoration(color: cardBg, borderRadius: AppRadius.topXxl),
+      decoration: BoxDecoration(
+        color: palette.card,
+        borderRadius: AppRadius.topXxl,
+      ),
       padding: EdgeInsets.only(
-        left: 24,
-        right: 24,
-        top: 16,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        left: AppSpacing.xl,
+        right: AppSpacing.xl,
+        top: AppSpacing.md,
+        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
       ),
       child: SafeArea(
         child: SingleChildScrollView(
@@ -120,16 +123,16 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
             children: [
               // Handle
               Container(
-                width: 36,
-                height: 4,
+                width: AppSpacing.xxl + AppSpacing.xxs,
+                height: AppSpacing.xxs,
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkDivider : AppColors.divider,
+                  color: palette.divider,
                   borderRadius: AppRadius.radiusFull,
                 ),
               ),
-              const SizedBox(height: 16),
+              AppSpacing.gapH16,
 
-              _buildCurrentStepContent(isDark),
+              _buildCurrentStepContent(context),
             ],
           ),
         ),
@@ -137,80 +140,80 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
     );
   }
 
-  Widget _buildCurrentStepContent(bool isDark) {
+  Widget _buildCurrentStepContent(BuildContext context) {
     switch (_step) {
       case _SetupStep.chooseMethod:
-        return _buildChooseMethodStep(isDark);
+        return _buildChooseMethodStep(context);
       case _SetupStep.enterCredential:
-        return _buildEnterCredentialStep(isDark);
+        return _buildEnterCredentialStep(context);
       case _SetupStep.confirmCredential:
-        return _buildConfirmCredentialStep(isDark);
+        return _buildConfirmCredentialStep(context);
       case _SetupStep.biometricsPrompt:
-        return _buildBiometricsStep(isDark);
+        return _buildBiometricsStep(context);
       case _SetupStep.decoyPrompt:
-        return _buildDecoyPromptStep(isDark);
+        return _buildDecoyPromptStep(context);
     }
   }
 
   // ── Step 1: Choose Lock Method ─────────────────────────────────────────────
-  Widget _buildChooseMethodStep(bool isDark) {
+  Widget _buildChooseMethodStep(BuildContext context) {
+    final palette = context.palette;
+
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: AppSpacing.edgeInsetsAllMd,
           decoration: BoxDecoration(
-            color: AppColors.moduleVault.withValues(alpha: 0.15),
+            color: AppColors.moduleVault.withValues(alpha: 0.14),
             shape: BoxShape.circle,
           ),
           child: const Icon(
             Icons.shield_rounded,
-            size: 36,
+            size: AppSpacing.xxl + AppSpacing.xxs,
             color: AppColors.moduleVault,
           ),
         ),
-        const SizedBox(height: 14),
+        AppSpacing.gapH12,
         Text(
           'Set Up Vault Security',
-          style: AppTextStyles.headingSmall.copyWith(
+          style: context.text.titleLarge?.copyWith(
             fontWeight: FontWeight.w800,
-            color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
+            color: palette.heading,
           ),
         ),
-        const SizedBox(height: 6),
+        AppSpacing.gapH4,
         Text(
           'Choose your preferred primary lock method:',
           textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 13,
-            color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
-          ),
+          style: context.text.bodySmall?.copyWith(color: palette.caption),
         ),
-        const SizedBox(height: 24),
+        AppSpacing.gapH24,
 
         // Method 1: PIN
         _buildMethodCard(
+          context,
           title: '4-Digit PIN Code',
           subtitle: 'Fast, secure numeric passcode with dialpad',
           icon: Icons.pin_rounded,
           isSelected: _selectedMode == SecurityLockMode.pin,
-          isDark: isDark,
           onTap: () => setState(() => _selectedMode = SecurityLockMode.pin),
         ),
-        const SizedBox(height: 12),
+        AppSpacing.gapH12,
 
         // Method 2: Pattern Lock
         _buildMethodCard(
+          context,
           title: '3x3 Pattern Lock',
           subtitle: 'Draw a connecting touch gesture on a 3x3 dot grid',
           icon: Icons.pattern_rounded,
           isSelected: _selectedMode == SecurityLockMode.pattern,
-          isDark: isDark,
           onTap: () => setState(() => _selectedMode = SecurityLockMode.pattern),
         ),
-        const SizedBox(height: 24),
+        AppSpacing.gapH24,
 
         SizedBox(
           width: double.infinity,
+          height: AppSpacing.xxxl + AppSpacing.xs,
           child: FilledButton(
             onPressed: () {
               setState(() {
@@ -222,14 +225,17 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
             },
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.moduleVault,
-              padding: const EdgeInsets.symmetric(vertical: 14),
+              foregroundColor: AppColors.textWhite,
               shape: const RoundedRectangleBorder(
                 borderRadius: AppRadius.radiusMd,
               ),
             ),
-            child: const Text(
+            child: Text(
               'Continue',
-              style: TextStyle(fontWeight: FontWeight.w700),
+              style: context.text.titleSmall?.copyWith(
+                color: AppColors.textWhite,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ),
@@ -237,71 +243,67 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
     );
   }
 
-  Widget _buildMethodCard({
+  Widget _buildMethodCard(
+    BuildContext context, {
     required String title,
     required String subtitle,
     required IconData icon,
     required bool isSelected,
-    required bool isDark,
     required VoidCallback onTap,
   }) {
+    final palette = context.palette;
+
     return InkWell(
       onTap: onTap,
       borderRadius: AppRadius.radiusLg,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(16),
+        padding: AppSpacing.edgeInsetsAllMd,
         decoration: BoxDecoration(
           borderRadius: AppRadius.radiusLg,
           border: Border.all(
-            color: isSelected
-                ? AppColors.moduleVault
-                : (isDark ? AppColors.darkDivider : AppColors.divider),
+            color: isSelected ? AppColors.moduleVault : palette.border,
             width: isSelected ? 2 : 1,
           ),
           color: isSelected
-              ? AppColors.moduleVault.withValues(alpha: isDark ? 0.15 : 0.08)
-              : (isDark
-                    ? AppColors.darkSurfaceSecondary
-                    : AppColors.surfaceSecondary),
+              ? AppColors.moduleVault.withValues(
+                  alpha: palette.isDark ? 0.15 : 0.08,
+                )
+              : palette.surfaceMuted,
         ),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(AppSpacing.xs + AppSpacing.xxxs),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.moduleVault : Colors.transparent,
+                color: isSelected
+                    ? AppColors.moduleVault
+                    : AppColors.moduleVault.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 icon,
-                color: isSelected ? Colors.white : AppColors.moduleVault,
-                size: 22,
+                color: isSelected ? AppColors.textWhite : AppColors.moduleVault,
+                size: AppSpacing.lg + AppSpacing.xxxs,
               ),
             ),
-            const SizedBox(width: 14),
+            AppSpacing.gapW12,
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
+                    style: context.text.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
-                      fontSize: 15,
-                      color: isDark
-                          ? AppColors.darkTextHeading
-                          : AppColors.textHeading,
+                      color: palette.heading,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppSpacing.xxxs),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDark
-                          ? AppColors.darkTextCaption
-                          : AppColors.textCaption,
+                    style: context.text.labelSmall?.copyWith(
+                      color: palette.caption,
                     ),
                   ),
                 ],
@@ -311,9 +313,7 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
               isSelected
                   ? Icons.check_circle_rounded
                   : Icons.radio_button_off_rounded,
-              color: isSelected
-                  ? AppColors.moduleVault
-                  : (isDark ? AppColors.darkDivider : AppColors.divider),
+              color: isSelected ? AppColors.moduleVault : palette.border,
             ),
           ],
         ),
@@ -322,29 +322,27 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
   }
 
   // ── Step 2: Enter Credential ───────────────────────────────────────────────
-  Widget _buildEnterCredentialStep(bool isDark) {
+  Widget _buildEnterCredentialStep(BuildContext context) {
+    final palette = context.palette;
     final isPin = _selectedMode == SecurityLockMode.pin;
 
     return Column(
       children: [
         Text(
           isPin ? 'Create Master PIN' : 'Draw Master Pattern',
-          style: AppTextStyles.headingSmall.copyWith(
+          style: context.text.titleLarge?.copyWith(
             fontWeight: FontWeight.w800,
-            color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
+            color: palette.heading,
           ),
         ),
-        const SizedBox(height: 6),
+        AppSpacing.gapH4,
         Text(
           isPin
               ? 'Enter a 4-digit passcode for your vault'
               : 'Connect at least 4 dots on the grid',
-          style: TextStyle(
-            fontSize: 13,
-            color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
-          ),
+          style: context.text.bodySmall?.copyWith(color: palette.caption),
         ),
-        const SizedBox(height: 20),
+        AppSpacing.gapH20,
 
         if (isPin)
           PinDialpadWidget(
@@ -396,29 +394,27 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
   }
 
   // ── Step 3: Confirm Credential ─────────────────────────────────────────────
-  Widget _buildConfirmCredentialStep(bool isDark) {
+  Widget _buildConfirmCredentialStep(BuildContext context) {
+    final palette = context.palette;
     final isPin = _selectedMode == SecurityLockMode.pin;
 
     return Column(
       children: [
         Text(
           isPin ? 'Confirm Master PIN' : 'Redraw Master Pattern',
-          style: AppTextStyles.headingSmall.copyWith(
+          style: context.text.titleLarge?.copyWith(
             fontWeight: FontWeight.w800,
-            color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
+            color: palette.heading,
           ),
         ),
-        const SizedBox(height: 6),
+        AppSpacing.gapH4,
         Text(
           isPin
               ? 'Re-enter your 4-digit passcode to confirm'
               : 'Draw the same pattern again to verify',
-          style: TextStyle(
-            fontSize: 13,
-            color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
-          ),
+          style: context.text.bodySmall?.copyWith(color: palette.caption),
         ),
-        const SizedBox(height: 20),
+        AppSpacing.gapH20,
 
         if (isPin)
           PinDialpadWidget(
@@ -488,79 +484,89 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
   }
 
   // ── Step 4: Biometrics Prompt ──────────────────────────────────────────────
-  Widget _buildBiometricsStep(bool isDark) {
+  Widget _buildBiometricsStep(BuildContext context) {
+    final palette = context.palette;
+
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.all(20),
+          padding: AppSpacing.edgeInsetsAllLg,
           decoration: BoxDecoration(
-            color: AppColors.moduleVault.withValues(alpha: 0.15),
+            color: AppColors.moduleVault.withValues(alpha: 0.14),
             shape: BoxShape.circle,
           ),
           child: const Icon(
             Icons.fingerprint_rounded,
-            size: 48,
+            size: AppSpacing.huge,
             color: AppColors.moduleVault,
           ),
         ),
-        const SizedBox(height: 16),
+        AppSpacing.gapH16,
         Text(
           'Enable Biometric Unlock?',
-          style: AppTextStyles.headingSmall.copyWith(
+          style: context.text.titleLarge?.copyWith(
             fontWeight: FontWeight.w800,
-            color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
+            color: palette.heading,
           ),
         ),
-        const SizedBox(height: 8),
+        AppSpacing.gapH8,
         Text(
           'Use your device fingerprint scanner or Face ID for instant, seamless unlocking.',
           textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 13,
-            color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
-          ),
+          style: context.text.bodySmall?.copyWith(color: palette.caption),
         ),
-        const SizedBox(height: 28),
+        AppSpacing.gapH24,
 
         Row(
           children: [
             Expanded(
-              child: OutlinedButton(
-                onPressed: () {
-                  setState(() {
-                    _enableBiometrics = false;
-                    _step = _SetupStep.decoyPrompt;
-                  });
-                },
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: AppRadius.radiusMd,
+              child: SizedBox(
+                height: AppSpacing.xxxl + AppSpacing.xs,
+                child: OutlinedButton(
+                  onPressed: () {
+                    setState(() {
+                      _enableBiometrics = false;
+                      _step = _SetupStep.decoyPrompt;
+                    });
+                  },
+                  style: OutlinedButton.styleFrom(
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: AppRadius.radiusMd,
+                    ),
                   ),
+                  child: const Text('Skip'),
                 ),
-                child: const Text('Skip'),
               ),
             ),
-            const SizedBox(width: 12),
+            AppSpacing.gapW12,
             Expanded(
-              child: FilledButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _enableBiometrics = true;
-                    _step = _SetupStep.decoyPrompt;
-                  });
-                },
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.moduleVault,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: AppRadius.radiusMd,
+              child: SizedBox(
+                height: AppSpacing.xxxl + AppSpacing.xs,
+                child: FilledButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _enableBiometrics = true;
+                      _step = _SetupStep.decoyPrompt;
+                    });
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.moduleVault,
+                    foregroundColor: AppColors.textWhite,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: AppRadius.radiusMd,
+                    ),
                   ),
-                ),
-                icon: const Icon(Icons.check_rounded, size: 18),
-                label: const Text(
-                  'Enable',
-                  style: TextStyle(fontWeight: FontWeight.w700),
+                  icon: const Icon(
+                    Icons.check_rounded,
+                    size: AppSpacing.lg - AppSpacing.xxxs,
+                  ),
+                  label: Text(
+                    'Enable',
+                    style: context.text.titleSmall?.copyWith(
+                      color: AppColors.textWhite,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -571,70 +577,75 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
   }
 
   // ── Step 5: Decoy / Duress Mode Prompt ──────────────────────────────────────
-  Widget _buildDecoyPromptStep(bool isDark) {
+  Widget _buildDecoyPromptStep(BuildContext context) {
+    final palette = context.palette;
+
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.all(20),
+          padding: AppSpacing.edgeInsetsAllLg,
           decoration: BoxDecoration(
             color: AppColors.error.withValues(alpha: 0.12),
             shape: BoxShape.circle,
           ),
           child: const Icon(
             Icons.warning_amber_rounded,
-            size: 44,
+            size: AppSpacing.xxxl + AppSpacing.xxs,
             color: AppColors.error,
           ),
         ),
-        const SizedBox(height: 16),
+        AppSpacing.gapH16,
         Text(
           'Optional: Decoy PIN Protection',
-          style: AppTextStyles.headingSmall.copyWith(
+          style: context.text.titleLarge?.copyWith(
             fontWeight: FontWeight.w800,
-            color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
+            color: palette.heading,
           ),
         ),
-        const SizedBox(height: 8),
+        AppSpacing.gapH8,
         Text(
           'Under duress or threat, entering your Decoy PIN displays an innocent empty vault without revealing your real passwords.',
           textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 13,
-            color: isDark ? AppColors.darkTextCaption : AppColors.textCaption,
-          ),
+          style: context.text.bodySmall?.copyWith(color: palette.caption),
         ),
-        const SizedBox(height: 24),
+        AppSpacing.gapH24,
 
         Row(
           children: [
             Expanded(
-              child: OutlinedButton(
-                onPressed: _finalizeSetup,
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: AppRadius.radiusMd,
+              child: SizedBox(
+                height: AppSpacing.xxxl + AppSpacing.xs,
+                child: OutlinedButton(
+                  onPressed: _finalizeSetup,
+                  style: OutlinedButton.styleFrom(
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: AppRadius.radiusMd,
+                    ),
                   ),
+                  child: const Text('Finish Setup'),
                 ),
-                child: const Text('Finish Setup'),
               ),
             ),
-            const SizedBox(width: 12),
+            AppSpacing.gapW12,
             Expanded(
-              child: FilledButton(
-                onPressed: () {
-                  _showSetDecoyDialog();
-                },
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.moduleVault,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: AppRadius.radiusMd,
+              child: SizedBox(
+                height: AppSpacing.xxxl + AppSpacing.xs,
+                child: FilledButton(
+                  onPressed: _showSetDecoyDialog,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.moduleVault,
+                    foregroundColor: AppColors.textWhite,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: AppRadius.radiusMd,
+                    ),
                   ),
-                ),
-                child: const Text(
-                  'Set Decoy PIN',
-                  style: TextStyle(fontWeight: FontWeight.w700),
+                  child: Text(
+                    'Set Decoy PIN',
+                    style: context.text.titleSmall?.copyWith(
+                      color: AppColors.textWhite,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -654,11 +665,13 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Choose a different PIN than your master PIN. Entering this opens safe decoy data.',
-              style: TextStyle(fontSize: 13),
+              style: context.text.bodySmall?.copyWith(
+                color: context.palette.body,
+              ),
             ),
-            const SizedBox(height: 14),
+            AppSpacing.gapH12,
             TextField(
               controller: controller,
               keyboardType: TextInputType.number,

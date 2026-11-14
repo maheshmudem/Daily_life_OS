@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../../../../config/theme/app_colors.dart';
+import '../../../../config/theme/app_text_styles.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../domain/entities/user_profile_entity.dart';
 
 class AvatarPresetStyle {
@@ -76,6 +78,7 @@ class UserAvatarWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
     final preset = presets[profile.avatarPresetIndex % presets.length];
     final photoBytes = _decodeAvatarBytes();
 
@@ -109,10 +112,7 @@ class UserAvatarWidget extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.primary,
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: Theme.of(context).scaffoldBackgroundColor,
-                  width: 1.5,
-                ),
+                border: Border.all(color: palette.scaffold, width: 1.5),
               ),
               child: Icon(
                 Icons.edit_rounded,
@@ -131,10 +131,7 @@ class UserAvatarWidget extends StatelessWidget {
               decoration: BoxDecoration(
                 color: preset.gradientColors.first,
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: Theme.of(context).scaffoldBackgroundColor,
-                  width: 1.4,
-                ),
+                border: Border.all(color: palette.scaffold, width: 1.4),
               ),
               child: Icon(
                 preset.badgeIcon,
@@ -177,7 +174,7 @@ class UserAvatarWidget extends StatelessWidget {
       alignment: Alignment.center,
       child: Text(
         profile.monogram,
-        style: TextStyle(
+        style: AppTextStyles.labelLarge.copyWith(
           color: Colors.white,
           fontWeight: FontWeight.w800,
           fontSize: size * 0.42,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
+import '../../config/theme/theme_context.dart';
 
 /// A reusable text widget that prevents awkward single-line truncation
 /// ("half text") by showing up to [collapsedMaxLines] lines and providing
@@ -94,8 +95,7 @@ class _ExpandableTextWidgetState extends State<ExpandableTextWidget> {
                             _isExpanded
                                 ? widget.collapseLabel
                                 : widget.expandLabel,
-                            style: TextStyle(
-                              fontSize: 11,
+                            style: context.text.labelSmall?.copyWith(
                               fontWeight: FontWeight.w700,
                               color: accentColor,
                             ),

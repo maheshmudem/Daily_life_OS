@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_spacing.dart';
+import '../../../../config/theme/theme_context.dart';
 
 /// Focus / Break / Long-break / Flow Stopwatch segmented control.
 class PomodoroModeSelector extends StatelessWidget {
@@ -25,40 +26,50 @@ class PomodoroModeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
     return Container(
       height: 38,
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: isDark
-            ? AppColors.darkSurfaceSecondary
-            : AppColors.surfaceSecondary,
+        color: palette.surfaceMuted,
         borderRadius: BorderRadius.circular(11),
-        border: Border.all(
-          color: isDark ? AppColors.darkDivider : AppColors.divider,
-          width: 0.8,
-        ),
+        border: Border.all(color: palette.divider, width: 0.8),
       ),
       child: Row(
         children: [
-          _buildSegment(0, Icons.bolt_rounded, 'Focus (${workMinutes}m)'),
           _buildSegment(
+            context,
+            0,
+            Icons.bolt_rounded,
+            'Focus (${workMinutes}m)',
+          ),
+          _buildSegment(
+            context,
             1,
             Icons.coffee_rounded,
             'Break (${shortBreakMinutes}m)',
           ),
           _buildSegment(
+            context,
             2,
             Icons.weekend_rounded,
             'Long (${longBreakMinutes}m)',
           ),
           if (showStopwatch)
-            _buildSegment(3, Icons.all_inclusive_rounded, 'Flow ⏱'),
+            _buildSegment(context, 3, Icons.all_inclusive_rounded, 'Flow ⏱'),
         ],
       ),
     );
   }
 
-  Widget _buildSegment(int index, IconData icon, String label) {
+  Widget _buildSegment(
+    BuildContext context,
+    int index,
+    IconData icon,
+    String label,
+  ) {
+    final palette = context.palette;
+    final textTheme = context.text;
     final isSelected = selectedIndex == index;
     final Color activeColor;
     switch (index) {
@@ -77,9 +88,7 @@ class PomodoroModeSelector extends StatelessWidget {
         break;
     }
 
-    final color = isSelected
-        ? activeColor
-        : (isDark ? AppColors.darkTextCaption : AppColors.textCaption);
+    final color = isSelected ? activeColor : palette.caption;
 
     return Expanded(
       child: GestureDetector(
@@ -91,17 +100,17 @@ class PomodoroModeSelector extends StatelessWidget {
           alignment: Alignment.center,
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
           decoration: BoxDecoration(
-            color: isSelected
-                ? (isDark ? AppColors.darkCardBackground : Colors.white)
-                : Colors.transparent,
+            color: isSelected ? palette.card : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
             border: isSelected
                 ? Border.all(
-                    color: activeColor.withValues(alpha: isDark ? 0.35 : 0.22),
+                    color: activeColor.withValues(
+                      alpha: palette.isDark ? 0.35 : 0.22,
+                    ),
                     width: 0.85,
                   )
                 : null,
-            boxShadow: isSelected && !isDark
+            boxShadow: isSelected && !palette.isDark
                 ? [
                     BoxShadow(
                       color: activeColor.withValues(alpha: 0.12),
@@ -120,14 +129,10 @@ class PomodoroModeSelector extends StatelessWidget {
                 const SizedBox(width: 3.5),
                 Text(
                   label,
-                  style: TextStyle(
+                  style: textTheme.labelSmall?.copyWith(
                     fontSize: 11.5,
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                    color: isSelected
-                        ? (isDark
-                              ? AppColors.darkTextHeading
-                              : AppColors.textHeading)
-                        : color,
+                    color: isSelected ? palette.heading : color,
                   ),
                 ),
               ],

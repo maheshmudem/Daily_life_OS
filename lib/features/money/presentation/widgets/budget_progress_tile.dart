@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../config/theme/app_colors.dart';
+import '../../../../config/theme/app_radius.dart';
+import '../../../../config/theme/app_spacing.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../domain/entities/category_budget_entity.dart';
@@ -20,15 +23,18 @@ class BudgetProgressTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = context.palette;
+    final text = context.text;
     final cat = budget.categoryInfo;
     final barColor = _statusColor();
-    final captionColor = isDark ? AppColors.darkTextMuted : AppColors.textMuted;
 
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -39,7 +45,7 @@ class BudgetProgressTile extends StatelessWidget {
                   height: 36,
                   decoration: BoxDecoration(
                     color: cat.color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: AppRadius.radiusMd,
                   ),
                   child: Icon(cat.icon, size: 18, color: cat.color),
                 ),
@@ -50,12 +56,10 @@ class BudgetProgressTile extends StatelessWidget {
                     children: [
                       Text(
                         cat.label,
-                        style: TextStyle(
+                        style: text.titleSmall?.copyWith(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
-                          color: isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.textPrimary,
+                          color: p.heading,
                         ),
                       ),
                       const SizedBox(height: 1),
@@ -70,7 +74,7 @@ class BudgetProgressTile extends StatelessWidget {
                                 shape: BoxShape.circle,
                               ),
                             ),
-                            const SizedBox(width: 4),
+                            AppSpacing.gapW4,
                           ],
                           Flexible(
                             child: Text(
@@ -82,7 +86,7 @@ class BudgetProgressTile extends StatelessWidget {
                                   ? StringConstants.nearLimit
                                   : '${CurrencyUtils.format(budget.remaining, decimals: 0)} left',
                               softWrap: true,
-                              style: TextStyle(
+                              style: text.labelSmall?.copyWith(
                                 fontSize: 11,
                                 fontWeight:
                                     budget.isOverBudget || budget.isNearLimit
@@ -90,7 +94,7 @@ class BudgetProgressTile extends StatelessWidget {
                                     : FontWeight.w400,
                                 color: budget.isOverBudget || budget.isNearLimit
                                     ? barColor
-                                    : captionColor,
+                                    : p.caption,
                               ),
                             ),
                           ),
@@ -99,7 +103,7 @@ class BudgetProgressTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
+                AppSpacing.gapW8,
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerRight,
@@ -111,14 +115,12 @@ class BudgetProgressTile extends StatelessWidget {
                           children: [
                             TextSpan(
                               text: CurrencyUtils.format(budget.spent),
-                              style: TextStyle(
+                              style: text.labelLarge?.copyWith(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
                                 color: budget.isOverBudget
                                     ? AppColors.error
-                                    : (isDark
-                                          ? AppColors.darkTextPrimary
-                                          : AppColors.textPrimary),
+                                    : p.heading,
                                 fontFeatures: const [
                                   FontFeature.tabularFigures(),
                                 ],
@@ -128,9 +130,9 @@ class BudgetProgressTile extends StatelessWidget {
                               TextSpan(
                                 text:
                                     ' / ${CurrencyUtils.format(budget.monthlyLimit)}',
-                                style: TextStyle(
+                                style: text.labelSmall?.copyWith(
                                   fontSize: 11.5,
-                                  color: captionColor,
+                                  color: p.caption,
                                 ),
                               ),
                           ],
@@ -141,19 +143,17 @@ class BudgetProgressTile extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            AppSpacing.gapH8,
             TweenAnimationBuilder<double>(
               tween: Tween(begin: 0, end: budget.progress),
               duration: const Duration(milliseconds: 800),
               curve: Curves.easeOutCubic,
               builder: (context, value, _) => ClipRRect(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: AppRadius.radiusXs,
                 child: LinearProgressIndicator(
                   value: value,
                   minHeight: 5.5,
-                  backgroundColor: isDark
-                      ? AppColors.darkSurfaceMuted
-                      : AppColors.surfaceElevated,
+                  backgroundColor: p.isDark ? p.surfaceSubtle : p.surfaceMuted,
                   valueColor: AlwaysStoppedAnimation<Color>(barColor),
                 ),
               ),

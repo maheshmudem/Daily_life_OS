@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../config/theme/app_colors.dart';
+import '../../../../config/theme/app_radius.dart';
+import '../../../../config/theme/app_spacing.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import 'money_shell_scope.dart';
 
@@ -48,7 +51,10 @@ class MoneyBottomNavBar extends StatelessWidget {
       );
     }
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: AppSpacing.xs,
+      ),
       decoration: BoxDecoration(
         color: activeColor.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(14),
@@ -67,7 +73,7 @@ class MoneyBottomNavBar extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: AppRadius.radiusMd,
         boxShadow: [
           BoxShadow(
             color: AppColors.moduleMoney.withValues(alpha: 0.32),
@@ -76,24 +82,24 @@ class MoneyBottomNavBar extends StatelessWidget {
           ),
         ],
       ),
-      child: const Icon(Icons.add_rounded, color: Colors.white, size: 21),
+      child: const Icon(
+        Icons.add_rounded,
+        color: AppColors.textWhite,
+        size: 21,
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = context.palette;
+    final text = context.text;
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.surface,
-        border: Border(
-          top: BorderSide(
-            color: isDark ? AppColors.darkBorder : AppColors.border,
-            width: 1,
-          ),
-        ),
-        boxShadow: isDark
+        color: p.card,
+        border: Border(top: BorderSide(color: p.border, width: 1)),
+        boxShadow: p.isDark
             ? null
             : [
                 BoxShadow(
@@ -108,19 +114,17 @@ class MoneyBottomNavBar extends StatelessWidget {
         currentIndex: _visualIndex,
         onTap: _onTap,
         type: BottomNavigationBarType.fixed,
-        backgroundColor: isDark ? AppColors.darkSurface : AppColors.surface,
+        backgroundColor: p.card,
         selectedItemColor: AppColors.moduleMoney,
-        unselectedItemColor: isDark
-            ? AppColors.darkTextMuted
-            : AppColors.textMuted,
+        unselectedItemColor: p.caption,
         selectedFontSize: 11,
         unselectedFontSize: 11,
         elevation: 0,
-        selectedLabelStyle: const TextStyle(
+        selectedLabelStyle: text.labelSmall?.copyWith(
           fontWeight: FontWeight.w700,
           fontSize: 11,
         ),
-        unselectedLabelStyle: const TextStyle(
+        unselectedLabelStyle: text.labelSmall?.copyWith(
           fontWeight: FontWeight.w500,
           fontSize: 11,
         ),

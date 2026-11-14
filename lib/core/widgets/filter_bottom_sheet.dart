@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
+import '../../config/theme/app_radius.dart';
+import '../../config/theme/app_spacing.dart';
+import '../../config/theme/theme_context.dart';
 
 class FilterBottomSheet extends StatelessWidget {
   final String title;
@@ -25,6 +28,7 @@ class FilterBottomSheet extends StatelessWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: context.palette.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -39,6 +43,9 @@ class FilterBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
+    final text = context.text;
+
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -47,7 +54,7 @@ class FilterBottomSheet extends StatelessWidget {
         constraints: BoxConstraints(
           maxHeight: MediaQuery.of(context).size.height * 0.7,
         ),
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,34 +65,34 @@ class FilterBottomSheet extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: BorderRadius.circular(2),
+                  color: p.border,
+                  borderRadius: AppRadius.radiusFull,
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            AppSpacing.gapH16,
             // Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: text.titleLarge?.copyWith(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textHeading,
+                    color: p.heading,
                   ),
                 ),
                 TextButton(
                   onPressed: onClear,
-                  child: const Text(
+                  child: Text(
                     'Clear All',
-                    style: TextStyle(color: AppColors.primary),
+                    style: text.labelLarge?.copyWith(color: AppColors.primary),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            AppSpacing.gapH16,
             // Filter content
             Flexible(
               child: SingleChildScrollView(
@@ -95,7 +102,7 @@ class FilterBottomSheet extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            AppSpacing.gapH16,
             // Apply button
             SizedBox(
               width: double.infinity,
@@ -106,15 +113,18 @@ class FilterBottomSheet extends StatelessWidget {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.textWhite,
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: AppRadius.radiusMd,
                   ),
                 ),
-                child: const Text(
+                child: Text(
                   'Apply Filters',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                  style: text.labelLarge?.copyWith(
+                    color: AppColors.textWhite,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),

@@ -9,6 +9,7 @@ abstract class NotesLocalDataSource {
     required String content,
     required int colorValue,
     String tags = '',
+    bool isPinned = false,
   });
   Future<void> updateNote(
     int id, {
@@ -16,6 +17,7 @@ abstract class NotesLocalDataSource {
     String? content,
     int? colorValue,
     String? tags,
+    bool? isPinned,
   });
   Future<void> deleteNote(int id);
   Future<void> togglePin(int id);
@@ -43,6 +45,7 @@ class NotesLocalDataSourceImpl implements NotesLocalDataSource {
     required String content,
     required int colorValue,
     String tags = '',
+    bool isPinned = false,
   }) async {
     final now = DateTime.now().toIso8601String();
     await _db
@@ -52,6 +55,7 @@ class NotesLocalDataSourceImpl implements NotesLocalDataSource {
             title: title,
             content: content,
             colorValue: colorValue,
+            isPinned: Value(isPinned),
             tags: Value(tags),
             createdAt: now,
             updatedAt: now,
@@ -66,6 +70,7 @@ class NotesLocalDataSourceImpl implements NotesLocalDataSource {
     String? content,
     int? colorValue,
     String? tags,
+    bool? isPinned,
   }) async {
     final now = DateTime.now().toIso8601String();
     await (_db.update(_db.notes)..where((t) => t.id.equals(id))).write(
@@ -76,6 +81,7 @@ class NotesLocalDataSourceImpl implements NotesLocalDataSource {
             ? Value(colorValue)
             : const Value.absent(),
         tags: tags != null ? Value(tags) : const Value.absent(),
+        isPinned: isPinned != null ? Value(isPinned) : const Value.absent(),
         updatedAt: Value(now),
       ),
     );

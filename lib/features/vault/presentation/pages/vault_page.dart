@@ -395,23 +395,26 @@ class _VaultViewState extends State<_VaultView>
               color: AppColors.moduleVault.withValues(alpha: 0.12),
               borderRadius: AppRadius.radiusFull,
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.verified_user_rounded,
-                  size: AppSpacing.sm,
-                  color: AppColors.moduleVault,
-                ),
-                AppSpacing.gapW4,
-                Text(
-                  'AES-256',
-                  style: context.text.labelSmall?.copyWith(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.verified_user_rounded,
+                    size: AppSpacing.sm,
                     color: AppColors.moduleVault,
-                    fontWeight: FontWeight.w700,
                   ),
-                ),
-              ],
+                  AppSpacing.gapW4,
+                  Text(
+                    'AES-256',
+                    style: context.text.labelSmall?.copyWith(
+                      color: AppColors.moduleVault,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           actionsEndPadding: AppSpacing.pageGutter,
@@ -437,12 +440,14 @@ class _VaultViewState extends State<_VaultView>
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
                 height: AppSpacing.xxl + AppSpacing.xxs,
-                padding: AppSpacing.edgeInsetsHSm,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xs + AppSpacing.xxxs,
+                ),
                 decoration: BoxDecoration(
                   color: isDecoy
                       ? AppColors.error.withValues(alpha: 0.14)
                       : palette.card,
-                  borderRadius: AppRadius.radiusFull,
+                  borderRadius: BorderRadius.circular(11),
                   border: Border.all(
                     color: isDecoy
                         ? AppColors.error.withValues(alpha: 0.5)
@@ -472,7 +477,7 @@ class _VaultViewState extends State<_VaultView>
                 ),
               ),
             ),
-            AppSpacing.gapW8,
+            const SizedBox(width: AppSpacing.xs - AppSpacing.xxxs),
             FeatureIconButton(
               tooltip: 'Security Settings',
               icon: Icons.shield_outlined,
@@ -490,7 +495,7 @@ class _VaultViewState extends State<_VaultView>
                 });
               },
             ),
-            AppSpacing.gapW8,
+            const SizedBox(width: AppSpacing.xs - AppSpacing.xxxs),
             FeatureIconButton(
               tooltip: !_isSecurityEnabled
                   ? 'Set Up Security'
@@ -525,7 +530,7 @@ class _VaultViewState extends State<_VaultView>
               },
             ),
             if (_isUnlocked) ...[
-              AppSpacing.gapW8,
+              const SizedBox(width: AppSpacing.xs - AppSpacing.xxxs),
               FeatureIconButton(
                 tooltip: 'Add Vault Item',
                 icon: Icons.add_rounded,
@@ -636,7 +641,7 @@ class _VaultViewState extends State<_VaultView>
     final palette = context.palette;
 
     return Container(
-      padding: AppSpacing.edgeInsetsAllMd,
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: palette.card,
         borderRadius: AppRadius.borderLg,
@@ -672,26 +677,31 @@ class _VaultViewState extends State<_VaultView>
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Wrap(
-                      spacing: AppSpacing.xs,
-                      runSpacing: 4,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        Text(
-                          isDecoy
-                              ? 'Decoy Vault Active'
-                              : 'Zero-Knowledge Encrypted',
-                          softWrap: true,
-                          style: context.text.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: palette.heading,
-                          ),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        isDecoy
+                            ? 'Decoy Vault Active'
+                            : 'Zero-Knowledge Encrypted',
+                        maxLines: 1,
+                        style: context.text.titleSmall?.copyWith(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.25,
+                          color: palette.heading,
                         ),
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.xs,
-                            vertical: AppSpacing.xxxs,
+                            horizontal: AppSpacing.xs - AppSpacing.xxxs,
+                            vertical: 1.5,
                           ),
                           decoration: BoxDecoration(
                             color:
@@ -704,6 +714,7 @@ class _VaultViewState extends State<_VaultView>
                           child: Text(
                             _isSecurityEnabled ? 'Protected' : 'Unsecured',
                             style: context.text.labelSmall?.copyWith(
+                              fontSize: 10.5,
                               fontWeight: FontWeight.w700,
                               color: _isSecurityEnabled
                                   ? AppColors.success
@@ -711,17 +722,23 @@ class _VaultViewState extends State<_VaultView>
                             ),
                           ),
                         ),
+                        const SizedBox(width: AppSpacing.xs - AppSpacing.xxxs),
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              !_isSecurityEnabled
+                                  ? 'No PIN / Pattern lock'
+                                  : 'Encrypted on device',
+                              maxLines: 1,
+                              style: context.text.labelSmall?.copyWith(
+                                color: palette.caption,
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
-                    ),
-                    AppSpacing.gapH4,
-                    Text(
-                      !_isSecurityEnabled
-                          ? 'No PIN/Pattern lock set. Enable lock to protect keys.'
-                          : 'Keys never leave this device. Encrypted at rest.',
-                      softWrap: true,
-                      style: context.text.bodySmall?.copyWith(
-                        color: palette.caption,
-                      ),
                     ),
                   ],
                 ),
@@ -732,9 +749,9 @@ class _VaultViewState extends State<_VaultView>
                   borderRadius: AppRadius.borderSm,
                   onTap: () => _openSecuritySetup(context),
                   child: Container(
+                    height: AppSpacing.xxl + AppSpacing.xxxs,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: AppSpacing.xs,
+                      horizontal: AppSpacing.xs + AppSpacing.xxxs,
                     ),
                     decoration: const BoxDecoration(
                       color: AppColors.moduleVault,
@@ -745,7 +762,7 @@ class _VaultViewState extends State<_VaultView>
                       children: [
                         const Icon(
                           Icons.shield_rounded,
-                          size: AppSpacing.sm,
+                          size: AppSpacing.sm + 1,
                           color: Colors.white,
                         ),
                         AppSpacing.gapW4,
@@ -768,9 +785,9 @@ class _VaultViewState extends State<_VaultView>
                     context.read<VaultBloc>().add(const LockVault());
                   },
                   child: Container(
+                    height: AppSpacing.xxl + AppSpacing.xxxs,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: AppSpacing.xs,
+                      horizontal: AppSpacing.xs + AppSpacing.xxxs,
                     ),
                     decoration: BoxDecoration(
                       color: AppColors.moduleVault.withValues(alpha: 0.12),
@@ -781,7 +798,7 @@ class _VaultViewState extends State<_VaultView>
                       children: [
                         const Icon(
                           Icons.lock_outline_rounded,
-                          size: AppSpacing.sm,
+                          size: AppSpacing.sm + 1,
                           color: AppColors.moduleVault,
                         ),
                         AppSpacing.gapW4,
@@ -802,7 +819,7 @@ class _VaultViewState extends State<_VaultView>
           Container(
             padding: const EdgeInsets.symmetric(
               vertical: AppSpacing.xs,
-              horizontal: AppSpacing.sm,
+              horizontal: AppSpacing.xs,
             ),
             decoration: BoxDecoration(
               color: palette.surfaceMuted,
@@ -885,12 +902,12 @@ class _VaultViewState extends State<_VaultView>
     final palette = context.palette;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, size: AppSpacing.md - AppSpacing.xxxs, color: color),
-          AppSpacing.gapW4,
+          const SizedBox(width: AppSpacing.xs - AppSpacing.xxxs),
           Flexible(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -901,6 +918,7 @@ class _VaultViewState extends State<_VaultView>
                   child: Text(
                     label,
                     style: context.text.labelSmall?.copyWith(
+                      fontSize: 11,
                       color: palette.caption,
                     ),
                   ),
@@ -911,6 +929,7 @@ class _VaultViewState extends State<_VaultView>
                   child: Text(
                     value,
                     style: context.text.labelMedium?.copyWith(
+                      fontSize: 12.5,
                       fontWeight: FontWeight.w700,
                       color: palette.heading,
                     ),
@@ -965,102 +984,106 @@ class _VaultViewState extends State<_VaultView>
         .where((p) => _secretForItem(p).length < 10)
         .length;
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.pageGutter,
-        AppSpacing.sm,
-        AppSpacing.pageGutter,
-        AppSpacing.huge * 2,
-      ),
-      children: [
-        // 1. Unified Watchtower Overview Card
-        _buildVaultOverviewCard(
-          context: context,
-          isDecoy: isDecoy,
-          passwordCount: passwords.length,
-          documentCount: documents.length,
-          expiringCount: expiringCount,
-          weakPasswordCount: weakPasswordCount,
-        ),
-        AppSpacing.gapH12,
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1080),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.pageGutter,
+            AppSpacing.sm,
+            AppSpacing.pageGutter,
+            AppSpacing.huge * 2,
+          ),
+          children: [
+            // 1. Unified Watchtower Overview Card
+            _buildVaultOverviewCard(
+              context: context,
+              isDecoy: isDecoy,
+              passwordCount: passwords.length,
+              documentCount: documents.length,
+              expiringCount: expiringCount,
+              weakPasswordCount: weakPasswordCount,
+            ),
+            AppSpacing.gapH12,
 
-        // 2. Clean 44px Search Bar + 36px Category Filter Pills
-        _buildSearchAndFilterSection(
-          context: context,
-          controller: _passwordSearchCtrl,
-          hintText: 'Search logins, usernames, or categories...',
-          query: _passwordSearchQuery,
-          onQueryChanged: (val) => setState(() => _passwordSearchQuery = val),
-          onClearQuery: () {
-            _passwordSearchCtrl.clear();
-            setState(() => _passwordSearchQuery = '');
-          },
-          categories: categories,
-          categoryCounts: categoryCounts,
-          selectedCategory: _selectedPasswordCategory,
-          onCategorySelected: (cat) =>
-              setState(() => _selectedPasswordCategory = cat),
-        ),
-        AppSpacing.gapH16,
+            // 2. Clean 40px Search Bar + 32px Category Filter Pills
+            _buildSearchAndFilterSection(
+              context: context,
+              controller: _passwordSearchCtrl,
+              hintText: 'Search logins, usernames, or categories...',
+              query: _passwordSearchQuery,
+              onQueryChanged: (val) =>
+                  setState(() => _passwordSearchQuery = val),
+              onClearQuery: () {
+                _passwordSearchCtrl.clear();
+                setState(() => _passwordSearchQuery = '');
+              },
+              categories: categories,
+              categoryCounts: categoryCounts,
+              selectedCategory: _selectedPasswordCategory,
+              onCategorySelected: (cat) =>
+                  setState(() => _selectedPasswordCategory = cat),
+            ),
+            AppSpacing.gapH12,
 
-        // 3. Grouped Section Cards by Category
-        if (filtered.isEmpty)
-          _buildEmptySectionCard(
-            context: context,
-            icon: Icons.key_off_rounded,
-            title: 'No matching logins found',
-            subtitle:
-                'Try clearing your search or category filter, or add a new login.',
-            onAction: () {
-              _passwordSearchCtrl.clear();
-              setState(() {
-                _passwordSearchQuery = '';
-                _selectedPasswordCategory = 'All';
-              });
-            },
-            actionLabel: 'Reset Filters',
-          )
-        else
-          ...grouped.entries.map((entry) {
-            final category = entry.key;
-            final items = entry.value;
-            final accent = _categoryColor(category);
-
-            return Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: _buildSectionCardContainer(
+            // 3. Grouped Section Cards by Category
+            if (filtered.isEmpty)
+              _buildEmptySectionCard(
                 context: context,
-                sectionIcon: _sectionIconForCategory(category),
-                sectionTitle: _sectionTitleForCategory(category),
-                sectionAccent: accent,
-                trailingBadgeText:
-                    '${items.length} ${items.length == 1 ? 'login' : 'logins'}',
-                children: [
-                  for (var i = 0; i < items.length; i++) ...[
-                    _buildPasswordRow(
-                      context: context,
-                      item: items[i],
-                      accent: accent,
-                    ),
-                    if (i < items.length - 1)
-                      Divider(
-                        height: 1,
-                        thickness: 1,
-                        indent: AppSpacing.md + AppSpacing.xxxl + AppSpacing.sm,
-                        endIndent: AppSpacing.md,
-                        color: context.palette.border,
-                      ),
-                  ],
-                ],
-              ),
-            );
-          }),
+                icon: Icons.key_off_rounded,
+                title: 'No matching logins found',
+                subtitle:
+                    'Try clearing your search or category filter, or add a new login.',
+                onAction: () {
+                  _passwordSearchCtrl.clear();
+                  setState(() {
+                    _passwordSearchQuery = '';
+                    _selectedPasswordCategory = 'All';
+                  });
+                },
+                actionLabel: 'Reset Filters',
+              )
+            else
+              ...grouped.entries.map((entry) {
+                final category = entry.key;
+                final items = entry.value;
+                final accent = _categoryColor(category);
 
-        AppSpacing.gapH4,
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: _buildSectionCardContainer(
+                    context: context,
+                    sectionIcon: _sectionIconForCategory(category),
+                    sectionTitle: _sectionTitleForCategory(category),
+                    sectionAccent: accent,
+                    trailingBadgeText:
+                        '${items.length} ${items.length == 1 ? 'login' : 'logins'}',
+                    children: [
+                      for (var i = 0; i < items.length; i++) ...[
+                        _buildPasswordRow(
+                          context: context,
+                          item: items[i],
+                          accent: accent,
+                        ),
+                        if (i < items.length - 1)
+                          Divider(
+                            height: 1,
+                            thickness: 1,
+                            indent: AppSpacing.md + 38 + AppSpacing.sm,
+                            endIndent: AppSpacing.md,
+                            color: context.palette.divider,
+                          ),
+                      ],
+                    ],
+                  ),
+                );
+              }),
 
-        // 4. Interactive Password Security Tools & Live Key Generator Card
-        _buildPasswordSecurityToolsCard(context),
-      ],
+            // 4. Interactive Password Security Tools & Live Key Generator Card
+            _buildPasswordSecurityToolsCard(context),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1084,37 +1107,47 @@ class _VaultViewState extends State<_VaultView>
         child: Row(
           children: [
             Container(
-              width: AppSpacing.xxxl,
-              height: AppSpacing.xxxl,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
                 color: accent.withValues(alpha: 0.12),
-                borderRadius: AppRadius.borderMd,
+                borderRadius: BorderRadius.circular(11),
                 border: Border.all(color: accent.withValues(alpha: 0.25)),
               ),
-              child: Icon(item.icon, color: accent, size: AppSpacing.lg),
+              child: Icon(
+                item.icon,
+                color: accent,
+                size: AppSpacing.lg - AppSpacing.xxxs,
+              ),
             ),
             AppSpacing.gapW12,
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Wrap(
-                    spacing: AppSpacing.xs,
-                    runSpacing: 4,
-                    crossAxisAlignment: WrapCrossAlignment.center,
+                  Row(
                     children: [
-                      Text(
-                        item.title,
-                        softWrap: true,
-                        style: context.text.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: palette.heading,
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            item.title,
+                            maxLines: 1,
+                            style: context.text.titleSmall?.copyWith(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: palette.heading,
+                            ),
+                          ),
                         ),
                       ),
+                      const SizedBox(width: AppSpacing.xs - AppSpacing.xxxs),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.xs,
-                          vertical: AppSpacing.xxxs,
+                          horizontal: AppSpacing.xs - AppSpacing.xxxs,
+                          vertical: 1.5,
                         ),
                         decoration: BoxDecoration(
                           color: accent.withValues(alpha: 0.12),
@@ -1123,6 +1156,7 @@ class _VaultViewState extends State<_VaultView>
                         child: Text(
                           item.category,
                           style: context.text.labelSmall?.copyWith(
+                            fontSize: 10.5,
                             fontWeight: FontWeight.w700,
                             color: accent,
                           ),
@@ -1130,39 +1164,43 @@ class _VaultViewState extends State<_VaultView>
                       ),
                     ],
                   ),
-                  AppSpacing.gapH4,
-                  Wrap(
-                    spacing: AppSpacing.xs,
-                    runSpacing: 2,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      Text(
-                        item.username,
-                        softWrap: true,
-                        style: context.text.bodySmall?.copyWith(
-                          color: palette.secondary,
+                  const SizedBox(height: 3),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          item.username,
+                          maxLines: 1,
+                          style: context.text.bodySmall?.copyWith(
+                            fontSize: 12.5,
+                            color: palette.secondary,
+                          ),
                         ),
-                      ),
-                      Text(
-                        '•',
-                        style: context.text.bodySmall?.copyWith(
-                          color: palette.caption,
+                        Text(
+                          '  •  ',
+                          style: context.text.bodySmall?.copyWith(
+                            fontSize: 12,
+                            color: palette.caption,
+                          ),
                         ),
-                      ),
-                      Text(
-                        isRevealed ? secret : '••••••••',
-                        softWrap: true,
-                        style: AppTextStyles.monoCode.copyWith(
-                          fontSize: 12,
-                          fontWeight: isRevealed
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                          color: isRevealed
-                              ? AppColors.moduleVault
-                              : palette.caption,
+                        Text(
+                          isRevealed ? secret : '••••••••',
+                          maxLines: 1,
+                          style: AppTextStyles.monoCode.copyWith(
+                            fontSize: 12,
+                            fontWeight: isRevealed
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: isRevealed
+                                ? AppColors.moduleVault
+                                : palette.caption,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -1186,7 +1224,7 @@ class _VaultViewState extends State<_VaultView>
                 });
               },
             ),
-            AppSpacing.gapW8,
+            const SizedBox(width: AppSpacing.xs - AppSpacing.xxxs),
             // 1-Tap Copy Password Button
             _buildRowActionIcon(
               tooltip: 'Copy Password',
@@ -1211,22 +1249,22 @@ class _VaultViewState extends State<_VaultView>
       trailingBadgeText: '100% Strong',
       children: [
         Padding(
-          padding: AppSpacing.edgeInsetsAllMd,
+          padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
                   Container(
-                    width: AppSpacing.xxxl,
-                    height: AppSpacing.xxxl,
+                    width: 38,
+                    height: 38,
                     decoration: BoxDecoration(
                       color: AppColors.secondary.withValues(alpha: 0.12),
-                      borderRadius: AppRadius.borderMd,
+                      borderRadius: BorderRadius.circular(11),
                     ),
                     child: const Icon(
                       Icons.password_rounded,
-                      size: AppSpacing.lg,
+                      size: AppSpacing.lg - AppSpacing.xxxs,
                       color: AppColors.secondary,
                     ),
                   ),
@@ -1234,19 +1272,32 @@ class _VaultViewState extends State<_VaultView>
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          'Cryptographic Key Generator',
-                          style: context.text.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: palette.heading,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Cryptographic Key Generator',
+                            maxLines: 1,
+                            style: context.text.titleSmall?.copyWith(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: palette.heading,
+                            ),
                           ),
                         ),
-                        AppSpacing.gapH4,
-                        Text(
-                          'Generate a $_generatorLength-char high-entropy password & copy instantly',
-                          style: context.text.bodySmall?.copyWith(
-                            color: palette.caption,
+                        const SizedBox(height: 2),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            '$_generatorLength-char high-entropy key • instant copy',
+                            maxLines: 1,
+                            style: context.text.bodySmall?.copyWith(
+                              fontSize: 12,
+                              color: palette.caption,
+                            ),
                           ),
                         ),
                       ],
@@ -1265,9 +1316,9 @@ class _VaultViewState extends State<_VaultView>
                       );
                     },
                     child: Container(
+                      height: AppSpacing.xxl + AppSpacing.xxxs,
                       padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                        vertical: AppSpacing.xs,
+                        horizontal: AppSpacing.xs + AppSpacing.xxxs,
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.secondary.withValues(alpha: 0.14),
@@ -1281,7 +1332,7 @@ class _VaultViewState extends State<_VaultView>
                         children: [
                           const Icon(
                             Icons.auto_awesome_rounded,
-                            size: AppSpacing.sm,
+                            size: AppSpacing.sm + 1,
                             color: AppColors.secondary,
                           ),
                           AppSpacing.gapW4,
@@ -1303,7 +1354,7 @@ class _VaultViewState extends State<_VaultView>
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.sm,
-                  vertical: AppSpacing.xs,
+                  vertical: AppSpacing.xs - AppSpacing.xxxs,
                 ),
                 decoration: BoxDecoration(
                   color: palette.surfaceMuted,
@@ -1340,7 +1391,7 @@ class _VaultViewState extends State<_VaultView>
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.xs,
-                            vertical: AppSpacing.xxxs,
+                            vertical: AppSpacing.xxxs + 1,
                           ),
                           decoration: BoxDecoration(
                             color: _generatorLength == len
@@ -1418,149 +1469,159 @@ class _VaultViewState extends State<_VaultView>
     final activeDocs = filtered.where((d) => !d.isExpiringSoon).toList();
     final totalExpiring = documents.where((d) => d.isExpiringSoon).length;
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.pageGutter,
-        AppSpacing.sm,
-        AppSpacing.pageGutter,
-        AppSpacing.huge * 2,
-      ),
-      children: [
-        // 1. Unified Watchtower Overview Card
-        _buildVaultOverviewCard(
-          context: context,
-          isDecoy: isDecoy,
-          passwordCount: passwords.length,
-          documentCount: documents.length,
-          expiringCount: totalExpiring,
-        ),
-        AppSpacing.gapH12,
-
-        // 2. Automated Expiry Notice Card
-        Container(
-          padding: AppSpacing.edgeInsetsAllSm,
-          decoration: BoxDecoration(
-            color: AppColors.moduleTime.withValues(alpha: 0.1),
-            borderRadius: AppRadius.borderMd,
-            border: Border.all(
-              color: AppColors.moduleTime.withValues(alpha: 0.28),
-            ),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1080),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.pageGutter,
+            AppSpacing.sm,
+            AppSpacing.pageGutter,
+            AppSpacing.huge * 2,
           ),
-          child: Row(
-            children: [
-              Container(
-                width: AppSpacing.xxl,
-                height: AppSpacing.xxl,
-                decoration: BoxDecoration(
-                  color: AppColors.moduleTime.withValues(alpha: 0.18),
-                  borderRadius: AppRadius.borderSm,
-                ),
-                child: const Icon(
-                  Icons.notification_important_rounded,
-                  color: AppColors.moduleTime,
-                  size: AppSpacing.md,
-                ),
-              ),
-              AppSpacing.gapW12,
-              Expanded(
-                child: Text(
-                  'Automated Expiry Alerts: We notify you 30 days & 7 days before warranty or policy lapses.',
-                  style: context.text.bodySmall?.copyWith(
-                    color: context.palette.heading,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        AppSpacing.gapH12,
-
-        // 3. Clean 44px Search Bar + 36px Category Filter Pills
-        _buildSearchAndFilterSection(
-          context: context,
-          controller: _documentSearchCtrl,
-          hintText: 'Search warranties, policies, or categories...',
-          query: _documentSearchQuery,
-          onQueryChanged: (val) => setState(() => _documentSearchQuery = val),
-          onClearQuery: () {
-            _documentSearchCtrl.clear();
-            setState(() => _documentSearchQuery = '');
-          },
-          categories: categories,
-          categoryCounts: categoryCounts,
-          selectedCategory: _selectedDocumentCategory,
-          onCategorySelected: (cat) =>
-              setState(() => _selectedDocumentCategory = cat),
-        ),
-        AppSpacing.gapH16,
-
-        if (filtered.isEmpty)
-          _buildEmptySectionCard(
-            context: context,
-            icon: Icons.folder_off_rounded,
-            title: 'No matching warranties or policies',
-            subtitle:
-                'Clear your search filter or add a new warranty/insurance card.',
-            onAction: () {
-              _documentSearchCtrl.clear();
-              setState(() {
-                _documentSearchQuery = '';
-                _selectedDocumentCategory = 'All';
-              });
-            },
-            actionLabel: 'Reset Filters',
-          )
-        else ...[
-          // 4. Section Card: EXPIRING SOON (Action Needed)
-          if (expiringDocs.isNotEmpty) ...[
-            _buildSectionCardContainer(
+          children: [
+            // 1. Unified Watchtower Overview Card
+            _buildVaultOverviewCard(
               context: context,
-              sectionIcon: Icons.warning_amber_rounded,
-              sectionTitle: 'EXPIRING SOON • RENEWAL NEEDED',
-              sectionAccent: AppColors.warning,
-              trailingBadgeText: '${expiringDocs.length} urgent',
-              children: [
-                for (var i = 0; i < expiringDocs.length; i++) ...[
-                  _buildDocumentRow(context: context, doc: expiringDocs[i]),
-                  if (i < expiringDocs.length - 1)
-                    Divider(
-                      height: 1,
-                      thickness: 1,
-                      indent: AppSpacing.md + AppSpacing.xxxl + AppSpacing.sm,
-                      endIndent: AppSpacing.md,
-                      color: context.palette.border,
-                    ),
-                ],
-              ],
+              isDecoy: isDecoy,
+              passwordCount: passwords.length,
+              documentCount: documents.length,
+              expiringCount: totalExpiring,
             ),
             AppSpacing.gapH12,
-          ],
 
-          // 5. Section Card: ACTIVE WARRANTIES & POLICIES
-          if (activeDocs.isNotEmpty)
-            _buildSectionCardContainer(
-              context: context,
-              sectionIcon: Icons.verified_user_outlined,
-              sectionTitle: 'ACTIVE WARRANTIES & POLICIES',
-              sectionAccent: AppColors.secondary,
-              trailingBadgeText: '${activeDocs.length} active',
-              children: [
-                for (var i = 0; i < activeDocs.length; i++) ...[
-                  _buildDocumentRow(context: context, doc: activeDocs[i]),
-                  if (i < activeDocs.length - 1)
-                    Divider(
-                      height: 1,
-                      thickness: 1,
-                      indent: AppSpacing.md + AppSpacing.xxxl + AppSpacing.sm,
-                      endIndent: AppSpacing.md,
-                      color: context.palette.border,
+            // 2. Automated Expiry Notice Card
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: AppSpacing.xs + AppSpacing.xxxs,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.moduleTime.withValues(alpha: 0.1),
+                borderRadius: AppRadius.borderMd,
+                border: Border.all(
+                  color: AppColors.moduleTime.withValues(alpha: 0.28),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: AppSpacing.xxl,
+                    height: AppSpacing.xxl,
+                    decoration: BoxDecoration(
+                      color: AppColors.moduleTime.withValues(alpha: 0.18),
+                      borderRadius: AppRadius.borderSm,
                     ),
+                    child: const Icon(
+                      Icons.notification_important_rounded,
+                      color: AppColors.moduleTime,
+                      size: AppSpacing.md,
+                    ),
+                  ),
+                  AppSpacing.gapW12,
+                  Expanded(
+                    child: Text(
+                      'Automated Expiry Alerts: We notify you 30 days & 7 days before warranty or policy lapses.',
+                      style: context.text.bodySmall?.copyWith(
+                        fontSize: 12.5,
+                        color: context.palette.heading,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 ],
-              ],
+              ),
             ),
-        ],
-      ],
+            AppSpacing.gapH12,
+
+            // 3. Clean 40px Search Bar + 32px Category Filter Pills
+            _buildSearchAndFilterSection(
+              context: context,
+              controller: _documentSearchCtrl,
+              hintText: 'Search warranties, policies, or categories...',
+              query: _documentSearchQuery,
+              onQueryChanged: (val) =>
+                  setState(() => _documentSearchQuery = val),
+              onClearQuery: () {
+                _documentSearchCtrl.clear();
+                setState(() => _documentSearchQuery = '');
+              },
+              categories: categories,
+              categoryCounts: categoryCounts,
+              selectedCategory: _selectedDocumentCategory,
+              onCategorySelected: (cat) =>
+                  setState(() => _selectedDocumentCategory = cat),
+            ),
+            AppSpacing.gapH12,
+
+            if (filtered.isEmpty)
+              _buildEmptySectionCard(
+                context: context,
+                icon: Icons.folder_off_rounded,
+                title: 'No matching warranties or policies',
+                subtitle:
+                    'Clear your search filter or add a new warranty/insurance card.',
+                onAction: () {
+                  _documentSearchCtrl.clear();
+                  setState(() {
+                    _documentSearchQuery = '';
+                    _selectedDocumentCategory = 'All';
+                  });
+                },
+                actionLabel: 'Reset Filters',
+              )
+            else ...[
+              // 4. Section Card: EXPIRING SOON (Action Needed)
+              if (expiringDocs.isNotEmpty) ...[
+                _buildSectionCardContainer(
+                  context: context,
+                  sectionIcon: Icons.warning_amber_rounded,
+                  sectionTitle: 'EXPIRING SOON • RENEWAL NEEDED',
+                  sectionAccent: AppColors.warning,
+                  trailingBadgeText: '${expiringDocs.length} urgent',
+                  children: [
+                    for (var i = 0; i < expiringDocs.length; i++) ...[
+                      _buildDocumentRow(context: context, doc: expiringDocs[i]),
+                      if (i < expiringDocs.length - 1)
+                        Divider(
+                          height: 1,
+                          thickness: 1,
+                          indent: AppSpacing.md + 38 + AppSpacing.sm,
+                          endIndent: AppSpacing.md,
+                          color: context.palette.divider,
+                        ),
+                    ],
+                  ],
+                ),
+                AppSpacing.gapH12,
+              ],
+
+              // 5. Section Card: ACTIVE WARRANTIES & POLICIES
+              if (activeDocs.isNotEmpty)
+                _buildSectionCardContainer(
+                  context: context,
+                  sectionIcon: Icons.verified_user_outlined,
+                  sectionTitle: 'ACTIVE WARRANTIES & POLICIES',
+                  sectionAccent: AppColors.secondary,
+                  trailingBadgeText: '${activeDocs.length} active',
+                  children: [
+                    for (var i = 0; i < activeDocs.length; i++) ...[
+                      _buildDocumentRow(context: context, doc: activeDocs[i]),
+                      if (i < activeDocs.length - 1)
+                        Divider(
+                          height: 1,
+                          thickness: 1,
+                          indent: AppSpacing.md + 38 + AppSpacing.sm,
+                          endIndent: AppSpacing.md,
+                          color: context.palette.divider,
+                        ),
+                    ],
+                  ],
+                ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -1585,37 +1646,47 @@ class _VaultViewState extends State<_VaultView>
         child: Row(
           children: [
             Container(
-              width: AppSpacing.xxxl,
-              height: AppSpacing.xxxl,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
                 color: accent.withValues(alpha: 0.12),
-                borderRadius: AppRadius.borderMd,
+                borderRadius: BorderRadius.circular(11),
                 border: Border.all(color: accent.withValues(alpha: 0.28)),
               ),
-              child: Icon(doc.icon, color: accent, size: AppSpacing.lg),
+              child: Icon(
+                doc.icon,
+                color: accent,
+                size: AppSpacing.lg - AppSpacing.xxxs,
+              ),
             ),
             AppSpacing.gapW12,
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Wrap(
-                    spacing: AppSpacing.xs,
-                    runSpacing: 4,
-                    crossAxisAlignment: WrapCrossAlignment.center,
+                  Row(
                     children: [
-                      Text(
-                        doc.title,
-                        softWrap: true,
-                        style: context.text.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: palette.heading,
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            doc.title,
+                            maxLines: 1,
+                            style: context.text.titleSmall?.copyWith(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: palette.heading,
+                            ),
+                          ),
                         ),
                       ),
+                      const SizedBox(width: AppSpacing.xs - AppSpacing.xxxs),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.xs,
-                          vertical: AppSpacing.xxxs,
+                          horizontal: AppSpacing.xs - AppSpacing.xxxs,
+                          vertical: 1.5,
                         ),
                         decoration: BoxDecoration(
                           color:
@@ -1628,6 +1699,7 @@ class _VaultViewState extends State<_VaultView>
                         child: Text(
                           isExpiringSoon ? 'Expiring' : 'Active',
                           style: context.text.labelSmall?.copyWith(
+                            fontSize: 10.5,
                             color: isExpiringSoon
                                 ? AppColors.warning
                                 : AppColors.success,
@@ -1637,17 +1709,22 @@ class _VaultViewState extends State<_VaultView>
                       ),
                     ],
                   ),
-                  AppSpacing.gapH4,
-                  Text(
-                    '${doc.category} • ${doc.expiry}',
-                    softWrap: true,
-                    style: context.text.bodySmall?.copyWith(
-                      color: isExpiringSoon
-                          ? AppColors.warning
-                          : palette.secondary,
-                      fontWeight: isExpiringSoon
-                          ? FontWeight.w600
-                          : FontWeight.w400,
+                  const SizedBox(height: 3),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '${doc.category} • ${doc.expiry}',
+                      maxLines: 1,
+                      style: context.text.bodySmall?.copyWith(
+                        fontSize: 12.5,
+                        color: isExpiringSoon
+                            ? AppColors.warning
+                            : palette.secondary,
+                        fontWeight: isExpiringSoon
+                            ? FontWeight.w600
+                            : FontWeight.w400,
+                      ),
                     ),
                   ),
                 ],
@@ -1694,9 +1771,10 @@ class _VaultViewState extends State<_VaultView>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 44px Search Bar matching Notes & Money
+        // 40px Search Bar matching Notes & Money
         Container(
-          height: AppSpacing.xxxl + AppSpacing.xxs,
+          height: AppSpacing.xxxl,
+          alignment: Alignment.center,
           decoration: BoxDecoration(
             color: palette.card,
             borderRadius: AppRadius.borderMd,
@@ -1705,17 +1783,28 @@ class _VaultViewState extends State<_VaultView>
           child: TextField(
             controller: controller,
             onChanged: onQueryChanged,
-            style: context.text.bodyMedium?.copyWith(color: palette.heading),
+            textAlignVertical: TextAlignVertical.center,
+            style: context.text.bodySmall?.copyWith(
+              fontSize: 13.5,
+              color: palette.heading,
+              fontWeight: FontWeight.w500,
+            ),
             decoration: InputDecoration(
               filled: false,
+              isDense: true,
               hintText: hintText,
-              hintStyle: context.text.bodyMedium?.copyWith(
+              hintStyle: context.text.bodySmall?.copyWith(
+                fontSize: 13,
                 color: palette.caption,
               ),
               prefixIcon: Icon(
                 Icons.search_rounded,
-                size: AppSpacing.lg,
+                size: AppSpacing.lg - AppSpacing.xxxs,
                 color: palette.caption,
+              ),
+              prefixIconConstraints: const BoxConstraints(
+                minWidth: 38,
+                minHeight: 40,
               ),
               suffixIcon: query.isNotEmpty
                   ? IconButton(
@@ -1731,20 +1820,19 @@ class _VaultViewState extends State<_VaultView>
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
               focusedBorder: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                vertical: AppSpacing.sm,
-              ),
+              contentPadding: const EdgeInsets.only(right: AppSpacing.sm),
             ),
           ),
         ),
-        AppSpacing.gapH12,
-        // 36px Horizontal Filter Pills with Counts
+        AppSpacing.gapH8,
+        // 32px Horizontal Filter Pills with Counts
         SizedBox(
-          height: AppSpacing.xxl + AppSpacing.xxs,
+          height: AppSpacing.xxl,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: categories.length,
-            separatorBuilder: (_, _) => AppSpacing.gapW8,
+            separatorBuilder: (_, _) =>
+                const SizedBox(width: AppSpacing.xs - AppSpacing.xxxs),
             itemBuilder: (context, index) {
               final cat = categories[index];
               final isSelected = cat == selectedCategory;
@@ -1757,7 +1845,9 @@ class _VaultViewState extends State<_VaultView>
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 160),
-                  padding: AppSpacing.edgeInsetsHSm,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xs + AppSpacing.xxxs,
+                  ),
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: isSelected ? AppColors.moduleVault : palette.card,
@@ -1773,19 +1863,20 @@ class _VaultViewState extends State<_VaultView>
                     children: [
                       Text(
                         cat,
-                        style: context.text.labelMedium?.copyWith(
+                        style: context.text.labelSmall?.copyWith(
+                          fontSize: 12,
                           fontWeight: isSelected
                               ? FontWeight.w700
                               : FontWeight.w600,
                           color: isSelected ? Colors.white : palette.body,
                         ),
                       ),
-                      AppSpacing.gapW4,
+                      const SizedBox(width: AppSpacing.xs - AppSpacing.xxxs),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.xxs + AppSpacing.xxxs,
-                          vertical: AppSpacing.xxxs / 2,
-                        ),
+                        constraints: const BoxConstraints(minWidth: 18),
+                        height: 18,
+                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        alignment: Alignment.center,
                         decoration: BoxDecoration(
                           color: isSelected
                               ? Colors.white.withValues(alpha: 0.22)
@@ -1795,6 +1886,7 @@ class _VaultViewState extends State<_VaultView>
                         child: Text(
                           '$count',
                           style: context.text.labelSmall?.copyWith(
+                            fontSize: 10.5,
                             color: isSelected ? Colors.white : palette.caption,
                             fontWeight: FontWeight.w700,
                           ),
@@ -1847,15 +1939,21 @@ class _VaultViewState extends State<_VaultView>
                   Icon(sectionIcon, size: AppSpacing.md, color: sectionAccent),
                   AppSpacing.gapW8,
                   Expanded(
-                    child: Text(
-                      sectionTitle,
-                      style: context.text.labelSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.8,
-                        color: palette.heading,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        sectionTitle,
+                        maxLines: 1,
+                        style: context.text.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                          color: palette.heading,
+                        ),
                       ),
                     ),
                   ),
+                  AppSpacing.gapW8,
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.xs,
@@ -1995,10 +2093,10 @@ class _VaultViewState extends State<_VaultView>
             children: [
               Center(
                 child: Container(
-                  width: AppSpacing.xxxl,
+                  width: AppSpacing.xxl + AppSpacing.xxs,
                   height: AppSpacing.xxs,
                   decoration: BoxDecoration(
-                    color: palette.border,
+                    color: palette.divider,
                     borderRadius: AppRadius.radiusFull,
                   ),
                 ),
@@ -2007,8 +2105,8 @@ class _VaultViewState extends State<_VaultView>
               Row(
                 children: [
                   Container(
-                    width: AppSpacing.xxxl + AppSpacing.xxs,
-                    height: AppSpacing.xxxl + AppSpacing.xxs,
+                    width: AppSpacing.xxxl + AppSpacing.xxxs,
+                    height: AppSpacing.xxxl + AppSpacing.xxxs,
                     decoration: BoxDecoration(
                       color: accent.withValues(alpha: 0.14),
                       borderRadius: AppRadius.borderMd,
@@ -2027,7 +2125,7 @@ class _VaultViewState extends State<_VaultView>
                             color: palette.heading,
                           ),
                         ),
-                        AppSpacing.gapH4,
+                        const SizedBox(height: AppSpacing.xxxs),
                         Text(
                           '${item.category} • AES-256 Encrypted Record',
                           style: ctx.text.bodySmall?.copyWith(
@@ -2121,10 +2219,10 @@ class _VaultViewState extends State<_VaultView>
             children: [
               Center(
                 child: Container(
-                  width: AppSpacing.xxxl,
+                  width: AppSpacing.xxl + AppSpacing.xxs,
                   height: AppSpacing.xxs,
                   decoration: BoxDecoration(
-                    color: palette.border,
+                    color: palette.divider,
                     borderRadius: AppRadius.radiusFull,
                   ),
                 ),
@@ -2133,8 +2231,8 @@ class _VaultViewState extends State<_VaultView>
               Row(
                 children: [
                   Container(
-                    width: AppSpacing.xxxl + AppSpacing.xxs,
-                    height: AppSpacing.xxxl + AppSpacing.xxs,
+                    width: AppSpacing.xxxl + AppSpacing.xxxs,
+                    height: AppSpacing.xxxl + AppSpacing.xxxs,
                     decoration: BoxDecoration(
                       color: accent.withValues(alpha: 0.14),
                       borderRadius: AppRadius.borderMd,
@@ -2153,7 +2251,7 @@ class _VaultViewState extends State<_VaultView>
                             color: palette.heading,
                           ),
                         ),
-                        AppSpacing.gapH4,
+                        const SizedBox(height: AppSpacing.xxxs),
                         Text(
                           '${doc.category} • ${doc.expiry}',
                           style: ctx.text.bodySmall?.copyWith(
@@ -2289,7 +2387,7 @@ class _VaultViewState extends State<_VaultView>
       context: context,
       isScrollControlled: true,
       backgroundColor: context.palette.card,
-      shape: const RoundedRectangleBorder(borderRadius: AppRadius.topXl),
+      shape: const RoundedRectangleBorder(borderRadius: AppRadius.topXxl),
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setModalState) {
@@ -2310,77 +2408,157 @@ class _VaultViewState extends State<_VaultView>
                 children: [
                   Center(
                     child: Container(
-                      width: AppSpacing.xxxl,
+                      width: AppSpacing.xxl + AppSpacing.xxs,
                       height: AppSpacing.xxs,
                       decoration: BoxDecoration(
-                        color: palette.border,
+                        color: palette.divider,
                         borderRadius: AppRadius.radiusFull,
                       ),
                     ),
                   ),
                   AppSpacing.gapH16,
-                  Text(
-                    isWarrantyTab
-                        ? 'Add Warranty / Policy'
-                        : 'Add Encrypted Login',
-                    style: ctx.text.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: palette.heading,
-                    ),
+                  Row(
+                    children: [
+                      Container(
+                        width: AppSpacing.xxl + AppSpacing.xxs,
+                        height: AppSpacing.xxl + AppSpacing.xxs,
+                        decoration: BoxDecoration(
+                          color: AppColors.moduleVault.withValues(alpha: 0.14),
+                          borderRadius: AppRadius.radiusSm,
+                        ),
+                        child: Icon(
+                          isWarrantyTab
+                              ? Icons.verified_user_rounded
+                              : Icons.key_rounded,
+                          size: AppSpacing.lg - AppSpacing.xxxs,
+                          color: AppColors.moduleVault,
+                        ),
+                      ),
+                      AppSpacing.gapW12,
+                      Expanded(
+                        child: Text(
+                          isWarrantyTab
+                              ? 'Add Warranty / Policy'
+                              : 'Add Encrypted Login',
+                          style: ctx.text.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: palette.heading,
+                          ),
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () => Navigator.pop(ctx),
+                        borderRadius: AppRadius.radiusSm,
+                        child: Container(
+                          width: AppSpacing.xxl,
+                          height: AppSpacing.xxl,
+                          decoration: BoxDecoration(
+                            color: palette.surfaceMuted,
+                            borderRadius: AppRadius.radiusSm,
+                            border: Border.all(color: palette.border),
+                          ),
+                          child: Icon(
+                            Icons.close_rounded,
+                            size: AppSpacing.lg - AppSpacing.xxxs,
+                            color: palette.caption,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   AppSpacing.gapH12,
                   Wrap(
-                    spacing: AppSpacing.xs,
+                    spacing: AppSpacing.xs - AppSpacing.xxxs,
                     runSpacing: AppSpacing.xs,
                     children: cats.map((cat) {
                       final active = cat == selectedCat;
-                      return ChoiceChip(
-                        label: Text(cat, style: ctx.text.labelMedium),
-                        selected: active,
-                        onSelected: (_) =>
-                            setModalState(() => selectedCat = cat),
+                      return GestureDetector(
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setModalState(() => selectedCat = cat);
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 160),
+                          height: AppSpacing.xxl,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.xs + AppSpacing.xxxs,
+                          ),
+                          decoration: BoxDecoration(
+                            color: active
+                                ? AppColors.moduleVault
+                                : palette.surfaceMuted,
+                            borderRadius: AppRadius.radiusFull,
+                            border: Border.all(
+                              color: active
+                                  ? AppColors.moduleVault
+                                  : palette.border,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _sectionIconForCategory(cat),
+                                size: AppSpacing.sm + 1,
+                                color: active ? Colors.white : palette.caption,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                cat,
+                                style: ctx.text.labelSmall?.copyWith(
+                                  fontSize: 12,
+                                  fontWeight: active
+                                      ? FontWeight.w700
+                                      : FontWeight.w600,
+                                  color: active ? Colors.white : palette.body,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       );
                     }).toList(),
                   ),
-                  AppSpacing.gapH12,
-                  TextField(
+                  AppSpacing.gapH16,
+                  _buildSheetInputContainer(
+                    context: ctx,
                     controller: titleCtrl,
-                    decoration: InputDecoration(
-                      labelText: isWarrantyTab
-                          ? 'Product / Policy Name'
-                          : 'Service / App Title',
-                      isDense: true,
-                    ),
+                    icon: isWarrantyTab
+                        ? Icons.description_outlined
+                        : Icons.apps_rounded,
+                    labelText: isWarrantyTab
+                        ? 'Product / Policy Name'
+                        : 'Service / App Title',
                   ),
                   AppSpacing.gapH12,
-                  TextField(
+                  _buildSheetInputContainer(
+                    context: ctx,
                     controller: subCtrl,
-                    decoration: InputDecoration(
-                      labelText: isWarrantyTab
-                          ? 'Expiry Note (e.g. Valid till Dec 2027)'
-                          : 'Username / Email / SSID',
-                      isDense: true,
-                    ),
+                    icon: isWarrantyTab
+                        ? Icons.event_available_rounded
+                        : Icons.alternate_email_rounded,
+                    labelText: isWarrantyTab
+                        ? 'Expiry Note (e.g. Valid till Dec 2027)'
+                        : 'Username / Email / SSID',
                   ),
                   if (!isWarrantyTab) ...[
                     AppSpacing.gapH12,
-                    TextField(
+                    _buildSheetInputContainer(
+                      context: ctx,
                       controller: secretCtrl,
-                      decoration: InputDecoration(
-                        labelText: 'Password / PIN',
-                        isDense: true,
-                        suffixIcon: IconButton(
-                          tooltip: 'Generate Strong Password',
-                          onPressed: () {
-                            setModalState(() {
-                              secretCtrl.text = _generateEntropyKey(16);
-                            });
-                          },
-                          icon: const Icon(
-                            Icons.auto_awesome_rounded,
-                            color: AppColors.secondary,
-                            size: AppSpacing.lg,
-                          ),
+                      icon: Icons.password_rounded,
+                      labelText: 'Password / PIN',
+                      suffix: IconButton(
+                        tooltip: 'Generate Strong Password',
+                        onPressed: () {
+                          setModalState(() {
+                            secretCtrl.text = _generateEntropyKey(16);
+                          });
+                        },
+                        icon: const Icon(
+                          Icons.auto_awesome_rounded,
+                          color: AppColors.secondary,
+                          size: AppSpacing.lg,
                         ),
                       ),
                     ),
@@ -2388,10 +2566,14 @@ class _VaultViewState extends State<_VaultView>
                   AppSpacing.gapH16,
                   SizedBox(
                     width: double.infinity,
-                    height: AppSpacing.huge,
+                    height: AppSpacing.xxxl + AppSpacing.xs,
                     child: FilledButton(
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.moduleVault,
+                        foregroundColor: Colors.white,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: AppRadius.borderMd,
+                        ),
                       ),
                       onPressed: () {
                         final title = titleCtrl.text.trim();
@@ -2437,7 +2619,13 @@ class _VaultViewState extends State<_VaultView>
                         _persistVaultData();
                         Navigator.pop(ctx);
                       },
-                      child: const Text('Save to Encrypted Vault'),
+                      child: Text(
+                        'Save to Encrypted Vault',
+                        style: ctx.text.titleSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -2446,6 +2634,54 @@ class _VaultViewState extends State<_VaultView>
           },
         );
       },
+    );
+  }
+
+  Widget _buildSheetInputContainer({
+    required BuildContext context,
+    required TextEditingController controller,
+    required IconData icon,
+    required String labelText,
+    Widget? suffix,
+  }) {
+    final palette = context.palette;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xxxs,
+      ),
+      decoration: BoxDecoration(
+        color: palette.surfaceMuted,
+        borderRadius: AppRadius.borderMd,
+        border: Border.all(color: palette.border),
+      ),
+      child: TextField(
+        controller: controller,
+        style: context.text.bodyMedium?.copyWith(
+          color: palette.heading,
+          fontWeight: FontWeight.w500,
+        ),
+        decoration: InputDecoration(
+          filled: false,
+          isDense: true,
+          labelText: labelText,
+          labelStyle: context.text.bodySmall?.copyWith(color: palette.caption),
+          prefixIcon: Icon(
+            icon,
+            size: AppSpacing.lg - AppSpacing.xxxs,
+            color: AppColors.moduleVault,
+          ),
+          prefixIconConstraints: const BoxConstraints(
+            minWidth: 34,
+            minHeight: 40,
+          ),
+          suffixIcon: suffix,
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+        ),
+      ),
     );
   }
 }

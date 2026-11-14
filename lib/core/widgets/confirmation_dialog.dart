@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
+import '../../config/theme/app_radius.dart';
+import '../../config/theme/theme_context.dart';
 
 class ConfirmationDialog extends StatelessWidget {
   final String title;
@@ -47,36 +49,36 @@ class ConfirmationDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
+    final text = context.text;
     final effectiveConfirmColor =
         confirmColor ?? (isDestructive ? AppColors.error : AppColors.primary);
 
     return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      backgroundColor: p.card,
+      shape: const RoundedRectangleBorder(borderRadius: AppRadius.radiusLg),
       title: Text(
         title,
-        style: const TextStyle(
+        style: text.titleLarge?.copyWith(
           fontSize: 18,
           fontWeight: FontWeight.w700,
-          color: AppColors.textHeading,
+          color: p.heading,
         ),
       ),
-      content: Text(
-        message,
-        style: const TextStyle(fontSize: 14, color: AppColors.textBody),
-      ),
+      content: Text(message, style: text.bodyMedium?.copyWith(color: p.body)),
       actions: [
         TextButton(
           onPressed: onCancel ?? () => Navigator.of(context).pop(false),
           child: Text(
             cancelLabel,
-            style: const TextStyle(color: AppColors.textCaption),
+            style: text.labelLarge?.copyWith(color: p.caption),
           ),
         ),
         TextButton(
           onPressed: onConfirm,
           child: Text(
             confirmLabel,
-            style: TextStyle(
+            style: text.labelLarge?.copyWith(
               color: effectiveConfirmColor,
               fontWeight: FontWeight.w600,
             ),

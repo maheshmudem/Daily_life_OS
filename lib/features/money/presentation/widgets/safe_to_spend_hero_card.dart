@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../config/theme/app_decorations.dart';
 import '../../../../config/theme/app_radius.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/expandable_text_widget.dart';
 import '../../domain/entities/transaction_entity.dart';
@@ -26,6 +27,7 @@ class SafeToSpendHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final text = context.text;
     // Use dailyAllowanceForToday so today's expenses are NOT subtracted twice!
     final dailyLimit = budget.dailyAllowanceForToday(spentToday);
     final leftToday = dailyLimit - spentToday;
@@ -63,13 +65,13 @@ class SafeToSpendHeroCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 7),
-              const Expanded(
+              Expanded(
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
                   child: Text(
                     'SAFE-TO-SPEND TODAY',
-                    style: TextStyle(
+                    style: text.labelSmall?.copyWith(
                       color: Colors.white,
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
@@ -99,18 +101,18 @@ class SafeToSpendHeroCard extends StatelessWidget {
                               color: Colors.white.withValues(alpha: 0.22),
                               borderRadius: AppRadius.radiusFull,
                             ),
-                            child: const Row(
+                            child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.auto_graph_rounded,
                                   size: 11,
                                   color: Colors.white,
                                 ),
-                                SizedBox(width: 4),
+                                const SizedBox(width: 4),
                                 Text(
                                   'Set Plan',
-                                  style: TextStyle(
+                                  style: text.labelSmall?.copyWith(
                                     color: Colors.white,
                                     fontSize: 10,
                                     fontWeight: FontWeight.w700,
@@ -133,7 +135,7 @@ class SafeToSpendHeroCard extends StatelessWidget {
                         ),
                         child: Text(
                           '${budget.daysRemaining}d left',
-                          style: const TextStyle(
+                          style: text.labelSmall?.copyWith(
                             color: Colors.white,
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
@@ -184,12 +186,12 @@ class SafeToSpendHeroCard extends StatelessWidget {
                           leftToday.clamp(0, double.infinity),
                         ),
                         maxLines: 1,
-                        style: const TextStyle(
+                        style: text.headlineMedium?.copyWith(
                           color: Colors.white,
                           fontSize: 28,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.7,
-                          fontFeatures: [FontFeature.tabularFigures()],
+                          fontFeatures: const [FontFeature.tabularFigures()],
                         ),
                       ),
                     ),
@@ -199,7 +201,7 @@ class SafeToSpendHeroCard extends StatelessWidget {
                           ? 'Tap "Set Plan" to set monthly salary/budget'
                           : 'Available out of ${CurrencyUtils.format(dailyLimit)}/day cap',
                       softWrap: true,
-                      style: const TextStyle(
+                      style: text.labelSmall?.copyWith(
                         color: Colors.white70,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -226,7 +228,7 @@ class SafeToSpendHeroCard extends StatelessWidget {
                   isOverDaily
                       ? 'Over by ${CurrencyUtils.format(spentToday - dailyLimit)}'
                       : '${((1.0 - dailyProgress) * 100).round()}% safe',
-                  style: const TextStyle(
+                  style: text.labelSmall?.copyWith(
                     color: Colors.white,
                     fontSize: 10.5,
                     fontWeight: FontWeight.w700,
@@ -283,7 +285,7 @@ class SafeToSpendHeroCard extends StatelessWidget {
                         : 'Approaching daily limit (${(dailyProgress * 100).round()}% used today). Keep remaining spend light.',
                     collapsedMaxLines: 1,
                     toggleColor: Colors.white,
-                    style: const TextStyle(
+                    style: text.labelSmall?.copyWith(
                       color: Colors.white,
                       fontSize: 10.5,
                       fontWeight: FontWeight.w600,
@@ -310,6 +312,7 @@ class SafeToSpendHeroCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _buildMetricStat(
+                        context,
                         'Spent Today',
                         CurrencyUtils.format(spentToday),
                       ),
@@ -317,6 +320,7 @@ class SafeToSpendHeroCard extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _buildMetricStat(
+                        context,
                         'Can Spend This Week',
                         CurrencyUtils.format(leftThisWeek),
                       ),
@@ -330,6 +334,7 @@ class SafeToSpendHeroCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _buildMetricStat(
+                        context,
                         'Can Spend This Month',
                         CurrencyUtils.format(leftThisMonth),
                       ),
@@ -337,6 +342,7 @@ class SafeToSpendHeroCard extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _buildMetricStat(
+                        context,
                         'Fixed Monthly Bills',
                         CurrencyUtils.format(budget.fixedBills),
                       ),
@@ -351,7 +357,8 @@ class SafeToSpendHeroCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMetricStat(String label, String value) {
+  Widget _buildMetricStat(BuildContext context, String label, String value) {
+    final text = context.text;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -360,7 +367,10 @@ class SafeToSpendHeroCard extends StatelessWidget {
           alignment: Alignment.centerLeft,
           child: Text(
             label,
-            style: const TextStyle(color: Colors.white70, fontSize: 10),
+            style: text.labelSmall?.copyWith(
+              color: Colors.white70,
+              fontSize: 10,
+            ),
           ),
         ),
         const SizedBox(height: 2),
@@ -369,11 +379,11 @@ class SafeToSpendHeroCard extends StatelessWidget {
           alignment: Alignment.centerLeft,
           child: Text(
             value,
-            style: const TextStyle(
+            style: text.labelLarge?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w700,
               fontSize: 12.5,
-              fontFeatures: [FontFeature.tabularFigures()],
+              fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
         ),

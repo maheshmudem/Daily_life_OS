@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../../config/theme/app_colors.dart';
+import '../../config/theme/app_radius.dart';
+import '../../config/theme/app_spacing.dart';
+import '../../config/theme/theme_context.dart';
 
 class SearchBarWidget extends StatefulWidget {
   final String hintText;
@@ -48,40 +50,29 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = context.palette;
+    final text = context.text;
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurfaceSecondary : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.border,
-        ),
+        color: p.isDark ? p.surfaceMuted : p.card,
+        borderRadius: AppRadius.radiusMd,
+        border: Border.all(color: p.border),
       ),
       child: TextField(
         controller: _controller,
         onChanged: _onSearchChanged,
+        style: text.bodyMedium?.copyWith(color: p.heading),
         decoration: InputDecoration(
           hintText: widget.hintText,
-          hintStyle: const TextStyle(
-            color: AppColors.textCaption,
-            fontSize: 14,
-          ),
-          prefixIcon: const Icon(
-            Icons.search,
-            color: AppColors.iconColor,
-            size: 20,
-          ),
+          hintStyle: text.bodyMedium?.copyWith(color: p.caption),
+          prefixIcon: Icon(Icons.search, color: p.icon, size: 20),
           suffixIcon: ValueListenableBuilder<TextEditingValue>(
             valueListenable: _controller,
             builder: (context, value, child) {
               if (value.text.isEmpty) return const SizedBox.shrink();
               return IconButton(
-                icon: const Icon(
-                  Icons.close,
-                  size: 18,
-                  color: AppColors.iconColor,
-                ),
+                icon: Icon(Icons.close, size: 18, color: p.icon),
                 onPressed: () {
                   _controller.clear();
                   widget.onChanged('');
@@ -93,8 +84,8 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
           filled: false,
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.md,
           ),
         ),
       ),

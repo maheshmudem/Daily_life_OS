@@ -156,4 +156,12 @@ class AppColors {
   static const Color routineAfternoon = Color(0xFF0EA5E9);
   static const Color routineEvening = Color(0xFF8B5CF6);
   static const Color routineNight = Color(0xFF4338CA);
+
+  // Additional Chart & Category Accents
+  static const Color chartCyan = Color(0xFF06B6D4);
+  static const Color chartPurple = Color(0xFFA855F7);
+  static const Color chartRose = Color(0xFFF43F5E);
+  static const Color moduleTasks = Color(0xFF0EA5E9);
+  static const Color moduleTasksLight = Color(0xFF38BDF8);
+  static const Color moduleTasksDark = Color(0xFF0284C7);
 }

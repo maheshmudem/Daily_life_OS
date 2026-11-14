@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/utils/date_utils.dart';
@@ -48,8 +49,6 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return BlocBuilder<MoneyBloc, MoneyState>(
       builder: (context, state) => FeatureScaffold(
         title: StringConstants.navMoney,
@@ -91,7 +90,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
           return Column(
             children: [
               // Top control bar: Month selector on left, scrollable sub-view pills on right
-              _buildTopControlBar(context, loaded, isDark),
+              _buildTopControlBar(context, loaded),
               Expanded(
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 220),
@@ -99,7 +98,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                   switchOutCurve: Curves.easeInCubic,
                   child: KeyedSubtree(
                     key: ValueKey('money_subview_$_subView'),
-                    child: _buildActiveSubView(context, loaded, isDark),
+                    child: _buildActiveSubView(context, loaded),
                   ),
                 ),
               ),
@@ -110,11 +109,9 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
     );
   }
 
-  Widget _buildTopControlBar(
-    BuildContext context,
-    MoneyLoaded state,
-    bool isDark,
-  ) {
+  Widget _buildTopControlBar(BuildContext context, MoneyLoaded state) {
+    final palette = context.palette;
+    final text = context.text;
     final tabs = [
       (icon: Icons.dashboard_outlined, label: 'Dashboard'),
       (
@@ -157,18 +154,12 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                           vertical: 7,
                         ),
                         decoration: BoxDecoration(
-                          color: isSelected
-                              ? AppColors.primary
-                              : (isDark
-                                    ? AppColors.darkSurface
-                                    : AppColors.surface),
+                          color: isSelected ? AppColors.primary : palette.card,
                           borderRadius: AppRadius.radiusFull,
                           border: Border.all(
                             color: isSelected
                                 ? AppColors.primary
-                                : (isDark
-                                      ? AppColors.darkBorder
-                                      : AppColors.border),
+                                : palette.border,
                           ),
                         ),
                         child: Row(
@@ -179,23 +170,19 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                               size: 14,
                               color: isSelected
                                   ? Colors.white
-                                  : (isDark
-                                        ? AppColors.darkTextSecondary
-                                        : AppColors.textSecondary),
+                                  : palette.secondary,
                             ),
                             const SizedBox(width: 5),
                             Text(
                               tab.label,
-                              style: TextStyle(
+                              style: text.labelMedium?.copyWith(
                                 fontSize: 12,
                                 fontWeight: isSelected
                                     ? FontWeight.w600
                                     : FontWeight.w500,
                                 color: isSelected
                                     ? Colors.white
-                                    : (isDark
-                                          ? AppColors.darkTextPrimary
-                                          : AppColors.textPrimary),
+                                    : palette.heading,
                               ),
                             ),
                           ],
@@ -219,11 +206,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
         .fold<double>(0, (sum, t) => sum + t.amount);
   }
 
-  Widget _buildActiveSubView(
-    BuildContext context,
-    MoneyLoaded state,
-    bool isDark,
-  ) {
+  Widget _buildActiveSubView(BuildContext context, MoneyLoaded state) {
     final spentToday = _computeSpentToday(state);
     switch (_subView) {
       case 1:
@@ -280,7 +263,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
             const MoneySectionHeader(
               title: StringConstants.quickCategoryLogging,
             ),
-            _buildCategoryPills(context, isDark),
+            _buildCategoryPills(context),
             const SizedBox(height: 18),
             TotalAssetsCard(
               insights: state.insights,
@@ -288,7 +271,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
             ),
             const SizedBox(height: 18),
             const MoneySectionHeader(title: StringConstants.moneyTools),
-            _buildCompactToolsGrid(context, state, isDark),
+            _buildCompactToolsGrid(context, state),
           ],
         );
       default:
@@ -303,14 +286,14 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                     flex: 6,
                     child: ListView(
                       padding: const EdgeInsets.fromLTRB(20, 6, 10, 32),
-                      children: _buildMainColumn(context, state, isDark),
+                      children: _buildMainColumn(context, state),
                     ),
                   ),
                   Expanded(
                     flex: 4,
                     child: ListView(
                       padding: const EdgeInsets.fromLTRB(10, 6, 20, 32),
-                      children: _buildSideColumn(context, state, isDark),
+                      children: _buildSideColumn(context, state),
                     ),
                   ),
                 ],
@@ -319,9 +302,9 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
             return ListView(
               padding: const EdgeInsets.fromLTRB(20, 6, 20, 32),
               children: [
-                ..._buildMainColumn(context, state, isDark),
+                ..._buildMainColumn(context, state),
                 const SizedBox(height: 22),
-                ..._buildSideColumn(context, state, isDark),
+                ..._buildSideColumn(context, state),
               ],
             );
           },
@@ -329,11 +312,9 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
     }
   }
 
-  List<Widget> _buildMainColumn(
-    BuildContext context,
-    MoneyLoaded state,
-    bool isDark,
-  ) {
+  List<Widget> _buildMainColumn(BuildContext context, MoneyLoaded state) {
+    final palette = context.palette;
+    final text = context.text;
     final scope = MoneyShellScope.maybeOf(context);
     final recent = state.transactions.take(6).toList();
     final spentToday = _computeSpentToday(state);
@@ -341,7 +322,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
     return [
       // 0. Guided Setup Banner when starting fresh (no salary/budget or transactions yet)
       if (state.transactions.isEmpty && state.budget.monthlyBudget <= 0) ...[
-        _buildGuidedSetupCard(context, state, isDark),
+        _buildGuidedSetupCard(context, state),
         const SizedBox(height: 14),
       ],
 
@@ -372,7 +353,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
       const SizedBox(height: 12),
 
       // 3. Pending Lend & Borrow (To Collect / To Pay) & Due Reminders Card
-      _buildPendingIouAndAlertsCard(context, state, isDark),
+      _buildPendingIouAndAlertsCard(context, state),
       const SizedBox(height: 12),
 
       // 4. Budget & Savings Report (Where you spend most, Savings, How to improve)
@@ -385,7 +366,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
       const SizedBox(height: 14),
 
       // 4. Quick Category Logging horizontal strip
-      _buildCategoryPills(context, isDark),
+      _buildCategoryPills(context),
       const SizedBox(height: 18),
 
       // 4. Recent Transactions inside ONE grouped card with indented dividers
@@ -398,18 +379,16 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
         Container(
           padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
           decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : AppColors.surface,
+            color: palette.card,
             borderRadius: AppRadius.borderLg,
-            border: Border.all(
-              color: isDark ? AppColors.darkBorder : AppColors.border,
-            ),
+            border: Border.all(color: palette.border),
           ),
           child: Center(
             child: Text(
               'No transactions yet. Tap + Add to record one.',
-              style: TextStyle(
+              style: text.bodySmall?.copyWith(
                 fontSize: 13,
-                color: isDark ? AppColors.darkTextMuted : AppColors.textMuted,
+                color: palette.caption,
               ),
             ),
           ),
@@ -417,21 +396,15 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
       else
         Container(
           decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : AppColors.surface,
+            color: palette.card,
             borderRadius: AppRadius.borderLg,
-            border: Border.all(
-              color: isDark ? AppColors.darkBorder : AppColors.border,
-            ),
+            border: Border.all(color: palette.border),
           ),
           child: Column(
             children: [
               for (var i = 0; i < recent.length; i++) ...[
                 if (i > 0)
-                  Divider(
-                    height: 1,
-                    indent: 68,
-                    color: isDark ? AppColors.darkBorder : AppColors.border,
-                  ),
+                  Divider(height: 1, indent: 68, color: palette.border),
                 TransactionTile(
                   transaction: recent[i],
                   showCard: false,
@@ -445,11 +418,9 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
     ];
   }
 
-  List<Widget> _buildSideColumn(
-    BuildContext context,
-    MoneyLoaded state,
-    bool isDark,
-  ) {
+  List<Widget> _buildSideColumn(BuildContext context, MoneyLoaded state) {
+    final palette = context.palette;
+    final text = context.text;
     final scope = MoneyShellScope.maybeOf(context);
     final allBudgets = state.categoryBudgets;
     final visibleBudgets = (_showAllBudgets || allBudgets.length <= 4)
@@ -464,11 +435,9 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
       ),
       Container(
         decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurface : AppColors.surface,
+          color: palette.card,
           borderRadius: AppRadius.borderLg,
-          border: Border.all(
-            color: isDark ? AppColors.darkBorder : AppColors.border,
-          ),
+          border: Border.all(color: palette.border),
         ),
         child: AnimatedSize(
           duration: const Duration(milliseconds: 220),
@@ -482,7 +451,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                     height: 1,
                     indent: 16,
                     endIndent: 16,
-                    color: isDark ? AppColors.darkBorder : AppColors.border,
+                    color: palette.border,
                   ),
                 BudgetProgressTile(
                   budget: visibleBudgets[i],
@@ -497,7 +466,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                   height: 1,
                   indent: 16,
                   endIndent: 16,
-                  color: isDark ? AppColors.darkBorder : AppColors.border,
+                  color: palette.border,
                 ),
                 InkWell(
                   borderRadius: const BorderRadius.vertical(
@@ -522,7 +491,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                           _showAllBudgets
                               ? 'Show top 4 categories'
                               : 'Show all ${allBudgets.length} categories',
-                          style: const TextStyle(
+                          style: text.labelMedium?.copyWith(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
                             color: AppColors.primary,
@@ -540,15 +509,13 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
     ];
   }
 
-  Widget _buildGuidedSetupCard(
-    BuildContext context,
-    MoneyLoaded state,
-    bool isDark,
-  ) {
+  Widget _buildGuidedSetupCard(BuildContext context, MoneyLoaded state) {
+    final palette = context.palette;
+    final text = context.text;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.surface,
+        color: palette.card,
         borderRadius: AppRadius.borderLg,
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.35)),
       ),
@@ -577,21 +544,17 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                   children: [
                     Text(
                       'Start Fresh: 3 Simple Steps',
-                      style: TextStyle(
+                      style: text.titleSmall?.copyWith(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w800,
-                        color: isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.textPrimary,
+                        color: palette.heading,
                       ),
                     ),
                     Text(
                       'Set up your monthly income, budget, expenses & reminders',
-                      style: TextStyle(
+                      style: text.labelSmall?.copyWith(
                         fontSize: 11,
-                        color: isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.textSecondary,
+                        color: palette.secondary,
                       ),
                     ),
                   ],
@@ -601,12 +564,12 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
           ),
           const SizedBox(height: 12),
           _buildSetupStepTile(
+            context: context,
             step: '1',
             title: 'Add Monthly Salary or Income',
             subtitle: 'Record your salary or incoming money first',
             buttonLabel: '+ Salary',
             color: AppColors.success,
-            isDark: isDark,
             onTap: () => AddTransactionSheet.show(
               context,
               initialType: 'income',
@@ -615,22 +578,22 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
           ),
           const SizedBox(height: 8),
           _buildSetupStepTile(
+            context: context,
             step: '2',
             title: 'Set Smart Budget & Fixed Bills',
             subtitle: 'Auto-calculate your daily & weekly safe spend',
             buttonLabel: 'Set Plan',
             color: AppColors.primary,
-            isDark: isDark,
             onTap: () => SalaryPlanSetupSheet.show(context, state: state),
           ),
           const SizedBox(height: 8),
           _buildSetupStepTile(
+            context: context,
             step: '3',
             title: 'Track Lent / Borrowed Money & Reminders',
             subtitle: 'Log money given to collect back or borrowed to pay',
             buttonLabel: '+ Lend/Borrow',
             color: AppColors.moduleTime,
-            isDark: isDark,
             onTap: () => IouSheet.showAddDialog(context, initialType: 'lent'),
           ),
         ],
@@ -639,18 +602,20 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
   }
 
   Widget _buildSetupStepTile({
+    required BuildContext context,
     required String step,
     required String title,
     required String subtitle,
     required String buttonLabel,
     required Color color,
-    required bool isDark,
     required VoidCallback onTap,
   }) {
+    final palette = context.palette;
+    final text = context.text;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurfaceMuted : AppColors.surfaceElevated,
+        color: palette.surfaceSubtle,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
@@ -665,7 +630,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
             ),
             child: Text(
               step,
-              style: TextStyle(
+              style: text.labelSmall?.copyWith(
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
                 color: color,
@@ -680,22 +645,18 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                 Text(
                   title,
                   softWrap: true,
-                  style: TextStyle(
+                  style: text.labelLarge?.copyWith(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.textPrimary,
+                    color: palette.heading,
                   ),
                 ),
                 Text(
                   subtitle,
                   softWrap: true,
-                  style: TextStyle(
+                  style: text.labelSmall?.copyWith(
                     fontSize: 10.5,
-                    color: isDark
-                        ? AppColors.darkTextMuted
-                        : AppColors.textMuted,
+                    color: palette.caption,
                   ),
                 ),
               ],
@@ -713,7 +674,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
               ),
               child: Text(
                 buttonLabel,
-                style: const TextStyle(
+                style: text.labelSmall?.copyWith(
                   color: Colors.white,
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
@@ -729,8 +690,9 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
   Widget _buildPendingIouAndAlertsCard(
     BuildContext context,
     MoneyLoaded state,
-    bool isDark,
   ) {
+    final palette = context.palette;
+    final text = context.text;
     final activeIous = state.ious.where((i) => !i.isSettled).toList();
     final lentIous = activeIous.where((i) => i.isLent).toList();
     final borrowedIous = activeIous.where((i) => !i.isLent).toList();
@@ -740,11 +702,9 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.surface,
+        color: palette.card,
         borderRadius: AppRadius.borderLg,
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.border,
-        ),
+        border: Border.all(color: palette.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -772,23 +732,19 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                     Text(
                       'Pending Lend & Borrow Reminders',
                       softWrap: true,
-                      style: TextStyle(
+                      style: text.titleSmall?.copyWith(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
-                        color: isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.textPrimary,
+                        color: palette.heading,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       'Track money given (to collect) & borrowed (to pay)',
                       softWrap: true,
-                      style: TextStyle(
+                      style: text.labelSmall?.copyWith(
                         fontSize: 11.5,
-                        color: isDark
-                            ? AppColors.darkTextMuted
-                            : AppColors.textMuted,
+                        color: palette.caption,
                       ),
                     ),
                   ],
@@ -797,11 +753,14 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
               InkWell(
                 onTap: () => BillSplitSheet.show(context),
                 borderRadius: BorderRadius.circular(8),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 4,
+                  ),
                   child: Text(
                     StringConstants.billSplitShort,
-                    style: TextStyle(
+                    style: text.labelSmall?.copyWith(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w700,
                       color: AppColors.moduleMoney,
@@ -813,11 +772,14 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
               InkWell(
                 onTap: () => IouSheet.show(context),
                 borderRadius: BorderRadius.circular(8),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 4,
+                  ),
                   child: Text(
                     'Manage',
-                    style: TextStyle(
+                    style: text.labelSmall?.copyWith(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w700,
                       color: AppColors.primary,
@@ -852,7 +814,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Row(
+                        Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Flexible(
@@ -861,7 +823,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                                 alignment: Alignment.centerLeft,
                                 child: Text(
                                   'To Collect (Lent)',
-                                  style: TextStyle(
+                                  style: text.labelSmall?.copyWith(
                                     fontSize: 10.5,
                                     fontWeight: FontWeight.w700,
                                     color: AppColors.moduleMoney,
@@ -869,7 +831,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                                 ),
                               ),
                             ),
-                            Icon(
+                            const Icon(
                               Icons.add_circle_outline_rounded,
                               size: 14,
                               color: AppColors.moduleMoney,
@@ -882,12 +844,10 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                           alignment: Alignment.centerLeft,
                           child: Text(
                             CurrencyUtils.format(totalLent),
-                            style: TextStyle(
+                            style: text.titleSmall?.copyWith(
                               fontSize: 15,
                               fontWeight: FontWeight.w800,
-                              color: isDark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.textPrimary,
+                              color: palette.heading,
                             ),
                           ),
                         ),
@@ -896,11 +856,9 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                           alignment: Alignment.centerLeft,
                           child: Text(
                             '${lentIous.length} pending • Tap + to add',
-                            style: TextStyle(
+                            style: text.labelSmall?.copyWith(
                               fontSize: 9.5,
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.textSecondary,
+                              color: palette.secondary,
                             ),
                           ),
                         ),
@@ -930,7 +888,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Row(
+                        Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Flexible(
@@ -939,7 +897,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                                 alignment: Alignment.centerLeft,
                                 child: Text(
                                   'To Pay (Borrowed)',
-                                  style: TextStyle(
+                                  style: text.labelSmall?.copyWith(
                                     fontSize: 10.5,
                                     fontWeight: FontWeight.w700,
                                     color: AppColors.error,
@@ -947,7 +905,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                                 ),
                               ),
                             ),
-                            Icon(
+                            const Icon(
                               Icons.add_circle_outline_rounded,
                               size: 14,
                               color: AppColors.error,
@@ -960,12 +918,10 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                           alignment: Alignment.centerLeft,
                           child: Text(
                             CurrencyUtils.format(totalBorrowed),
-                            style: TextStyle(
+                            style: text.titleSmall?.copyWith(
                               fontSize: 15,
                               fontWeight: FontWeight.w800,
-                              color: isDark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.textPrimary,
+                              color: palette.heading,
                             ),
                           ),
                         ),
@@ -974,11 +930,9 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                           alignment: Alignment.centerLeft,
                           child: Text(
                             '${borrowedIous.length} pending • Tap + to add',
-                            style: TextStyle(
+                            style: text.labelSmall?.copyWith(
                               fontSize: 9.5,
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.textSecondary,
+                              color: palette.secondary,
                             ),
                           ),
                         ),
@@ -1013,9 +967,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: isDark
-                              ? AppColors.darkSurfaceMuted
-                              : AppColors.surfaceElevated,
+                          color: palette.surfaceSubtle,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(
@@ -1037,12 +989,10 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                                         ? 'Collect from ${iou.person}'
                                         : 'Pay back ${iou.person}',
                                     softWrap: true,
-                                    style: TextStyle(
+                                    style: text.labelLarge?.copyWith(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w700,
-                                      color: isDark
-                                          ? AppColors.darkTextPrimary
-                                          : AppColors.textPrimary,
+                                      color: palette.heading,
                                     ),
                                   ),
                                   ExpandableTextWidget(
@@ -1050,13 +1000,11 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                                         ? '$dueBadge • ${iou.cleanNote}'
                                         : iou.cleanNote,
                                     collapsedMaxLines: 1,
-                                    style: TextStyle(
+                                    style: text.labelSmall?.copyWith(
                                       fontSize: 10.5,
                                       color: iou.isOverdue
                                           ? AppColors.error
-                                          : (isDark
-                                                ? AppColors.darkTextSecondary
-                                                : AppColors.textSecondary),
+                                          : palette.secondary,
                                     ),
                                   ),
                                 ],
@@ -1065,7 +1013,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                             const SizedBox(width: 8),
                             Text(
                               CurrencyUtils.format(iou.amount),
-                              style: TextStyle(
+                              style: text.labelLarge?.copyWith(
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.w800,
                                 color: color,
@@ -1096,7 +1044,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                                 ),
                                 child: Text(
                                   iou.isLent ? 'Collected' : 'Paid',
-                                  style: TextStyle(
+                                  style: text.labelSmall?.copyWith(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w700,
                                     color: color,
@@ -1130,7 +1078,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                               _showAllIous
                                   ? 'Show less'
                                   : 'Show all (${activeIous.length} pending)',
-                              style: const TextStyle(
+                              style: text.labelSmall?.copyWith(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.primary,
@@ -1149,7 +1097,9 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
     );
   }
 
-  Widget _buildCategoryPills(BuildContext context, bool isDark) {
+  Widget _buildCategoryPills(BuildContext context) {
+    final palette = context.palette;
+    final text = context.text;
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -1161,11 +1111,9 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
               margin: const EdgeInsets.only(right: 8),
               padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.darkSurface : AppColors.surface,
+                color: palette.card,
                 borderRadius: AppRadius.radiusFull,
-                border: Border.all(
-                  color: isDark ? AppColors.darkBorder : AppColors.border,
-                ),
+                border: Border.all(color: palette.border),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -1174,12 +1122,10 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                   const SizedBox(width: 5),
                   Text(
                     cat.shortLabel,
-                    style: TextStyle(
+                    style: text.labelMedium?.copyWith(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: isDark
-                          ? AppColors.darkTextPrimary
-                          : AppColors.textPrimary,
+                      color: palette.heading,
                     ),
                   ),
                 ],
@@ -1191,11 +1137,9 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
     );
   }
 
-  Widget _buildCompactToolsGrid(
-    BuildContext context,
-    MoneyLoaded state,
-    bool isDark,
-  ) {
+  Widget _buildCompactToolsGrid(BuildContext context, MoneyLoaded state) {
+    final palette = context.palette;
+    final text = context.text;
     final items = [
       _ToolItem(
         icon: Icons.autorenew_rounded,
@@ -1267,11 +1211,9 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
-              color: isDark ? AppColors.darkSurface : AppColors.surface,
+              color: palette.card,
               borderRadius: AppRadius.borderMd,
-              border: Border.all(
-                color: isDark ? AppColors.darkBorder : AppColors.border,
-              ),
+              border: Border.all(color: palette.border),
             ),
             child: Row(
               children: [
@@ -1295,12 +1237,10 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                         alignment: Alignment.centerLeft,
                         child: Text(
                           item.title,
-                          style: TextStyle(
+                          style: text.titleSmall?.copyWith(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w700,
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.textPrimary,
+                            color: palette.heading,
                           ),
                         ),
                       ),
@@ -1311,11 +1251,9 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                         child: Text(
                           item.subtitle,
                           maxLines: 1,
-                          style: TextStyle(
+                          style: text.labelSmall?.copyWith(
                             fontSize: 11.5,
-                            color: isDark
-                                ? AppColors.darkTextMuted
-                                : AppColors.textMuted,
+                            color: palette.caption,
                           ),
                         ),
                       ),

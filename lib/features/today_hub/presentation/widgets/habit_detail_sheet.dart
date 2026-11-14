@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
+import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
 import '../../domain/entities/habit_entity.dart';
@@ -259,9 +260,10 @@ class HabitDetailSheet extends StatelessWidget {
                           habit.isDoneToday
                               ? 'Completed Today'
                               : 'Mark Completed',
-                          style: const TextStyle(
+                          style: AppTextStyles.labelLarge.copyWith(
                             fontWeight: FontWeight.w700,
                             fontSize: 13,
+                            color: Colors.white,
                           ),
                         ),
                       ),
@@ -296,7 +298,7 @@ class HabitDetailSheet extends StatelessWidget {
                         ),
                         label: Text(
                           habit.isSkippedToday ? 'Skipped' : 'Skip Today',
-                          style: const TextStyle(
+                          style: AppTextStyles.labelMedium.copyWith(
                             fontWeight: FontWeight.w600,
                             fontSize: 12.5,
                           ),
@@ -538,7 +540,7 @@ class HabitDetailSheet extends StatelessWidget {
                             ),
                             child: Text(
                               '${day.day}',
-                              style: TextStyle(
+                              style: text.labelSmall?.copyWith(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w700,
                                 color: done

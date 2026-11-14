@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_radius.dart';
+import '../../config/theme/theme_context.dart';
 
 /// Shimmer loading placeholder for smooth, state-of-the-art loading states.
 class AppShimmerLoader extends StatefulWidget {
@@ -57,13 +57,11 @@ class _AppShimmerLoaderState extends State<AppShimmerLoader>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final baseColor = isDark
-        ? AppColors.darkSurfaceSecondary
-        : AppColors.surfaceSecondary;
-    final highlightColor = isDark
-        ? AppColors.darkSurfaceMuted.withValues(alpha: 0.6)
-        : Colors.white.withValues(alpha: 0.85);
+    final p = context.palette;
+    final baseColor = p.surfaceMuted;
+    final highlightColor = p.isDark
+        ? p.surfaceSubtle.withValues(alpha: 0.6)
+        : p.card.withValues(alpha: 0.85);
 
     return AnimatedBuilder(
       animation: _animation,

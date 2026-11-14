@@ -29,14 +29,18 @@ class AddNote extends NotesEvent {
   final String content;
   final int colorValue;
   final String tags;
+  final bool isPinned;
+
   const AddNote({
     required this.title,
     required this.content,
     required this.colorValue,
     this.tags = '',
+    this.isPinned = false,
   });
+
   @override
-  List<Object?> get props => [title, content, colorValue, tags];
+  List<Object?> get props => [title, content, colorValue, tags, isPinned];
 }
 
 class UpdateNote extends NotesEvent {
@@ -45,6 +49,7 @@ class UpdateNote extends NotesEvent {
   final String content;
   final int colorValue;
   final String tags;
+  final bool? isPinned;
 
   const UpdateNote({
     required this.id,
@@ -52,8 +57,9 @@ class UpdateNote extends NotesEvent {
     required this.content,
     required this.colorValue,
     this.tags = '',
+    this.isPinned,
   });
 
   @override
-  List<Object?> get props => [id, title, content, colorValue, tags];
+  List<Object?> get props => [id, title, content, colorValue, tags, isPinned];
 }

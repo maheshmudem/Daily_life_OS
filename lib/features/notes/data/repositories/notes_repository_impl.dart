@@ -16,11 +16,13 @@ class NotesRepositoryImpl implements NotesRepository {
     required String content,
     required int colorValue,
     String tags = '',
+    bool isPinned = false,
   }) => _localDataSource.addNote(
     title: title,
     content: content,
     colorValue: colorValue,
     tags: tags,
+    isPinned: isPinned,
   );
 
   @override
@@ -30,12 +32,14 @@ class NotesRepositoryImpl implements NotesRepository {
     String? content,
     int? colorValue,
     String? tags,
+    bool? isPinned,
   }) => _localDataSource.updateNote(
     id,
     title: title,
     content: content,
     colorValue: colorValue,
     tags: tags,
+    isPinned: isPinned,
   );
 
   @override

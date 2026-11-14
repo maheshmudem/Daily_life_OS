@@ -3,6 +3,7 @@ import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/app_text_styles.dart';
+import '../../../../config/theme/theme_context.dart';
 
 class PomodoroAdvancedConfig {
   final int workMinutes;
@@ -127,13 +128,10 @@ class _PomodoroCustomDurationSheetState
 
   @override
   Widget build(BuildContext context) {
-    final cardBg = widget.isDark ? AppColors.darkCardBackground : Colors.white;
-    final headingColor = widget.isDark
-        ? AppColors.darkTextHeading
-        : AppColors.textHeading;
-    final captionColor = widget.isDark
-        ? AppColors.darkTextCaption
-        : AppColors.textCaption;
+    final palette = context.palette;
+    final cardBg = palette.card;
+    final headingColor = palette.heading;
+    final captionColor = palette.caption;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -152,9 +150,7 @@ class _PomodoroCustomDurationSheetState
                   width: 36,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: widget.isDark
-                        ? AppColors.darkDivider
-                        : AppColors.divider,
+                    color: palette.divider,
                     borderRadius: AppRadius.radiusFull,
                   ),
                 ),
@@ -310,9 +306,12 @@ class _PomodoroCustomDurationSheetState
                     );
                     Navigator.of(context).pop();
                   },
-                  child: const Text(
+                  child: Text(
                     'Save Timer Settings',
-                    style: TextStyle(fontWeight: FontWeight.w700),
+                    style: AppTextStyles.buttonLabel.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -333,12 +332,12 @@ class _PomodoroCustomDurationSheetState
     required int step,
     bool compact = false,
   }) {
+    final palette = context.palette;
+    final textTheme = context.text;
     return Container(
       padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 14, vertical: 4),
       decoration: BoxDecoration(
-        color: widget.isDark
-            ? AppColors.darkSurfaceSecondary
-            : AppColors.surfaceSecondary,
+        color: palette.surfaceMuted,
         borderRadius: AppRadius.radiusMd,
       ),
       child: Row(
@@ -349,12 +348,10 @@ class _PomodoroCustomDurationSheetState
               title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
+              style: textTheme.bodySmall?.copyWith(
                 fontSize: compact ? 12 : 13,
                 fontWeight: FontWeight.w600,
-                color: widget.isDark
-                    ? AppColors.darkTextHeading
-                    : AppColors.textHeading,
+                color: palette.heading,
               ),
             ),
           ),
@@ -370,7 +367,7 @@ class _PomodoroCustomDurationSheetState
               ),
               Text(
                 '$value $unit',
-                style: TextStyle(
+                style: textTheme.bodySmall?.copyWith(
                   fontWeight: FontWeight.w700,
                   fontSize: compact ? 12 : 13,
                   color: AppColors.moduleTime,
@@ -398,12 +395,12 @@ class _PomodoroCustomDurationSheetState
     required bool value,
     required ValueChanged<bool> onChanged,
   }) {
+    final palette = context.palette;
+    final textTheme = context.text;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: widget.isDark
-            ? AppColors.darkSurfaceSecondary
-            : AppColors.surfaceSecondary,
+        color: palette.surfaceMuted,
         borderRadius: AppRadius.radiusMd,
       ),
       child: Row(
@@ -424,21 +421,17 @@ class _PomodoroCustomDurationSheetState
               children: [
                 Text(
                   title,
-                  style: TextStyle(
+                  style: textTheme.bodySmall?.copyWith(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w700,
-                    color: widget.isDark
-                        ? AppColors.darkTextHeading
-                        : AppColors.textHeading,
+                    color: palette.heading,
                   ),
                 ),
                 Text(
                   subtitle,
-                  style: TextStyle(
+                  style: textTheme.labelSmall?.copyWith(
                     fontSize: 11,
-                    color: widget.isDark
-                        ? AppColors.darkTextCaption
-                        : AppColors.textCaption,
+                    color: palette.caption,
                   ),
                 ),
               ],

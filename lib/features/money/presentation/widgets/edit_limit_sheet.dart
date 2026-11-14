@@ -3,7 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
-import '../../../../config/theme/app_text_styles.dart';
+import '../../../../config/theme/app_spacing.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/utils/validators.dart';
@@ -81,16 +82,19 @@ class _EditCategoryLimitSheetState extends State<EditCategoryLimitSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = context.palette;
+    final text = context.text;
     final cat = widget.budget.categoryInfo;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 12, 20, 24 + bottomInset),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
-        borderRadius: AppRadius.topXxl,
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.xl,
+        AppSpacing.md,
+        AppSpacing.xl,
+        AppSpacing.xl + bottomInset,
       ),
+      decoration: BoxDecoration(color: p.card, borderRadius: AppRadius.topXxl),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,12 +104,12 @@ class _EditCategoryLimitSheetState extends State<EditCategoryLimitSheet> {
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: isDark ? AppColors.darkDivider : AppColors.divider,
+                color: p.divider,
                 borderRadius: AppRadius.radiusFull,
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          AppSpacing.gapH16,
           Row(
             children: [
               Container(
@@ -117,26 +121,18 @@ class _EditCategoryLimitSheetState extends State<EditCategoryLimitSheet> {
                 ),
                 child: Icon(cat.icon, color: cat.color, size: 22),
               ),
-              const SizedBox(width: 12),
+              AppSpacing.gapW12,
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       cat.label,
-                      style: AppTextStyles.headingSmall.copyWith(
-                        color: isDark
-                            ? AppColors.darkTextHeading
-                            : AppColors.textHeading,
-                      ),
+                      style: text.titleLarge?.copyWith(color: p.heading),
                     ),
                     Text(
                       '${StringConstants.currentSpend}: ${CurrencyUtils.format(widget.budget.spent)}',
-                      style: AppTextStyles.caption.copyWith(
-                        color: isDark
-                            ? AppColors.darkTextCaption
-                            : AppColors.textCaption,
-                      ),
+                      style: text.labelSmall?.copyWith(color: p.caption),
                     ),
                   ],
                 ),
@@ -154,9 +150,7 @@ class _EditCategoryLimitSheetState extends State<EditCategoryLimitSheet> {
             onChanged: (_) {
               if (_error != null) setState(() => _error = null);
             },
-            style: AppTextStyles.headingMedium.copyWith(
-              color: isDark ? AppColors.darkTextHeading : AppColors.textHeading,
-            ),
+            style: text.headlineSmall?.copyWith(color: p.heading),
             decoration: InputDecoration(
               labelText: StringConstants.monthlyLimit,
               prefixText: '${CurrencyUtils.symbol} ',
@@ -164,10 +158,10 @@ class _EditCategoryLimitSheetState extends State<EditCategoryLimitSheet> {
               errorText: _error,
             ),
           ),
-          const SizedBox(height: 12),
+          AppSpacing.gapH12,
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
             children: _presetLimits().map((preset) {
               return ActionChip(
                 label: Text('${CurrencyUtils.symbol}$preset'),
@@ -178,7 +172,7 @@ class _EditCategoryLimitSheetState extends State<EditCategoryLimitSheet> {
               );
             }).toList(),
           ),
-          const SizedBox(height: 20),
+          AppSpacing.gapH20,
           Row(
             children: [
               Expanded(
@@ -187,13 +181,13 @@ class _EditCategoryLimitSheetState extends State<EditCategoryLimitSheet> {
                   child: const Text(StringConstants.cancel),
                 ),
               ),
-              const SizedBox(width: 12),
+              AppSpacing.gapW12,
               Expanded(
                 flex: 2,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.moduleMoney,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppColors.textWhite,
                   ),
                   onPressed: _save,
                   child: const Text(StringConstants.saveLimit),
@@ -266,15 +260,18 @@ class _EditSafeSpendSheetState extends State<EditSafeSpendSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = context.palette;
+    final text = context.text;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 12, 20, 24 + bottomInset),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
-        borderRadius: AppRadius.topXxl,
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.xl,
+        AppSpacing.md,
+        AppSpacing.xl,
+        AppSpacing.xl + bottomInset,
       ),
+      decoration: BoxDecoration(color: p.card, borderRadius: AppRadius.topXxl),
       child: Form(
         key: _formKey,
         child: Column(
@@ -286,21 +283,17 @@ class _EditSafeSpendSheetState extends State<EditSafeSpendSheet> {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkDivider : AppColors.divider,
+                  color: p.divider,
                   borderRadius: AppRadius.radiusFull,
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            AppSpacing.gapH16,
             Text(
               StringConstants.safeSpendSettings,
-              style: AppTextStyles.headingSmall.copyWith(
-                color: isDark
-                    ? AppColors.darkTextHeading
-                    : AppColors.textHeading,
-              ),
+              style: text.titleLarge?.copyWith(color: p.heading),
             ),
-            const SizedBox(height: 16),
+            AppSpacing.gapH16,
             TextFormField(
               controller: _budgetCtrl,
               keyboardType: const TextInputType.numberWithOptions(
@@ -324,14 +317,14 @@ class _EditSafeSpendSheetState extends State<EditSafeSpendSheet> {
                 prefixText: '${CurrencyUtils.symbol} ',
               ),
             ),
-            const SizedBox(height: 20),
+            AppSpacing.gapH20,
             SizedBox(
               width: double.infinity,
               height: 48,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.moduleMoney,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.textWhite,
                 ),
                 onPressed: _save,
                 child: const Text(StringConstants.save),

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
+import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
 import '../../domain/entities/habit_entity.dart';
@@ -735,9 +736,10 @@ class _HabitEditorSheetState extends State<HabitEditorSheet> {
                 ),
                 label: Text(
                   isEditing ? 'Save Changes' : 'Create Habit',
-                  style: const TextStyle(
+                  style: AppTextStyles.labelLarge.copyWith(
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
+                    color: Colors.white,
                   ),
                 ),
               ),

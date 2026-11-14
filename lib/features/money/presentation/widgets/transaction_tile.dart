@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/expandable_text_widget.dart';
 import '../../domain/entities/transaction_entity.dart';
@@ -27,7 +28,9 @@ class TransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final palette = context.palette;
+    final text = context.text;
+    final isDark = palette.isDark;
     final category = transaction.categoryInfo;
     final isIncome = transaction.isIncome;
     final isTransfer = transaction.isTransfer;
@@ -39,10 +42,8 @@ class TransactionTile extends StatelessWidget {
     final badgeLabel = isTransfer ? 'Transfer' : category.shortLabel;
     final amountColor = isTransfer
         ? AppColors.primary
-        : (isIncome
-              ? AppColors.success
-              : (isDark ? AppColors.darkTextPrimary : AppColors.textPrimary));
-    final captionColor = isDark ? AppColors.darkTextMuted : AppColors.textMuted;
+        : (isIncome ? AppColors.success : palette.heading);
+    final captionColor = palette.caption;
     final note = transaction.note?.trim() ?? '';
 
     final content = Row(
@@ -70,13 +71,11 @@ class TransactionTile extends StatelessWidget {
                 collapsedMaxLines: 2,
                 characterThreshold: 48,
                 toggleColor: tileColor,
-                style: TextStyle(
+                style: text.titleSmall?.copyWith(
                   fontSize: 15,
                   height: 1.3,
                   fontWeight: FontWeight.w700,
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.textPrimary,
+                  color: palette.heading,
                 ),
               ),
               const SizedBox(height: 3),
@@ -88,7 +87,10 @@ class TransactionTile extends StatelessWidget {
                       alignment: Alignment.centerLeft,
                       child: Text(
                         transaction.formattedDate,
-                        style: TextStyle(fontSize: 11.5, color: captionColor),
+                        style: text.labelSmall?.copyWith(
+                          fontSize: 11.5,
+                          color: captionColor,
+                        ),
                       ),
                     ),
                   ),
@@ -99,22 +101,16 @@ class TransactionTile extends StatelessWidget {
                       vertical: 1.5,
                     ),
                     decoration: BoxDecoration(
-                      color: isDark
-                          ? AppColors.darkSurfaceMuted
-                          : AppColors.surfaceElevated,
+                      color: palette.surfaceSubtle,
                       borderRadius: BorderRadius.circular(5),
-                      border: Border.all(
-                        color: isDark ? AppColors.darkBorder : AppColors.border,
-                      ),
+                      border: Border.all(color: palette.border),
                     ),
                     child: Text(
                       transaction.mode,
-                      style: TextStyle(
+                      style: text.labelSmall?.copyWith(
                         fontSize: 9.5,
                         fontWeight: FontWeight.w600,
-                        color: isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.textSecondary,
+                        color: palette.secondary,
                       ),
                     ),
                   ),
@@ -125,11 +121,9 @@ class TransactionTile extends StatelessWidget {
                 ExpandableTextWidget(
                   text: note,
                   collapsedMaxLines: 1,
-                  style: TextStyle(
+                  style: text.labelSmall?.copyWith(
                     fontSize: 11,
-                    color: isDark
-                        ? AppColors.darkTextSecondary
-                        : AppColors.textSecondary,
+                    color: palette.secondary,
                   ),
                 ),
               ],
@@ -153,7 +147,7 @@ class TransactionTile extends StatelessWidget {
                           isCredit: isIncome,
                           decimals: 2,
                         ),
-                  style: TextStyle(
+                  style: text.titleSmall?.copyWith(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w700,
                     color: amountColor,
@@ -176,7 +170,7 @@ class TransactionTile extends StatelessWidget {
                   ),
                   child: Text(
                     badgeLabel,
-                    style: TextStyle(
+                    style: text.labelSmall?.copyWith(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                       color: badgeColor,
@@ -202,11 +196,9 @@ class TransactionTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.surface,
+        color: palette.card,
         borderRadius: AppRadius.borderLg,
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.border,
-        ),
+        border: Border.all(color: palette.border),
       ),
       child: Material(
         color: Colors.transparent,

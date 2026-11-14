@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_radius.dart';
-import '../../config/theme/app_text_styles.dart';
+import '../../config/theme/app_spacing.dart';
+import '../../config/theme/theme_context.dart';
 
 class AppEmptyState extends StatelessWidget {
   final IconData icon;
@@ -23,63 +24,59 @@ class AppEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = context.palette;
+    final text = context.text;
     final tint = iconColor ?? AppColors.primary;
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppSpacing.xxl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
-                color: tint.withValues(alpha: isDark ? 0.18 : 0.10),
+                color: tint.withValues(alpha: p.isDark ? 0.18 : 0.10),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, size: 48, color: tint),
             ),
-            const SizedBox(height: 20),
+            AppSpacing.gapH20,
             Text(
               title,
               textAlign: TextAlign.center,
-              style: AppTextStyles.headingSmall.copyWith(
-                color: isDark
-                    ? AppColors.darkTextHeading
-                    : AppColors.textHeading,
-              ),
+              style: text.titleLarge?.copyWith(color: p.heading),
             ),
-            const SizedBox(height: 8),
+            AppSpacing.gapH8,
             Text(
               description,
               textAlign: TextAlign.center,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: isDark
-                    ? AppColors.darkTextCaption
-                    : AppColors.textCaption,
-              ),
+              style: text.bodyMedium?.copyWith(color: p.caption),
             ),
             if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: 24),
+              AppSpacing.gapH24,
               ElevatedButton.icon(
                 onPressed: onAction,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: tint,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.textWhite,
                   shape: const RoundedRectangleBorder(
                     borderRadius: AppRadius.radiusMd,
                   ),
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
+                    horizontal: AppSpacing.xl,
+                    vertical: AppSpacing.md,
                   ),
                   elevation: 0,
                 ),
                 icon: const Icon(Icons.add_rounded, size: 18),
                 label: Text(
                   actionLabel!,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  style: text.labelLarge?.copyWith(
+                    color: AppColors.textWhite,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],

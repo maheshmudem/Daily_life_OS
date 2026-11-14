@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_radius.dart';
+import '../../config/theme/app_spacing.dart';
+import '../../config/theme/theme_context.dart';
 
 class AppActionItem {
   final IconData icon;
@@ -58,9 +60,8 @@ class AppActionSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBg = isDark ? AppColors.darkCardBackground : Colors.white;
-    final dividerColor = isDark ? AppColors.darkDivider : AppColors.divider;
+    final p = context.palette;
+    final text = context.text;
 
     // Separate normal actions and destructive actions
     final normalActions = actions.where((a) => !a.isDestructive).toList();
@@ -68,13 +69,17 @@ class AppActionSheet extends StatelessWidget {
 
     return SafeArea(
       child: Container(
-        margin: const EdgeInsets.only(left: 12, right: 12, bottom: 12),
+        margin: const EdgeInsets.only(
+          left: AppSpacing.md,
+          right: AppSpacing.md,
+          bottom: AppSpacing.md,
+        ),
         decoration: BoxDecoration(
-          color: cardBg,
-          borderRadius: BorderRadius.circular(24),
+          color: p.card,
+          borderRadius: AppRadius.radiusXxl,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.15),
+              color: Colors.black.withValues(alpha: p.isDark ? 0.45 : 0.15),
               blurRadius: 32,
               offset: const Offset(0, -6),
             ),
@@ -87,11 +92,14 @@ class AppActionSheet extends StatelessWidget {
             // Drag Handle Indicator
             Center(
               child: Container(
-                margin: const EdgeInsets.only(top: 12, bottom: 8),
+                margin: const EdgeInsets.only(
+                  top: AppSpacing.md,
+                  bottom: AppSpacing.sm,
+                ),
                 width: 38,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkDivider : AppColors.divider,
+                  color: p.divider,
                   borderRadius: AppRadius.radiusFull,
                 ),
               ),
@@ -108,7 +116,7 @@ class AppActionSheet extends StatelessWidget {
                   children: [
                     if (headerLeading != null) ...[
                       headerLeading!,
-                      const SizedBox(width: 12),
+                      AppSpacing.gapW12,
                     ],
                     Expanded(
                       child: Column(
@@ -119,12 +127,9 @@ class AppActionSheet extends StatelessWidget {
                               title!,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 16,
+                              style: text.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w800,
-                                color: isDark
-                                    ? AppColors.darkTextHeading
-                                    : AppColors.textHeading,
+                                color: p.heading,
                               ),
                             ),
                           if (subtitle != null) ...[
@@ -133,11 +138,9 @@ class AppActionSheet extends StatelessWidget {
                               subtitle!,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
+                              style: text.labelSmall?.copyWith(
                                 fontSize: 12,
-                                color: isDark
-                                    ? AppColors.darkTextCaption
-                                    : AppColors.textCaption,
+                                color: p.caption,
                               ),
                             ),
                           ],
@@ -148,35 +151,36 @@ class AppActionSheet extends StatelessWidget {
                       icon: const Icon(Icons.close_rounded, size: 20),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
-                      color: isDark
-                          ? AppColors.darkTextCaption
-                          : AppColors.textCaption,
+                      color: p.caption,
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ],
                 ),
               ),
-              Divider(color: dividerColor, height: 1),
+              Divider(color: p.divider, height: 1),
             ],
 
             // Action Items Group
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: AppSpacing.sm,
+              ),
               child: Column(
                 children: [
                   ...normalActions.map(
-                    (action) => _buildActionTile(context, action, isDark),
+                    (action) => _buildActionTile(context, action, p, text),
                   ),
                   if (destructiveActions.isNotEmpty) ...[
                     Padding(
                       padding: const EdgeInsets.symmetric(
                         vertical: 6,
-                        horizontal: 8,
+                        horizontal: AppSpacing.sm,
                       ),
-                      child: Divider(color: dividerColor, height: 1),
+                      child: Divider(color: p.divider, height: 1),
                     ),
                     ...destructiveActions.map(
-                      (action) => _buildActionTile(context, action, isDark),
+                      (action) => _buildActionTile(context, action, p, text),
                     ),
                   ],
                 ],
@@ -191,20 +195,18 @@ class AppActionSheet extends StatelessWidget {
   Widget _buildActionTile(
     BuildContext context,
     AppActionItem action,
-    bool isDark,
+    AppPalette p,
+    TextTheme text,
   ) {
     final effectiveColor = action.isDestructive
         ? AppColors.error
-        : (action.tintColor ??
-              (isDark ? AppColors.darkTextHeading : AppColors.textHeading));
+        : (action.tintColor ?? p.heading);
 
     final iconBgColor = action.isDestructive
         ? AppColors.error.withValues(alpha: 0.12)
         : (action.tintColor != null
               ? action.tintColor!.withValues(alpha: 0.12)
-              : (isDark
-                    ? AppColors.darkSurfaceSecondary
-                    : AppColors.surfaceSecondary));
+              : p.surfaceMuted);
 
     return Material(
       color: Colors.transparent,
@@ -225,7 +227,7 @@ class AppActionSheet extends StatelessWidget {
                 height: 38,
                 decoration: BoxDecoration(
                   color: iconBgColor,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: AppRadius.radiusMd,
                 ),
                 child: Icon(action.icon, size: 19, color: effectiveColor),
               ),
@@ -238,8 +240,7 @@ class AppActionSheet extends StatelessWidget {
                   children: [
                     Text(
                       action.title,
-                      style: TextStyle(
-                        fontSize: 14,
+                      style: text.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: effectiveColor,
                       ),
@@ -248,12 +249,7 @@ class AppActionSheet extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         action.subtitle!,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: isDark
-                              ? AppColors.darkTextCaption
-                              : AppColors.textCaption,
-                        ),
+                        style: text.labelSmall?.copyWith(color: p.caption),
                       ),
                     ],
                   ],
@@ -264,9 +260,7 @@ class AppActionSheet extends StatelessWidget {
               Icon(
                 Icons.chevron_right_rounded,
                 size: 18,
-                color: isDark
-                    ? AppColors.darkTextCaption.withValues(alpha: 0.4)
-                    : AppColors.textCaption.withValues(alpha: 0.5),
+                color: p.caption.withValues(alpha: p.isDark ? 0.4 : 0.5),
               ),
             ],
           ),

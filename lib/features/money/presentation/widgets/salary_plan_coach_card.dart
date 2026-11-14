@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../core/widgets/expandable_text_widget.dart';
@@ -34,7 +35,7 @@ class SalaryPlanAllocatorCard extends StatefulWidget {
     required this.period,
     required this.initialSalary,
     required this.initialFixedBills,
-    required this.isDark,
+    this.isDark = false,
     this.initiallyShowInputs = false,
     required this.onSelectPreset,
     required this.onApplyPlan,
@@ -93,7 +94,8 @@ class _SalaryPlanAllocatorCardState extends State<SalaryPlanAllocatorCard> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = widget.isDark;
+    final palette = context.palette;
+    final text = context.text;
     final preset = widget.preset;
     final period = widget.period;
     final salary = _enteredSalary;
@@ -117,11 +119,9 @@ class _SalaryPlanAllocatorCardState extends State<SalaryPlanAllocatorCard> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.surface,
+        color: palette.card,
         borderRadius: AppRadius.borderLg,
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.border,
-        ),
+        border: Border.all(color: palette.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,12 +138,10 @@ class _SalaryPlanAllocatorCardState extends State<SalaryPlanAllocatorCard> {
               Expanded(
                 child: Text(
                   'Salary & Smart Plan (${period.label})',
-                  style: TextStyle(
+                  style: text.titleSmall?.copyWith(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w700,
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.textPrimary,
+                    color: palette.heading,
                   ),
                 ),
               ),
@@ -171,7 +169,7 @@ class _SalaryPlanAllocatorCardState extends State<SalaryPlanAllocatorCard> {
                       const SizedBox(width: 4),
                       Text(
                         _showSalaryInputs ? 'Hide Input' : 'Set Salary',
-                        style: const TextStyle(
+                        style: text.labelSmall?.copyWith(
                           color: AppColors.primary,
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -194,9 +192,9 @@ class _SalaryPlanAllocatorCardState extends State<SalaryPlanAllocatorCard> {
                     color: AppColors.primary,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Apply Plan',
-                    style: TextStyle(
+                    style: text.labelSmall?.copyWith(
                       color: Colors.white,
                       fontSize: 11.5,
                       fontWeight: FontWeight.w600,
@@ -213,9 +211,7 @@ class _SalaryPlanAllocatorCardState extends State<SalaryPlanAllocatorCard> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.darkSurfaceMuted
-                    : AppColors.surfaceElevated,
+                color: palette.surfaceSubtle,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Column(
@@ -227,7 +223,6 @@ class _SalaryPlanAllocatorCardState extends State<SalaryPlanAllocatorCard> {
                         child: _CompactAmountField(
                           controller: _salaryCtrl,
                           label: 'Monthly Salary / Income',
-                          isDark: isDark,
                           onChanged: (_) => setState(() {}),
                         ),
                       ),
@@ -236,7 +231,6 @@ class _SalaryPlanAllocatorCardState extends State<SalaryPlanAllocatorCard> {
                         child: _CompactAmountField(
                           controller: _billsCtrl,
                           label: 'Fixed Bills (Rent/EMI)',
-                          isDark: isDark,
                           onChanged: (_) => setState(() {}),
                         ),
                       ),
@@ -264,28 +258,22 @@ class _SalaryPlanAllocatorCardState extends State<SalaryPlanAllocatorCard> {
                               decoration: BoxDecoration(
                                 color: isSelected
                                     ? AppColors.primary
-                                    : (isDark
-                                          ? AppColors.darkSurface
-                                          : Colors.white),
+                                    : palette.card,
                                 borderRadius: AppRadius.radiusFull,
                                 border: Border.all(
                                   color: isSelected
                                       ? AppColors.primary
-                                      : (isDark
-                                            ? AppColors.darkBorder
-                                            : AppColors.border),
+                                      : palette.border,
                                 ),
                               ),
                               child: Text(
                                 CurrencyUtils.compact(amt),
-                                style: TextStyle(
+                                style: text.labelSmall?.copyWith(
                                   fontSize: 10.5,
                                   fontWeight: FontWeight.w700,
                                   color: isSelected
                                       ? Colors.white
-                                      : (isDark
-                                            ? AppColors.darkTextSecondary
-                                            : AppColors.textSecondary),
+                                      : palette.secondary,
                                 ),
                               ),
                             ),
@@ -306,19 +294,15 @@ class _SalaryPlanAllocatorCardState extends State<SalaryPlanAllocatorCard> {
                           size: 16,
                           color: _logAsIncome
                               ? AppColors.primary
-                              : (isDark
-                                    ? AppColors.darkTextMuted
-                                    : AppColors.textMuted),
+                              : palette.caption,
                         ),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
                             'Also record ${CurrencyUtils.format(salary)} as this month\'s Salary Income',
-                            style: TextStyle(
+                            style: text.labelSmall?.copyWith(
                               fontSize: 11,
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.textSecondary,
+                              color: palette.secondary,
                             ),
                           ),
                         ),
@@ -350,9 +334,7 @@ class _SalaryPlanAllocatorCardState extends State<SalaryPlanAllocatorCard> {
                       decoration: BoxDecoration(
                         color: selected
                             ? AppColors.primary.withValues(alpha: 0.14)
-                            : (isDark
-                                  ? AppColors.darkSurfaceMuted
-                                  : AppColors.surfaceElevated),
+                            : palette.surfaceSubtle,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: selected
@@ -362,16 +344,14 @@ class _SalaryPlanAllocatorCardState extends State<SalaryPlanAllocatorCard> {
                       ),
                       child: Text(
                         p.title,
-                        style: TextStyle(
+                        style: text.labelSmall?.copyWith(
                           fontSize: 11.5,
                           fontWeight: selected
                               ? FontWeight.w700
                               : FontWeight.w500,
                           color: selected
                               ? AppColors.primary
-                              : (isDark
-                                    ? AppColors.darkTextSecondary
-                                    : AppColors.textSecondary),
+                              : palette.secondary,
                         ),
                       ),
                     ),
@@ -390,7 +370,6 @@ class _SalaryPlanAllocatorCardState extends State<SalaryPlanAllocatorCard> {
                   label: 'Needs (${(preset.needsShare * 100).round()}%)',
                   amount: CurrencyUtils.format(needsAmount),
                   color: AppColors.primary,
-                  isDark: isDark,
                 ),
               ),
               const SizedBox(width: 8),
@@ -399,7 +378,6 @@ class _SalaryPlanAllocatorCardState extends State<SalaryPlanAllocatorCard> {
                   label: 'Wants (${(preset.wantsShare * 100).round()}%)',
                   amount: CurrencyUtils.format(wantsAmount),
                   color: AppColors.moduleTime,
-                  isDark: isDark,
                 ),
               ),
               const SizedBox(width: 8),
@@ -408,7 +386,6 @@ class _SalaryPlanAllocatorCardState extends State<SalaryPlanAllocatorCard> {
                   label: 'Savings (${(preset.savingsShare * 100).round()}%)',
                   amount: CurrencyUtils.format(savingsAmount),
                   color: AppColors.success,
-                  isDark: isDark,
                 ),
               ),
             ],
@@ -419,9 +396,7 @@ class _SalaryPlanAllocatorCardState extends State<SalaryPlanAllocatorCard> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
             decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.darkSurfaceMuted
-                  : AppColors.surfaceElevated,
+              color: palette.surfaceSubtle,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -431,19 +406,16 @@ class _SalaryPlanAllocatorCardState extends State<SalaryPlanAllocatorCard> {
                   label: 'Daily Safe Cap',
                   value: '${CurrencyUtils.format(dailySafe)}/d',
                   color: AppColors.primary,
-                  isDark: isDark,
                 ),
                 _MiniPlanMetric(
                   label: '7-Day Budget',
                   value: '${CurrencyUtils.format(weeklySafe)}/wk',
                   color: AppColors.moduleTime,
-                  isDark: isDark,
                 ),
                 _MiniPlanMetric(
                   label: '1-Yr Savings',
                   value: CurrencyUtils.compact(yearlySavings),
                   color: AppColors.success,
-                  isDark: isDark,
                 ),
               ],
             ),
@@ -457,18 +429,18 @@ class _SalaryPlanAllocatorCardState extends State<SalaryPlanAllocatorCard> {
 class _CompactAmountField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
-  final bool isDark;
   final ValueChanged<String> onChanged;
 
   const _CompactAmountField({
     required this.controller,
     required this.label,
-    required this.isDark,
     required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
+    final text = context.text;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -476,10 +448,10 @@ class _CompactAmountField extends StatelessWidget {
           label,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(
+          style: text.labelSmall?.copyWith(
             fontSize: 10,
             fontWeight: FontWeight.w600,
-            color: isDark ? AppColors.darkTextMuted : AppColors.textMuted,
+            color: palette.caption,
           ),
         ),
         const SizedBox(height: 3),
@@ -490,38 +462,32 @@ class _CompactAmountField extends StatelessWidget {
             keyboardType: const TextInputType.numberWithOptions(decimal: false),
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             onChanged: onChanged,
-            style: TextStyle(
+            style: text.labelLarge?.copyWith(
               fontSize: 12.5,
               fontWeight: FontWeight.w700,
-              color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+              color: palette.heading,
             ),
             decoration: InputDecoration(
               isDense: true,
               prefixText: '${CurrencyUtils.symbol} ',
-              prefixStyle: TextStyle(
+              prefixStyle: text.labelLarge?.copyWith(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w700,
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.textSecondary,
+                color: palette.secondary,
               ),
               filled: true,
-              fillColor: isDark ? AppColors.darkSurface : Colors.white,
+              fillColor: palette.card,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 8,
                 vertical: 7,
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(
-                  color: isDark ? AppColors.darkBorder : AppColors.border,
-                ),
+                borderSide: BorderSide(color: palette.border),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(
-                  color: isDark ? AppColors.darkBorder : AppColors.border,
-                ),
+                borderSide: BorderSide(color: palette.border),
               ),
             ),
           ),
@@ -535,17 +501,17 @@ class _PlanBucketTile extends StatelessWidget {
   final String label;
   final String amount;
   final Color color;
-  final bool isDark;
 
   const _PlanBucketTile({
     required this.label,
     required this.amount,
     required this.color,
-    required this.isDark,
   });
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
+    final text = context.text;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
       decoration: BoxDecoration(
@@ -559,7 +525,7 @@ class _PlanBucketTile extends StatelessWidget {
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
+            style: text.labelSmall?.copyWith(
               fontSize: 10,
               fontWeight: FontWeight.w600,
               color: color,
@@ -572,12 +538,10 @@ class _PlanBucketTile extends StatelessWidget {
             child: Text(
               amount,
               maxLines: 1,
-              style: TextStyle(
+              style: text.labelLarge?.copyWith(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.textPrimary,
+                color: palette.heading,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
@@ -592,31 +556,31 @@ class _MiniPlanMetric extends StatelessWidget {
   final String label;
   final String value;
   final Color color;
-  final bool isDark;
 
   const _MiniPlanMetric({
     required this.label,
     required this.value,
     required this.color,
-    required this.isDark,
   });
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
+    final text = context.text;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: text.labelSmall?.copyWith(
             fontSize: 9.5,
-            color: isDark ? AppColors.darkTextMuted : AppColors.textMuted,
+            color: palette.caption,
           ),
         ),
         const SizedBox(height: 1),
         Text(
           value,
-          style: TextStyle(
+          style: text.labelSmall?.copyWith(
             fontSize: 11.5,
             fontWeight: FontWeight.w700,
             color: color,
@@ -765,7 +729,9 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final palette = context.palette;
+    final text = context.text;
+    final isDark = palette.isDark;
     final state = widget.state;
     final spentToday = widget.spentToday;
     final onOpenSalaryPlan = widget.onOpenSalaryPlan;
@@ -806,11 +772,9 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.surface,
+        color: palette.card,
         borderRadius: AppRadius.borderLg,
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.border,
-        ),
+        border: Border.all(color: palette.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -840,23 +804,19 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                       'AI Coach & Savings Report (${period.label})',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+                      style: text.titleSmall?.copyWith(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w700,
-                        color: isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.textPrimary,
+                        color: palette.heading,
                       ),
                     ),
                     Text(
                       'Spend forecast · Savings rate · Smart optimizations',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+                      style: text.labelSmall?.copyWith(
                         fontSize: 10.5,
-                        color: isDark
-                            ? AppColors.darkTextMuted
-                            : AppColors.textMuted,
+                        color: palette.caption,
                       ),
                     ),
                   ],
@@ -871,7 +831,7 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                 ),
                 child: Text(
                   'AI $score/100',
-                  style: TextStyle(
+                  style: text.labelSmall?.copyWith(
                     fontSize: 10.5,
                     fontWeight: FontWeight.w700,
                     color: scoreColor,
@@ -901,21 +861,21 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                         color: AppColors.primary.withValues(alpha: 0.25),
                       ),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.calculate_outlined,
                           size: 14,
                           color: AppColors.primary,
                         ),
-                        SizedBox(width: 5),
+                        const SizedBox(width: 5),
                         Flexible(
                           child: Text(
                             'Can I Afford This? (AI Check)',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
+                            style: text.labelSmall?.copyWith(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               color: AppColors.primary,
@@ -944,18 +904,18 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                         color: AppColors.success.withValues(alpha: 0.25),
                       ),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.payments_outlined,
                           size: 14,
                           color: AppColors.success,
                         ),
-                        SizedBox(width: 4),
+                        const SizedBox(width: 4),
                         Text(
                           'Salary Plan',
-                          style: TextStyle(
+                          style: text.labelSmall?.copyWith(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                             color: AppColors.success,
@@ -1004,17 +964,15 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                           children: [
                             Text(
                               'AI Month-End Forecast',
-                              style: TextStyle(
+                              style: text.labelSmall?.copyWith(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
-                                color: isDark
-                                    ? AppColors.darkTextPrimary
-                                    : AppColors.textPrimary,
+                                color: palette.heading,
                               ),
                             ),
                             Text(
                               'Est. ${CurrencyUtils.format(insights.projectedMonthSpend)}',
-                              style: TextStyle(
+                              style: text.labelSmall?.copyWith(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w800,
                                 color:
@@ -1030,12 +988,10 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                         ExpandableTextWidget(
                           text: insights.aiForecastSummary,
                           collapsedMaxLines: 2,
-                          style: TextStyle(
+                          style: text.labelSmall?.copyWith(
                             fontSize: 10.5,
                             height: 1.3,
-                            color: isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.textSecondary,
+                            color: palette.secondary,
                           ),
                         ),
                       ],
@@ -1051,9 +1007,7 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.darkSurfaceMuted
-                  : AppColors.surfaceElevated,
+              color: palette.surfaceSubtle,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
@@ -1064,14 +1018,9 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                     value: CurrencyUtils.format(actualSaved),
                     subtitle: '${savingsRate.toStringAsFixed(0)}% of income',
                     color: AppColors.success,
-                    isDark: isDark,
                   ),
                 ),
-                Container(
-                  width: 1,
-                  height: 30,
-                  color: isDark ? AppColors.darkBorder : AppColors.border,
-                ),
+                Container(width: 1, height: 30, color: palette.border),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.only(left: 10),
@@ -1082,15 +1031,10 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                           ? 'Goal achieved'
                           : 'Gap: ${CurrencyUtils.format(targetSavings - actualSaved)}',
                       color: AppColors.primary,
-                      isDark: isDark,
                     ),
                   ),
                 ),
-                Container(
-                  width: 1,
-                  height: 30,
-                  color: isDark ? AppColors.darkBorder : AppColors.border,
-                ),
+                Container(width: 1, height: 30, color: palette.border),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.only(left: 10),
@@ -1102,7 +1046,6 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                       color: insights.avgPerDay > dailyAllowance
                           ? AppColors.warning
                           : AppColors.moduleTime,
-                      isDark: isDark,
                     ),
                   ),
                 ),
@@ -1133,7 +1076,7 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                     _showDetails
                         ? 'Show less'
                         : 'Show AI Action Plan (${suggestions.length} tips)',
-                    style: const TextStyle(
+                    style: text.labelSmall?.copyWith(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w700,
                       color: AppColors.primary,
@@ -1152,7 +1095,7 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                       ),
                       child: Text(
                         '${overCategories.length} Over Limit',
-                        style: const TextStyle(
+                        style: text.labelSmall?.copyWith(
                           fontSize: 9.5,
                           fontWeight: FontWeight.w700,
                           color: AppColors.error,
@@ -1179,13 +1122,11 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                         const SizedBox(height: 8),
                         Text(
                           'WHERE YOU SPEND THE MOST',
-                          style: TextStyle(
+                          style: text.labelSmall?.copyWith(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 0.5,
-                            color: isDark
-                                ? AppColors.darkTextMuted
-                                : AppColors.textMuted,
+                            color: palette.caption,
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -1210,12 +1151,10 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                                     cs.category.label,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
+                                    style: text.labelMedium?.copyWith(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
-                                      color: isDark
-                                          ? AppColors.darkTextPrimary
-                                          : AppColors.textPrimary,
+                                      color: palette.heading,
                                     ),
                                   ),
                                 ),
@@ -1234,7 +1173,7 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                                     ),
                                     child: Text(
                                       'Over by ${CurrencyUtils.format(catBudget.spent - catBudget.monthlyLimit)}',
-                                      style: const TextStyle(
+                                      style: text.labelSmall?.copyWith(
                                         fontSize: 9.5,
                                         fontWeight: FontWeight.w700,
                                         color: AppColors.error,
@@ -1243,12 +1182,10 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                                   ),
                                 Text(
                                   '${CurrencyUtils.format(cs.amount)} ($pctOfTotal%)',
-                                  style: TextStyle(
+                                  style: text.labelSmall?.copyWith(
                                     fontSize: 11.5,
                                     fontWeight: FontWeight.w700,
-                                    color: isDark
-                                        ? AppColors.darkTextPrimary
-                                        : AppColors.textPrimary,
+                                    color: palette.heading,
                                     fontFeatures: const [
                                       FontFeature.tabularFigures(),
                                     ],
@@ -1266,13 +1203,11 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                         children: [
                           Text(
                             'AI RECOMMENDATIONS & ACTIONS',
-                            style: TextStyle(
+                            style: text.labelSmall?.copyWith(
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.5,
-                              color: isDark
-                                  ? AppColors.darkTextMuted
-                                  : AppColors.textMuted,
+                              color: palette.caption,
                             ),
                           ),
                           if (overCategories.isNotEmpty)
@@ -1296,7 +1231,7 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                                 ),
                                 child: Text(
                                   'Auto-Fix ${overCategories.length} Over Limit',
-                                  style: const TextStyle(
+                                  style: text.labelSmall?.copyWith(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w700,
                                     color: AppColors.error,
@@ -1334,24 +1269,20 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                                     children: [
                                       Text(
                                         tip.title,
-                                        style: TextStyle(
+                                        style: text.labelSmall?.copyWith(
                                           fontSize: 11.5,
                                           fontWeight: FontWeight.w700,
-                                          color: isDark
-                                              ? AppColors.darkTextPrimary
-                                              : AppColors.textPrimary,
+                                          color: palette.heading,
                                         ),
                                       ),
                                       const SizedBox(height: 2),
                                       ExpandableTextWidget(
                                         text: tip.body,
                                         collapsedMaxLines: 2,
-                                        style: TextStyle(
+                                        style: text.labelSmall?.copyWith(
                                           fontSize: 11,
                                           height: 1.3,
-                                          color: isDark
-                                              ? AppColors.darkTextSecondary
-                                              : AppColors.textSecondary,
+                                          color: palette.secondary,
                                         ),
                                       ),
                                     ],
@@ -1376,18 +1307,18 @@ class _ReportMetricTile extends StatelessWidget {
   final String value;
   final String subtitle;
   final Color color;
-  final bool isDark;
 
   const _ReportMetricTile({
     required this.label,
     required this.value,
     required this.subtitle,
     required this.color,
-    required this.isDark,
   });
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
+    final text = context.text;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1395,10 +1326,10 @@ class _ReportMetricTile extends StatelessWidget {
           label,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(
+          style: text.labelSmall?.copyWith(
             fontSize: 9.5,
             fontWeight: FontWeight.w600,
-            color: isDark ? AppColors.darkTextMuted : AppColors.textMuted,
+            color: palette.caption,
           ),
         ),
         const SizedBox(height: 2),
@@ -1408,7 +1339,7 @@ class _ReportMetricTile extends StatelessWidget {
           child: Text(
             value,
             maxLines: 1,
-            style: TextStyle(
+            style: text.labelLarge?.copyWith(
               fontSize: 12.5,
               fontWeight: FontWeight.w800,
               color: color,
@@ -1423,11 +1354,9 @@ class _ReportMetricTile extends StatelessWidget {
           child: Text(
             subtitle,
             maxLines: 1,
-            style: TextStyle(
+            style: text.labelSmall?.copyWith(
               fontSize: 9.5,
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.textSecondary,
+              color: palette.secondary,
             ),
           ),
         ),
@@ -1479,7 +1408,7 @@ class _SalaryPlanSetupSheetState extends State<SalaryPlanSetupSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final palette = context.palette;
     final state = widget.state;
     final baseSalary = state.insights.monthIncome > 0
         ? state.insights.monthIncome
@@ -1493,7 +1422,7 @@ class _SalaryPlanSetupSheetState extends State<SalaryPlanSetupSheet> {
         bottom: MediaQuery.of(context).viewInsets.bottom + 20,
       ),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.surface,
+        color: palette.card,
         borderRadius: AppRadius.topXl,
       ),
       child: SingleChildScrollView(
@@ -1504,7 +1433,7 @@ class _SalaryPlanSetupSheetState extends State<SalaryPlanSetupSheet> {
               width: 34,
               height: 4,
               decoration: BoxDecoration(
-                color: isDark ? AppColors.darkBorder : AppColors.border,
+                color: palette.border,
                 borderRadius: AppRadius.radiusFull,
               ),
             ),
@@ -1514,7 +1443,7 @@ class _SalaryPlanSetupSheetState extends State<SalaryPlanSetupSheet> {
               period: state.selectedPeriod,
               initialSalary: baseSalary,
               initialFixedBills: state.budget.fixedBills,
-              isDark: isDark,
+              isDark: palette.isDark,
               initiallyShowInputs: true,
               onSelectPreset: (p) => setState(() => _preset = p),
               onApplyPlan: (salary, fixedBills, logSalaryIncome) {
@@ -1609,7 +1538,8 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final palette = context.palette;
+    final text = context.text;
     final state = widget.state;
     final insights = state.insights;
     final amount = _purchaseAmount;
@@ -1682,7 +1612,7 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
         bottom: MediaQuery.of(context).viewInsets.bottom + 20,
       ),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.surface,
+        color: palette.card,
         borderRadius: AppRadius.topXl,
       ),
       child: SingleChildScrollView(
@@ -1695,7 +1625,7 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkBorder : AppColors.border,
+                  color: palette.border,
                   borderRadius: AppRadius.radiusFull,
                 ),
               ),
@@ -1723,21 +1653,17 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
                     children: [
                       Text(
                         'AI Purchase Affordability Check',
-                        style: TextStyle(
+                        style: text.titleSmall?.copyWith(
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
-                          color: isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.textPrimary,
+                          color: palette.heading,
                         ),
                       ),
                       Text(
                         'Simulate impact on today\'s safe spend, category & savings',
-                        style: TextStyle(
+                        style: text.labelSmall?.copyWith(
                           fontSize: 11,
-                          color: isDark
-                              ? AppColors.darkTextMuted
-                              : AppColors.textMuted,
+                          color: palette.caption,
                         ),
                       ),
                     ],
@@ -1759,7 +1685,6 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
                   child: _CompactAmountField(
                     controller: _amountCtrl,
                     label: 'Planned Purchase Amount',
-                    isDark: isDark,
                     onChanged: (_) => setState(() {}),
                   ),
                 ),
@@ -1771,12 +1696,10 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
                     children: [
                       Text(
                         'Item / Merchant (Optional)',
-                        style: TextStyle(
+                        style: text.labelSmall?.copyWith(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
-                          color: isDark
-                              ? AppColors.darkTextMuted
-                              : AppColors.textMuted,
+                          color: palette.caption,
                         ),
                       ),
                       const SizedBox(height: 3),
@@ -1784,45 +1707,31 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
                         height: 34,
                         child: TextField(
                           controller: _itemCtrl,
-                          style: TextStyle(
+                          style: text.labelLarge?.copyWith(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w600,
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.textPrimary,
+                            color: palette.heading,
                           ),
                           decoration: InputDecoration(
                             isDense: true,
                             hintText: 'e.g. Headphones, Dinner',
-                            hintStyle: TextStyle(
+                            hintStyle: text.labelSmall?.copyWith(
                               fontSize: 11.5,
-                              color: isDark
-                                  ? AppColors.darkTextMuted
-                                  : AppColors.textMuted,
+                              color: palette.caption,
                             ),
                             filled: true,
-                            fillColor: isDark
-                                ? AppColors.darkSurface
-                                : Colors.white,
+                            fillColor: palette.card,
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 7,
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: isDark
-                                    ? AppColors.darkBorder
-                                    : AppColors.border,
-                              ),
+                              borderSide: BorderSide(color: palette.border),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: isDark
-                                    ? AppColors.darkBorder
-                                    : AppColors.border,
-                              ),
+                              borderSide: BorderSide(color: palette.border),
                             ),
                           ),
                         ),
@@ -1854,21 +1763,15 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
                         decoration: BoxDecoration(
                           color: selected
                               ? AppColors.primary
-                              : (isDark
-                                    ? AppColors.darkSurfaceMuted
-                                    : AppColors.surfaceElevated),
+                              : palette.surfaceSubtle,
                           borderRadius: AppRadius.radiusFull,
                         ),
                         child: Text(
                           CurrencyUtils.format(presetAmt),
-                          style: TextStyle(
+                          style: text.labelSmall?.copyWith(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: selected
-                                ? Colors.white
-                                : (isDark
-                                      ? AppColors.darkTextSecondary
-                                      : AppColors.textSecondary),
+                            color: selected ? Colors.white : palette.secondary,
                           ),
                         ),
                       ),
@@ -1897,9 +1800,7 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
                         decoration: BoxDecoration(
                           color: selected
                               ? c.color.withValues(alpha: 0.16)
-                              : (isDark
-                                    ? AppColors.darkSurfaceMuted
-                                    : AppColors.surfaceElevated),
+                              : palette.surfaceSubtle,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: selected ? c.color : Colors.transparent,
@@ -1912,16 +1813,12 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
                             const SizedBox(width: 4),
                             Text(
                               c.label,
-                              style: TextStyle(
+                              style: text.labelSmall?.copyWith(
                                 fontSize: 11,
                                 fontWeight: selected
                                     ? FontWeight.w700
                                     : FontWeight.w500,
-                                color: selected
-                                    ? c.color
-                                    : (isDark
-                                          ? AppColors.darkTextSecondary
-                                          : AppColors.textSecondary),
+                                color: selected ? c.color : palette.secondary,
                               ),
                             ),
                           ],
@@ -1953,7 +1850,7 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
                       children: [
                         Text(
                           verdictTitle,
-                          style: TextStyle(
+                          style: text.labelLarge?.copyWith(
                             fontSize: 13,
                             fontWeight: FontWeight.w800,
                             color: verdictColor,
@@ -1962,12 +1859,10 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
                         const SizedBox(height: 3),
                         Text(
                           verdictBody,
-                          style: TextStyle(
+                          style: text.bodySmall?.copyWith(
                             fontSize: 11.5,
                             height: 1.35,
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.textPrimary,
+                            color: palette.heading,
                           ),
                         ),
                       ],
@@ -1982,9 +1877,7 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.darkSurfaceMuted
-                    : AppColors.surfaceElevated,
+                color: palette.surfaceSubtle,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
@@ -1999,14 +1892,9 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
                       color: leftTodayAfter >= 0
                           ? AppColors.success
                           : AppColors.error,
-                      isDark: isDark,
                     ),
                   ),
-                  Container(
-                    width: 1,
-                    height: 30,
-                    color: isDark ? AppColors.darkBorder : AppColors.border,
-                  ),
+                  Container(width: 1, height: 30, color: palette.border),
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.only(left: 8),
@@ -2019,15 +1907,10 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
                         color: catOverAfter
                             ? AppColors.error
                             : AppColors.primary,
-                        isDark: isDark,
                       ),
                     ),
                   ),
-                  Container(
-                    width: 1,
-                    height: 30,
-                    color: isDark ? AppColors.darkBorder : AppColors.border,
-                  ),
+                  Container(width: 1, height: 30, color: palette.border),
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.only(left: 8),
@@ -2041,7 +1924,6 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
                         color: monthRemainingAfter >= 0
                             ? AppColors.moduleTime
                             : AppColors.error,
-                        isDark: isDark,
                       ),
                     ),
                   ),

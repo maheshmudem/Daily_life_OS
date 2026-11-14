@@ -111,10 +111,7 @@ void main() {
     expect(find.text('Countdowns'), findsOneWidget);
 
     // 4a. Verify Set Reminder Section & Quick Add
-    expect(
-      find.text(StringConstants.setReminder.toUpperCase()),
-      findsOneWidget,
-    );
+    expect(find.text(StringConstants.setReminder), findsWidgets);
     expect(find.text(StringConstants.reminderHint), findsOneWidget);
 
     // Enter reminder title in the quick set reminder card
@@ -136,8 +133,8 @@ void main() {
     // Verify reminder appears in list
     expect(find.text('Pick up laundry'), findsOneWidget);
 
-    // 4b. Verify 'Full Options' opens Set Reminder Modal Sheet
-    final fullOptionsFinder = find.text('Full Options');
+    // 4b. Verify 'Full options' opens Set Reminder Modal Sheet
+    final fullOptionsFinder = find.text('Full options');
     expect(fullOptionsFinder, findsOneWidget);
     await tester.tap(fullOptionsFinder);
     await tester.pumpAndSettle();

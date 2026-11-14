@@ -4,6 +4,7 @@ import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/app_text_styles.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../../../core/widgets/expandable_text_widget.dart';
 import '../../domain/entities/pomodoro_entities.dart';
 
@@ -146,17 +147,13 @@ class _PomodoroAnalyticsDashboardState
 
   @override
   Widget build(BuildContext context) {
-    final isDark = widget.isDark;
-    final dividerColor = isDark ? AppColors.darkDivider : AppColors.divider;
-    final cardBg = isDark
-        ? AppColors.darkCardBackground
-        : AppColors.cardBackground;
-    final headingColor = isDark
-        ? AppColors.darkTextHeading
-        : AppColors.textHeading;
-    final captionColor = isDark
-        ? AppColors.darkTextCaption
-        : AppColors.textCaption;
+    final palette = context.palette;
+    final textTheme = context.text;
+    final isDark = palette.isDark;
+    final dividerColor = palette.divider;
+    final cardBg = palette.card;
+    final headingColor = palette.heading;
+    final captionColor = palette.caption;
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -246,9 +243,7 @@ class _PomodoroAnalyticsDashboardState
               Container(
                 padding: const EdgeInsets.all(11),
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.darkSurfaceSecondary
-                      : AppColors.surfaceSecondary,
+                  color: palette.surfaceMuted,
                   borderRadius: AppRadius.radiusSm,
                   border: Border.all(
                     color: AppColors.moduleTime.withValues(alpha: 0.2),
@@ -282,7 +277,7 @@ class _PomodoroAnalyticsDashboardState
                               Center(
                                 child: Text(
                                   '${(animVal * 100).round()}%',
-                                  style: TextStyle(
+                                  style: textTheme.labelSmall?.copyWith(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w800,
                                     fontFeatures: const [
@@ -304,7 +299,7 @@ class _PomodoroAnalyticsDashboardState
                         children: [
                           Text(
                             coachHeadline,
-                            style: TextStyle(
+                            style: textTheme.bodySmall?.copyWith(
                               fontSize: 12.5,
                               fontWeight: FontWeight.w800,
                               color: headingColor,
@@ -316,7 +311,7 @@ class _PomodoroAnalyticsDashboardState
                             collapsedMaxLines: 2,
                             characterThreshold: 75,
                             toggleColor: AppColors.moduleTime,
-                            style: TextStyle(
+                            style: textTheme.bodySmall?.copyWith(
                               fontSize: 11.5,
                               height: 1.35,
                               color: captionColor,
@@ -434,21 +429,17 @@ class _PomodoroAnalyticsDashboardState
     required bool isDark,
     required Color dividerColor,
   }) {
-    final headingColor = isDark
-        ? AppColors.darkTextHeading
-        : AppColors.textHeading;
-    final captionColor = isDark
-        ? AppColors.darkTextCaption
-        : AppColors.textCaption;
+    final palette = context.palette;
+    final textTheme = context.text;
+    final headingColor = palette.heading;
+    final captionColor = palette.caption;
 
     // Value + label always share one line (scaled down if needed) and the
     // subtitle never wraps, so the 2x2 grid keeps equal tile heights.
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
-        color: isDark
-            ? AppColors.darkSurfaceSecondary
-            : AppColors.surfaceSecondary,
+        color: palette.surfaceMuted,
         borderRadius: AppRadius.radiusSm,
       ),
       child: Row(
@@ -478,7 +469,7 @@ class _PomodoroAnalyticsDashboardState
                     children: [
                       Text(
                         value,
-                        style: TextStyle(
+                        style: textTheme.titleSmall?.copyWith(
                           fontSize: 15.5,
                           height: 1.15,
                           letterSpacing: -0.3,
@@ -490,7 +481,7 @@ class _PomodoroAnalyticsDashboardState
                       const SizedBox(width: 5),
                       Text(
                         label,
-                        style: TextStyle(
+                        style: textTheme.labelSmall?.copyWith(
                           fontSize: 11.5,
                           fontWeight: FontWeight.w700,
                           color: color,
@@ -506,7 +497,7 @@ class _PomodoroAnalyticsDashboardState
                   child: Text(
                     subtitle,
                     maxLines: 1,
-                    style: TextStyle(
+                    style: textTheme.labelSmall?.copyWith(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
                       color: captionColor,
@@ -529,6 +520,8 @@ class _PomodoroAnalyticsDashboardState
     required Color captionColor,
     required bool isDark,
   }) {
+    final palette = context.palette;
+    final textTheme = context.text;
     // Compute 7 days (oldest to today: offset 6 down to 0)
     final days = List.generate(7, (idx) {
       final offset = 6 - idx;
@@ -606,7 +599,7 @@ class _PomodoroAnalyticsDashboardState
                 final ratio = maxMins > 0
                     ? (day.minutes / maxMins).clamp(0.0, 1.0)
                     : 0.0;
-                final barHeight = math.max(6.0, ratio * 52.0);
+                final barHeight = math.max(6.0, ratio * 50.0);
                 final metGoal =
                     day.minutes >=
                     (widget.dailyGoalSessions * widget.workMinutes);
@@ -619,16 +612,20 @@ class _PomodoroAnalyticsDashboardState
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Text(
-                          day.minutes > 0 ? '${day.minutes}m' : '—',
-                          style: TextStyle(
-                            fontSize: 9.5,
-                            fontWeight: isSelected
-                                ? FontWeight.w800
-                                : FontWeight.w500,
-                            color: isSelected
-                                ? AppColors.moduleTime
-                                : captionColor,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            day.minutes > 0 ? '${day.minutes}m' : '—',
+                            style: textTheme.labelSmall?.copyWith(
+                              fontSize: 9.5,
+                              height: 1.1,
+                              fontWeight: isSelected
+                                  ? FontWeight.w800
+                                  : FontWeight.w500,
+                              color: isSelected
+                                  ? AppColors.moduleTime
+                                  : captionColor,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -649,8 +646,8 @@ class _PomodoroAnalyticsDashboardState
                                         end: Alignment.bottomCenter,
                                         colors: isSelected
                                             ? const [
-                                                Color(0xFFF59E0B),
-                                                Color(0xFFD97706),
+                                                AppColors.moduleTime,
+                                                AppColors.moduleTimeDark,
                                               ]
                                             : (metGoal
                                                   ? [
@@ -672,9 +669,7 @@ class _PomodoroAnalyticsDashboardState
                                                     ]),
                                       ),
                                 color: day.minutes == 0
-                                    ? (isDark
-                                          ? AppColors.darkSurfaceSecondary
-                                          : AppColors.surfaceSecondary)
+                                    ? palette.surfaceMuted
                                     : null,
                               ),
                             );
@@ -683,7 +678,7 @@ class _PomodoroAnalyticsDashboardState
                         const SizedBox(height: 5),
                         Text(
                           day.label,
-                          style: TextStyle(
+                          style: textTheme.labelSmall?.copyWith(
                             fontSize: 10,
                             fontWeight: isSelected
                                 ? FontWeight.w800
@@ -749,7 +744,7 @@ class _PomodoroAnalyticsDashboardState
                       const SizedBox(width: 4),
                       Text(
                         '${entry.key} ${entry.value}m ($pct%)',
-                        style: TextStyle(
+                        style: textTheme.labelSmall?.copyWith(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                           color: captionColor,
@@ -770,14 +765,18 @@ class _PomodoroAnalyticsDashboardState
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        _showAllCategories
-                            ? 'Show less categories'
-                            : 'Show all ${sortedCategories.length} categories',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
+                      Flexible(
+                        child: Text(
+                          _showAllCategories
+                              ? 'Show less categories'
+                              : 'Show all ${sortedCategories.length} categories',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.captionBold.copyWith(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 2),
@@ -805,6 +804,8 @@ class _PomodoroAnalyticsDashboardState
     required Color captionColor,
     required bool isDark,
   }) {
+    final palette = context.palette;
+    final textTheme = context.text;
     final visibleDistractions = _showAllDistractions
         ? widget.distractions
         : widget.distractions.take(3).toList();
@@ -834,21 +835,25 @@ class _PomodoroAnalyticsDashboardState
                   height: 36,
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: isDark
-                          ? AppColors.darkSurfaceSecondary
-                          : AppColors.surfaceSecondary,
+                      color: palette.surfaceMuted,
                       borderRadius: AppRadius.radiusSm,
                       border: Border.all(color: dividerColor, width: 0.8),
                     ),
                     child: TextField(
                       controller: _distractionController,
-                      style: TextStyle(fontSize: 12.5, color: headingColor),
+                      style: textTheme.bodySmall?.copyWith(
+                        fontSize: 12.5,
+                        color: headingColor,
+                      ),
                       decoration: InputDecoration(
                         isDense: true,
                         filled: false,
                         hintText:
                             'Jot a distracting thought (e.g., Call dentist)...',
-                        hintStyle: TextStyle(color: captionColor, fontSize: 12),
+                        hintStyle: textTheme.bodySmall?.copyWith(
+                          color: captionColor,
+                          fontSize: 12,
+                        ),
                         prefixIcon: const Icon(
                           Icons.lightbulb_outline_rounded,
                           size: 15,
@@ -881,9 +886,13 @@ class _PomodoroAnalyticsDashboardState
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                child: const Text(
+                child: Text(
                   'Park',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                  style: AppTextStyles.captionBold.copyWith(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ],
@@ -904,9 +913,7 @@ class _PomodoroAnalyticsDashboardState
                         vertical: 7,
                       ),
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? AppColors.darkSurfaceSecondary
-                            : AppColors.surfaceSecondary,
+                        color: palette.surfaceMuted,
                         borderRadius: AppRadius.radiusSm,
                       ),
                       child: Row(
@@ -931,7 +938,7 @@ class _PomodoroAnalyticsDashboardState
                               collapsedMaxLines: 2,
                               characterThreshold: 60,
                               toggleColor: AppColors.moduleVault,
-                              style: TextStyle(
+                              style: textTheme.bodySmall?.copyWith(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                                 color: item.addedToPlanner
@@ -959,9 +966,9 @@ class _PomodoroAnalyticsDashboardState
                                 Icons.add_task_rounded,
                                 size: 13,
                               ),
-                              label: const Text(
+                              label: Text(
                                 'To Planner',
-                                style: TextStyle(
+                                style: AppTextStyles.captionBold.copyWith(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -1014,7 +1021,7 @@ class _PomodoroAnalyticsDashboardState
                     _showAllDistractions
                         ? 'Show less'
                         : 'Show more ($hiddenCount more)',
-                    style: const TextStyle(
+                    style: AppTextStyles.captionBold.copyWith(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w700,
                     ),
@@ -1041,6 +1048,8 @@ class _PomodoroAnalyticsDashboardState
     required Color captionColor,
     required bool isDark,
   }) {
+    final palette = context.palette;
+    final textTheme = context.text;
     final visibleSessions = _showAllSessions
         ? widget.sessions
         : widget.sessions.take(3).toList();
@@ -1069,7 +1078,10 @@ class _PomodoroAnalyticsDashboardState
               padding: const EdgeInsets.symmetric(vertical: 12),
               child: Text(
                 'No focus sessions logged yet. Start a sprint or tap "+ Log" above!',
-                style: TextStyle(fontSize: 12, color: captionColor),
+                style: textTheme.bodySmall?.copyWith(
+                  fontSize: 12,
+                  color: captionColor,
+                ),
               ),
             )
           else ...[
@@ -1085,9 +1097,7 @@ class _PomodoroAnalyticsDashboardState
                     child: Container(
                       padding: const EdgeInsets.fromLTRB(10, 10, 6, 10),
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? AppColors.darkSurfaceSecondary
-                            : AppColors.surfaceSecondary,
+                        color: palette.surfaceMuted,
                         borderRadius: AppRadius.radiusSm,
                       ),
                       child: Row(
@@ -1117,7 +1127,7 @@ class _PomodoroAnalyticsDashboardState
                                   collapsedMaxLines: 2,
                                   characterThreshold: 55,
                                   toggleColor: catColor,
-                                  style: TextStyle(
+                                  style: textTheme.bodyMedium?.copyWith(
                                     fontSize: 13.5,
                                     fontWeight: FontWeight.w700,
                                     height: 1.3,
@@ -1139,10 +1149,11 @@ class _PomodoroAnalyticsDashboardState
                                         children: [
                                           TextSpan(
                                             text: session.category,
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w700,
-                                              color: catColor,
-                                            ),
+                                            style: textTheme.labelSmall
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w700,
+                                                  color: catColor,
+                                                ),
                                           ),
                                           TextSpan(
                                             text:
@@ -1152,7 +1163,7 @@ class _PomodoroAnalyticsDashboardState
                                             const TextSpan(text: ' · Flow ⏱'),
                                         ],
                                       ),
-                                      style: TextStyle(
+                                      style: textTheme.labelSmall?.copyWith(
                                         fontSize: 11.5,
                                         height: 1.3,
                                         fontWeight: FontWeight.w500,
@@ -1172,12 +1183,13 @@ class _PomodoroAnalyticsDashboardState
                                       ),
                                       child: Text(
                                         '${session.focusRating}★',
-                                        style: const TextStyle(
-                                          fontSize: 10,
-                                          height: 1.2,
-                                          fontWeight: FontWeight.w800,
-                                          color: AppColors.moduleTime,
-                                        ),
+                                        style: AppTextStyles.captionBold
+                                            .copyWith(
+                                              fontSize: 10,
+                                              height: 1.2,
+                                              fontWeight: FontWeight.w800,
+                                              color: AppColors.moduleTime,
+                                            ),
                                       ),
                                     ),
                                   ],
@@ -1189,7 +1201,7 @@ class _PomodoroAnalyticsDashboardState
                                     collapsedMaxLines: 2,
                                     characterThreshold: 55,
                                     toggleColor: AppColors.moduleTime,
-                                    style: TextStyle(
+                                    style: textTheme.bodySmall?.copyWith(
                                       fontSize: 11.5,
                                       height: 1.35,
                                       fontStyle: FontStyle.italic,
@@ -1218,7 +1230,7 @@ class _PomodoroAnalyticsDashboardState
                                 ),
                                 child: Text(
                                   '${session.durationMinutes}m',
-                                  style: TextStyle(
+                                  style: textTheme.labelSmall?.copyWith(
                                     fontSize: 11.5,
                                     height: 1.2,
                                     fontWeight: FontWeight.w800,
@@ -1278,7 +1290,7 @@ class _PomodoroAnalyticsDashboardState
                     _showAllSessions
                         ? 'Show less sessions'
                         : 'Show more ($hiddenSessionsCount more sessions)',
-                    style: const TextStyle(
+                    style: AppTextStyles.captionBold.copyWith(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w700,
                     ),
@@ -1314,6 +1326,7 @@ class _CardHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.text;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -1326,7 +1339,7 @@ class _CardHeader extends StatelessWidget {
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
+                style: textTheme.titleSmall?.copyWith(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
                   letterSpacing: -0.3,
@@ -1339,7 +1352,7 @@ class _CardHeader extends StatelessWidget {
                   subtitle!,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: textTheme.bodySmall?.copyWith(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                     color: subtitleColor ?? captionColor,
@@ -1380,8 +1393,7 @@ class _HeaderAction extends StatelessWidget {
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         visualDensity: VisualDensity.compact,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        textStyle: const TextStyle(
-          fontFamily: AppTextStyles.fontFamily,
+        textStyle: AppTextStyles.captionBold.copyWith(
           fontSize: 12,
           fontWeight: FontWeight.w700,
         ),
@@ -1462,13 +1474,11 @@ class _PomodoroManualSessionSheetState
 
   @override
   Widget build(BuildContext context) {
-    final cardBg = widget.isDark ? AppColors.darkCardBackground : Colors.white;
-    final headingColor = widget.isDark
-        ? AppColors.darkTextHeading
-        : AppColors.textHeading;
-    final captionColor = widget.isDark
-        ? AppColors.darkTextCaption
-        : AppColors.textCaption;
+    final palette = context.palette;
+    final textTheme = context.text;
+    final cardBg = palette.card;
+    final headingColor = palette.heading;
+    final captionColor = palette.caption;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -1491,9 +1501,7 @@ class _PomodoroManualSessionSheetState
                     width: 36,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: widget.isDark
-                          ? AppColors.darkDivider
-                          : AppColors.divider,
+                      color: palette.divider,
                       borderRadius: AppRadius.radiusFull,
                     ),
                   ),
@@ -1523,7 +1531,7 @@ class _PomodoroManualSessionSheetState
                   children: [
                     Text(
                       'Duration: $_duration mins',
-                      style: TextStyle(
+                      style: textTheme.bodySmall?.copyWith(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                         color: headingColor,
@@ -1642,9 +1650,12 @@ class _PomodoroManualSessionSheetState
                       );
                       Navigator.of(context).pop();
                     },
-                    child: const Text(
+                    child: Text(
                       'Save Focus Session',
-                      style: TextStyle(fontWeight: FontWeight.w700),
+                      style: AppTextStyles.buttonLabel.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),

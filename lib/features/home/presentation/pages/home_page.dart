@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../config/theme/app_colors.dart';
+import '../../../../config/theme/app_text_styles.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 
 class HomePage extends StatefulWidget {
@@ -61,25 +63,27 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final palette = context.palette;
+    final text = context.text;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: palette.scaffold,
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               StringConstants.appName,
-              style: theme.textTheme.headlineSmall?.copyWith(
+              style: text.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.5,
+                color: palette.heading,
               ),
             ),
             Text(
               StringConstants.appTagline,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.textCaption,
+              style: text.bodySmall?.copyWith(
+                color: palette.caption,
                 fontSize: 12,
               ),
             ),
@@ -151,15 +155,20 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add_rounded),
-        label: const Text(
+        label: Text(
           'New Action',
-          style: TextStyle(fontWeight: FontWeight.w600),
+          style: AppTextStyles.labelLarge.copyWith(
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
         ),
       ),
     );
   }
 
   Widget _buildReadinessBanner(BuildContext context) {
+    final palette = context.palette;
+    final text = context.text;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -187,20 +196,20 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Daily Life OS Architecture Ready',
-                  style: TextStyle(
+                  style: text.titleSmall?.copyWith(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textHeading,
+                    color: palette.heading,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'Clean Architecture, DI, Theme, and Routing initialized. Ready for PRD features.',
-                  style: TextStyle(
+                  style: text.bodySmall?.copyWith(
                     fontSize: 12,
-                    color: AppColors.textBody.withValues(alpha: 0.8),
+                    color: palette.body.withValues(alpha: 0.8),
                   ),
                 ),
               ],
@@ -212,6 +221,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildTodayOverviewCard(BuildContext context) {
+    final text = context.text;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -219,7 +229,11 @@ class _HomePageState extends State<HomePage> {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF4F46E5), Color(0xFF6366F1), Color(0xFF4338CA)],
+          colors: [
+            AppColors.primaryDark,
+            AppColors.primary,
+            AppColors.primaryDark,
+          ],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
@@ -245,18 +259,18 @@ class _HomePageState extends State<HomePage> {
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.calendar_today_rounded,
                       size: 12,
                       color: Colors.white,
                     ),
-                    SizedBox(width: 6),
+                    const SizedBox(width: 6),
                     Text(
                       'Today’s Plan',
-                      style: TextStyle(
+                      style: text.labelSmall?.copyWith(
                         color: Colors.white,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -265,9 +279,9 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
               ),
-              const Text(
+              Text(
                 '75% Completed',
-                style: TextStyle(
+                style: text.labelLarge?.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
                   fontSize: 13,
@@ -276,9 +290,9 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'Keep building momentum.',
-            style: TextStyle(
+            style: text.headlineSmall?.copyWith(
               color: Colors.white,
               fontSize: 22,
               fontWeight: FontWeight.w800,
@@ -288,7 +302,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 4),
           Text(
             '3 habits logged • 2 priority tasks finished today',
-            style: TextStyle(
+            style: text.bodySmall?.copyWith(
               color: Colors.white.withValues(alpha: 0.85),
               fontSize: 13,
             ),
@@ -315,15 +329,17 @@ class _HomePageState extends State<HomePage> {
     required String title,
     String? actionText,
   }) {
+    final palette = context.palette;
+    final text = context.text;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: text.titleMedium?.copyWith(
             fontSize: 17,
             fontWeight: FontWeight.w700,
-            color: AppColors.textHeading,
+            color: palette.heading,
           ),
         ),
         if (actionText != null)
@@ -336,7 +352,7 @@ class _HomePageState extends State<HomePage> {
             ),
             child: Text(
               actionText,
-              style: const TextStyle(
+              style: text.labelLarge?.copyWith(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: AppColors.primary,
@@ -348,6 +364,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildQuickActions(BuildContext context) {
+    final palette = context.palette;
+    final text = context.text;
     final actions = [
       {
         'title': 'Add Task',
@@ -379,9 +397,9 @@ class _HomePageState extends State<HomePage> {
             margin: const EdgeInsets.symmetric(horizontal: 4),
             padding: const EdgeInsets.symmetric(vertical: 14),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: palette.card,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.divider),
+              border: Border.all(color: palette.divider),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -394,10 +412,10 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(height: 8),
                 Text(
                   item['title'] as String,
-                  style: const TextStyle(
+                  style: text.labelMedium?.copyWith(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textHeading,
+                    color: palette.heading,
                   ),
                 ),
               ],
@@ -409,6 +427,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildHabitsList(BuildContext context) {
+    final palette = context.palette;
+    final text = context.text;
     return Column(
       children: _habits.asMap().entries.map((entry) {
         final index = entry.key;
@@ -420,10 +440,10 @@ class _HomePageState extends State<HomePage> {
           margin: const EdgeInsets.only(bottom: 10),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: palette.card,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: isDone ? color.withValues(alpha: 0.3) : AppColors.divider,
+              color: isDone ? color.withValues(alpha: 0.3) : palette.divider,
             ),
           ),
           child: Row(
@@ -440,18 +460,18 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     Text(
                       habit['title'] as String,
-                      style: TextStyle(
+                      style: text.titleSmall?.copyWith(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textHeading,
+                        color: palette.heading,
                         decoration: isDone ? TextDecoration.lineThrough : null,
                       ),
                     ),
                     Text(
                       '🔥 ${habit['streak']} days streak',
-                      style: const TextStyle(
+                      style: text.labelSmall?.copyWith(
                         fontSize: 11,
-                        color: AppColors.textCaption,
+                        color: palette.caption,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -463,7 +483,7 @@ class _HomePageState extends State<HomePage> {
                   isDone
                       ? Icons.check_circle_rounded
                       : Icons.radio_button_unchecked_rounded,
-                  color: isDone ? color : AppColors.border,
+                  color: isDone ? color : palette.border,
                   size: 24,
                 ),
                 onPressed: () {
@@ -480,6 +500,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildTasksList(BuildContext context) {
+    final palette = context.palette;
+    final text = context.text;
     return Column(
       children: _tasks.asMap().entries.map((entry) {
         final index = entry.key;
@@ -490,9 +512,9 @@ class _HomePageState extends State<HomePage> {
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: palette.card,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.divider),
+            border: Border.all(color: palette.divider),
           ),
           child: Row(
             children: [
@@ -512,11 +534,9 @@ class _HomePageState extends State<HomePage> {
               Expanded(
                 child: Text(
                   task['title'] as String,
-                  style: TextStyle(
+                  style: text.bodyMedium?.copyWith(
                     fontSize: 14,
-                    color: isDone
-                        ? AppColors.textCaption
-                        : AppColors.textHeading,
+                    color: isDone ? palette.caption : palette.heading,
                     decoration: isDone ? TextDecoration.lineThrough : null,
                   ),
                 ),
@@ -526,17 +546,17 @@ class _HomePageState extends State<HomePage> {
                 decoration: BoxDecoration(
                   color: task['priority'] == 'High'
                       ? AppColors.error.withValues(alpha: 0.1)
-                      : AppColors.surfaceSecondary,
+                      : palette.surfaceMuted,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   task['priority'] as String,
-                  style: TextStyle(
+                  style: text.labelSmall?.copyWith(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     color: task['priority'] == 'High'
                         ? AppColors.error
-                        : AppColors.textCaption,
+                        : palette.caption,
                   ),
                 ),
               ),

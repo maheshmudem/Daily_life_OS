@@ -403,7 +403,7 @@ class StringConstants {
   static const String vaultSecurityPulseTitle = 'Vault Security & Expiry Pulse';
   static const String vaultHealthyLabel = 'All Vault items healthy';
   static const String vaultWeakPasswordsLabel = 'Weak Passwords';
-  static const String vaultExpiringDocsLabel = 'Expiring / Expired';
+  static const String vaultExpiringDocsLabel = 'Expiry Watch';
 
   // Next-Wave Enhancements (CSV Export, Repeat Today, Bill Split, OS Backup)
   static const String exportCsvTooltip = 'Export CSV to Clipboard';

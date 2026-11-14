@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_text_styles.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../domain/entities/money_insights.dart';
@@ -20,8 +21,9 @@ class SpentSummaryChartCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final captionColor = isDark ? AppColors.darkTextMuted : AppColors.textMuted;
+    final palette = context.palette;
+    final text = context.text;
+    final captionColor = palette.caption;
 
     final labels = insights.periodBarLabels.isNotEmpty
         ? insights.periodBarLabels
@@ -40,11 +42,9 @@ class SpentSummaryChartCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.surface,
+        color: palette.card,
         borderRadius: AppRadius.borderLg,
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.border,
-        ),
+        border: Border.all(color: palette.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,7 +59,7 @@ class SpentSummaryChartCard extends StatelessWidget {
                   children: [
                     Text(
                       '${StringConstants.spent} · ${insights.period.label}',
-                      style: TextStyle(
+                      style: text.labelMedium?.copyWith(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                         color: captionColor,
@@ -68,13 +68,11 @@ class SpentSummaryChartCard extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       CurrencyUtils.format(insights.periodExpense, decimals: 2),
-                      style: TextStyle(
+                      style: text.headlineSmall?.copyWith(
                         fontSize: 26,
                         fontWeight: FontWeight.w700,
                         letterSpacing: -0.8,
-                        color: isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.textPrimary,
+                        color: palette.heading,
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
@@ -111,8 +109,7 @@ class SpentSummaryChartCard extends StatelessWidget {
                   drawVerticalLine: false,
                   horizontalInterval: maxY > 0 ? maxY / 4 : 100,
                   getDrawingHorizontalLine: (_) => FlLine(
-                    color: (isDark ? AppColors.darkBorder : AppColors.border)
-                        .withValues(alpha: 0.8),
+                    color: palette.border.withValues(alpha: 0.8),
                     strokeWidth: 1,
                     dashArray: const [4, 4],
                   ),
@@ -140,7 +137,7 @@ class SpentSummaryChartCard extends StatelessWidget {
                           padding: const EdgeInsets.only(top: 6),
                           child: Text(
                             labels[idx],
-                            style: TextStyle(
+                            style: text.labelSmall?.copyWith(
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
                               color: captionColor,
@@ -219,6 +216,7 @@ class _SpendDeltaChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final text = context.text;
     final isUp = percent > 0;
     final color = isUp ? AppColors.warning : AppColors.success;
 
@@ -230,7 +228,7 @@ class _SpendDeltaChip extends StatelessWidget {
       ),
       child: Text(
         '${isUp ? '↑' : '↓'} ${percent.abs().toStringAsFixed(1)}% $label',
-        style: TextStyle(
+        style: text.labelSmall?.copyWith(
           fontSize: 10.5,
           fontWeight: FontWeight.w600,
           color: color,
@@ -248,7 +246,8 @@ class _LegendDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final palette = context.palette;
+    final text = context.text;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -263,11 +262,9 @@ class _LegendDot extends StatelessWidget {
         const SizedBox(width: 5),
         Text(
           label,
-          style: TextStyle(
+          style: text.labelSmall?.copyWith(
             fontSize: 11,
-            color: isDark
-                ? AppColors.darkTextSecondary
-                : AppColors.textSecondary,
+            color: palette.secondary,
           ),
         ),
       ],

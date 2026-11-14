@@ -490,11 +490,11 @@ class FocusCategoryCatalog {
       case 'Writing':
         return AppColors.moduleNotes;
       case 'Design':
-        return const Color(0xFFEC4899);
+        return AppColors.chartRose;
       case 'Reading':
         return AppColors.success;
       case 'Planning':
-        return const Color(0xFF14B8A6);
+        return AppColors.moduleTasks;
       case 'Personal':
         return AppColors.warning;
       case 'Deep Work':

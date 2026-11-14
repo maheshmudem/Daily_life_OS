@@ -6,6 +6,7 @@ import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_decorations.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
+import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/currency_utils.dart';
@@ -138,9 +139,7 @@ class _TodayHubViewState extends State<_TodayHubView> {
                 : 0;
 
             final tintBg = AppColors.primary.withValues(
-              alpha: Theme.of(context).brightness == Brightness.dark
-                  ? 0.22
-                  : 0.10,
+              alpha: context.palette.isDark ? 0.22 : 0.10,
             );
 
             return FeatureScaffold(
@@ -815,7 +814,7 @@ class _HabitsManagementCardState extends State<_HabitsManagementCard> {
                       _showAllHabits
                           ? 'Show less habits'
                           : 'Show more ($hiddenHabitsCount more habits)',
-                      style: const TextStyle(
+                      style: AppTextStyles.labelSmall.copyWith(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w700,
                       ),
@@ -1029,7 +1028,7 @@ class _MomentumSummaryCard extends StatelessWidget {
                                 const Icon(
                                   Icons.local_fire_department_rounded,
                                   size: 11.5,
-                                  color: Color(0xFFFBBF24),
+                                  color: AppColors.moduleTimeLight,
                                 ),
                                 const SizedBox(width: 2),
                                 Text(
@@ -1357,7 +1356,7 @@ class _TimelineUnifiedCardState extends State<_TimelineUnifiedCard> {
                   _showAllItems
                       ? 'Show less'
                       : 'Show more ($hiddenCount more tasks)',
-                  style: const TextStyle(
+                  style: AppTextStyles.labelSmall.copyWith(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
                   ),

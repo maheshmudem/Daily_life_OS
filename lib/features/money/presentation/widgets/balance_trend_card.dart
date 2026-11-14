@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_text_styles.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../domain/entities/money_insights.dart';
@@ -47,7 +48,9 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final palette = context.palette;
+    final text = context.text;
+    final isDark = palette.isDark;
     final insights = widget.insights;
     final isPositive = insights.balanceChange >= 0;
     final changeColor = isPositive ? AppColors.moduleMoney : AppColors.error;
@@ -69,12 +72,12 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.surface,
+        color: palette.card,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isDark
               ? AppColors.moduleMoney.withValues(alpha: 0.24)
-              : AppColors.border,
+              : palette.border,
         ),
         boxShadow: isDark
             ? null
@@ -125,15 +128,9 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                         vertical: 4.5,
                       ),
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? AppColors.darkSurfaceMuted
-                            : AppColors.surfaceElevated,
+                        color: palette.surfaceSubtle,
                         borderRadius: AppRadius.radiusFull,
-                        border: Border.all(
-                          color: isDark
-                              ? AppColors.darkBorder
-                              : AppColors.border,
-                        ),
+                        border: Border.all(color: palette.border),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -155,12 +152,10 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                           const SizedBox(width: 6),
                           Text(
                             StringConstants.mainAccount,
-                            style: AppTextStyles.labelSmall.copyWith(
+                            style: text.labelSmall?.copyWith(
                               fontSize: 11.5,
                               fontWeight: FontWeight.w600,
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.textSecondary,
+                              color: palette.secondary,
                             ),
                           ),
                         ],
@@ -186,7 +181,7 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                               _hideBalance
                                   ? 'Net Worth ••••'
                                   : 'Net Worth ${CurrencyUtils.compact(insights.netWorth)}',
-                              style: const TextStyle(
+                              style: text.labelSmall?.copyWith(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.moduleMoney,
@@ -209,24 +204,16 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                         child: Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: isDark
-                                ? AppColors.darkSurfaceMuted
-                                : AppColors.surfaceElevated,
+                            color: palette.surfaceSubtle,
                             shape: BoxShape.circle,
-                            border: Border.all(
-                              color: isDark
-                                  ? AppColors.darkBorder
-                                  : AppColors.border,
-                            ),
+                            border: Border.all(color: palette.border),
                           ),
                           child: Icon(
                             _hideBalance
                                 ? Icons.visibility_off_outlined
                                 : Icons.visibility_outlined,
                             size: 14,
-                            color: isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.textSecondary,
+                            color: palette.secondary,
                           ),
                         ),
                       ),
@@ -241,13 +228,11 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                   children: [
                     Text(
                       StringConstants.totalBalance,
-                      style: TextStyle(
+                      style: text.labelSmall?.copyWith(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.4,
-                        color: isDark
-                            ? AppColors.darkTextMuted
-                            : AppColors.textMuted,
+                        color: palette.caption,
                       ),
                     ),
                     if (_touchedDayIndex != null && points.isNotEmpty) ...[
@@ -263,7 +248,7 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                         ),
                         child: Text(
                           'Day ${_touchedDayIndex! + 1}/${points.length}',
-                          style: const TextStyle(
+                          style: text.labelSmall?.copyWith(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                             color: AppColors.primary,
@@ -281,13 +266,11 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                       ? Text(
                           '${CurrencyUtils.symbol} ••••••',
                           key: const ValueKey('masked_balance'),
-                          style: TextStyle(
+                          style: text.headlineLarge?.copyWith(
                             fontSize: 32,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 1.5,
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.textPrimary,
+                            color: palette.heading,
                           ),
                         )
                       : FittedBox(
@@ -298,12 +281,10 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                               children: [
                                 TextSpan(
                                   text: wholePart,
-                                  style: TextStyle(
+                                  style: text.headlineLarge?.copyWith(
                                     fontSize: 35,
                                     fontWeight: FontWeight.w800,
-                                    color: isDark
-                                        ? AppColors.darkTextPrimary
-                                        : AppColors.textPrimary,
+                                    color: palette.heading,
                                     letterSpacing: -1.1,
                                     fontFeatures: const [
                                       FontFeature.tabularFigures(),
@@ -312,12 +293,10 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                                 ),
                                 TextSpan(
                                   text: decimalPart,
-                                  style: TextStyle(
+                                  style: text.titleMedium?.copyWith(
                                     fontSize: 20,
                                     fontWeight: FontWeight.w600,
-                                    color: isDark
-                                        ? AppColors.darkTextSecondary
-                                        : AppColors.textSecondary,
+                                    color: palette.secondary,
                                     fontFeatures: const [
                                       FontFeature.tabularFigures(),
                                     ],
@@ -396,12 +375,10 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: isDark
-                        ? AppColors.darkSurfaceMuted.withValues(alpha: 0.65)
-                        : AppColors.surfaceElevated,
+                        ? palette.surfaceSubtle.withValues(alpha: 0.65)
+                        : palette.surfaceSubtle,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: isDark ? AppColors.darkBorder : AppColors.border,
-                    ),
+                    border: Border.all(color: palette.border),
                   ),
                   child: Column(
                     children: [
@@ -418,7 +395,6 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                                   : 'Tap to add income',
                               color: AppColors.success,
                               icon: Icons.south_west_rounded,
-                              isDark: isDark,
                               onTap: widget.onAddIncome,
                             ),
                           ),
@@ -434,7 +410,6 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                                   : 'Tap to add expense',
                               color: AppColors.error,
                               icon: Icons.north_east_rounded,
-                              isDark: isDark,
                               onTap: widget.onAddExpense,
                             ),
                           ),
@@ -453,7 +428,6 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                                   '${insights.savingsRatePercent.clamp(0, 100).round()}% savings rate',
                               color: AppColors.primary,
                               icon: Icons.savings_outlined,
-                              isDark: isDark,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -469,7 +443,6 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                                   '${insights.daysRemainingInMonth} days remaining',
                               color: AppColors.moduleTime,
                               icon: Icons.account_balance_wallet_outlined,
-                              isDark: isDark,
                             ),
                           ),
                         ],
@@ -489,7 +462,6 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                         label: StringConstants.moneyNavAdd,
                         accentColor: AppColors.moduleMoney,
                         isFilled: true,
-                        isDark: isDark,
                         onTap: widget.onAddExpense,
                       ),
                     ),
@@ -500,7 +472,6 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                         label: 'Salary / Income',
                         accentColor: AppColors.success,
                         isFilled: true,
-                        isDark: isDark,
                         onTap: widget.onAddIncome,
                       ),
                     ),
@@ -512,7 +483,6 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                           label: 'Lend / Borrow',
                           accentColor: AppColors.moduleTime,
                           isFilled: false,
-                          isDark: isDark,
                           onTap: widget.onOpenIou!,
                         ),
                       ),
@@ -525,7 +495,6 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                           label: 'AI Check',
                           accentColor: AppColors.primary,
                           isFilled: false,
-                          isDark: isDark,
                           onTap: widget.onOpenAiSimulator!,
                         ),
                       ),
@@ -537,7 +506,6 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                         label: StringConstants.reports,
                         accentColor: AppColors.moduleNotes,
                         isFilled: false,
-                        isDark: isDark,
                         onTap: widget.onOpenInsights,
                       ),
                     ),
@@ -558,7 +526,6 @@ class _SnapshotMetricTile extends StatelessWidget {
   final String subtitle;
   final Color color;
   final IconData icon;
-  final bool isDark;
   final VoidCallback? onTap;
 
   const _SnapshotMetricTile({
@@ -567,12 +534,14 @@ class _SnapshotMetricTile extends StatelessWidget {
     required this.subtitle,
     required this.color,
     required this.icon,
-    required this.isDark,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
+    final text = context.text;
+    final isDark = palette.isDark;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -581,12 +550,10 @@ class _SnapshotMetricTile extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
           decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : AppColors.surface,
+            color: palette.card,
             borderRadius: BorderRadius.circular(11),
             border: Border.all(
-              color: isDark
-                  ? AppColors.darkBorder.withValues(alpha: 0.7)
-                  : AppColors.border.withValues(alpha: 0.8),
+              color: palette.border.withValues(alpha: isDark ? 0.7 : 0.8),
             ),
           ),
           child: Column(
@@ -610,12 +577,10 @@ class _SnapshotMetricTile extends StatelessWidget {
                       alignment: Alignment.centerLeft,
                       child: Text(
                         label,
-                        style: TextStyle(
+                        style: text.labelSmall?.copyWith(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.textSecondary,
+                          color: palette.secondary,
                         ),
                       ),
                     ),
@@ -629,12 +594,10 @@ class _SnapshotMetricTile extends StatelessWidget {
                 child: Text(
                   value,
                   maxLines: 1,
-                  style: TextStyle(
+                  style: text.titleMedium?.copyWith(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.textPrimary,
+                    color: palette.heading,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
@@ -645,7 +608,7 @@ class _SnapshotMetricTile extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   subtitle,
-                  style: TextStyle(
+                  style: text.labelSmall?.copyWith(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                     color: color,
@@ -754,7 +717,6 @@ class _DockActionTile extends StatefulWidget {
   final String label;
   final Color accentColor;
   final bool isFilled;
-  final bool isDark;
   final VoidCallback onTap;
 
   const _DockActionTile({
@@ -762,7 +724,6 @@ class _DockActionTile extends StatefulWidget {
     required this.label,
     required this.accentColor,
     required this.isFilled,
-    required this.isDark,
     required this.onTap,
   });
 
@@ -775,6 +736,9 @@ class _DockActionTileState extends State<_DockActionTile> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
+    final text = context.text;
+    final isDark = palette.isDark;
     return GestureDetector(
       onTapDown: (_) => setState(() => _pressed = true),
       onTapUp: (_) {
@@ -796,7 +760,7 @@ class _DockActionTileState extends State<_DockActionTile> {
                 color: widget.isFilled
                     ? widget.accentColor
                     : widget.accentColor.withValues(
-                        alpha: widget.isDark ? 0.16 : 0.10,
+                        alpha: isDark ? 0.16 : 0.10,
                       ),
                 borderRadius: BorderRadius.circular(13),
                 border: widget.isFilled
@@ -827,12 +791,10 @@ class _DockActionTileState extends State<_DockActionTile> {
                 widget.label,
                 maxLines: 1,
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: text.labelSmall?.copyWith(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w600,
-                  color: widget.isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.textPrimary,
+                  color: palette.heading,
                 ),
               ),
             ),

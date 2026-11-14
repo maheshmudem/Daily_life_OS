@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../config/theme/app_colors.dart';
+import '../../../../config/theme/theme_context.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../di/injection_container.dart';
 import '../../../security/domain/repositories/security_repository.dart';
@@ -74,7 +74,7 @@ class _MoneyShellPageState extends State<MoneyShellPage>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = context.palette;
     _visitedTabs.add(_currentTab);
 
     final pages = <Widget>[
@@ -110,9 +110,7 @@ class _MoneyShellPageState extends State<MoneyShellPage>
 
           if (lockEnabled && !_isUnlocked) {
             return Scaffold(
-              backgroundColor: isDark
-                  ? AppColors.darkScaffoldBackground
-                  : AppColors.scaffoldBackground,
+              backgroundColor: p.scaffold,
               appBar: AppBar(
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back_rounded),
@@ -143,9 +141,7 @@ class _MoneyShellPageState extends State<MoneyShellPage>
               exitMoney: _exitMoney,
               selectTab: _selectTab,
               child: Scaffold(
-                backgroundColor: isDark
-                    ? AppColors.darkScaffoldBackground
-                    : AppColors.scaffoldBackground,
+                backgroundColor: p.scaffold,
                 body: IndexedStack(index: _currentTab, children: pages),
                 bottomNavigationBar: MoneyBottomNavBar(
                   currentTab: _currentTab,

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
+import '../../config/theme/app_radius.dart';
+import '../../config/theme/app_spacing.dart';
+import '../../config/theme/theme_context.dart';
 import '../constants/string_constants.dart';
 
 class AppErrorWidget extends StatelessWidget {
@@ -16,9 +19,10 @@ class AppErrorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppSpacing.xxl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -27,27 +31,27 @@ class AppErrorWidget extends StatelessWidget {
               size: 64,
               color: AppColors.primary.withValues(alpha: 0.6),
             ),
-            const SizedBox(height: 16),
+            AppSpacing.gapH16,
             Text(
               message,
-              style: const TextStyle(
+              style: context.text.bodyMedium?.copyWith(
                 fontSize: 15,
-                color: AppColors.textBody,
+                color: p.body,
                 height: 1.5,
               ),
               textAlign: TextAlign.center,
             ),
             if (onRetry != null) ...[
-              const SizedBox(height: 24),
+              AppSpacing.gapH24,
               ElevatedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
                 label: const Text(StringConstants.retry),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                  foregroundColor: AppColors.textWhite,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: AppRadius.radiusMd,
                   ),
                 ),
               ),
