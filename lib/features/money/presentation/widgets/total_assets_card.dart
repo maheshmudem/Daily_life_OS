@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
@@ -43,7 +44,7 @@ class TotalAssetsCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text(
+                child: AppText(
                   StringConstants.totalAssets,
                   style: text.labelLarge?.copyWith(
                     fontSize: 13,
@@ -55,7 +56,7 @@ class TotalAssetsCard extends StatelessWidget {
               FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerRight,
-                child: Text(
+                child: AppText(
                   CurrencyUtils.format(total, decimals: 2),
                   style: text.titleMedium?.copyWith(
                     fontSize: 17,
@@ -200,11 +201,11 @@ class _AssetLegend extends StatelessWidget {
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 5),
-        Text(
+        AppText(
           '$label ',
           style: text.labelSmall?.copyWith(fontSize: 11.5, color: p.secondary),
         ),
-        Text(
+        AppText(
           amount,
           style: text.labelSmall?.copyWith(
             fontSize: 11.5,

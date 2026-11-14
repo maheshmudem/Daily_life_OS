@@ -1,10 +1,10 @@
 import 'dart:async';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/services/tts/tts_service.dart';
@@ -69,7 +69,7 @@ class AudioBriefingSheet extends StatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (ctx) => AudioBriefingSheet(
         userName: userName,
         autoPlay: autoPlay,
@@ -564,7 +564,7 @@ class _AudioBriefingSheetState extends State<AudioBriefingSheet> {
                 ),
                 child: const Icon(
                   Icons.graphic_eq_rounded,
-                  color: Colors.white,
+                  color: AppColors.textWhite,
                   size: 22,
                 ),
               ),
@@ -573,18 +573,14 @@ class _AudioBriefingSheetState extends State<AudioBriefingSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    AppText.titleLarge(
                       StringConstants.audioBriefingSheetTitle,
-                      style: AppTextStyles.titleLarge.copyWith(
-                        color: palette.heading,
-                      ),
+                      color: palette.heading,
                     ),
                     const SizedBox(height: 2),
-                    Text(
+                    AppText.caption(
                       StringConstants.audioBriefingSheetSubtitle,
-                      style: AppTextStyles.caption.copyWith(
-                        color: palette.caption,
-                      ),
+                      color: palette.caption,
                     ),
                   ],
                 ),
@@ -641,14 +637,12 @@ class _AudioBriefingSheetState extends State<AudioBriefingSheet> {
                 ),
                 AppSpacing.gapW8,
                 Expanded(
-                  child: Text(
+                  child: AppText.captionBold(
                     _activeSectionIndex == -1
                         ? '$_statusLabel • All Activities'
                         : '$_statusLabel • ${_sections[_activeSectionIndex].title}',
                     softWrap: true,
-                    style: AppTextStyles.captionBold.copyWith(
-                      color: _isPlaying ? accent : palette.caption,
-                    ),
+                    color: _isPlaying ? accent : palette.caption,
                   ),
                 ),
                 if (_activeSectionIndex != -1)
@@ -666,7 +660,7 @@ class _AudioBriefingSheetState extends State<AudioBriefingSheet> {
                         ),
                         borderRadius: AppRadius.radiusFull,
                       ),
-                      child: Text(
+                      child: AppText(
                         StringConstants.audioBriefPlayAll,
                         style: text.labelSmall?.copyWith(
                           fontSize: 10.5,
@@ -680,7 +674,7 @@ class _AudioBriefingSheetState extends State<AudioBriefingSheet> {
             ),
           ),
           AppSpacing.gapH8,
-          Text(
+          AppText(
             StringConstants.audioBriefTapSectionHint,
             style: text.labelSmall?.copyWith(
               fontSize: 11,
@@ -732,11 +726,9 @@ class _AudioBriefingSheetState extends State<AudioBriefingSheet> {
                       side: BorderSide(color: palette.border),
                     ),
                   ),
-                  child: Text(
+                  child: AppText.titleSmall(
                     _speedLabel,
-                    style: AppTextStyles.titleSmall.copyWith(
-                      color: palette.heading,
-                    ),
+                    color: palette.heading,
                   ),
                 ),
               ),
@@ -757,7 +749,7 @@ class _AudioBriefingSheetState extends State<AudioBriefingSheet> {
                   tooltip: _isPlaying ? 'Pause' : 'Play',
                   style: IconButton.styleFrom(
                     backgroundColor: accent,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppColors.textWhite,
                   ),
                   iconSize: 28,
                   icon: Icon(
@@ -820,7 +812,7 @@ class _BriefingActivitySectionCard extends StatelessWidget {
     final tint = section.accentColor;
 
     return Material(
-      color: Colors.transparent,
+      color: AppColors.transparent,
       child: InkWell(
         key: ValueKey('audio_brief_section_${section.id}'),
         onTap: onTap,
@@ -859,7 +851,7 @@ class _BriefingActivitySectionCard extends StatelessWidget {
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
-                    child: Text(
+                    child: AppText(
                       section.title,
                       softWrap: true,
                       style: text.titleMedium?.copyWith(
@@ -891,7 +883,7 @@ class _BriefingActivitySectionCard extends StatelessWidget {
                           color: tint,
                         ),
                         const SizedBox(width: 4),
-                        Text(
+                        AppText(
                           section.badgeText,
                           style: text.labelSmall?.copyWith(
                             fontSize: 10.5,
@@ -905,13 +897,11 @@ class _BriefingActivitySectionCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8),
-              Text(
+              AppText.bodyMedium(
                 section.spokenScript,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontSize: 12.5,
-                  height: 1.45,
-                  color: palette.body,
-                ),
+                fontSize: 12.5,
+                height: 1.45,
+                color: palette.body,
               ),
               if (section.activityHighlights.isNotEmpty) ...[
                 const SizedBox(height: 8),
@@ -929,7 +919,7 @@ class _BriefingActivitySectionCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(7),
                         border: Border.all(color: palette.border, width: 0.8),
                       ),
-                      child: Text(
+                      child: AppText(
                         item,
                         style: text.labelSmall?.copyWith(
                           fontSize: 11,

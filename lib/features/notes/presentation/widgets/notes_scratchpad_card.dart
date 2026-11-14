@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
@@ -145,7 +146,7 @@ class _NotesScratchpadCardState extends State<NotesScratchpadCard> {
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
-                    child: Text(
+                    child: AppText(
                       StringConstants.dailyScratchpad.toUpperCase(),
                       maxLines: 1,
                       style: textTheme.labelSmall?.copyWith(
@@ -192,7 +193,7 @@ class _NotesScratchpadCardState extends State<NotesScratchpadCard> {
                                         ),
                                       ),
                                       const SizedBox(width: 5),
-                                      Text(
+                                      AppText(
                                         'Instant auto-save',
                                         maxLines: 1,
                                         style: textTheme.labelSmall?.copyWith(
@@ -255,7 +256,7 @@ class _NotesScratchpadCardState extends State<NotesScratchpadCard> {
                                       color: AppColors.textWhite,
                                     ),
                                     const SizedBox(width: 4),
-                                    Text(
+                                    AppText(
                                       StringConstants.save,
                                       style: textTheme.labelMedium?.copyWith(
                                         fontSize: 11.5,
@@ -396,7 +397,7 @@ class _NotesScratchpadCardState extends State<NotesScratchpadCard> {
                                 ),
                                 if (words > 0) ...[
                                   const SizedBox(width: 8),
-                                  Text(
+                                  AppText(
                                     '$words ${words == 1 ? 'word' : 'words'}',
                                     style: textTheme.labelSmall?.copyWith(
                                       fontSize: 10.5,
@@ -445,7 +446,7 @@ class _ScratchpadQuickAction extends StatelessWidget {
           children: [
             Icon(icon, size: 13, color: AppColors.moduleNotes),
             const SizedBox(width: 4),
-            Text(
+            AppText(
               label,
               style: context.text.labelSmall?.copyWith(
                 fontSize: 11,

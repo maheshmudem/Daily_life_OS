@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
@@ -169,11 +170,11 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                               tab.icon,
                               size: 14,
                               color: isSelected
-                                  ? Colors.white
+                                  ? AppColors.textWhite
                                   : palette.secondary,
                             ),
                             const SizedBox(width: 5),
-                            Text(
+                            AppText(
                               tab.label,
                               style: text.labelMedium?.copyWith(
                                 fontSize: 12,
@@ -181,7 +182,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                                     ? FontWeight.w600
                                     : FontWeight.w500,
                                 color: isSelected
-                                    ? Colors.white
+                                    ? AppColors.textWhite
                                     : palette.heading,
                               ),
                             ),
@@ -384,7 +385,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
             border: Border.all(color: palette.border),
           ),
           child: Center(
-            child: Text(
+            child: AppText(
               'No transactions yet. Tap + Add to record one.',
               style: text.bodySmall?.copyWith(
                 fontSize: 13,
@@ -487,7 +488,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                           color: AppColors.primary,
                         ),
                         const SizedBox(width: 4),
-                        Text(
+                        AppText(
                           _showAllBudgets
                               ? 'Show top 4 categories'
                               : 'Show all ${allBudgets.length} categories',
@@ -542,7 +543,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    AppText(
                       'Start Fresh: 3 Simple Steps',
                       style: text.titleSmall?.copyWith(
                         fontSize: 13.5,
@@ -550,7 +551,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                         color: palette.heading,
                       ),
                     ),
-                    Text(
+                    AppText(
                       'Set up your monthly income, budget, expenses & reminders',
                       style: text.labelSmall?.copyWith(
                         fontSize: 11,
@@ -628,7 +629,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
               color: color.withValues(alpha: 0.16),
               shape: BoxShape.circle,
             ),
-            child: Text(
+            child: AppText(
               step,
               style: text.labelSmall?.copyWith(
                 fontSize: 11,
@@ -642,7 +643,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                AppText(
                   title,
                   softWrap: true,
                   style: text.labelLarge?.copyWith(
@@ -651,7 +652,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                     color: palette.heading,
                   ),
                 ),
-                Text(
+                AppText(
                   subtitle,
                   softWrap: true,
                   style: text.labelSmall?.copyWith(
@@ -672,10 +673,10 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                 color: color,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Text(
+              child: AppText(
                 buttonLabel,
                 style: text.labelSmall?.copyWith(
-                  color: Colors.white,
+                  color: AppColors.textWhite,
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                 ),
@@ -729,7 +730,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    AppText(
                       'Pending Lend & Borrow Reminders',
                       softWrap: true,
                       style: text.titleSmall?.copyWith(
@@ -739,7 +740,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
+                    AppText(
                       'Track money given (to collect) & borrowed (to pay)',
                       softWrap: true,
                       style: text.labelSmall?.copyWith(
@@ -758,7 +759,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                     horizontal: 6,
                     vertical: 4,
                   ),
-                  child: Text(
+                  child: AppText(
                     StringConstants.billSplitShort,
                     style: text.labelSmall?.copyWith(
                       fontSize: 11.5,
@@ -777,7 +778,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                     horizontal: 6,
                     vertical: 4,
                   ),
-                  child: Text(
+                  child: AppText(
                     'Manage',
                     style: text.labelSmall?.copyWith(
                       fontSize: 11.5,
@@ -821,7 +822,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                               child: FittedBox(
                                 fit: BoxFit.scaleDown,
                                 alignment: Alignment.centerLeft,
-                                child: Text(
+                                child: AppText(
                                   'To Collect (Lent)',
                                   style: text.labelSmall?.copyWith(
                                     fontSize: 10.5,
@@ -842,7 +843,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                         FittedBox(
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.centerLeft,
-                          child: Text(
+                          child: AppText(
                             CurrencyUtils.format(totalLent),
                             style: text.titleSmall?.copyWith(
                               fontSize: 15,
@@ -854,7 +855,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                         FittedBox(
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.centerLeft,
-                          child: Text(
+                          child: AppText(
                             '${lentIous.length} pending • Tap + to add',
                             style: text.labelSmall?.copyWith(
                               fontSize: 9.5,
@@ -895,7 +896,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                               child: FittedBox(
                                 fit: BoxFit.scaleDown,
                                 alignment: Alignment.centerLeft,
-                                child: Text(
+                                child: AppText(
                                   'To Pay (Borrowed)',
                                   style: text.labelSmall?.copyWith(
                                     fontSize: 10.5,
@@ -916,7 +917,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                         FittedBox(
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.centerLeft,
-                          child: Text(
+                          child: AppText(
                             CurrencyUtils.format(totalBorrowed),
                             style: text.titleSmall?.copyWith(
                               fontSize: 15,
@@ -928,7 +929,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                         FittedBox(
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.centerLeft,
-                          child: Text(
+                          child: AppText(
                             '${borrowedIous.length} pending • Tap + to add',
                             style: text.labelSmall?.copyWith(
                               fontSize: 9.5,
@@ -984,7 +985,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
+                                  AppText(
                                     iou.isLent
                                         ? 'Collect from ${iou.person}'
                                         : 'Pay back ${iou.person}',
@@ -1011,7 +1012,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            Text(
+                            AppText(
                               CurrencyUtils.format(iou.amount),
                               style: text.labelLarge?.copyWith(
                                 fontSize: 12.5,
@@ -1042,7 +1043,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                                   color: color.withValues(alpha: 0.14),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
-                                child: Text(
+                                child: AppText(
                                   iou.isLent ? 'Collected' : 'Paid',
                                   style: text.labelSmall?.copyWith(
                                     fontSize: 10,
@@ -1074,7 +1075,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                               color: AppColors.primary,
                             ),
                             const SizedBox(width: 4),
-                            Text(
+                            AppText(
                               _showAllIous
                                   ? 'Show less'
                                   : 'Show all (${activeIous.length} pending)',
@@ -1120,7 +1121,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                 children: [
                   Icon(cat.icon, size: 15, color: cat.color),
                   const SizedBox(width: 5),
-                  Text(
+                  AppText(
                     cat.shortLabel,
                     style: text.labelMedium?.copyWith(
                       fontSize: 12,
@@ -1235,7 +1236,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                       FittedBox(
                         fit: BoxFit.scaleDown,
                         alignment: Alignment.centerLeft,
-                        child: Text(
+                        child: AppText(
                           item.title,
                           style: text.titleSmall?.copyWith(
                             fontSize: 13.5,
@@ -1248,7 +1249,7 @@ class _MoneyOverviewPageState extends State<MoneyOverviewPage> {
                       FittedBox(
                         fit: BoxFit.scaleDown,
                         alignment: Alignment.centerLeft,
-                        child: Text(
+                        child: AppText(
                           item.subtitle,
                           maxLines: 1,
                           style: text.labelSmall?.copyWith(

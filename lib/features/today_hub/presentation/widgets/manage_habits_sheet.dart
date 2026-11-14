@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
 import '../../domain/entities/habit_entity.dart';
@@ -20,7 +20,7 @@ class ManageHabitsSheet extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (_) => BlocProvider.value(
         value: bloc,
         child: const FractionallySizedBox(
@@ -128,7 +128,7 @@ class _ManageHabitsSheetState extends State<ManageHabitsSheet> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              AppText(
                                 'Habits & Micro-Routines Studio',
                                 softWrap: true,
                                 style: text.titleMedium?.copyWith(
@@ -138,7 +138,7 @@ class _ManageHabitsSheetState extends State<ManageHabitsSheet> {
                                 ),
                               ),
                               const SizedBox(height: 2),
-                              Text(
+                              AppText(
                                 '${habits.length} routines • $completedToday done • ${skippedToday > 0 ? "$skippedToday skipped • " : ""}$weeklyScore% 7d consistency',
                                 softWrap: true,
                                 style: text.labelSmall?.copyWith(
@@ -163,7 +163,7 @@ class _ManageHabitsSheetState extends State<ManageHabitsSheet> {
                           },
                           style: FilledButton.styleFrom(
                             backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
+                            foregroundColor: AppColors.textWhite,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 11,
                               vertical: 8,
@@ -175,13 +175,11 @@ class _ManageHabitsSheetState extends State<ManageHabitsSheet> {
                             ),
                           ),
                           icon: const Icon(Icons.add_rounded, size: 16),
-                          label: Text(
+                          label: const AppText.labelMedium(
                             'New Habit',
-                            style: AppTextStyles.labelMedium.copyWith(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textWhite,
                           ),
                         ),
                       ],
@@ -306,13 +304,15 @@ class _ManageHabitsSheetState extends State<ManageHabitsSheet> {
                                       : palette.border,
                                 ),
                               ),
-                              child: Text(
+                              child: AppText(
                                 cat,
                                 style: text.labelSmall?.copyWith(
                                   fontWeight: active
                                       ? FontWeight.w700
                                       : FontWeight.w500,
-                                  color: active ? Colors.white : palette.body,
+                                  color: active
+                                      ? AppColors.textWhite
+                                      : palette.body,
                                 ),
                               ),
                             ),
@@ -341,7 +341,7 @@ class _ManageHabitsSheetState extends State<ManageHabitsSheet> {
                                 color: palette.caption,
                               ),
                               const SizedBox(height: 10),
-                              Text(
+                              AppText(
                                 'No habits match your filter',
                                 style: text.titleSmall?.copyWith(
                                   fontWeight: FontWeight.w700,
@@ -349,7 +349,7 @@ class _ManageHabitsSheetState extends State<ManageHabitsSheet> {
                                 ),
                               ),
                               const SizedBox(height: 4),
-                              Text(
+                              AppText(
                                 'Create a new micro-routine or reset your search filters.',
                                 textAlign: TextAlign.center,
                                 style: text.bodySmall?.copyWith(
@@ -400,7 +400,7 @@ class _StudioMetric extends StatelessWidget {
         children: [
           FittedBox(
             fit: BoxFit.scaleDown,
-            child: Text(
+            child: AppText(
               value,
               style: text.titleSmall?.copyWith(
                 fontSize: 15,
@@ -413,7 +413,7 @@ class _StudioMetric extends StatelessWidget {
           const SizedBox(height: 2),
           FittedBox(
             fit: BoxFit.scaleDown,
-            child: Text(
+            child: AppText(
               label,
               style: text.labelSmall?.copyWith(
                 fontSize: 11,
@@ -469,7 +469,7 @@ class _ManageHabitCard extends StatelessWidget {
                       shape: BoxShape.circle,
                       color: habit.isDoneToday
                           ? AppColors.success
-                          : Colors.transparent,
+                          : AppColors.transparent,
                       border: Border.all(
                         color: habit.isDoneToday
                             ? AppColors.success
@@ -481,7 +481,7 @@ class _ManageHabitCard extends StatelessWidget {
                         ? const Icon(
                             Icons.check_rounded,
                             size: 15,
-                            color: Colors.white,
+                            color: AppColors.textWhite,
                           )
                         : null,
                   ),
@@ -505,7 +505,7 @@ class _ManageHabitCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      AppText(
                         habit.title,
                         softWrap: true,
                         style: text.titleMedium?.copyWith(
@@ -523,7 +523,7 @@ class _ManageHabitCard extends StatelessWidget {
                       ),
                       if (habit.description.trim().isNotEmpty) ...[
                         const SizedBox(height: 3),
-                        Text(
+                        AppText(
                           habit.description.trim(),
                           softWrap: true,
                           style: text.bodySmall?.copyWith(
@@ -550,7 +550,7 @@ class _ManageHabitCard extends StatelessWidget {
                               ),
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            child: Text(
+                            child: AppText(
                               habit.category,
                               style: text.labelSmall?.copyWith(
                                 fontSize: 10.5,
@@ -572,7 +572,7 @@ class _ManageHabitCard extends StatelessWidget {
                                 width: 0.8,
                               ),
                             ),
-                            child: Text(
+                            child: AppText(
                               habit.scheduleLabel,
                               style: text.labelSmall?.copyWith(
                                 fontSize: 11,
@@ -591,7 +591,7 @@ class _ManageHabitCard extends StatelessWidget {
                               ),
                               const SizedBox(width: 2),
                               Flexible(
-                                child: Text(
+                                child: AppText(
                                   '${habit.streakDays}d streak · $weeklyRate% 7d',
                                   style: text.labelSmall?.copyWith(
                                     fontSize: 11.5,
@@ -642,7 +642,7 @@ class _ManageHabitCard extends StatelessWidget {
                       children: [
                         Icon(Icons.insights_rounded, size: 14, color: accent),
                         const SizedBox(width: 4),
-                        Text(
+                        AppText(
                           'Analytics & 30d Log',
                           style: text.labelSmall?.copyWith(
                             fontSize: 11.5,

@@ -1,4 +1,5 @@
 import 'package:fl_chart/fl_chart.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/material.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
@@ -83,7 +84,7 @@ class _CategoryBreakdownRow extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    child: Text(
+                    child: AppText(
                       cat.label,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -98,7 +99,7 @@ class _CategoryBreakdownRow extends StatelessWidget {
                   FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerRight,
-                    child: Text.rich(
+                    child: AppText.rich(
                       TextSpan(
                         children: [
                           TextSpan(
@@ -149,7 +150,7 @@ class _CategoryBreakdownRow extends StatelessWidget {
               ),
               if (budget.isOverBudget) ...[
                 const SizedBox(height: 3),
-                Text(
+                AppText(
                   'Over by ${CurrencyUtils.format(budget.overBy, decimals: 2)}',
                   style: text.labelSmall?.copyWith(
                     fontSize: 10.5,
@@ -193,7 +194,7 @@ class MonthlySpendingSummaryCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+              AppText(
                 '${insights.period.label} Spending',
                 style: text.bodyMedium?.copyWith(
                   fontSize: 13.5,
@@ -207,7 +208,7 @@ class MonthlySpendingSummaryCard extends StatelessWidget {
                   color: AppColors.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Text(
+                child: AppText(
                   AppDateUtils.formatMonthYear(insights.month),
                   style: text.labelSmall?.copyWith(
                     fontSize: 11,
@@ -222,7 +223,7 @@ class MonthlySpendingSummaryCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
+              AppText(
                 CurrencyUtils.format(insights.periodExpense, decimals: 2),
                 style: text.headlineSmall?.copyWith(
                   fontSize: 24,
@@ -235,7 +236,7 @@ class MonthlySpendingSummaryCard extends StatelessWidget {
               const SizedBox(width: 8),
               Padding(
                 padding: const EdgeInsets.only(bottom: 3),
-                child: Text(
+                child: AppText(
                   'of ${CurrencyUtils.format(insights.periodLimit)}',
                   style: text.bodySmall?.copyWith(
                     fontSize: 12.5,
@@ -259,14 +260,14 @@ class MonthlySpendingSummaryCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+              AppText(
                 '${(progress * 100).round()}% of ${insights.period.label.toLowerCase()} budget used',
                 style: text.labelSmall?.copyWith(
                   fontSize: 11.5,
                   color: palette.secondary,
                 ),
               ),
-              Text(
+              AppText(
                 '${CurrencyUtils.format(insights.periodSaved)} ${StringConstants.saved}',
                 style: text.labelSmall?.copyWith(
                   fontSize: 11.5,
@@ -323,7 +324,7 @@ class _TopSpendingCategoriesCardState extends State<TopSpendingCategoriesCard> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: Text(
+                child: AppText(
                   StringConstants.topCategories,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -338,7 +339,7 @@ class _TopSpendingCategoriesCardState extends State<TopSpendingCategoriesCard> {
                 const SizedBox(width: 8),
                 GestureDetector(
                   onTap: () => setState(() => _showAll = !_showAll),
-                  child: Text(
+                  child: AppText(
                     _showAll ? 'Show top 4' : 'Show all (${items.length})',
                     style: text.labelSmall?.copyWith(
                       fontSize: 11.5,
@@ -400,7 +401,7 @@ class _TopSpendingCategoriesCardState extends State<TopSpendingCategoriesCard> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
+                            AppText(
                               touchedItem != null
                                   ? touchedItem.category.shortLabel
                                   : 'Total',
@@ -414,7 +415,7 @@ class _TopSpendingCategoriesCardState extends State<TopSpendingCategoriesCard> {
                             ),
                             FittedBox(
                               fit: BoxFit.scaleDown,
-                              child: Text(
+                              child: AppText(
                                 CurrencyUtils.compact(
                                   touchedItem != null
                                       ? touchedItem.amount
@@ -458,7 +459,7 @@ class _TopSpendingCategoriesCardState extends State<TopSpendingCategoriesCard> {
                             ),
                             const SizedBox(width: 8),
                             Expanded(
-                              child: Text(
+                              child: AppText(
                                 cat.shortLabel,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -469,7 +470,7 @@ class _TopSpendingCategoriesCardState extends State<TopSpendingCategoriesCard> {
                                 ),
                               ),
                             ),
-                            Text(
+                            AppText(
                               '$pct%',
                               style: text.labelSmall?.copyWith(
                                 fontSize: 11.5,
@@ -511,7 +512,7 @@ class _TopSpendingCategoriesCardState extends State<TopSpendingCategoriesCard> {
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Text(
+                        child: AppText(
                           cat.label,
                           style: text.bodySmall?.copyWith(
                             fontSize: 12.5,
@@ -536,7 +537,7 @@ class _TopSpendingCategoriesCardState extends State<TopSpendingCategoriesCard> {
                       const SizedBox(width: 10),
                       SizedBox(
                         width: 72,
-                        child: Text(
+                        child: AppText(
                           CurrencyUtils.format(entry.amount),
                           textAlign: TextAlign.right,
                           style: text.labelMedium?.copyWith(
@@ -638,7 +639,7 @@ class _KpiTile extends StatelessWidget {
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
-            child: Text(
+            child: AppText(
               value,
               maxLines: 1,
               style: text.titleSmall?.copyWith(
@@ -650,7 +651,7 @@ class _KpiTile extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2),
-          Text(
+          AppText(
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

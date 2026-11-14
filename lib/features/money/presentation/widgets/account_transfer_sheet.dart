@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -24,7 +25,7 @@ class AccountTransferSheet extends StatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (_) =>
           BlocProvider.value(value: bloc, child: const AccountTransferSheet()),
     );
@@ -157,7 +158,7 @@ class _AccountTransferSheetState extends State<AccountTransferSheet> {
                       ),
                       AppSpacing.gapW12,
                       Expanded(
-                        child: Text(
+                        child: AppText(
                           StringConstants.transferBetweenAccounts,
                           style: context.text.titleMedium?.copyWith(
                             fontWeight: FontWeight.w800,
@@ -189,7 +190,7 @@ class _AccountTransferSheetState extends State<AccountTransferSheet> {
                             size: AppSpacing.xxl,
                           ),
                           AppSpacing.gapH8,
-                          Text(
+                          AppText(
                             StringConstants.transferInsufficientAccounts,
                             textAlign: TextAlign.center,
                             style: context.text.bodyMedium?.copyWith(
@@ -216,7 +217,7 @@ class _AccountTransferSheetState extends State<AccountTransferSheet> {
                           .map(
                             (acc) => DropdownMenuItem<int>(
                               value: acc.id,
-                              child: Text(
+                              child: AppText(
                                 '${acc.name} (${CurrencyUtils.format(acc.balance)})',
                               ),
                             ),
@@ -249,7 +250,7 @@ class _AccountTransferSheetState extends State<AccountTransferSheet> {
                           .map(
                             (acc) => DropdownMenuItem<int>(
                               value: acc.id,
-                              child: Text(
+                              child: AppText(
                                 '${acc.name} (${CurrencyUtils.format(acc.balance)})',
                               ),
                             ),
@@ -286,14 +287,14 @@ class _AccountTransferSheetState extends State<AccountTransferSheet> {
                         key: const ValueKey('transfer_submit_btn'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.moduleMoney,
-                          foregroundColor: Colors.white,
+                          foregroundColor: AppColors.textWhite,
                           padding: const EdgeInsets.symmetric(
                             vertical: AppSpacing.md,
                           ),
                         ),
                         onPressed: () => _submitTransfer(context),
                         icon: const Icon(Icons.swap_horiz_rounded),
-                        label: const Text(StringConstants.transfer),
+                        label: const AppText(StringConstants.transfer),
                       ),
                     ),
                   ],

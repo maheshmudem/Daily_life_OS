@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_radius.dart';
@@ -78,7 +79,7 @@ class _AppDropdownItemContent extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
+              AppText(
                 label,
                 style: text.bodySmall?.copyWith(
                   fontWeight: FontWeight.w600,
@@ -88,7 +89,7 @@ class _AppDropdownItemContent extends StatelessWidget {
               ),
               if (subtitle != null) ...[
                 const SizedBox(height: 1),
-                Text(
+                AppText(
                   subtitle!,
                   style: text.labelSmall?.copyWith(
                     fontSize: 10,
@@ -180,7 +181,7 @@ class _AppDropdownHeaderState extends State<AppDropdownHeader> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
+                AppText(
                   widget.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -191,7 +192,7 @@ class _AppDropdownHeaderState extends State<AppDropdownHeader> {
                 ),
                 if (widget.subtitle != null) ...[
                   const SizedBox(height: 1),
-                  Text(
+                  AppText(
                     widget.subtitle!,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -249,8 +250,8 @@ class AppDropdownMenu<T> extends StatelessWidget {
       items: items,
       initialValue: initialValue,
       elevation: 8,
-      shadowColor: Colors.black.withValues(alpha: p.isDark ? 0.5 : 0.15),
-      surfaceTintColor: Colors.transparent,
+      shadowColor: AppColors.black.withValues(alpha: p.isDark ? 0.5 : 0.15),
+      surfaceTintColor: AppColors.transparent,
       color: p.card,
       constraints:
           constraints ?? const BoxConstraints(minWidth: 155, maxWidth: 195),
@@ -284,19 +285,19 @@ class AppDropdownMenu<T> extends StatelessWidget {
     return Theme(
       data: Theme.of(context).copyWith(
         splashColor: p.isDark
-            ? Colors.white.withValues(alpha: 0.06)
-            : Colors.black.withValues(alpha: 0.04),
+            ? AppColors.textWhite.withValues(alpha: 0.06)
+            : AppColors.black.withValues(alpha: 0.04),
         highlightColor: p.isDark
-            ? Colors.white.withValues(alpha: 0.04)
-            : Colors.black.withValues(alpha: 0.02),
+            ? AppColors.textWhite.withValues(alpha: 0.04)
+            : AppColors.black.withValues(alpha: 0.02),
       ),
       child: PopupMenuButton<T>(
         tooltip: tooltip ?? '',
         position: PopupMenuPosition.under,
         offset: offset,
         elevation: 8,
-        shadowColor: Colors.black.withValues(alpha: p.isDark ? 0.5 : 0.15),
-        surfaceTintColor: Colors.transparent,
+        shadowColor: AppColors.black.withValues(alpha: p.isDark ? 0.5 : 0.15),
+        surfaceTintColor: AppColors.transparent,
         color: p.card,
         constraints:
             menuConstraints ??

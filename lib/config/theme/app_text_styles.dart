@@ -236,6 +236,19 @@ class AppTextStyles {
     color: AppColors.primary,
   );
 
+  // Color-null nav styles so BottomNavigationBarThemeData keeps
+  // selectedItemColor / unselectedItemColor intact across themes.
+  static const TextStyle navSelected = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+  );
+
+  static const TextStyle navUnselected = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 11,
+  );
+
   // ==========================================
   // THEME-AWARE TEXT THEME
   // ==========================================

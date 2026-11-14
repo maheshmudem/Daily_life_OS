@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
 import '../../domain/entities/habit_entity.dart';
@@ -27,7 +27,7 @@ class HabitDetailSheet extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (_) => BlocProvider.value(
         value: bloc,
         child: HabitDetailSheet(habitId: habit.id, initialHabit: habit),
@@ -139,7 +139,7 @@ class HabitDetailSheet extends StatelessWidget {
                                   ),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
-                                child: Text(
+                                child: AppText(
                                   habit.category,
                                   style: text.labelSmall?.copyWith(
                                     fontSize: 10.5,
@@ -148,7 +148,7 @@ class HabitDetailSheet extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              Text(
+                              AppText(
                                 habit.scheduleLabel,
                                 softWrap: true,
                                 style: text.labelSmall?.copyWith(
@@ -160,7 +160,7 @@ class HabitDetailSheet extends StatelessWidget {
                             ],
                           ),
                           const SizedBox(height: 4),
-                          Text(
+                          AppText(
                             habit.title,
                             style: text.titleMedium?.copyWith(
                               fontSize: 17,
@@ -170,7 +170,7 @@ class HabitDetailSheet extends StatelessWidget {
                           ),
                           if (habit.description.trim().isNotEmpty) ...[
                             const SizedBox(height: 3),
-                            Text(
+                            AppText(
                               habit.description.trim(),
                               style: text.bodySmall?.copyWith(
                                 color: palette.caption,
@@ -244,7 +244,7 @@ class HabitDetailSheet extends StatelessWidget {
                           backgroundColor: habit.isDoneToday
                               ? AppColors.success
                               : accent,
-                          foregroundColor: Colors.white,
+                          foregroundColor: AppColors.textWhite,
                           padding: const EdgeInsets.symmetric(vertical: 11),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(11),
@@ -256,15 +256,13 @@ class HabitDetailSheet extends StatelessWidget {
                               : Icons.radio_button_unchecked_rounded,
                           size: 18,
                         ),
-                        label: Text(
+                        label: AppText.labelLarge(
                           habit.isDoneToday
                               ? 'Completed Today'
                               : 'Mark Completed',
-                          style: AppTextStyles.labelLarge.copyWith(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
-                            color: Colors.white,
-                          ),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          color: AppColors.textWhite,
                         ),
                       ),
                     ),
@@ -296,12 +294,10 @@ class HabitDetailSheet extends StatelessWidget {
                               : Icons.snooze_rounded,
                           size: 16,
                         ),
-                        label: Text(
+                        label: AppText(
                           habit.isSkippedToday ? 'Skipped' : 'Skip Today',
-                          style: AppTextStyles.labelMedium.copyWith(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12.5,
-                          ),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12.5,
                         ),
                       ),
                     ),
@@ -358,7 +354,7 @@ class HabitDetailSheet extends StatelessWidget {
                   alignment: WrapAlignment.spaceBetween,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Text(
+                    AppText(
                       'LAST 7 DAYS (TAP ANY DAY TO TOGGLE)',
                       style: text.labelSmall?.copyWith(
                         fontWeight: FontWeight.w700,
@@ -366,7 +362,7 @@ class HabitDetailSheet extends StatelessWidget {
                         color: palette.caption,
                       ),
                     ),
-                    Text(
+                    AppText(
                       '$weeklyPct% weekly score',
                       style: text.labelSmall?.copyWith(
                         color: accent,
@@ -405,7 +401,7 @@ class HabitDetailSheet extends StatelessWidget {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
+                            AppText(
                               isToday ? 'Today' : dayName,
                               style: text.labelSmall?.copyWith(
                                 fontSize: 10.5,
@@ -443,7 +439,7 @@ class HabitDetailSheet extends StatelessWidget {
                                     ? const Icon(
                                         Icons.check_rounded,
                                         size: 16,
-                                        color: Colors.white,
+                                        color: AppColors.textWhite,
                                       )
                                     : skipped
                                     ? const Icon(
@@ -451,7 +447,7 @@ class HabitDetailSheet extends StatelessWidget {
                                         size: 14,
                                         color: AppColors.warning,
                                       )
-                                    : Text(
+                                    : AppText(
                                         '${day.day}',
                                         style: text.labelSmall?.copyWith(
                                           fontWeight: FontWeight.w600,
@@ -472,7 +468,7 @@ class HabitDetailSheet extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
+                    AppText(
                       '30-DAY MONTHLY CONSISTENCY',
                       style: text.labelSmall?.copyWith(
                         fontWeight: FontWeight.w700,
@@ -480,7 +476,7 @@ class HabitDetailSheet extends StatelessWidget {
                         color: palette.caption,
                       ),
                     ),
-                    Text(
+                    AppText(
                       '${last30Days.where(habit.isCompletedOn).length}/30 days',
                       style: text.labelSmall?.copyWith(
                         color: palette.caption,
@@ -538,13 +534,13 @@ class HabitDetailSheet extends StatelessWidget {
                                 width: 0.8,
                               ),
                             ),
-                            child: Text(
+                            child: AppText(
                               '${day.day}',
                               style: text.labelSmall?.copyWith(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w700,
                                 color: done
-                                    ? Colors.white
+                                    ? AppColors.textWhite
                                     : skipped
                                     ? AppColors.warning
                                     : palette.caption,
@@ -583,7 +579,7 @@ class HabitDetailSheet extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            AppText(
                               'Habit Reminder & Alert',
                               style: text.labelLarge?.copyWith(
                                 fontSize: 13,
@@ -592,7 +588,7 @@ class HabitDetailSheet extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 2),
-                            Text(
+                            AppText(
                               habit.reminderEnabled &&
                                       habit.reminderTime != null
                                   ? 'Active daily at ${habit.reminderTime}'
@@ -632,7 +628,7 @@ class HabitDetailSheet extends StatelessWidget {
                             );
                           }
                         },
-                        child: Text(
+                        child: AppText(
                           habit.reminderTime ?? 'Set Time',
                           style: text.labelMedium?.copyWith(
                             color: accent,
@@ -704,7 +700,7 @@ class _StatMiniTile extends StatelessWidget {
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
-                  child: Text(
+                  child: AppText(
                     value,
                     style: text.titleSmall?.copyWith(
                       fontSize: 15,
@@ -721,7 +717,7 @@ class _StatMiniTile extends StatelessWidget {
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
-            child: Text(
+            child: AppText(
               label,
               style: text.labelSmall?.copyWith(
                 fontSize: 10.5,

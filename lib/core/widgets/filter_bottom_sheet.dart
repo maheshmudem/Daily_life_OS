@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_bottom_sheet.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_radius.dart';
 import '../../config/theme/app_spacing.dart';
@@ -60,22 +62,13 @@ class FilterBottomSheet extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Handle
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: p.border,
-                  borderRadius: AppRadius.radiusFull,
-                ),
-              ),
-            ),
+            const AppSheetHandle(),
             AppSpacing.gapH16,
             // Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                AppText(
                   title,
                   style: text.titleLarge?.copyWith(
                     fontSize: 18,
@@ -85,7 +78,7 @@ class FilterBottomSheet extends StatelessWidget {
                 ),
                 TextButton(
                   onPressed: onClear,
-                  child: Text(
+                  child: AppText(
                     'Clear All',
                     style: text.labelLarge?.copyWith(color: AppColors.primary),
                   ),
@@ -119,7 +112,7 @@ class FilterBottomSheet extends StatelessWidget {
                     borderRadius: AppRadius.radiusMd,
                   ),
                 ),
-                child: Text(
+                child: AppText(
                   'Apply Filters',
                   style: text.labelLarge?.copyWith(
                     color: AppColors.textWhite,

@@ -1,10 +1,10 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../domain/entities/planner_item_entity.dart';
 
@@ -172,7 +172,7 @@ class _PomodoroFocusCardState extends State<PomodoroFocusCard>
         ),
         boxShadow: [
           BoxShadow(
-            color: (isDark ? Colors.black : accentColor).withValues(
+            color: (isDark ? AppColors.black : accentColor).withValues(
               alpha: isDark ? 0.35 : 0.08,
             ),
             blurRadius: 18,
@@ -237,14 +237,12 @@ class _PomodoroFocusCardState extends State<PomodoroFocusCard>
                                   color: accentColor.withValues(alpha: 0.32),
                                 ),
                               ),
-                              child: Text(
+                              child: AppText.overline(
                                 modeLabel,
-                                style: AppTextStyles.overline.copyWith(
-                                  color: textAccent,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.4,
-                                ),
+                                color: textAccent,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.4,
                               ),
                             ),
                             if (widget.strictMode) ...[
@@ -268,14 +266,12 @@ class _PomodoroFocusCardState extends State<PomodoroFocusCard>
                                       color: palette.heading,
                                     ),
                                     const SizedBox(width: 3),
-                                    Text(
+                                    AppText.overline(
                                       'STRICT',
-                                      style: AppTextStyles.overline.copyWith(
-                                        color: palette.heading,
-                                        fontSize: 9.5,
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: 0.4,
-                                      ),
+                                      color: palette.heading,
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 0.4,
                                     ),
                                   ],
                                 ),
@@ -290,7 +286,7 @@ class _PomodoroFocusCardState extends State<PomodoroFocusCard>
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
+                            AppText(
                               'Round ${widget.currentRound}/${widget.totalRounds}',
                               style: textTheme.labelSmall?.copyWith(
                                 color: palette.heading,
@@ -392,28 +388,24 @@ class _PomodoroFocusCardState extends State<PomodoroFocusCard>
                               ),
                               borderRadius: AppRadius.radiusFull,
                             ),
-                            child: Text(
+                            child: AppText.overline(
                               widget.focusCategory.toUpperCase(),
-                              style: AppTextStyles.overline.copyWith(
-                                color: textAccent,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.5,
-                              ),
+                              color: textAccent,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.5,
                             ),
                           ),
                           const SizedBox(height: 4),
-                          Text(
+                          AppText.timerHero(
                             widget.formattedTime,
-                            style: AppTextStyles.timerHero.copyWith(
-                              color: palette.heading,
-                              fontSize: 36,
-                              letterSpacing: -1,
-                              height: 1.05,
-                            ),
+                            color: palette.heading,
+                            fontSize: 36,
+                            letterSpacing: -1,
+                            height: 1.05,
                           ),
                           const SizedBox(height: 3),
-                          Text(
+                          AppText(
                             widget.isTimerRunning
                                 ? (isStopwatch
                                       ? 'Flow state active...'
@@ -533,7 +525,7 @@ class _PomodoroFocusCardState extends State<PomodoroFocusCard>
                                   ),
                                   const SizedBox(width: 6),
                                   Flexible(
-                                    child: Text(
+                                    child: AppText(
                                       'Focusing on: "${widget.linkedTask}"',
                                       maxLines: _expandLinkedTaskText
                                           ? null
@@ -561,7 +553,7 @@ class _PomodoroFocusCardState extends State<PomodoroFocusCard>
                                       ),
                                       borderRadius: AppRadius.radiusFull,
                                     ),
-                                    child: Text(
+                                    child: AppText(
                                       '🍅 ${widget.completedTaskPomodoros}/${widget.estimatedPomodoros}',
                                       style: textTheme.labelSmall?.copyWith(
                                         color: textAccent,
@@ -585,7 +577,7 @@ class _PomodoroFocusCardState extends State<PomodoroFocusCard>
                                   linkedItem != null &&
                                   linkedItem.notes.isNotEmpty) ...[
                                 const SizedBox(height: 5),
-                                Text(
+                                AppText(
                                   linkedItem.notes,
                                   textAlign: TextAlign.center,
                                   style: textTheme.bodySmall?.copyWith(
@@ -617,7 +609,7 @@ class _PomodoroFocusCardState extends State<PomodoroFocusCard>
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text(
+                                  AppText(
                                     _expandLinkedTaskText
                                         ? 'Show less'
                                         : 'Show more details',
@@ -676,7 +668,7 @@ class _PomodoroFocusCardState extends State<PomodoroFocusCard>
                                   color: textAccent,
                                 ),
                                 const SizedBox(width: 4),
-                                Text(
+                                AppText(
                                   'Subtasks ${linkedItem.checklistDoneCount}/${linkedItem.checklist.length}',
                                   style: textTheme.labelSmall?.copyWith(
                                     color: palette.heading,
@@ -720,7 +712,7 @@ class _PomodoroFocusCardState extends State<PomodoroFocusCard>
                                   color: AppColors.success,
                                 ),
                                 const SizedBox(width: 4),
-                                Text(
+                                AppText(
                                   'Complete Task',
                                   style: textTheme.labelSmall?.copyWith(
                                     color: isDark
@@ -776,7 +768,7 @@ class _PomodoroFocusCardState extends State<PomodoroFocusCard>
                                           ),
                                           const SizedBox(width: 6),
                                           Expanded(
-                                            child: Text(
+                                            child: AppText(
                                               sub.title,
                                               style: textTheme.bodySmall
                                                   ?.copyWith(
@@ -834,7 +826,7 @@ class _PomodoroFocusCardState extends State<PomodoroFocusCard>
                         onPressed: widget.onToggleTimer,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: accentColor,
-                          foregroundColor: Colors.white,
+                          foregroundColor: AppColors.textWhite,
                           minimumSize: const Size(0, 40),
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           padding: const EdgeInsets.symmetric(
@@ -852,13 +844,11 @@ class _PomodoroFocusCardState extends State<PomodoroFocusCard>
                               : Icons.play_arrow_rounded,
                           size: 20,
                         ),
-                        label: Text(
+                        label: AppText.labelLarge(
                           widget.isTimerRunning ? 'Pause' : 'Start Focus',
-                          style: AppTextStyles.buttonLabel.copyWith(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13.5,
-                            color: Colors.white,
-                          ),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13.5,
+                          color: AppColors.textWhite,
                         ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
@@ -913,7 +903,7 @@ class _PomodoroFocusCardState extends State<PomodoroFocusCard>
                   Icon(icon, size: 12, color: palette.heading),
                   const SizedBox(width: 4),
                 ],
-                Text(
+                AppText(
                   label,
                   style: context.text.labelSmall?.copyWith(
                     color: palette.heading,
@@ -961,7 +951,7 @@ class _PomodoroFocusCardState extends State<PomodoroFocusCard>
               ),
             ),
           const SizedBox(width: 4),
-          Text(
+          AppText(
             widget.selectedAmbience,
             style: context.text.labelSmall?.copyWith(
               color: textAccent,

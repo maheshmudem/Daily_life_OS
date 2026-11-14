@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -172,7 +173,7 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
                 child: Row(
                   children: [
                     FilterChip(
-                      label: const Text('All time'),
+                      label: const AppText('All time'),
                       selected: _allMonths,
                       showCheckmark: false,
                       visualDensity: VisualDensity.compact,
@@ -221,7 +222,7 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
                             size: 13,
                             color: selected ? AppColors.textWhite : cat.color,
                           ),
-                          label: Text(cat.shortLabel),
+                          label: AppText(cat.shortLabel),
                           selected: selected,
                           showCheckmark: false,
                           selectedColor: cat.color,
@@ -367,7 +368,7 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text(
+                                    AppText(
                                       AppDateUtils.formatDayHeader(day),
                                       style: text.labelMedium?.copyWith(
                                         fontSize: 12,
@@ -375,7 +376,7 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
                                         color: p.secondary,
                                       ),
                                     ),
-                                    Text(
+                                    AppText(
                                       CurrencyUtils.signed(
                                         dayNet.abs(),
                                         isCredit: isDayPositive,
@@ -479,7 +480,7 @@ class _MoneyActivityPageState extends State<MoneyActivityPage> {
     final selected = _typeFilter == value;
     return ChoiceChip(
       visualDensity: VisualDensity.compact,
-      label: Text(label),
+      label: AppText(label),
       selected: selected,
       showCheckmark: false,
       selectedColor: AppColors.primary,
@@ -510,7 +511,7 @@ class _SummaryPair extends StatelessWidget {
     final text = context.text;
     return Column(
       children: [
-        Text(
+        AppText(
           label,
           style: text.labelSmall?.copyWith(
             fontSize: 10.5,
@@ -521,7 +522,7 @@ class _SummaryPair extends StatelessWidget {
         const SizedBox(height: 2),
         FittedBox(
           fit: BoxFit.scaleDown,
-          child: Text(
+          child: AppText(
             value,
             maxLines: 1,
             style: text.labelMedium?.copyWith(

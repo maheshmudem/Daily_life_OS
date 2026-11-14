@@ -1,10 +1,11 @@
 import 'dart:async';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../domain/entities/planner_item_entity.dart';
 
 /// Full-Screen Immersive Zen Focus Chamber inspired by Forest, Tide, and Endel.
@@ -263,7 +264,7 @@ class _PomodoroZenScreenState extends State<PomodoroZenScreen>
               colors: [
                 accent.withValues(alpha: 0.22),
                 AppColors.floatingBarBackground,
-                Colors.black,
+                AppColors.black,
               ],
             ),
           ),
@@ -282,10 +283,10 @@ class _PomodoroZenScreenState extends State<PomodoroZenScreen>
                           vertical: 5,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.08),
+                          color: AppColors.textWhite.withValues(alpha: 0.08),
                           borderRadius: AppRadius.radiusFull,
                           border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.14),
+                            color: AppColors.textWhite.withValues(alpha: 0.14),
                           ),
                         ),
                         child: Row(
@@ -297,14 +298,12 @@ class _PomodoroZenScreenState extends State<PomodoroZenScreen>
                               color: accent,
                             ),
                             const SizedBox(width: 6),
-                            Text(
+                            AppText.overline(
                               'ZEN FOCUS CHAMBER • ROUND ${widget.currentRound}/${widget.totalRounds}',
-                              style: AppTextStyles.overline.copyWith(
-                                color: Colors.white,
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.5,
-                              ),
+                              color: AppColors.textWhite,
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.5,
                             ),
                           ],
                         ),
@@ -313,8 +312,10 @@ class _PomodoroZenScreenState extends State<PomodoroZenScreen>
                         onPressed: _exitZen,
                         tooltip: 'Exit Zen Mode',
                         style: IconButton.styleFrom(
-                          backgroundColor: Colors.white.withValues(alpha: 0.1),
-                          foregroundColor: Colors.white,
+                          backgroundColor: AppColors.textWhite.withValues(
+                            alpha: 0.1,
+                          ),
+                          foregroundColor: AppColors.textWhite,
                         ),
                         icon: const Icon(
                           Icons.fullscreen_exit_rounded,
@@ -332,7 +333,7 @@ class _PomodoroZenScreenState extends State<PomodoroZenScreen>
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.06),
+                      color: AppColors.textWhite.withValues(alpha: 0.06),
                       borderRadius: AppRadius.radiusFull,
                       border: Border.all(color: accent.withValues(alpha: 0.35)),
                     ),
@@ -342,12 +343,12 @@ class _PomodoroZenScreenState extends State<PomodoroZenScreen>
                         Icon(Icons.bolt_rounded, size: 15, color: accent),
                         const SizedBox(width: 6),
                         Flexible(
-                          child: Text(
+                          child: AppText(
                             widget.linkedTask,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: textTheme.bodySmall?.copyWith(
-                              color: Colors.white,
+                              color: AppColors.textWhite,
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
                             ),
@@ -363,7 +364,7 @@ class _PomodoroZenScreenState extends State<PomodoroZenScreen>
                             color: accent.withValues(alpha: 0.2),
                             borderRadius: AppRadius.radiusFull,
                           ),
-                          child: Text(
+                          child: AppText(
                             widget.focusCategory,
                             style: textTheme.labelSmall?.copyWith(
                               color: accent,
@@ -401,21 +402,21 @@ class _PomodoroZenScreenState extends State<PomodoroZenScreen>
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
+                            AppText.timerHero(
                               _formatTime(_seconds),
-                              style: AppTextStyles.timerHero.copyWith(
-                                color: Colors.white,
-                                fontSize: 52,
-                                letterSpacing: -1.5,
-                              ),
+                              color: AppColors.textWhite,
+                              fontSize: 52,
+                              letterSpacing: -1.5,
                             ),
                             const SizedBox(height: 6),
-                            Text(
+                            AppText(
                               _isRunning
                                   ? 'Breathe deeply • Stay present'
                                   : 'Paused in Zen Chamber',
                               style: textTheme.bodySmall?.copyWith(
-                                color: Colors.white.withValues(alpha: 0.72),
+                                color: AppColors.textWhite.withValues(
+                                  alpha: 0.72,
+                                ),
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -442,7 +443,7 @@ class _PomodoroZenScreenState extends State<PomodoroZenScreen>
                         onPressed: _toggleRun,
                         style: FilledButton.styleFrom(
                           backgroundColor: accent,
-                          foregroundColor: Colors.white,
+                          foregroundColor: AppColors.textWhite,
                           minimumSize: const Size(156, 48),
                           shape: const RoundedRectangleBorder(
                             borderRadius: AppRadius.radiusFull,
@@ -454,13 +455,11 @@ class _PomodoroZenScreenState extends State<PomodoroZenScreen>
                               : Icons.play_arrow_rounded,
                           size: 22,
                         ),
-                        label: Text(
+                        label: AppText.labelLarge(
                           _isRunning ? 'Pause Sprint' : 'Resume Sprint',
-                          style: AppTextStyles.buttonLabel.copyWith(
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                          ),
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textWhite,
                         ),
                       ),
                       if (widget.initialFocusModeIndex != 3) ...[
@@ -478,10 +477,10 @@ class _PomodoroZenScreenState extends State<PomodoroZenScreen>
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.05),
+                      color: AppColors.textWhite.withValues(alpha: 0.05),
                       borderRadius: AppRadius.radiusMd,
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.1),
+                        color: AppColors.textWhite.withValues(alpha: 0.1),
                       ),
                     ),
                     child: Column(
@@ -495,20 +494,20 @@ class _PomodoroZenScreenState extends State<PomodoroZenScreen>
                                 const Icon(
                                   Icons.graphic_eq_rounded,
                                   size: 16,
-                                  color: Colors.white70,
+                                  color: AppColors.white70,
                                 ),
                                 const SizedBox(width: 6),
-                                Text(
+                                AppText(
                                   'Zen Soundscape Mixer',
                                   style: textTheme.bodySmall?.copyWith(
-                                    color: Colors.white,
+                                    color: AppColors.textWhite,
                                     fontSize: 12.5,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
                               ],
                             ),
-                            Text(
+                            AppText(
                               _ambience == 'Mute'
                                   ? 'Muted'
                                   : '$_ambience • ${(_volume * 100).round()}%',
@@ -542,12 +541,16 @@ class _PomodoroZenScreenState extends State<PomodoroZenScreen>
                                 decoration: BoxDecoration(
                                   color: selected
                                       ? accent.withValues(alpha: 0.22)
-                                      : Colors.white.withValues(alpha: 0.06),
+                                      : AppColors.textWhite.withValues(
+                                          alpha: 0.06,
+                                        ),
                                   borderRadius: AppRadius.radiusFull,
                                   border: Border.all(
                                     color: selected
                                         ? accent
-                                        : Colors.white.withValues(alpha: 0.1),
+                                        : AppColors.textWhite.withValues(
+                                            alpha: 0.1,
+                                          ),
                                   ),
                                 ),
                                 child: Row(
@@ -556,15 +559,17 @@ class _PomodoroZenScreenState extends State<PomodoroZenScreen>
                                     Icon(
                                       icon,
                                       size: 13,
-                                      color: selected ? accent : Colors.white70,
+                                      color: selected
+                                          ? accent
+                                          : AppColors.white70,
                                     ),
                                     const SizedBox(width: 4),
-                                    Text(
+                                    AppText(
                                       name,
                                       style: textTheme.labelSmall?.copyWith(
                                         color: selected
-                                            ? Colors.white
-                                            : Colors.white70,
+                                            ? AppColors.textWhite
+                                            : AppColors.white70,
                                         fontSize: 11,
                                         fontWeight: selected
                                             ? FontWeight.w700
@@ -584,14 +589,14 @@ class _PomodoroZenScreenState extends State<PomodoroZenScreen>
                               const Icon(
                                 Icons.volume_down_rounded,
                                 size: 16,
-                                color: Colors.white60,
+                                color: AppColors.white60,
                               ),
                               Expanded(
                                 child: SliderTheme(
                                   data: SliderTheme.of(context).copyWith(
                                     activeTrackColor: accent,
-                                    inactiveTrackColor: Colors.white24,
-                                    thumbColor: Colors.white,
+                                    inactiveTrackColor: AppColors.white24,
+                                    thumbColor: AppColors.textWhite,
                                     trackHeight: 3,
                                   ),
                                   child: Slider(
@@ -606,7 +611,7 @@ class _PomodoroZenScreenState extends State<PomodoroZenScreen>
                               const Icon(
                                 Icons.volume_up_rounded,
                                 size: 16,
-                                color: Colors.white60,
+                                color: AppColors.white60,
                               ),
                             ],
                           ),
@@ -624,10 +629,10 @@ class _PomodoroZenScreenState extends State<PomodoroZenScreen>
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.05),
+                        color: AppColors.textWhite.withValues(alpha: 0.05),
                         borderRadius: AppRadius.radiusMd,
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.1),
+                          color: AppColors.textWhite.withValues(alpha: 0.1),
                         ),
                       ),
                       child: Row(
@@ -642,7 +647,7 @@ class _PomodoroZenScreenState extends State<PomodoroZenScreen>
                             child: TextField(
                               controller: _thoughtController,
                               style: textTheme.bodySmall?.copyWith(
-                                color: Colors.white,
+                                color: AppColors.textWhite,
                                 fontSize: 12.5,
                               ),
                               decoration: InputDecoration(
@@ -651,7 +656,7 @@ class _PomodoroZenScreenState extends State<PomodoroZenScreen>
                                 hintText:
                                     'Park a distracting thought without leaving flow...',
                                 hintStyle: textTheme.bodySmall?.copyWith(
-                                  color: Colors.white54,
+                                  color: AppColors.white54,
                                   fontSize: 12,
                                 ),
                                 border: InputBorder.none,
@@ -682,20 +687,24 @@ class _PomodoroZenScreenState extends State<PomodoroZenScreen>
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       child: Column(
                         children: [
-                          Text(
+                          AppText(
                             '"${quote['quote']}"',
                             textAlign: TextAlign.center,
                             style: textTheme.bodySmall?.copyWith(
-                              color: Colors.white.withValues(alpha: 0.72),
+                              color: AppColors.textWhite.withValues(
+                                alpha: 0.72,
+                              ),
                               fontSize: 12,
                               fontStyle: FontStyle.italic,
                             ),
                           ),
                           const SizedBox(height: 4),
-                          Text(
+                          AppText(
                             quote['author']!,
                             style: textTheme.labelSmall?.copyWith(
-                              color: Colors.white.withValues(alpha: 0.45),
+                              color: AppColors.textWhite.withValues(
+                                alpha: 0.45,
+                              ),
                               fontSize: 10.5,
                               fontWeight: FontWeight.w600,
                             ),
@@ -718,12 +727,10 @@ class _PomodoroZenScreenState extends State<PomodoroZenScreen>
     if (text.isEmpty) return;
     widget.onCaptureDistraction?.call(text);
     _thoughtController.clear();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Parked thought: "$text"'),
-        duration: const Duration(seconds: 1),
-        behavior: SnackBarBehavior.floating,
-      ),
+    SnackbarUtils.showMessage(
+      context,
+      'Parked thought: "$text"',
+      duration: const Duration(seconds: 1),
     );
   }
 
@@ -734,18 +741,16 @@ class _PomodoroZenScreenState extends State<PomodoroZenScreen>
     return OutlinedButton(
       onPressed: onTap,
       style: OutlinedButton.styleFrom(
-        foregroundColor: Colors.white,
-        side: BorderSide(color: Colors.white.withValues(alpha: 0.24)),
+        foregroundColor: AppColors.textWhite,
+        side: BorderSide(color: AppColors.textWhite.withValues(alpha: 0.24)),
         minimumSize: const Size(52, 42),
         shape: const RoundedRectangleBorder(borderRadius: AppRadius.radiusFull),
       ),
-      child: Text(
+      child: AppText.captionBold(
         label,
-        style: AppTextStyles.captionBold.copyWith(
-          fontSize: 12.5,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
-        ),
+        fontSize: 12.5,
+        fontWeight: FontWeight.w700,
+        color: AppColors.textWhite,
       ),
     );
   }
@@ -778,7 +783,7 @@ class _ZenDialPainter extends CustomPainter {
     }
 
     final trackPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.12)
+      ..color = AppColors.textWhite.withValues(alpha: 0.12)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 8;
     canvas.drawCircle(center, radius, trackPaint);

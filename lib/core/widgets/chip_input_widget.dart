@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_radius.dart';
 import '../../config/theme/app_spacing.dart';
@@ -89,7 +90,7 @@ class _ChipInputWidgetState extends State<ChipInputWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
+        AppText(
           widget.label,
           style: text.labelMedium?.copyWith(
             fontSize: 13,
@@ -105,7 +106,7 @@ class _ChipInputWidgetState extends State<ChipInputWidget> {
             runSpacing: 6,
             children: List.generate(widget.values.length, (index) {
               return Chip(
-                label: Text(
+                label: AppText(
                   widget.values[index],
                   style: text.bodySmall?.copyWith(
                     fontSize: 13,
@@ -168,7 +169,7 @@ class _ChipInputWidgetState extends State<ChipInputWidget> {
                   ),
                   child: Center(
                     widthFactor: 1,
-                    child: Text(
+                    child: AppText(
                       'Add',
                       style: text.labelMedium?.copyWith(
                         color: AppColors.textWhite,

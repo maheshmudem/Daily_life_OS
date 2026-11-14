@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/theme/app_colors.dart';
@@ -10,6 +11,7 @@ import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/utils/date_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/widgets/confirmation_dialog.dart';
 import '../../../../di/injection_container.dart';
 import '../../../security/domain/repositories/security_repository.dart';
 import '../../../security/presentation/widgets/security_setup_wizard.dart';
@@ -31,7 +33,7 @@ class SubscriptionsSheet extends StatelessWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (_) =>
           BlocProvider.value(value: bloc, child: const SubscriptionsSheet()),
     );
@@ -72,7 +74,7 @@ class SubscriptionsSheet extends StatelessWidget {
                 child: Row(
                   children: [
                     Expanded(
-                      child: Text(
+                      child: AppText(
                         StringConstants.subscriptions,
                         style: text.headlineSmall?.copyWith(
                           color: palette.heading,
@@ -82,7 +84,7 @@ class SubscriptionsSheet extends StatelessWidget {
                     TextButton.icon(
                       onPressed: () => _showAddSubscriptionDialog(context),
                       icon: const Icon(Icons.add_rounded, size: 18),
-                      label: const Text(StringConstants.add),
+                      label: const AppText(StringConstants.add),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close_rounded),
@@ -127,7 +129,7 @@ class SubscriptionsSheet extends StatelessWidget {
             shape: const RoundedRectangleBorder(
               borderRadius: AppRadius.radiusXl,
             ),
-            title: const Text(StringConstants.addSubscription),
+            title: const AppText(StringConstants.addSubscription),
             content: Form(
               key: formKey,
               child: SingleChildScrollView(
@@ -161,8 +163,8 @@ class SubscriptionsSheet extends StatelessWidget {
                         Icons.event_rounded,
                         color: AppColors.moduleMoney,
                       ),
-                      title: const Text(StringConstants.renewalDateLabel),
-                      subtitle: Text(AppDateUtils.formatDate(renewal)),
+                      title: const AppText(StringConstants.renewalDateLabel),
+                      subtitle: AppText(AppDateUtils.formatDate(renewal)),
                       onTap: () async {
                         final picked = await showDatePicker(
                           context: ctx,
@@ -179,7 +181,7 @@ class SubscriptionsSheet extends StatelessWidget {
                     ),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: const Text(StringConstants.autoKillLabel),
+                      title: const AppText(StringConstants.autoKillLabel),
                       value: autoKill,
                       activeThumbColor: AppColors.moduleMoney,
                       onChanged: (v) => setState(() => autoKill = v),
@@ -191,12 +193,12 @@ class SubscriptionsSheet extends StatelessWidget {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(dialogCtx).pop(),
-                child: const Text(StringConstants.cancel),
+                child: const AppText(StringConstants.cancel),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.moduleMoney,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.textWhite,
                 ),
                 onPressed: () {
                   if (!(formKey.currentState?.validate() ?? false)) return;
@@ -211,7 +213,7 @@ class SubscriptionsSheet extends StatelessWidget {
                   );
                   Navigator.of(dialogCtx).pop();
                 },
-                child: const Text(StringConstants.save),
+                child: const AppText(StringConstants.save),
               ),
             ],
           );
@@ -259,7 +261,7 @@ class SubscriptionsContent extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
+                child: AppText(
                   'Auto-Kill alerts remind you 2 days prior to auto-debit so you never pay for unused services.',
                   style: text.labelMedium?.copyWith(
                     fontSize: 12,
@@ -279,7 +281,7 @@ class SubscriptionsContent extends StatelessWidget {
             child: OutlinedButton.icon(
               onPressed: onAddTap,
               icon: const Icon(Icons.add_rounded, size: 18),
-              label: const Text(StringConstants.addSubscription),
+              label: const AppText(StringConstants.addSubscription),
             ),
           ),
       ],
@@ -316,7 +318,7 @@ class _SubscriptionTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                AppText(
                   sub.name,
                   style: text.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
@@ -324,7 +326,7 @@ class _SubscriptionTile extends StatelessWidget {
                     color: palette.heading,
                   ),
                 ),
-                Text(
+                AppText(
                   'Renews ${sub.renewalLabel}',
                   style: text.labelMedium?.copyWith(
                     fontSize: 12,
@@ -335,7 +337,7 @@ class _SubscriptionTile extends StatelessWidget {
                   GestureDetector(
                     onTap: () =>
                         context.read<MoneyBloc>().add(ToggleAutoKill(sub.id)),
-                    child: Text(
+                    child: AppText(
                       '⚡ Auto-Kill Protection ON • tap to disable',
                       style: text.labelSmall?.copyWith(
                         fontSize: 11,
@@ -348,7 +350,7 @@ class _SubscriptionTile extends StatelessWidget {
                   GestureDetector(
                     onTap: () =>
                         context.read<MoneyBloc>().add(ToggleAutoKill(sub.id)),
-                    child: Text(
+                    child: AppText(
                       'Tap to enable Auto-Kill',
                       style: text.labelSmall?.copyWith(
                         fontSize: 11,
@@ -362,7 +364,7 @@ class _SubscriptionTile extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
+              AppText(
                 '${CurrencyUtils.format(sub.amount)}/mo',
                 style: text.titleSmall?.copyWith(
                   fontWeight: FontWeight.w800,
@@ -395,7 +397,7 @@ class _SubscriptionTile extends StatelessWidget {
                         color: AppColors.moduleMoney.withValues(alpha: 0.14),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: Text(
+                      child: AppText(
                         StringConstants.payAndAdvanceLabel,
                         style: text.labelSmall?.copyWith(
                           fontSize: 10.5,
@@ -438,7 +440,7 @@ class IouSheet extends StatelessWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (_) => BlocProvider.value(value: bloc, child: const IouSheet()),
     );
   }
@@ -476,7 +478,7 @@ class IouSheet extends StatelessWidget {
                 child: Row(
                   children: [
                     Expanded(
-                      child: Text(
+                      child: AppText(
                         StringConstants.lendAndBorrow,
                         style: text.headlineSmall?.copyWith(
                           color: palette.heading,
@@ -486,12 +488,12 @@ class IouSheet extends StatelessWidget {
                     TextButton.icon(
                       onPressed: () => BillSplitSheet.show(context),
                       icon: const Icon(Icons.call_split_rounded, size: 17),
-                      label: const Text(StringConstants.billSplitShort),
+                      label: const AppText(StringConstants.billSplitShort),
                     ),
                     TextButton.icon(
                       onPressed: () => _showAddIouDialog(context),
                       icon: const Icon(Icons.add_rounded, size: 18),
-                      label: const Text(StringConstants.addIou),
+                      label: const AppText(StringConstants.addIou),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close_rounded),
@@ -548,7 +550,7 @@ class IouSheet extends StatelessWidget {
             shape: const RoundedRectangleBorder(
               borderRadius: AppRadius.radiusXl,
             ),
-            title: Text(
+            title: AppText(
               isLent
                   ? 'Lent Money (To Collect)'
                   : 'Borrowed Money (To Pay Back)',
@@ -564,7 +566,7 @@ class IouSheet extends StatelessWidget {
                       children: [
                         Expanded(
                           child: ChoiceChip(
-                            label: const Text('I Lent (Collect)'),
+                            label: const AppText('I Lent (Collect)'),
                             selected: type == 'lent',
                             onSelected: (_) => setState(() => type = 'lent'),
                           ),
@@ -572,7 +574,7 @@ class IouSheet extends StatelessWidget {
                         const SizedBox(width: 8),
                         Expanded(
                           child: ChoiceChip(
-                            label: const Text('I Borrowed (Pay)'),
+                            label: const AppText('I Borrowed (Pay)'),
                             selected: type == 'borrowed',
                             onSelected: (_) =>
                                 setState(() => type = 'borrowed'),
@@ -621,14 +623,14 @@ class IouSheet extends StatelessWidget {
                         Icons.event_available_rounded,
                         color: isLent ? AppColors.moduleMoney : AppColors.error,
                       ),
-                      title: Text(
+                      title: AppText(
                         isLent ? 'Collection Due Date' : 'Repayment Due Date',
                         style: text.labelLarge?.copyWith(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      subtitle: Text(
+                      subtitle: AppText(
                         dueDate != null
                             ? AppDateUtils.formatDate(dueDate!)
                             : 'No due date set',
@@ -647,12 +649,12 @@ class IouSheet extends StatelessWidget {
                             setState(() => dueDate = picked);
                           }
                         },
-                        child: const Text('Pick Date'),
+                        child: const AppText('Pick Date'),
                       ),
                     ),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: Text(
+                      title: AppText(
                         isLent
                             ? 'Remind me to collect money'
                             : 'Remind me to pay back',
@@ -672,12 +674,12 @@ class IouSheet extends StatelessWidget {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(dialogCtx).pop(),
-                child: const Text(StringConstants.cancel),
+                child: const AppText(StringConstants.cancel),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.moduleMoney,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.textWhite,
                 ),
                 onPressed: () async {
                   if (!(formKey.currentState?.validate() ?? false)) return;
@@ -726,7 +728,7 @@ class IouSheet extends StatelessWidget {
                     Navigator.of(dialogCtx).pop();
                   }
                 },
-                child: const Text(StringConstants.save),
+                child: const AppText(StringConstants.save),
               ),
             ],
           );
@@ -773,7 +775,7 @@ class IouContent extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    AppText(
                       'TO COLLECT (YOU LENT)',
                       style: text.labelSmall?.copyWith(
                         fontSize: 9.5,
@@ -786,7 +788,7 @@ class IouContent extends StatelessWidget {
                     FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
-                      child: Text(
+                      child: AppText(
                         CurrencyUtils.format(totalToCollect),
                         style: text.titleMedium?.copyWith(
                           fontSize: 16,
@@ -813,7 +815,7 @@ class IouContent extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    AppText(
                       'TO PAY BACK (BORROWED)',
                       style: text.labelSmall?.copyWith(
                         fontSize: 9.5,
@@ -826,7 +828,7 @@ class IouContent extends StatelessWidget {
                     FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
-                      child: Text(
+                      child: AppText(
                         CurrencyUtils.format(totalToPay),
                         style: text.titleMedium?.copyWith(
                           fontSize: 16,
@@ -846,7 +848,7 @@ class IouContent extends StatelessWidget {
           Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),
-              child: Text(
+              child: AppText(
                 'No active IOUs. Tap + Add IOU to record lent or borrowed money.',
                 textAlign: TextAlign.center,
                 style: text.bodySmall?.copyWith(color: palette.caption),
@@ -887,7 +889,7 @@ class IouContent extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        AppText(
                           iou.person,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -898,7 +900,7 @@ class IouContent extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 2),
-                        Text(
+                        AppText(
                           '${iou.typeLabel} • ${iou.cleanNote}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -922,7 +924,7 @@ class IouContent extends StatelessWidget {
                                       .withValues(alpha: 0.14),
                               borderRadius: BorderRadius.circular(5),
                             ),
-                            child: Text(
+                            child: AppText(
                               '⏰ $dueBadge',
                               style: text.labelSmall?.copyWith(
                                 fontSize: 10.5,
@@ -941,7 +943,7 @@ class IouContent extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(
+                      AppText(
                         CurrencyUtils.format(iou.amount),
                         style: text.titleSmall?.copyWith(
                           fontWeight: FontWeight.w800,
@@ -995,7 +997,7 @@ class IouContent extends StatelessWidget {
                                 StringConstants.iouSettledWithCashflow,
                               );
                             },
-                            child: Text(
+                            child: AppText(
                               StringConstants.settle,
                               style: text.labelSmall?.copyWith(
                                 fontSize: 11.5,
@@ -1018,7 +1020,7 @@ class IouContent extends StatelessWidget {
             child: OutlinedButton.icon(
               onPressed: onAddTap,
               icon: const Icon(Icons.add_rounded, size: 18),
-              label: const Text(StringConstants.addIou),
+              label: const AppText(StringConstants.addIou),
             ),
           ),
       ],
@@ -1038,7 +1040,7 @@ class MoneyAccountsSheet extends StatelessWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (_) =>
           BlocProvider.value(value: bloc, child: const MoneyAccountsSheet()),
     );
@@ -1084,13 +1086,13 @@ class MoneyAccountsSheet extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          AppText(
                             StringConstants.accounts,
                             style: text.headlineSmall?.copyWith(
                               color: palette.heading,
                             ),
                           ),
-                          Text(
+                          AppText(
                             '${StringConstants.totalAssets}: ${CurrencyUtils.format(total, decimals: 2)}',
                             style: text.labelSmall?.copyWith(
                               color: palette.caption,
@@ -1104,12 +1106,12 @@ class MoneyAccountsSheet extends StatelessWidget {
                         key: const ValueKey('accounts_sheet_transfer_btn'),
                         onPressed: () => AccountTransferSheet.show(context),
                         icon: const Icon(Icons.swap_horiz_rounded, size: 18),
-                        label: const Text(StringConstants.transfer),
+                        label: const AppText(StringConstants.transfer),
                       ),
                     TextButton.icon(
                       onPressed: () => _showAccountDialog(context),
                       icon: const Icon(Icons.add_rounded, size: 18),
-                      label: const Text(StringConstants.addAccount),
+                      label: const AppText(StringConstants.addAccount),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close_rounded),
@@ -1148,13 +1150,13 @@ class MoneyAccountsSheet extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
+                                  AppText(
                                     acc.name,
                                     style: text.titleSmall?.copyWith(
                                       color: palette.heading,
                                     ),
                                   ),
-                                  Text(
+                                  AppText(
                                     acc.typeLabel,
                                     style: text.labelSmall?.copyWith(
                                       color: palette.caption,
@@ -1163,7 +1165,7 @@ class MoneyAccountsSheet extends StatelessWidget {
                                 ],
                               ),
                             ),
-                            Text(
+                            AppText(
                               CurrencyUtils.format(acc.balance, decimals: 2),
                               style: text.titleSmall?.copyWith(
                                 fontWeight: FontWeight.w800,
@@ -1220,7 +1222,7 @@ class MoneyAccountsSheet extends StatelessWidget {
             shape: const RoundedRectangleBorder(
               borderRadius: AppRadius.radiusXl,
             ),
-            title: Text(
+            title: AppText(
               existing == null
                   ? StringConstants.addAccount
                   : StringConstants.editAccount,
@@ -1252,7 +1254,7 @@ class MoneyAccountsSheet extends StatelessWidget {
                           .map(
                             (t) => DropdownMenuItem(
                               value: t,
-                              child: Text(MoneyAccountType.label(t)),
+                              child: AppText(MoneyAccountType.label(t)),
                             ),
                           )
                           .toList(),
@@ -1284,12 +1286,12 @@ class MoneyAccountsSheet extends StatelessWidget {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(dialogCtx).pop(),
-                child: const Text(StringConstants.cancel),
+                child: const AppText(StringConstants.cancel),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.moduleMoney,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.textWhite,
                 ),
                 onPressed: () {
                   if (!(formKey.currentState?.validate() ?? false)) return;
@@ -1318,7 +1320,7 @@ class MoneyAccountsSheet extends StatelessWidget {
                   }
                   Navigator.of(dialogCtx).pop();
                 },
-                child: const Text(StringConstants.save),
+                child: const AppText(StringConstants.save),
               ),
             ],
           );
@@ -1340,7 +1342,7 @@ class MoneySettingsSheet extends StatelessWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (_) =>
           BlocProvider.value(value: bloc, child: const MoneySettingsSheet()),
     );
@@ -1377,14 +1379,14 @@ class MoneySettingsSheet extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              Text(
+              AppText(
                 StringConstants.moneySettings,
                 style: text.headlineSmall?.copyWith(color: palette.heading),
               ),
               const SizedBox(height: 16),
 
               // Currency selector
-              Text(
+              AppText(
                 StringConstants.currencyLabel,
                 style: text.titleSmall?.copyWith(color: palette.heading),
               ),
@@ -1395,13 +1397,13 @@ class MoneySettingsSheet extends StatelessWidget {
                 children: CurrencyUtils.supportedCurrencies.map((c) {
                   final selected = c.code == settings.currencyCode;
                   return ChoiceChip(
-                    label: Text('${c.symbol} ${c.code}'),
+                    label: AppText('${c.symbol} ${c.code}'),
                     selected: selected,
                     showCheckmark: false,
                     selectedColor: AppColors.moduleMoney,
                     labelStyle: text.labelSmall?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: selected ? Colors.white : palette.body,
+                      color: selected ? AppColors.textWhite : palette.body,
                     ),
                     onSelected: (_) {
                       context.read<MoneyBloc>().add(
@@ -1416,11 +1418,11 @@ class MoneySettingsSheet extends StatelessWidget {
               // Budget Alerts toggle
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: Text(
+                title: AppText(
                   StringConstants.budgetAlertsLabel,
                   style: text.titleSmall?.copyWith(color: palette.heading),
                 ),
-                subtitle: Text(
+                subtitle: AppText(
                   StringConstants.budgetAlertsSubtitle,
                   style: text.labelSmall?.copyWith(color: palette.caption),
                 ),
@@ -1436,11 +1438,11 @@ class MoneySettingsSheet extends StatelessWidget {
               // Vault Security lock toggle
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: Text(
+                title: AppText(
                   StringConstants.moneyLockLabel,
                   style: text.titleSmall?.copyWith(color: palette.heading),
                 ),
-                subtitle: Text(
+                subtitle: AppText(
                   StringConstants.moneyLockSubtitle,
                   style: text.labelSmall?.copyWith(color: palette.caption),
                 ),
@@ -1483,38 +1485,24 @@ class MoneySettingsSheet extends StatelessWidget {
                     size: 20,
                   ),
                 ),
-                title: Text(
+                title: AppText(
                   'Clear All Money Data (Start Fresh)',
                   style: text.titleSmall?.copyWith(color: AppColors.error),
                 ),
-                subtitle: Text(
+                subtitle: AppText(
                   'Removes all transactions, IOUs, subscriptions, accounts & resets budgets to 0.',
                   style: text.labelSmall?.copyWith(color: palette.caption),
                 ),
                 onTap: () async {
                   final bloc = context.read<MoneyBloc>();
-                  final confirmed = await showDialog<bool>(
-                    context: context,
-                    builder: (dCtx) => AlertDialog(
-                      title: const Text('Start Fresh?'),
-                      content: const Text(
+                  final confirmed = await ConfirmationDialog.show(
+                    context,
+                    title: 'Start Fresh?',
+                    message:
                         'This will clear all existing Money transactions, lent/borrowed entries, subscriptions, accounts, and reset your budget to 0 so you can enter your own fresh data.',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(dCtx).pop(false),
-                          child: const Text(StringConstants.cancel),
-                        ),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.error,
-                            foregroundColor: Colors.white,
-                          ),
-                          onPressed: () => Navigator.of(dCtx).pop(true),
-                          child: const Text('Clear & Start Fresh'),
-                        ),
-                      ],
-                    ),
+                    confirmLabel: 'Clear & Start Fresh',
+                    cancelLabel: StringConstants.cancel,
+                    isDestructive: true,
                   );
                   if (confirmed == true) {
                     bloc.add(const ResetAllMoneyData());

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_radius.dart';
 import '../../config/theme/app_spacing.dart';
@@ -32,7 +33,7 @@ class AppErrorWidget extends StatelessWidget {
               color: AppColors.primary.withValues(alpha: 0.6),
             ),
             AppSpacing.gapH16,
-            Text(
+            AppText(
               message,
               style: context.text.bodyMedium?.copyWith(
                 fontSize: 15,
@@ -46,7 +47,7 @@ class AppErrorWidget extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
-                label: const Text(StringConstants.retry),
+                label: const AppText(StringConstants.retry),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: AppColors.textWhite,

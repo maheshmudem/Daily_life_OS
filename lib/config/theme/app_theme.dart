@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
+import 'app_radius.dart';
 import 'app_spacing.dart';
 import 'app_text_styles.dart';
 
@@ -24,7 +25,7 @@ class AppTheme {
       primaryColor: AppColors.primary,
 
       appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.transparent,
         foregroundColor: AppColors.textHeading,
         elevation: 0,
         centerTitle: false,
@@ -47,7 +48,7 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.textWhite,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
@@ -80,7 +81,7 @@ class AppTheme {
 
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: AppColors.cardBackground,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 14,
@@ -105,14 +106,11 @@ class AppTheme {
       ),
 
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.cardBackground,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.textCaption,
-        selectedLabelStyle: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
-        unselectedLabelStyle: TextStyle(fontSize: 11),
+        selectedLabelStyle: AppTextStyles.navSelected,
+        unselectedLabelStyle: AppTextStyles.navUnselected,
         type: BottomNavigationBarType.fixed,
         elevation: 8,
       ),
@@ -127,6 +125,30 @@ class AppTheme {
         backgroundColor: AppColors.surfaceSecondary,
         labelStyle: AppTextStyles.bodySmall,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+
+      dialogTheme: const DialogThemeData(
+        backgroundColor: AppColors.cardBackground,
+        surfaceTintColor: AppColors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusXl),
+        titleTextStyle: AppTextStyles.headingSmall,
+        contentTextStyle: AppTextStyles.bodyMedium,
+      ),
+
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.cardBackground,
+        surfaceTintColor: AppColors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.topXxl),
+      ),
+
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: AppColors.textHeading,
+        contentTextStyle: AppTextStyles.bodyMedium.copyWith(
+          color: AppColors.textWhite,
+          fontWeight: FontWeight.w500,
+        ),
+        behavior: SnackBarBehavior.floating,
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.radiusMd),
       ),
 
       textTheme: AppTextStyles.textTheme(Brightness.light),
@@ -149,7 +171,7 @@ class AppTheme {
       primaryColor: AppColors.primaryLight,
 
       appBarTheme: AppBarTheme(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.transparent,
         foregroundColor: AppColors.darkTextHeading,
         elevation: 0,
         centerTitle: false,
@@ -176,7 +198,7 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.textWhite,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
@@ -211,11 +233,8 @@ class AppTheme {
         backgroundColor: AppColors.darkCardBackground,
         selectedItemColor: AppColors.primaryLight,
         unselectedItemColor: AppColors.darkTextCaption,
-        selectedLabelStyle: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
-        unselectedLabelStyle: TextStyle(fontSize: 11),
+        selectedLabelStyle: AppTextStyles.navSelected,
+        unselectedLabelStyle: AppTextStyles.navUnselected,
         type: BottomNavigationBarType.fixed,
         elevation: 8,
       ),
@@ -226,6 +245,34 @@ class AppTheme {
           color: AppColors.darkTextBody,
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.darkCardBackground,
+        surfaceTintColor: AppColors.transparent,
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.radiusXl),
+        titleTextStyle: AppTextStyles.headingSmall.copyWith(
+          color: AppColors.darkTextHeading,
+        ),
+        contentTextStyle: AppTextStyles.bodyMedium.copyWith(
+          color: AppColors.darkTextBody,
+        ),
+      ),
+
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.darkCardBackground,
+        surfaceTintColor: AppColors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.topXxl),
+      ),
+
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: AppColors.darkSurfaceSecondary,
+        contentTextStyle: AppTextStyles.bodyMedium.copyWith(
+          color: AppColors.darkTextHeading,
+          fontWeight: FontWeight.w500,
+        ),
+        behavior: SnackBarBehavior.floating,
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.radiusMd),
       ),
 
       textTheme: AppTextStyles.textTheme(Brightness.dark),

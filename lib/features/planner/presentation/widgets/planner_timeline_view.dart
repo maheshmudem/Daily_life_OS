@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../domain/entities/planner_item_entity.dart';
 
@@ -152,7 +152,7 @@ class PlannerTimelineView extends StatelessWidget {
                     color: AppColors.moduleTime,
                   ),
                   const SizedBox(width: 6),
-                  Text(
+                  AppText(
                     'Day-Flow Rhythm',
                     style: context.text.bodySmall?.copyWith(
                       fontSize: 13,
@@ -220,14 +220,12 @@ class PlannerTimelineView extends StatelessWidget {
         if (unscheduled.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-            child: Text(
+            child: AppText.overline(
               'ANYTIME · FLEXIBLE SLOTS',
-              style: AppTextStyles.overline.copyWith(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.6,
-                color: palette.caption,
-              ),
+              fontSize: 10.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.6,
+              color: palette.caption,
             ),
           ),
           for (var i = 0; i < unscheduled.length; i++)
@@ -273,7 +271,7 @@ class _DayPartChip extends StatelessWidget {
         children: [
           Icon(icon, size: 11, color: color),
           const SizedBox(width: 3.5),
-          Text(
+          AppText(
             label,
             style: context.text.labelSmall?.copyWith(
               fontSize: 10.5,
@@ -311,14 +309,12 @@ class _NowNeedleRow extends StatelessWidget {
                 ),
               ],
             ),
-            child: Text(
+            child: const AppText.overline(
               'NOW',
-              style: AppTextStyles.overline.copyWith(
-                fontSize: 9,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.5,
-                color: Colors.white,
-              ),
+              fontSize: 9,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.5,
+              color: AppColors.textWhite,
             ),
           ),
           const SizedBox(width: AppSpacing.xs),
@@ -344,14 +340,12 @@ class _NowNeedleRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
-          Text(
+          AppText.captionBold(
             nowLabel,
-            style: AppTextStyles.captionBold.copyWith(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w700,
-              color: AppColors.moduleTimeDark,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
+            fontSize: 10.5,
+            fontWeight: FontWeight.w700,
+            color: AppColors.moduleTimeDark,
+            tabularFigures: true,
           ),
         ],
       ),
@@ -418,7 +412,7 @@ class _TimelineAxisNode extends StatelessWidget {
           left: 0,
           top: 9,
           width: 40,
-          child: Text(
+          child: AppText(
             timeText,
             textAlign: TextAlign.right,
             style: textTheme.labelSmall?.copyWith(
@@ -495,7 +489,9 @@ class _TimelineAxisNode extends StatelessWidget {
                             margin: const EdgeInsets.only(top: 1),
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: item.isDone ? accent : Colors.transparent,
+                              color: item.isDone
+                                  ? accent
+                                  : AppColors.transparent,
                               border: Border.all(
                                 color: item.isDone ? accent : palette.border,
                                 width: 1.8,
@@ -505,7 +501,7 @@ class _TimelineAxisNode extends StatelessWidget {
                                 ? const Icon(
                                     Icons.check_rounded,
                                     size: 12.5,
-                                    color: Colors.white,
+                                    color: AppColors.textWhite,
                                   )
                                 : null,
                           ),
@@ -515,7 +511,7 @@ class _TimelineAxisNode extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              AppText(
                                 item.title,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
@@ -533,7 +529,7 @@ class _TimelineAxisNode extends StatelessWidget {
                               ),
                               if (hasNotes && !item.isDone) ...[
                                 const SizedBox(height: 3),
-                                Text(
+                                AppText(
                                   item.notes.trim(),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -589,17 +585,12 @@ class _TimelineAxisNode extends StatelessWidget {
                                           ),
                                         ),
                                         const SizedBox(width: 4),
-                                        Text(
+                                        AppText.captionBold(
                                           '✓ ${item.checklistDoneCount}/${item.checklist.length}',
-                                          style: AppTextStyles.captionBold
-                                              .copyWith(
-                                                fontSize: 10.5,
-                                                fontWeight: FontWeight.w700,
-                                                color: AppColors.moduleTimeDark,
-                                                fontFeatures: const [
-                                                  FontFeature.tabularFigures(),
-                                                ],
-                                              ),
+                                          fontSize: 10.5,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.moduleTimeDark,
+                                          tabularFigures: true,
                                         ),
                                       ],
                                     ),
@@ -671,7 +662,7 @@ class _MiniBadge extends StatelessWidget {
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(5),
       ),
-      child: Text(
+      child: AppText(
         label,
         style: context.text.labelSmall?.copyWith(
           fontSize: 10,

@@ -1,12 +1,13 @@
 import 'dart:async';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../di/injection_container.dart';
 import '../../../notes/domain/usecases/manage_notes_usecases.dart';
 import '../bloc/today_hub_bloc.dart';
@@ -31,7 +32,7 @@ class EveningWrapUpSheet extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (_) => BlocProvider.value(
         value: bloc,
         child: EveningWrapUpSheet(
@@ -94,11 +95,9 @@ class _EveningWrapUpSheetState extends State<EveningWrapUpSheet> {
       if (mounted) {
         unawaited(HapticFeedback.mediumImpact());
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Evening Wrap-Up & Reflection saved to Notes!'),
-            behavior: SnackBarBehavior.floating,
-          ),
+        SnackbarUtils.showMessage(
+          context,
+          'Evening Wrap-Up & Reflection saved to Notes!',
         );
       }
     } catch (_) {
@@ -181,14 +180,14 @@ class _EveningWrapUpSheetState extends State<EveningWrapUpSheet> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          AppText(
                             'Evening Wrap-Up & Daily Review',
                             style: text.titleMedium?.copyWith(
                               fontWeight: FontWeight.w700,
                               color: palette.heading,
                             ),
                           ),
-                          Text(
+                          AppText(
                             '$pct% daily completion • Close out remaining items & reflect',
                             style: text.labelSmall?.copyWith(
                               color: palette.caption,
@@ -256,7 +255,7 @@ class _EveningWrapUpSheetState extends State<EveningWrapUpSheet> {
                 // Unfinished Habits Quick Review
                 if (pendingHabits.isNotEmpty) ...[
                   const SizedBox(height: 16),
-                  Text(
+                  AppText(
                     'PENDING HABITS (${pendingHabits.length})',
                     style: text.labelSmall?.copyWith(
                       fontWeight: FontWeight.w700,
@@ -282,7 +281,7 @@ class _EveningWrapUpSheetState extends State<EveningWrapUpSheet> {
                           Icon(h.icon, size: 16, color: h.color),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: Text(
+                            child: AppText(
                               h.title,
                               softWrap: true,
                               style: text.labelLarge?.copyWith(
@@ -304,12 +303,7 @@ class _EveningWrapUpSheetState extends State<EveningWrapUpSheet> {
                               ),
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
-                            child: Text(
-                              'Skip',
-                              style: AppTextStyles.labelSmall.copyWith(
-                                fontSize: 11.5,
-                              ),
-                            ),
+                            child: const AppText('Skip', fontSize: 11.5),
                           ),
                           const SizedBox(width: 4),
                           FilledButton.tonal(
@@ -326,12 +320,10 @@ class _EveningWrapUpSheetState extends State<EveningWrapUpSheet> {
                               ),
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
-                            child: Text(
+                            child: const AppText(
                               'Complete',
-                              style: AppTextStyles.labelSmall.copyWith(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w700,
-                              ),
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ],
@@ -343,7 +335,7 @@ class _EveningWrapUpSheetState extends State<EveningWrapUpSheet> {
                 // Unfinished Tasks Quick Review
                 if (pendingTasks.isNotEmpty) ...[
                   const SizedBox(height: 12),
-                  Text(
+                  AppText(
                     'UNFINISHED TIMELINE TASKS (${pendingTasks.length})',
                     style: text.labelSmall?.copyWith(
                       fontWeight: FontWeight.w700,
@@ -369,7 +361,7 @@ class _EveningWrapUpSheetState extends State<EveningWrapUpSheet> {
                           Icon(t.icon, size: 16, color: t.color),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: Text(
+                            child: AppText(
                               '${t.time} • ${t.title}',
                               softWrap: true,
                               style: text.labelLarge?.copyWith(
@@ -393,12 +385,10 @@ class _EveningWrapUpSheetState extends State<EveningWrapUpSheet> {
                               ),
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
-                            child: Text(
+                            child: const AppText(
                               'Mark Done',
-                              style: AppTextStyles.labelSmall.copyWith(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w700,
-                              ),
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ],
@@ -408,7 +398,7 @@ class _EveningWrapUpSheetState extends State<EveningWrapUpSheet> {
                 ],
 
                 const SizedBox(height: 16),
-                Text(
+                AppText(
                   'HOW DID TODAY FEEL?',
                   style: text.labelSmall?.copyWith(
                     fontWeight: FontWeight.w700,
@@ -442,7 +432,7 @@ class _EveningWrapUpSheetState extends State<EveningWrapUpSheet> {
                                 : palette.border,
                           ),
                         ),
-                        child: Text(
+                        child: AppText(
                           mood,
                           style: text.labelSmall?.copyWith(
                             fontWeight: selected
@@ -456,7 +446,7 @@ class _EveningWrapUpSheetState extends State<EveningWrapUpSheet> {
                   }).toList(),
                 ),
                 const SizedBox(height: 14),
-                Text(
+                AppText(
                   'DAILY REFLECTION & WINS (SAVES TO NOTES)',
                   style: text.labelSmall?.copyWith(
                     fontWeight: FontWeight.w700,
@@ -495,21 +485,19 @@ class _EveningWrapUpSheetState extends State<EveningWrapUpSheet> {
                         : () => _saveReflection(state),
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
+                      foregroundColor: AppColors.textWhite,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     icon: const Icon(Icons.bookmark_added_rounded, size: 18),
-                    label: Text(
+                    label: AppText.labelLarge(
                       _savingReflection
                           ? 'Saving Reflection...'
                           : 'Complete Wrap-Up & Save Reflection',
-                      style: AppTextStyles.labelLarge.copyWith(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13.5,
-                        color: Colors.white,
-                      ),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13.5,
+                      color: AppColors.textWhite,
                     ),
                   ),
                 ),
@@ -540,7 +528,7 @@ class _WrapStatItem extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
+        AppText(
           value,
           style: text.titleSmall?.copyWith(
             fontWeight: FontWeight.w800,
@@ -549,7 +537,7 @@ class _WrapStatItem extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 2),
-        Text(
+        AppText(
           label,
           style: text.labelSmall?.copyWith(
             fontSize: 10.5,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -6,7 +7,6 @@ import 'package:intl/intl.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
 import '../../domain/entities/note_entity.dart';
@@ -35,7 +35,7 @@ class NoteEditorSheet extends StatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (_) => BlocProvider.value(
         value: notesBloc,
         child: NoteEditorSheet(
@@ -278,7 +278,7 @@ class _NoteEditorSheetState extends State<NoteEditorSheet> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          AppText(
                             _isEditing ? 'Edit Note' : 'Create New Note',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -289,7 +289,7 @@ class _NoteEditorSheetState extends State<NoteEditorSheet> {
                               color: palette.heading,
                             ),
                           ),
-                          Text(
+                          AppText(
                             '$wordCount ${wordCount == 1 ? 'word' : 'words'} · ${_contentCtrl.text.length} chars',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -384,7 +384,7 @@ class _NoteEditorSheetState extends State<NoteEditorSheet> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      Text(
+                      AppText(
                         'Color Accent: ',
                         style: textTheme.labelMedium?.copyWith(
                           fontSize: 12,
@@ -411,7 +411,7 @@ class _NoteEditorSheetState extends State<NoteEditorSheet> {
                                 border: Border.all(
                                   color: _selectedColor == colorVal
                                       ? palette.heading
-                                      : Colors.transparent,
+                                      : AppColors.transparent,
                                   width: 2,
                                 ),
                               ),
@@ -419,7 +419,7 @@ class _NoteEditorSheetState extends State<NoteEditorSheet> {
                                   ? const Icon(
                                       Icons.check_rounded,
                                       size: 14,
-                                      color: Colors.white,
+                                      color: AppColors.textWhite,
                                     )
                                   : null,
                             ),
@@ -577,7 +577,7 @@ class _NoteEditorSheetState extends State<NoteEditorSheet> {
 
                 if (_validationError != null) ...[
                   const SizedBox(height: 6),
-                  Text(
+                  AppText(
                     _validationError!,
                     style: textTheme.labelSmall?.copyWith(
                       color: AppColors.error,
@@ -588,7 +588,7 @@ class _NoteEditorSheetState extends State<NoteEditorSheet> {
                 const SizedBox(height: 14),
 
                 // ── 4. @Tag Context Bundling ─────────────────────────────────
-                Text(
+                AppText(
                   'Context Tags',
                   style: textTheme.labelMedium?.copyWith(
                     fontSize: 12,
@@ -641,7 +641,7 @@ class _NoteEditorSheetState extends State<NoteEditorSheet> {
                               ),
                               const SizedBox(width: 4),
                             ],
-                            Text(
+                            AppText(
                               tag,
                               style: textTheme.labelSmall?.copyWith(
                                 fontSize: 11.5,
@@ -709,7 +709,7 @@ class _NoteEditorSheetState extends State<NoteEditorSheet> {
                           ),
                           foregroundColor: accentColor,
                         ),
-                        child: Text(
+                        child: AppText(
                           'Add Tag',
                           style: textTheme.labelSmall?.copyWith(
                             fontSize: 11.5,
@@ -730,7 +730,7 @@ class _NoteEditorSheetState extends State<NoteEditorSheet> {
                     onPressed: _submit,
                     style: FilledButton.styleFrom(
                       backgroundColor: accentColor,
-                      foregroundColor: Colors.white,
+                      foregroundColor: AppColors.textWhite,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -739,11 +739,11 @@ class _NoteEditorSheetState extends State<NoteEditorSheet> {
                       _isEditing ? Icons.check_rounded : Icons.add_rounded,
                       size: 18,
                     ),
-                    label: Text(
+                    label: AppText.labelLarge(
                       _isEditing ? 'Save Changes' : 'Create Note',
-                      style: AppTextStyles.buttonText.copyWith(
-                        color: Colors.white,
-                      ),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textWhite,
                     ),
                   ),
                 ),
@@ -782,7 +782,7 @@ class _ComposerFormatChip extends StatelessWidget {
           children: [
             Icon(icon, size: 13.5, color: accentColor),
             const SizedBox(width: 4),
-            Text(
+            AppText(
               label,
               style: context.text.labelSmall?.copyWith(
                 fontSize: 11,

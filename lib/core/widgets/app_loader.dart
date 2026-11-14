@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_radius.dart';
 import '../../config/theme/app_spacing.dart';
@@ -13,7 +14,7 @@ class AppLoader extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.palette;
     return Container(
-      color: Colors.black54,
+      color: AppColors.overlayScrim,
       child: Center(
         child: Container(
           padding: const EdgeInsets.symmetric(
@@ -25,7 +26,7 @@ class AppLoader extends StatelessWidget {
             borderRadius: AppRadius.radiusLg,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: p.isDark ? 0.35 : 0.1),
+                color: AppColors.black.withValues(alpha: p.isDark ? 0.35 : 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 4),
               ),
@@ -39,7 +40,7 @@ class AppLoader extends StatelessWidget {
               ),
               if (message != null) ...[
                 AppSpacing.gapH16,
-                Text(
+                AppText(
                   message!,
                   style: context.text.bodyMedium?.copyWith(color: p.body),
                   textAlign: TextAlign.center,
@@ -88,7 +89,7 @@ class FullScreenLoader extends StatelessWidget {
             ),
             if (message != null) ...[
               AppSpacing.gapH16,
-              Text(
+              AppText(
                 message!,
                 style: context.text.bodyMedium?.copyWith(color: p.body),
               ),

@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -993,16 +994,16 @@ class _NotesViewState extends State<_NotesView> {
               Icon(
                 item.icon,
                 size: 13,
-                color: selected ? Colors.white : palette.secondary,
+                color: selected ? AppColors.textWhite : palette.secondary,
               ),
               const SizedBox(width: 5),
             ],
-            Text(
+            AppText(
               item.label,
               style: textTheme.labelSmall?.copyWith(
                 fontSize: 11.5,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                color: selected ? Colors.white : palette.body,
+                color: selected ? AppColors.textWhite : palette.body,
               ),
             ),
             const SizedBox(width: 5),
@@ -1010,16 +1011,16 @@ class _NotesViewState extends State<_NotesView> {
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
               decoration: BoxDecoration(
                 color: selected
-                    ? Colors.white.withValues(alpha: 0.22)
+                    ? AppColors.textWhite.withValues(alpha: 0.22)
                     : palette.surfaceMuted,
                 borderRadius: AppRadius.radiusFull,
               ),
-              child: Text(
+              child: AppText(
                 '${item.count}',
                 style: textTheme.labelSmall?.copyWith(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
-                  color: selected ? Colors.white : palette.caption,
+                  color: selected ? AppColors.textWhite : palette.caption,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
@@ -1049,7 +1050,7 @@ class _NotesViewState extends State<_NotesView> {
           const SizedBox(width: 6),
         ],
         Flexible(
-          child: Text(
+          child: AppText(
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -1070,7 +1071,7 @@ class _NotesViewState extends State<_NotesView> {
                 : palette.surfaceMuted,
             borderRadius: AppRadius.radiusFull,
           ),
-          child: Text(
+          child: AppText(
             '$count',
             style: textTheme.labelSmall?.copyWith(
               fontSize: 11,
@@ -1247,7 +1248,7 @@ class _NotesViewState extends State<_NotesView> {
             ),
           ),
           const SizedBox(height: 14),
-          Text(
+          AppText(
             title,
             textAlign: TextAlign.center,
             style: textTheme.titleMedium?.copyWith(
@@ -1257,7 +1258,7 @@ class _NotesViewState extends State<_NotesView> {
             ),
           ),
           const SizedBox(height: 6),
-          Text(
+          AppText(
             subtitle,
             textAlign: TextAlign.center,
             style: textTheme.bodySmall?.copyWith(
@@ -1284,20 +1285,20 @@ class _NotesViewState extends State<_NotesView> {
                 ),
               ),
               icon: const Icon(Icons.filter_alt_off_rounded, size: 16),
-              label: const Text('Clear Filters'),
+              label: const AppText('Clear Filters'),
             )
           else
             FilledButton.icon(
               onPressed: () => _openNoteEditor(context),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.moduleNotes,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.textWhite,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
               icon: const Icon(Icons.add_rounded, size: 17),
-              label: const Text('Create First Note'),
+              label: const AppText('Create First Note'),
             ),
         ],
       ),
@@ -1331,7 +1332,7 @@ class _OverviewMetricCell extends StatelessWidget {
       decoration: BoxDecoration(
         color: isActive && onTap != null
             ? accentColor.withValues(alpha: palette.isDark ? 0.16 : 0.10)
-            : Colors.transparent,
+            : AppColors.transparent,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
@@ -1339,7 +1340,7 @@ class _OverviewMetricCell extends StatelessWidget {
         children: [
           FittedBox(
             fit: BoxFit.scaleDown,
-            child: Text(
+            child: AppText(
               value,
               maxLines: 1,
               style: textTheme.titleMedium?.copyWith(
@@ -1354,7 +1355,7 @@ class _OverviewMetricCell extends StatelessWidget {
           const SizedBox(height: 1),
           FittedBox(
             fit: BoxFit.scaleDown,
-            child: Text(
+            child: AppText(
               label,
               maxLines: 1,
               style: textTheme.labelSmall?.copyWith(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
@@ -94,7 +95,7 @@ class PinDialpadWidget extends StatelessWidget {
 
         if (errorMessage != null && errorMessage!.isNotEmpty) ...[
           AppSpacing.gapH12,
-          Text(
+          AppText(
             errorMessage!,
             style: context.text.bodySmall?.copyWith(
               color: AppColors.error,
@@ -169,7 +170,7 @@ class PinDialpadWidget extends StatelessWidget {
           color: palette.surfaceMuted,
           border: Border.all(color: palette.border),
         ),
-        child: Text(
+        child: AppText(
           digit,
           style: context.text.headlineMedium?.copyWith(
             fontSize: 22,

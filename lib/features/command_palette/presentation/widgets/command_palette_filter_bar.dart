@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../config/theme/app_colors.dart';
@@ -54,7 +55,7 @@ class CommandPaletteFilterBar extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
+                  AppText(
                     mod,
                     style: context.text.labelMedium?.copyWith(
                       fontWeight: isSelected
@@ -75,7 +76,7 @@ class CommandPaletteFilterBar extends StatelessWidget {
                           : palette.surfaceMuted,
                       borderRadius: AppRadius.radiusFull,
                     ),
-                    child: Text(
+                    child: AppText(
                       '$count',
                       style: context.text.labelSmall?.copyWith(
                         color: isSelected

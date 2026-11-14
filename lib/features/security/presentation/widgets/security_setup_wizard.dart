@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../config/theme/app_colors.dart';
@@ -28,7 +29,7 @@ class SecuritySetupWizard extends StatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (_) => SecuritySetupWizard(
         securityRepository: securityRepository,
         onCompleted: onCompleted,
@@ -174,7 +175,7 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
           ),
         ),
         AppSpacing.gapH12,
-        Text(
+        AppText(
           'Set Up Vault Security',
           style: context.text.titleLarge?.copyWith(
             fontWeight: FontWeight.w800,
@@ -182,7 +183,7 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
           ),
         ),
         AppSpacing.gapH4,
-        Text(
+        AppText(
           'Choose your preferred primary lock method:',
           textAlign: TextAlign.center,
           style: context.text.bodySmall?.copyWith(color: palette.caption),
@@ -230,7 +231,7 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
                 borderRadius: AppRadius.radiusMd,
               ),
             ),
-            child: Text(
+            child: AppText(
               'Continue',
               style: context.text.titleSmall?.copyWith(
                 color: AppColors.textWhite,
@@ -292,7 +293,7 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  AppText(
                     title,
                     style: context.text.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
@@ -300,7 +301,7 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xxxs),
-                  Text(
+                  AppText(
                     subtitle,
                     style: context.text.labelSmall?.copyWith(
                       color: palette.caption,
@@ -328,7 +329,7 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
 
     return Column(
       children: [
-        Text(
+        AppText(
           isPin ? 'Create Master PIN' : 'Draw Master Pattern',
           style: context.text.titleLarge?.copyWith(
             fontWeight: FontWeight.w800,
@@ -336,7 +337,7 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
           ),
         ),
         AppSpacing.gapH4,
-        Text(
+        AppText(
           isPin
               ? 'Enter a 4-digit passcode for your vault'
               : 'Connect at least 4 dots on the grid',
@@ -400,7 +401,7 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
 
     return Column(
       children: [
-        Text(
+        AppText(
           isPin ? 'Confirm Master PIN' : 'Redraw Master Pattern',
           style: context.text.titleLarge?.copyWith(
             fontWeight: FontWeight.w800,
@@ -408,7 +409,7 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
           ),
         ),
         AppSpacing.gapH4,
-        Text(
+        AppText(
           isPin
               ? 'Re-enter your 4-digit passcode to confirm'
               : 'Draw the same pattern again to verify',
@@ -502,7 +503,7 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
           ),
         ),
         AppSpacing.gapH16,
-        Text(
+        AppText(
           'Enable Biometric Unlock?',
           style: context.text.titleLarge?.copyWith(
             fontWeight: FontWeight.w800,
@@ -510,7 +511,7 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
           ),
         ),
         AppSpacing.gapH8,
-        Text(
+        AppText(
           'Use your device fingerprint scanner or Face ID for instant, seamless unlocking.',
           textAlign: TextAlign.center,
           style: context.text.bodySmall?.copyWith(color: palette.caption),
@@ -534,7 +535,7 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
                       borderRadius: AppRadius.radiusMd,
                     ),
                   ),
-                  child: const Text('Skip'),
+                  child: const AppText('Skip'),
                 ),
               ),
             ),
@@ -560,7 +561,7 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
                     Icons.check_rounded,
                     size: AppSpacing.lg - AppSpacing.xxxs,
                   ),
-                  label: Text(
+                  label: AppText(
                     'Enable',
                     style: context.text.titleSmall?.copyWith(
                       color: AppColors.textWhite,
@@ -595,7 +596,7 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
           ),
         ),
         AppSpacing.gapH16,
-        Text(
+        AppText(
           'Optional: Decoy PIN Protection',
           style: context.text.titleLarge?.copyWith(
             fontWeight: FontWeight.w800,
@@ -603,7 +604,7 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
           ),
         ),
         AppSpacing.gapH8,
-        Text(
+        AppText(
           'Under duress or threat, entering your Decoy PIN displays an innocent empty vault without revealing your real passwords.',
           textAlign: TextAlign.center,
           style: context.text.bodySmall?.copyWith(color: palette.caption),
@@ -622,7 +623,7 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
                       borderRadius: AppRadius.radiusMd,
                     ),
                   ),
-                  child: const Text('Finish Setup'),
+                  child: const AppText('Finish Setup'),
                 ),
               ),
             ),
@@ -639,7 +640,7 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
                       borderRadius: AppRadius.radiusMd,
                     ),
                   ),
-                  child: Text(
+                  child: AppText(
                     'Set Decoy PIN',
                     style: context.text.titleSmall?.copyWith(
                       color: AppColors.textWhite,
@@ -660,12 +661,12 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
     showDialog(
       context: context,
       builder: (dlgContext) => AlertDialog(
-        title: const Text('Set 4-Digit Decoy PIN'),
+        title: const AppText('Set 4-Digit Decoy PIN'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            AppText(
               'Choose a different PIN than your master PIN. Entering this opens safe decoy data.',
               style: context.text.bodySmall?.copyWith(
                 color: context.palette.body,
@@ -689,7 +690,7 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dlgContext),
-            child: const Text('Cancel'),
+            child: const AppText('Cancel'),
           ),
           FilledButton(
             onPressed: () {
@@ -700,7 +701,7 @@ class _SecuritySetupWizardState extends State<SecuritySetupWizard> {
                 _finalizeSetup();
               }
             },
-            child: const Text('Save & Finish'),
+            child: const AppText('Save & Finish'),
           ),
         ],
       ),

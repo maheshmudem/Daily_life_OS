@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 
 class PomodoroAdvancedConfig {
@@ -77,7 +77,7 @@ class PomodoroCustomDurationSheet extends StatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (ctx) => PomodoroCustomDurationSheet(
         initialWorkMinutes: workMinutes,
         initialShortBreakMinutes: shortBreakMinutes,
@@ -159,12 +159,10 @@ class _PomodoroCustomDurationSheetState
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
+                  AppText.titleMedium(
                     'Customize Pomodoro Timer',
-                    style: AppTextStyles.titleMedium.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: headingColor,
-                    ),
+                    fontWeight: FontWeight.w800,
+                    color: headingColor,
                   ),
                   IconButton(
                     icon: const Icon(Icons.close_rounded, size: 20),
@@ -233,12 +231,10 @@ class _PomodoroCustomDurationSheetState
                 ],
               ),
               const SizedBox(height: 16),
-              Text(
+              AppText.overline(
                 'FOCUS AUTOMATION & DISCIPLINE',
-                style: AppTextStyles.overline.copyWith(
-                  color: captionColor,
-                  fontWeight: FontWeight.w700,
-                ),
+                color: captionColor,
+                fontWeight: FontWeight.w700,
               ),
               const SizedBox(height: 8),
               _buildToggleRow(
@@ -306,12 +302,11 @@ class _PomodoroCustomDurationSheetState
                     );
                     Navigator.of(context).pop();
                   },
-                  child: Text(
+                  child: const AppText.labelLarge(
                     'Save Timer Settings',
-                    style: AppTextStyles.buttonLabel.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textWhite,
                   ),
                 ),
               ),
@@ -344,7 +339,7 @@ class _PomodoroCustomDurationSheetState
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Flexible(
-            child: Text(
+            child: AppText(
               title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -365,7 +360,7 @@ class _PomodoroCustomDurationSheetState
                 icon: const Icon(Icons.remove_circle_outline_rounded, size: 19),
                 onPressed: value > min ? () => onChanged(value - step) : null,
               ),
-              Text(
+              AppText(
                 '$value $unit',
                 style: textTheme.bodySmall?.copyWith(
                   fontWeight: FontWeight.w700,
@@ -419,7 +414,7 @@ class _PomodoroCustomDurationSheetState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                AppText(
                   title,
                   style: textTheme.bodySmall?.copyWith(
                     fontSize: 12.5,
@@ -427,7 +422,7 @@ class _PomodoroCustomDurationSheetState
                     color: palette.heading,
                   ),
                 ),
-                Text(
+                AppText(
                   subtitle,
                   style: textTheme.labelSmall?.copyWith(
                     fontSize: 11,

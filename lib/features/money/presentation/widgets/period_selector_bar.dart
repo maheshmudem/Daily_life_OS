@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
@@ -49,12 +50,12 @@ class PeriodSelectorBar extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isSelected
                       ? (p.isDark ? AppColors.primary : p.card)
-                      : Colors.transparent,
+                      : AppColors.transparent,
                   borderRadius: AppRadius.borderSm,
                   boxShadow: isSelected && !p.isDark
                       ? [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.06),
+                            color: AppColors.black.withValues(alpha: 0.06),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
@@ -64,7 +65,7 @@ class PeriodSelectorBar extends StatelessWidget {
                 alignment: Alignment.center,
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
-                  child: Text(
+                  child: AppText(
                     label,
                     maxLines: 1,
                     style: text.labelSmall?.copyWith(

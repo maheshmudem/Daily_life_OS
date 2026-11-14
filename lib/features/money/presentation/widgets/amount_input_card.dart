@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
@@ -61,7 +62,7 @@ class AmountInputCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+              AppText(
                 StringConstants.amountLabel.toUpperCase(),
                 style: text.labelSmall?.copyWith(
                   fontSize: 11,
@@ -85,7 +86,7 @@ class AmountInputCard extends StatelessWidget {
                         color: p.surfaceMuted,
                         borderRadius: AppRadius.radiusXs,
                       ),
-                      child: Text(
+                      child: AppText(
                         'Clear',
                         style: text.labelSmall?.copyWith(
                           fontSize: 11,
@@ -103,7 +104,7 @@ class AmountInputCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
+              AppText(
                 CurrencyUtils.symbol,
                 style: text.displaySmall?.copyWith(
                   fontSize: 34,
@@ -186,7 +187,7 @@ class AmountInputCard extends StatelessWidget {
                           width: 0.8,
                         ),
                       ),
-                      child: Text(
+                      child: AppText(
                         '${CurrencyUtils.symbol}$val',
                         style: text.labelMedium?.copyWith(
                           fontSize: 12,

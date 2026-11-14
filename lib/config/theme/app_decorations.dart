@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 import 'app_radius.dart';
+import 'theme_context.dart';
 
 /// Predefined modern visual decorations, gradients, shadows, and glassmorphism.
 class AppDecorations {
@@ -8,19 +9,15 @@ class AppDecorations {
 
   // Standard Card with crisp border and subtle ambient shadow
   static BoxDecoration card(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final palette = context.palette;
     return BoxDecoration(
-      color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
+      color: palette.card,
       borderRadius: AppRadius.radiusLg,
-      border: Border.all(
-        color: isDark ? AppColors.darkDivider : AppColors.divider,
-        width: 1,
-      ),
+      border: Border.all(color: palette.divider, width: 1),
       boxShadow: [
         BoxShadow(
-          color: (isDark ? Colors.black : AppColors.shadowColor).withValues(
-            alpha: isDark ? 0.35 : 0.05,
-          ),
+          color: (palette.isDark ? AppColors.black : AppColors.shadowColor)
+              .withValues(alpha: palette.isDark ? 0.35 : 0.05),
           blurRadius: 16,
           offset: const Offset(0, 4),
         ),
@@ -30,17 +27,16 @@ class AppDecorations {
 
   // Elevated Card for Heroes and Modals
   static BoxDecoration cardElevated(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final palette = context.palette;
     return BoxDecoration(
-      color: isDark ? AppColors.darkSurfaceSecondary : AppColors.cardBackground,
+      color: palette.isDark ? palette.surfaceMuted : palette.card,
       borderRadius: AppRadius.radiusXl,
-      border: Border.all(
-        color: isDark ? AppColors.darkBorder : AppColors.border,
-        width: 1,
-      ),
+      border: Border.all(color: palette.border, width: 1),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.08),
+          color: AppColors.black.withValues(
+            alpha: palette.isDark ? 0.45 : 0.08,
+          ),
           blurRadius: 24,
           offset: const Offset(0, 8),
         ),
@@ -50,12 +46,15 @@ class AppDecorations {
 
   // Persistent Floating Quick-Capture Bar Decoration (Raycast/Things 3 style)
   static BoxDecoration get floatingBar => BoxDecoration(
-    color: const Color(0xF20F172A), // Translucent Dark Slate
+    color: AppColors.floatingBarSurface,
     borderRadius: AppRadius.radiusFull,
-    border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1),
+    border: Border.all(
+      color: AppColors.textWhite.withValues(alpha: 0.15),
+      width: 1,
+    ),
     boxShadow: [
       BoxShadow(
-        color: Colors.black.withValues(alpha: 0.35),
+        color: AppColors.black.withValues(alpha: 0.35),
         blurRadius: 24,
         offset: const Offset(0, 8),
       ),
@@ -67,7 +66,7 @@ class AppDecorations {
     gradient: const LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [Color(0xFF4F46E5), Color(0xFF6366F1), Color(0xFF4338CA)],
+      colors: [AppColors.primaryDeep, AppColors.primary, AppColors.primaryDark],
     ),
     borderRadius: AppRadius.radiusXl,
     boxShadow: [
@@ -84,7 +83,11 @@ class AppDecorations {
     gradient: const LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [Color(0xFF047857), Color(0xFF10B981), Color(0xFF065F46)],
+      colors: [
+        AppColors.moduleMoneyDeep,
+        AppColors.moduleMoney,
+        AppColors.moduleMoneyDarkest,
+      ],
     ),
     borderRadius: AppRadius.radiusXl,
     boxShadow: [
@@ -101,7 +104,11 @@ class AppDecorations {
     gradient: const LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [Color(0xFFD97706), Color(0xFFF59E0B), Color(0xFFB45309)],
+      colors: [
+        AppColors.moduleTimeDark,
+        AppColors.moduleTime,
+        AppColors.moduleTimeDarkest,
+      ],
     ),
     borderRadius: AppRadius.radiusXl,
     boxShadow: [
@@ -118,7 +125,11 @@ class AppDecorations {
     gradient: const LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [Color(0xFF6D28D9), Color(0xFF8B5CF6), Color(0xFF5B21B6)],
+      colors: [
+        AppColors.moduleVaultDark,
+        AppColors.moduleVault,
+        AppColors.moduleVaultDarkest,
+      ],
     ),
     borderRadius: AppRadius.radiusXl,
     boxShadow: [
@@ -132,13 +143,13 @@ class AppDecorations {
 
   // Standard BoxShadows
   static BoxShadow get defaultShadow => BoxShadow(
-    color: Colors.black.withValues(alpha: 0.05),
+    color: AppColors.black.withValues(alpha: 0.05),
     blurRadius: 14,
     offset: const Offset(0, 3),
   );
 
   static BoxShadow get elevatedShadow => BoxShadow(
-    color: Colors.black.withValues(alpha: 0.12),
+    color: AppColors.black.withValues(alpha: 0.12),
     blurRadius: 22,
     offset: const Offset(0, 6),
   );

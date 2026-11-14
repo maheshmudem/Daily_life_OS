@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_spacing.dart';
@@ -141,7 +142,7 @@ class HabitBubbleWidget extends StatelessWidget {
                             ? AppColors.success
                             : isSkipped
                             ? AppColors.warning.withValues(alpha: 0.16)
-                            : Colors.transparent,
+                            : AppColors.transparent,
                         border: Border.all(
                           color: isDone
                               ? AppColors.success
@@ -158,7 +159,7 @@ class HabitBubbleWidget extends StatelessWidget {
                                 Icons.check_rounded,
                                 key: ValueKey('done'),
                                 size: 14,
-                                color: Colors.white,
+                                color: AppColors.textWhite,
                               )
                             : isSkipped
                             ? const Icon(
@@ -195,7 +196,7 @@ class HabitBubbleWidget extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
+                      AppText(
                         title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -212,7 +213,7 @@ class HabitBubbleWidget extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 3),
-                      Text.rich(
+                      AppText.rich(
                         TextSpan(
                           children: [
                             if (hasCategory) ...[
@@ -340,7 +341,7 @@ class _StreakBadge extends StatelessWidget {
         children: [
           Icon(Icons.local_fire_department_rounded, size: 12, color: color),
           const SizedBox(width: 2),
-          Text(
+          AppText(
             '${days}d',
             style: context.text.labelMedium?.copyWith(
               fontSize: 11.5,

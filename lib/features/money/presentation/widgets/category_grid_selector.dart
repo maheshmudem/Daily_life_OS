@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/config/theme/app_colors.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../domain/entities/money_category.dart';
 
@@ -130,15 +132,15 @@ class _CategoryPillState extends State<_CategoryPill> {
               Icon(
                 widget.category.icon,
                 size: 16,
-                color: selected ? Colors.white : color,
+                color: selected ? AppColors.textWhite : color,
               ),
               const SizedBox(width: 7),
-              Text(
+              AppText(
                 widget.category.shortLabel,
                 style: text.labelMedium?.copyWith(
                   fontSize: 12,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                  color: selected ? Colors.white : palette.heading,
+                  color: selected ? AppColors.textWhite : palette.heading,
                 ),
               ),
             ],
@@ -224,12 +226,12 @@ class _CategoryTileState extends State<_CategoryTile> {
                 child: Icon(
                   widget.category.icon,
                   size: 18,
-                  color: selected ? Colors.white : color,
+                  color: selected ? AppColors.textWhite : color,
                 ),
               ),
               const SizedBox(height: 4),
               Flexible(
-                child: Text(
+                child: AppText(
                   widget.category.shortLabel,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -238,7 +240,7 @@ class _CategoryTileState extends State<_CategoryTile> {
                     fontSize: 11,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                     color: selected
-                        ? (isDark ? Colors.white : color)
+                        ? (isDark ? AppColors.textWhite : color)
                         : (isDark ? palette.body : palette.heading),
                   ),
                 ),

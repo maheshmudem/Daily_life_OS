@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/widgets/expandable_text_widget.dart';
 import '../../domain/entities/pomodoro_entities.dart';
@@ -275,7 +275,7 @@ class _PomodoroAnalyticsDashboardState
                                 ),
                               ),
                               Center(
-                                child: Text(
+                                child: AppText(
                                   '${(animVal * 100).round()}%',
                                   style: textTheme.labelSmall?.copyWith(
                                     fontSize: 11,
@@ -297,7 +297,7 @@ class _PomodoroAnalyticsDashboardState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          AppText(
                             coachHeadline,
                             style: textTheme.bodySmall?.copyWith(
                               fontSize: 12.5,
@@ -467,7 +467,7 @@ class _PomodoroAnalyticsDashboardState
                     crossAxisAlignment: CrossAxisAlignment.baseline,
                     textBaseline: TextBaseline.alphabetic,
                     children: [
-                      Text(
+                      AppText(
                         value,
                         style: textTheme.titleSmall?.copyWith(
                           fontSize: 15.5,
@@ -479,7 +479,7 @@ class _PomodoroAnalyticsDashboardState
                         ),
                       ),
                       const SizedBox(width: 5),
-                      Text(
+                      AppText(
                         label,
                         style: textTheme.labelSmall?.copyWith(
                           fontSize: 11.5,
@@ -494,7 +494,7 @@ class _PomodoroAnalyticsDashboardState
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
-                  child: Text(
+                  child: AppText(
                     subtitle,
                     maxLines: 1,
                     style: textTheme.labelSmall?.copyWith(
@@ -614,7 +614,7 @@ class _PomodoroAnalyticsDashboardState
                       children: [
                         FittedBox(
                           fit: BoxFit.scaleDown,
-                          child: Text(
+                          child: AppText(
                             day.minutes > 0 ? '${day.minutes}m' : '—',
                             style: textTheme.labelSmall?.copyWith(
                               fontSize: 9.5,
@@ -676,7 +676,7 @@ class _PomodoroAnalyticsDashboardState
                           },
                         ),
                         const SizedBox(height: 5),
-                        Text(
+                        AppText(
                           day.label,
                           style: textTheme.labelSmall?.copyWith(
                             fontSize: 10,
@@ -742,7 +742,7 @@ class _PomodoroAnalyticsDashboardState
                         ),
                       ),
                       const SizedBox(width: 4),
-                      Text(
+                      AppText(
                         '${entry.key} ${entry.value}m ($pct%)',
                         style: textTheme.labelSmall?.copyWith(
                           fontSize: 11,
@@ -766,17 +766,15 @@ class _PomodoroAnalyticsDashboardState
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Flexible(
-                        child: Text(
+                        child: AppText.captionBold(
                           _showAllCategories
                               ? 'Show less categories'
                               : 'Show all ${sortedCategories.length} categories',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.captionBold.copyWith(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primary,
-                          ),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
                         ),
                       ),
                       const SizedBox(width: 2),
@@ -878,7 +876,7 @@ class _PomodoroAnalyticsDashboardState
                 onPressed: _submitDistraction,
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.moduleVault,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.textWhite,
                   minimumSize: const Size(0, 36),
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -886,13 +884,11 @@ class _PomodoroAnalyticsDashboardState
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                child: Text(
+                child: const AppText.captionBold(
                   'Park',
-                  style: AppTextStyles.captionBold.copyWith(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textWhite,
                 ),
               ),
             ],
@@ -966,12 +962,10 @@ class _PomodoroAnalyticsDashboardState
                                 Icons.add_task_rounded,
                                 size: 13,
                               ),
-                              label: Text(
+                              label: const AppText(
                                 'To Planner',
-                                style: AppTextStyles.captionBold.copyWith(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                ),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           IconButton(
@@ -1017,14 +1011,12 @@ class _PomodoroAnalyticsDashboardState
                         : Icons.keyboard_arrow_down_rounded,
                     size: 16,
                   ),
-                  label: Text(
+                  label: AppText(
                     _showAllDistractions
                         ? 'Show less'
                         : 'Show more ($hiddenCount more)',
-                    style: AppTextStyles.captionBold.copyWith(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -1076,7 +1068,7 @@ class _PomodoroAnalyticsDashboardState
           if (visibleSessions.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Text(
+              child: AppText(
                 'No focus sessions logged yet. Start a sprint or tap "+ Log" above!',
                 style: textTheme.bodySmall?.copyWith(
                   fontSize: 12,
@@ -1144,7 +1136,7 @@ class _PomodoroAnalyticsDashboardState
                                   runSpacing: 2,
                                   crossAxisAlignment: WrapCrossAlignment.center,
                                   children: [
-                                    Text.rich(
+                                    AppText.rich(
                                       TextSpan(
                                         children: [
                                           TextSpan(
@@ -1181,15 +1173,12 @@ class _PomodoroAnalyticsDashboardState
                                         ),
                                         borderRadius: BorderRadius.circular(5),
                                       ),
-                                      child: Text(
+                                      child: AppText.captionBold(
                                         '${session.focusRating}★',
-                                        style: AppTextStyles.captionBold
-                                            .copyWith(
-                                              fontSize: 10,
-                                              height: 1.2,
-                                              fontWeight: FontWeight.w800,
-                                              color: AppColors.moduleTime,
-                                            ),
+                                        fontSize: 10,
+                                        height: 1.2,
+                                        fontWeight: FontWeight.w800,
+                                        color: AppColors.moduleTime,
                                       ),
                                     ),
                                   ],
@@ -1228,7 +1217,7 @@ class _PomodoroAnalyticsDashboardState
                                   color: catColor.withValues(alpha: 0.14),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
-                                child: Text(
+                                child: AppText(
                                   '${session.durationMinutes}m',
                                   style: textTheme.labelSmall?.copyWith(
                                     fontSize: 11.5,
@@ -1286,14 +1275,12 @@ class _PomodoroAnalyticsDashboardState
                         : Icons.keyboard_arrow_down_rounded,
                     size: 16,
                   ),
-                  label: Text(
+                  label: AppText(
                     _showAllSessions
                         ? 'Show less sessions'
                         : 'Show more ($hiddenSessionsCount more sessions)',
-                    style: AppTextStyles.captionBold.copyWith(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -1335,7 +1322,7 @@ class _CardHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
+              AppText(
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -1348,7 +1335,7 @@ class _CardHeader extends StatelessWidget {
               ),
               if (subtitle != null) ...[
                 const SizedBox(height: 2),
-                Text(
+                AppText(
                   subtitle!,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -1393,13 +1380,13 @@ class _HeaderAction extends StatelessWidget {
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         visualDensity: VisualDensity.compact,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        textStyle: AppTextStyles.captionBold.copyWith(
+        textStyle: context.text.captionBold.copyWith(
           fontSize: 12,
           fontWeight: FontWeight.w700,
         ),
       ),
       icon: Icon(icon, size: 15),
-      label: Text(label),
+      label: AppText(label),
     );
   }
 }
@@ -1432,7 +1419,7 @@ class PomodoroManualSessionSheet extends StatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (ctx) => PomodoroManualSessionSheet(
         initialTask: initialTask,
         initialCategory: initialCategory,
@@ -1507,12 +1494,10 @@ class _PomodoroManualSessionSheetState
                   ),
                 ),
                 AppSpacing.gapH16,
-                Text(
+                AppText.titleMedium(
                   'Log Focus Session',
-                  style: AppTextStyles.titleMedium.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: headingColor,
-                  ),
+                  fontWeight: FontWeight.w800,
+                  color: headingColor,
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -1529,7 +1514,7 @@ class _PomodoroManualSessionSheetState
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
+                    AppText(
                       'Duration: $_duration mins',
                       style: textTheme.bodySmall?.copyWith(
                         fontSize: 13,
@@ -1542,7 +1527,7 @@ class _PomodoroManualSessionSheetState
                       children: [15, 25, 45, 60, 90].map((m) {
                         final selected = _duration == m;
                         return ChoiceChip(
-                          label: Text('${m}m'),
+                          label: AppText('${m}m'),
                           selected: selected,
                           showCheckmark: false,
                           visualDensity: VisualDensity.compact,
@@ -1555,12 +1540,7 @@ class _PomodoroManualSessionSheetState
                   ],
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  'Category:',
-                  style: AppTextStyles.captionBold.copyWith(
-                    color: captionColor,
-                  ),
-                ),
+                AppText.captionBold('Category:', color: captionColor),
                 const SizedBox(height: 6),
                 Wrap(
                   spacing: 6,
@@ -1568,7 +1548,7 @@ class _PomodoroManualSessionSheetState
                   children: FocusCategoryCatalog.categories.map((cat) {
                     final selected = _category == cat;
                     return ChoiceChip(
-                      label: Text(cat),
+                      label: AppText(cat),
                       selected: selected,
                       showCheckmark: false,
                       visualDensity: VisualDensity.compact,
@@ -1581,11 +1561,9 @@ class _PomodoroManualSessionSheetState
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
+                    AppText.captionBold(
                       'Flow State Rating:',
-                      style: AppTextStyles.captionBold.copyWith(
-                        color: captionColor,
-                      ),
+                      color: captionColor,
                     ),
                     Row(
                       children: List.generate(5, (i) {
@@ -1650,12 +1628,11 @@ class _PomodoroManualSessionSheetState
                       );
                       Navigator.of(context).pop();
                     },
-                    child: Text(
+                    child: const AppText.labelLarge(
                       'Save Focus Session',
-                      style: AppTextStyles.buttonLabel.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textWhite,
                     ),
                   ),
                 ),

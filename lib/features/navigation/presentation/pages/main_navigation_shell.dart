@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:daily_life_os/config/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -150,7 +151,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                           ? null
                           : [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.04),
+                                color: AppColors.black.withValues(alpha: 0.04),
                                 blurRadius: 14,
                                 offset: const Offset(0, -3),
                               ),

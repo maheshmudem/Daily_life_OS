@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/material.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
@@ -51,7 +52,7 @@ class _IncomeMiniCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          AppText(
             StringConstants.income,
             style: text.labelMedium?.copyWith(
               fontSize: 12,
@@ -63,7 +64,7 @@ class _IncomeMiniCard extends StatelessWidget {
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
-            child: Text(
+            child: AppText(
               CurrencyUtils.format(insights.periodIncome, decimals: 2),
               maxLines: 1,
               style: text.titleMedium?.copyWith(
@@ -145,7 +146,7 @@ class _NetCashflowMiniCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          AppText(
             StringConstants.netCashflow,
             style: text.labelMedium?.copyWith(
               fontSize: 12,
@@ -157,7 +158,7 @@ class _NetCashflowMiniCard extends StatelessWidget {
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
-            child: Text(
+            child: AppText(
               CurrencyUtils.signed(net, isCredit: isPositive, decimals: 2),
               maxLines: 1,
               style: text.titleMedium?.copyWith(

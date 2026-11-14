@@ -1,12 +1,12 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_decorations.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../domain/entities/planner_item_entity.dart';
 import 'planner_week_strip.dart';
@@ -15,7 +15,7 @@ import 'planner_week_strip.dart';
 ///
 /// Built strictly on Daily Life OS design tokens (`context.palette`,
 /// [AppColors.moduleTime] Sunrise Amber, [AppSpacing], [AppRadius], and
-/// [AppTextStyles]) with content-proportional sizing:
+/// `AppText`) with content-proportional sizing:
 /// - Left completion ring + concise status summary + optional 1-tap `Up Next`
 ///   focus pill (collapsed when no pending item exists)
 /// - Surface-muted 4-metric interactive filter strip (`Active`, `Today`,
@@ -127,7 +127,7 @@ class PlannerHeroCard extends StatelessWidget {
                       AppColors.focusPomodoro.withValues(
                         alpha: isDark ? 0.04 : 0.02,
                       ),
-                      Colors.transparent,
+                      AppColors.transparent,
                     ],
                   ),
                 ),
@@ -163,24 +163,22 @@ class PlannerHeroCard extends StatelessWidget {
                           Row(
                             children: [
                               Flexible(
-                                child: Text(
+                                child: AppText.overline(
                                   selectedDateIso == null
                                       ? 'PLANNER HORIZON'
                                       : 'HORIZON · ${targetDateLabel.toUpperCase()}',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: AppTextStyles.overline.copyWith(
-                                    fontSize: 10.5,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.5,
-                                    color: amberAccent,
-                                  ),
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.5,
+                                  color: amberAccent,
                                 ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 2),
-                          Text(
+                          AppText(
                             headline,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -192,7 +190,7 @@ class PlannerHeroCard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 1.5),
-                          Text(
+                          AppText(
                             subtitle,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -243,7 +241,7 @@ class PlannerHeroCard extends StatelessWidget {
                             ),
                             const SizedBox(width: 6),
                             Expanded(
-                              child: Text(
+                              child: AppText(
                                 'Up Next · ${nextPendingItem!.title}',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -257,16 +255,12 @@ class PlannerHeroCard extends StatelessWidget {
                             if ((nextPendingItem!.startTime ?? '')
                                 .isNotEmpty) ...[
                               const SizedBox(width: 6),
-                              Text(
+                              AppText.labelSmall(
                                 nextPendingItem!.startTime!,
-                                style: AppTextStyles.label.copyWith(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: amberAccent,
-                                  fontFeatures: const [
-                                    FontFeature.tabularFigures(),
-                                  ],
-                                ),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: amberAccent,
+                                tabularFigures: true,
                               ),
                             ],
                             const SizedBox(width: 4),
@@ -419,7 +413,7 @@ class _PlannerCompletionRing extends StatelessWidget {
             fit: BoxFit.scaleDown,
             child: Padding(
               padding: const EdgeInsets.all(6),
-              child: Text(
+              child: AppText(
                 '$percentage%',
                 style: textTheme.labelMedium?.copyWith(
                   fontSize: 12,
@@ -513,12 +507,12 @@ class _HeroMetricTile extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4.5),
         decoration: BoxDecoration(
-          color: isActive ? palette.card : Colors.transparent,
+          color: isActive ? palette.card : AppColors.transparent,
           borderRadius: BorderRadius.circular(9),
           border: Border.all(
             color: isActive
                 ? accentColor.withValues(alpha: palette.isDark ? 0.45 : 0.35)
-                : Colors.transparent,
+                : AppColors.transparent,
           ),
         ),
         child: Column(
@@ -526,7 +520,7 @@ class _HeroMetricTile extends StatelessWidget {
           children: [
             FittedBox(
               fit: BoxFit.scaleDown,
-              child: Text(
+              child: AppText(
                 value,
                 maxLines: 1,
                 style: textTheme.titleSmall?.copyWith(
@@ -549,7 +543,7 @@ class _HeroMetricTile extends StatelessWidget {
                 children: [
                   Icon(icon, size: 11.5, color: accentColor),
                   const SizedBox(width: 3.5),
-                  Text(
+                  AppText(
                     label,
                     maxLines: 1,
                     style: textTheme.labelSmall?.copyWith(

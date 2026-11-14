@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/material.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/theme_context.dart';
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../domain/entities/security_config_entity.dart';
 import '../../domain/repositories/security_repository.dart';
 import 'pattern_lock_grid_widget.dart';
@@ -27,7 +29,7 @@ class SecuritySettingsSheet extends StatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (_) => SecuritySettingsSheet(
         securityRepository: securityRepository,
         onLockNow: onLockNow,
@@ -106,7 +108,7 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                   ),
                   AppSpacing.gapW12,
                   Expanded(
-                    child: Text(
+                    child: AppText(
                       'Security & Vault Lock',
                       style: context.text.titleLarge?.copyWith(
                         fontWeight: FontWeight.w700,
@@ -172,7 +174,7 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                         ),
                       ),
                       AppSpacing.gapH12,
-                      Text(
+                      AppText(
                         'Vault Security is Disabled',
                         style: context.text.titleMedium?.copyWith(
                           fontWeight: FontWeight.w700,
@@ -180,7 +182,7 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                         ),
                       ),
                       AppSpacing.gapH8,
-                      Text(
+                      AppText(
                         'Anyone using this phone can view your saved passwords, bank logins, and sensitive documents. Set up a PIN or Pattern to protect your data.',
                         textAlign: TextAlign.center,
                         style: context.text.bodySmall?.copyWith(
@@ -199,13 +201,9 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                               context,
                               securityRepository: widget.securityRepository,
                               onCompleted: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Vault security enabled successfully!',
-                                    ),
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
+                                SnackbarUtils.showMessage(
+                                  context,
+                                  'Vault security enabled successfully!',
                                 );
                               },
                             );
@@ -221,7 +219,7 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                             Icons.shield_rounded,
                             size: AppSpacing.lg - AppSpacing.xxxs,
                           ),
-                          label: Text(
+                          label: AppText(
                             'Set Up Security Now',
                             style: context.text.titleSmall?.copyWith(
                               color: AppColors.textWhite,
@@ -254,7 +252,7 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                       Icons.lock_rounded,
                       size: AppSpacing.lg - AppSpacing.xxxs,
                     ),
-                    label: Text(
+                    label: AppText(
                       'Lock Vault Immediately',
                       style: context.text.titleSmall?.copyWith(
                         color: AppColors.textWhite,
@@ -311,14 +309,14 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                     Icons.tune_rounded,
                     color: AppColors.moduleVault,
                   ),
-                  title: Text(
+                  title: AppText(
                     'Default Unlock Method',
                     style: context.text.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: palette.heading,
                     ),
                   ),
-                  subtitle: Text(
+                  subtitle: AppText(
                     _config!.activeMode == SecurityLockMode.pin
                         ? '4-Digit PIN Code'
                         : '3x3 Pattern Lock',
@@ -334,12 +332,12 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                       if (_config!.hasPin)
                         const DropdownMenuItem(
                           value: SecurityLockMode.pin,
-                          child: Text('PIN Code'),
+                          child: AppText('PIN Code'),
                         ),
                       if (_config!.hasPattern)
                         const DropdownMenuItem(
                           value: SecurityLockMode.pattern,
-                          child: Text('Pattern'),
+                          child: AppText('Pattern'),
                         ),
                     ],
                     onChanged: (mode) async {
@@ -450,14 +448,14 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                     Icons.delete_outline_rounded,
                     color: AppColors.error,
                   ),
-                  title: Text(
+                  title: AppText(
                     'Remove All Security',
                     style: context.text.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppColors.error,
                     ),
                   ),
-                  subtitle: Text(
+                  subtitle: AppText(
                     'Delete all stored PINs and patterns from hardware storage',
                     style: context.text.labelSmall?.copyWith(
                       color: palette.caption,
@@ -472,13 +470,9 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                         await widget.securityRepository.clearAllSecurity();
                         unawaited(_loadConfig());
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'All security locks removed. Vault is now unlocked.',
-                              ),
-                              behavior: SnackBarBehavior.floating,
-                            ),
+                          SnackbarUtils.showMessage(
+                            context,
+                            'All security locks removed. Vault is now unlocked.',
                           );
                         }
                       },
@@ -506,14 +500,14 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
     return SwitchListTile.adaptive(
       contentPadding: EdgeInsets.zero,
       secondary: Icon(icon, color: AppColors.moduleVault),
-      title: Text(
+      title: AppText(
         title,
         style: context.text.titleSmall?.copyWith(
           fontWeight: FontWeight.w600,
           color: palette.heading,
         ),
       ),
-      subtitle: Text(
+      subtitle: AppText(
         subtitle,
         style: context.text.labelSmall?.copyWith(color: palette.caption),
       ),
@@ -537,14 +531,14 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: Icon(icon, color: iconColor ?? color),
-      title: Text(
+      title: AppText(
         title,
         style: context.text.titleSmall?.copyWith(
           fontWeight: FontWeight.w600,
           color: palette.heading,
         ),
       ),
-      subtitle: Text(
+      subtitle: AppText(
         subtitle,
         style: context.text.labelSmall?.copyWith(color: palette.caption),
       ),
@@ -570,12 +564,12 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
       context: context,
       builder: (dlgContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: Text(title),
+          title: AppText(title),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              AppText(
                 subtitle,
                 style: context.text.bodySmall?.copyWith(
                   color: context.palette.body,
@@ -602,7 +596,7 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dlgContext),
-              child: const Text('Cancel'),
+              child: const AppText('Cancel'),
             ),
             FilledButton(
               onPressed: () async {
@@ -617,7 +611,7 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                   );
                 }
               },
-              child: const Text('Verify'),
+              child: const AppText('Verify'),
             ),
           ],
         ),
@@ -634,12 +628,12 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
       context: context,
       builder: (dlgContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: Text(isDecoy ? 'Set Decoy / Panic PIN' : 'Set Master PIN'),
+          title: AppText(isDecoy ? 'Set Decoy / Panic PIN' : 'Set Master PIN'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              AppText(
                 isDecoy
                     ? 'Enter a 4-digit emergency PIN. When entered at the lock screen, it displays an empty decoy vault.'
                     : 'Enter and confirm a 4-digit numeric PIN.',
@@ -684,7 +678,7 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dlgContext),
-              child: const Text('Cancel'),
+              child: const AppText('Cancel'),
             ),
             FilledButton(
               onPressed: () async {
@@ -708,16 +702,12 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
 
                 if (dlgContext.mounted) Navigator.pop(dlgContext);
                 unawaited(_loadConfig());
-                messenger.showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      isDecoy ? 'Decoy PIN updated!' : 'Master PIN saved!',
-                    ),
-                    behavior: SnackBarBehavior.floating,
-                  ),
+                SnackbarUtils.showMessengerMessage(
+                  messenger,
+                  isDecoy ? 'Decoy PIN updated!' : 'Master PIN saved!',
                 );
               },
-              child: const Text('Save PIN'),
+              child: const AppText('Save PIN'),
             ),
           ],
         ),
@@ -732,13 +722,15 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
       context: context,
       builder: (dlgContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: Text(isDecoy ? 'Draw Decoy Pattern' : 'Draw Master Pattern'),
+          title: AppText(
+            isDecoy ? 'Draw Decoy Pattern' : 'Draw Master Pattern',
+          ),
           content: SizedBox(
             width: 280,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
+                AppText(
                   isDecoy
                       ? 'Connect at least 4 dots for your Decoy Pattern.'
                       : 'Connect at least 4 dots to set your new unlock gesture.',
@@ -756,7 +748,7 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                   },
                 ),
                 if (recordedPattern != null)
-                  Text(
+                  AppText(
                     'Recorded ${recordedPattern!.length} dots',
                     style: context.text.labelMedium?.copyWith(
                       fontWeight: FontWeight.w700,
@@ -769,7 +761,7 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dlgContext),
-              child: const Text('Cancel'),
+              child: const AppText('Cancel'),
             ),
             FilledButton(
               onPressed:
@@ -787,19 +779,15 @@ class _SecuritySettingsSheetState extends State<SecuritySettingsSheet> {
                       }
                       if (dlgContext.mounted) Navigator.pop(dlgContext);
                       unawaited(_loadConfig());
-                      messenger.showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            isDecoy
-                                ? 'Decoy Pattern saved!'
-                                : 'Master Pattern saved!',
-                          ),
-                          behavior: SnackBarBehavior.floating,
-                        ),
+                      SnackbarUtils.showMessengerMessage(
+                        messenger,
+                        isDecoy
+                            ? 'Decoy Pattern saved!'
+                            : 'Master Pattern saved!',
                       );
                     }
                   : null,
-              child: const Text('Save Pattern'),
+              child: const AppText('Save Pattern'),
             ),
           ],
         ),

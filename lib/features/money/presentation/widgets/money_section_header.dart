@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/theme_context.dart';
 
@@ -28,7 +29,7 @@ class MoneySectionHeader extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
-            child: Text(
+            child: AppText(
               title,
               softWrap: true,
               style: text.titleMedium?.copyWith(
@@ -43,7 +44,7 @@ class MoneySectionHeader extends StatelessWidget {
           if (actionLabel != null)
             GestureDetector(
               onTap: onAction,
-              child: Text(
+              child: AppText(
                 actionLabel!,
                 style: text.labelMedium?.copyWith(
                   fontSize: 13,

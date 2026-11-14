@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/currency_utils.dart';
@@ -39,7 +39,7 @@ class NoteExpenseConverterSheet extends StatefulWidget {
     return showModalBottomSheet<NoteExpenseConversionResult>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (_) => NoteExpenseConverterSheet(note: note),
     );
   }
@@ -188,7 +188,7 @@ class _NoteExpenseConverterSheetState extends State<NoteExpenseConverterSheet> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          AppText(
                             StringConstants.convertToExpense,
                             style: text.titleMedium?.copyWith(
                               fontSize: 17,
@@ -196,7 +196,7 @@ class _NoteExpenseConverterSheetState extends State<NoteExpenseConverterSheet> {
                               color: palette.heading,
                             ),
                           ),
-                          Text(
+                          AppText(
                             'Log directly to Money Manager',
                             style: text.labelSmall?.copyWith(
                               fontSize: 11.5,
@@ -246,7 +246,7 @@ class _NoteExpenseConverterSheetState extends State<NoteExpenseConverterSheet> {
                   ),
                   child: Row(
                     children: [
-                      Text(
+                      AppText(
                         CurrencyUtils.symbol,
                         style: text.headlineSmall?.copyWith(
                           fontSize: 22,
@@ -294,7 +294,7 @@ class _NoteExpenseConverterSheetState extends State<NoteExpenseConverterSheet> {
                 ),
                 if (_errorText != null) ...[
                   const SizedBox(height: 6),
-                  Text(
+                  AppText(
                     _errorText!,
                     style: text.labelSmall?.copyWith(
                       color: AppColors.error,
@@ -377,7 +377,7 @@ class _NoteExpenseConverterSheetState extends State<NoteExpenseConverterSheet> {
                                   color: active ? cat.color : palette.caption,
                                 ),
                                 const SizedBox(width: 5),
-                                Text(
+                                AppText(
                                   cat.label,
                                   style: text.labelSmall?.copyWith(
                                     fontSize: 11.5,
@@ -429,7 +429,7 @@ class _NoteExpenseConverterSheetState extends State<NoteExpenseConverterSheet> {
                                     : palette.divider,
                               ),
                             ),
-                            child: Text(
+                            child: AppText(
                               mode,
                               style: text.labelMedium?.copyWith(
                                 fontSize: 12.5,
@@ -463,7 +463,7 @@ class _NoteExpenseConverterSheetState extends State<NoteExpenseConverterSheet> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Text(StringConstants.cancel),
+                          child: const AppText(StringConstants.cancel),
                         ),
                       ),
                     ),
@@ -476,17 +476,17 @@ class _NoteExpenseConverterSheetState extends State<NoteExpenseConverterSheet> {
                           onPressed: _submit,
                           style: FilledButton.styleFrom(
                             backgroundColor: AppColors.moduleMoney,
-                            foregroundColor: Colors.white,
+                            foregroundColor: AppColors.textWhite,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                           icon: const Icon(Icons.check_rounded, size: 18),
-                          label: Text(
+                          label: const AppText.labelLarge(
                             StringConstants.save,
-                            style: AppTextStyles.buttonText.copyWith(
-                              color: Colors.white,
-                            ),
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textWhite,
                           ),
                         ),
                       ),

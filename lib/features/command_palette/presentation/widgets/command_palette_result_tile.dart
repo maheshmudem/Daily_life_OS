@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
@@ -68,7 +69,7 @@ class CommandPaletteResultTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  AppText(
                     entry.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -78,7 +79,7 @@ class CommandPaletteResultTile extends StatelessWidget {
                     ),
                   ),
                   AppSpacing.gapH4,
-                  Text(
+                  AppText(
                     entry.subtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -99,7 +100,7 @@ class CommandPaletteResultTile extends StatelessWidget {
                 color: accent.withValues(alpha: 0.12),
                 borderRadius: AppRadius.radiusFull,
               ),
-              child: Text(
+              child: AppText(
                 entry.badgeText,
                 style: context.text.labelSmall?.copyWith(
                   color: accent,

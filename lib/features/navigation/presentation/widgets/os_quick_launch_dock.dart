@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../config/theme/app_colors.dart';
@@ -127,7 +128,7 @@ class _OsDockPill extends StatelessWidget {
                 const SizedBox(height: 6),
                 FittedBox(
                   fit: BoxFit.scaleDown,
-                  child: Text(
+                  child: AppText(
                     label,
                     maxLines: 1,
                     style: context.text.labelMedium?.copyWith(

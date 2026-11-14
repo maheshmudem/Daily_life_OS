@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/theme_context.dart';
@@ -85,7 +86,7 @@ class TransactionTile extends StatelessWidget {
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
-                      child: Text(
+                      child: AppText(
                         transaction.formattedDate,
                         style: text.labelSmall?.copyWith(
                           fontSize: 11.5,
@@ -105,7 +106,7 @@ class TransactionTile extends StatelessWidget {
                       borderRadius: BorderRadius.circular(5),
                       border: Border.all(color: palette.border),
                     ),
-                    child: Text(
+                    child: AppText(
                       transaction.mode,
                       style: text.labelSmall?.copyWith(
                         fontSize: 9.5,
@@ -139,7 +140,7 @@ class TransactionTile extends StatelessWidget {
               FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerRight,
-                child: Text(
+                child: AppText(
                   isTransfer
                       ? CurrencyUtils.format(transaction.amount, decimals: 2)
                       : CurrencyUtils.signed(
@@ -168,7 +169,7 @@ class TransactionTile extends StatelessWidget {
                     color: badgeColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text(
+                  child: AppText(
                     badgeLabel,
                     style: text.labelSmall?.copyWith(
                       fontSize: 10,
@@ -201,7 +202,7 @@ class TransactionTile extends StatelessWidget {
         border: Border.all(color: palette.border),
       ),
       child: Material(
-        color: Colors.transparent,
+        color: AppColors.transparent,
         child: InkWell(
           borderRadius: AppRadius.borderLg,
           onTap: onTap,

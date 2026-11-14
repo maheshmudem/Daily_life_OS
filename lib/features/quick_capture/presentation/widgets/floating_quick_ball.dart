@@ -2,13 +2,13 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../domain/entities/quick_capture_entities.dart';
 
@@ -418,11 +418,6 @@ class _FloatingQuickBallState extends State<FloatingQuickBall>
   }
 
   Widget _buildExpandedCapsuleContent() {
-    final pillTextStyle = AppTextStyles.label.copyWith(
-      color: AppColors.textWhite,
-      fontWeight: FontWeight.w700,
-    );
-
     return Material(
       type: MaterialType.transparency,
       child: Padding(
@@ -472,12 +467,13 @@ class _FloatingQuickBallState extends State<FloatingQuickBall>
                         ),
                       ),
                       AppSpacing.gapW4,
-                      Flexible(
-                        child: Text(
+                      const Flexible(
+                        child: AppText.labelSmall(
                           StringConstants.holdToSpeak,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: pillTextStyle,
+                          color: AppColors.textWhite,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ],
@@ -514,14 +510,13 @@ class _FloatingQuickBallState extends State<FloatingQuickBall>
                         size: AppSpacing.md,
                       ),
                       AppSpacing.gapW4,
-                      Flexible(
-                        child: Text(
+                      const Flexible(
+                        child: AppText.labelSmall(
                           StringConstants.quickType,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: pillTextStyle.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          color: AppColors.textWhite,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
@@ -557,11 +552,10 @@ class _FloatingQuickBallState extends State<FloatingQuickBall>
                         size: AppSpacing.md,
                       ),
                       AppSpacing.gapW4,
-                      Text(
+                      AppText.labelSmall(
                         'Scan',
-                        style: pillTextStyle.copyWith(
-                          color: AppColors.textWhite.withValues(alpha: 0.92),
-                        ),
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textWhite.withValues(alpha: 0.92),
                       ),
                     ],
                   ),

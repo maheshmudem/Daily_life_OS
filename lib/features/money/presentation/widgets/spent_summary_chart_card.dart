@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/material.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/currency_utils.dart';
@@ -57,7 +57,7 @@ class SpentSummaryChartCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    AppText(
                       '${StringConstants.spent} · ${insights.period.label}',
                       style: text.labelMedium?.copyWith(
                         fontSize: 12,
@@ -66,7 +66,7 @@ class SpentSummaryChartCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 3),
-                    Text(
+                    AppText(
                       CurrencyUtils.format(insights.periodExpense, decimals: 2),
                       style: text.headlineSmall?.copyWith(
                         fontSize: 26,
@@ -135,7 +135,7 @@ class SpentSummaryChartCard extends StatelessWidget {
                         }
                         return Padding(
                           padding: const EdgeInsets.only(top: 6),
-                          child: Text(
+                          child: AppText(
                             labels[idx],
                             style: text.labelSmall?.copyWith(
                               fontSize: 11,
@@ -153,7 +153,9 @@ class SpentSummaryChartCard extends StatelessWidget {
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       return BarTooltipItem(
                         CurrencyUtils.format(rod.toY),
-                        AppTextStyles.captionBold.copyWith(color: Colors.white),
+                        context.text.captionBold.copyWith(
+                          color: AppColors.textWhite,
+                        ),
                       );
                     },
                   ),
@@ -226,7 +228,7 @@ class _SpendDeltaChip extends StatelessWidget {
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(6),
       ),
-      child: Text(
+      child: AppText(
         '${isUp ? '↑' : '↓'} ${percent.abs().toStringAsFixed(1)}% $label',
         style: text.labelSmall?.copyWith(
           fontSize: 10.5,
@@ -260,7 +262,7 @@ class _LegendDot extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 5),
-        Text(
+        AppText(
           label,
           style: text.labelSmall?.copyWith(
             fontSize: 11,

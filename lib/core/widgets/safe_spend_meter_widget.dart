@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_radius.dart';
 import '../../config/theme/app_spacing.dart';
@@ -68,7 +69,7 @@ class _SafeSpendMeterWidgetState extends State<SafeSpendMeterWidget> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Flexible(
-                child: Text(
+                child: AppText(
                   'Safe-to-Spend Today',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -93,7 +94,7 @@ class _SafeSpendMeterWidgetState extends State<SafeSpendMeterWidget> {
                       color: tone.withValues(alpha: 0.14),
                       borderRadius: AppRadius.radiusFull,
                     ),
-                    child: Text(
+                    child: AppText(
                       statusLabel,
                       style: text.labelSmall?.copyWith(
                         color: tone,
@@ -121,7 +122,7 @@ class _SafeSpendMeterWidgetState extends State<SafeSpendMeterWidget> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Flexible(
-                child: Text.rich(
+                child: AppText.rich(
                   TextSpan(
                     children: [
                       TextSpan(
@@ -165,7 +166,7 @@ class _SafeSpendMeterWidgetState extends State<SafeSpendMeterWidget> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
+                      AppText(
                         _showDetails ? 'Show less' : 'Show more',
                         style: text.labelSmall?.copyWith(
                           color: palette.body,
@@ -209,7 +210,7 @@ class _SafeSpendMeterWidgetState extends State<SafeSpendMeterWidget> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Flexible(
-                child: Text(
+                child: AppText(
                   'Spent ${CurrencyUtils.format(widget.spentToday)} of '
                   '${CurrencyUtils.format(widget.dailySafeLimit)}',
                   maxLines: 1,
@@ -223,7 +224,7 @@ class _SafeSpendMeterWidgetState extends State<SafeSpendMeterWidget> {
               ),
               const SizedBox(width: 8),
               Flexible(
-                child: Text(
+                child: AppText(
                   '${widget.daysRemaining} days left in month',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -317,7 +318,7 @@ class _BudgetDetailColumn extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
+          AppText(
             label,
             style: text.labelSmall?.copyWith(
               color: palette.caption,
@@ -325,7 +326,7 @@ class _BudgetDetailColumn extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2),
-          Text(
+          AppText(
             value,
             style: text.labelLarge?.copyWith(
               color: valueColor ?? palette.heading,

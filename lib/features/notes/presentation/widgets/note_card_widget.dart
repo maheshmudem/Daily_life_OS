@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
@@ -170,7 +171,7 @@ class NoteCardWidget extends StatelessWidget {
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.only(top: 2),
-                      child: Text(
+                      child: AppText(
                         note.title.trim().isNotEmpty
                             ? note.title.trim()
                             : 'Untitled Note',
@@ -269,7 +270,7 @@ class NoteCardWidget extends StatelessWidget {
                             ),
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: Text(
+                          child: AppText(
                             tag,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -291,7 +292,7 @@ class NoteCardWidget extends StatelessWidget {
                           color: palette.surfaceMuted,
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: Text(
+                        child: AppText(
                           '+$hiddenTagCount',
                           style: textTheme.labelSmall?.copyWith(
                             fontSize: 10,
@@ -311,7 +312,7 @@ class NoteCardWidget extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: Text(
+                    child: AppText(
                       footerMeta,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -390,7 +391,7 @@ class NoteCardWidget extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Text(
+              AppText(
                 '${note.checklistDoneCount}/${note.checklistTotalCount}',
                 style: textTheme.labelSmall?.copyWith(
                   fontSize: 10.5,
@@ -412,7 +413,7 @@ class NoteCardWidget extends StatelessWidget {
           if (remaining > 0)
             Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Text(
+              child: AppText(
                 '+$remaining more ${remaining == 1 ? 'item' : 'items'}',
                 style: textTheme.labelSmall?.copyWith(
                   fontSize: 10.5,
@@ -457,7 +458,7 @@ class NoteCardWidget extends StatelessWidget {
             ),
             const SizedBox(width: 7),
             Expanded(
-              child: Text(
+              child: AppText(
                 label,
                 maxLines: isCompactGrid ? 1 : 2,
                 overflow: TextOverflow.ellipsis,
@@ -605,7 +606,7 @@ class _FooterGhostAction extends StatelessWidget {
         children: [
           Icon(icon, size: 12, color: color),
           const SizedBox(width: 3.5),
-          Text(
+          AppText(
             label,
             style: context.text.labelSmall?.copyWith(
               fontSize: 10.5,

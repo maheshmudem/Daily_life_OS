@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_spacing.dart';
@@ -88,7 +89,7 @@ class _PatternLockGridWidgetState extends State<PatternLockGridWidget> {
         if (widget.errorMessage != null && widget.errorMessage!.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: Text(
+            child: AppText(
               widget.errorMessage!,
               style: context.text.bodySmall?.copyWith(
                 color: AppColors.error,

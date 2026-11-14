@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import '../../../../config/theme/app_colors.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 
@@ -72,7 +72,7 @@ class _HomePageState extends State<HomePage> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            AppText(
               StringConstants.appName,
               style: text.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w800,
@@ -80,7 +80,7 @@ class _HomePageState extends State<HomePage> {
                 color: palette.heading,
               ),
             ),
-            Text(
+            AppText(
               StringConstants.appTagline,
               style: text.bodySmall?.copyWith(
                 color: palette.caption,
@@ -153,14 +153,12 @@ class _HomePageState extends State<HomePage> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {},
         backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: AppColors.textWhite,
         icon: const Icon(Icons.add_rounded),
-        label: Text(
+        label: const AppText.labelLarge(
           'New Action',
-          style: AppTextStyles.labelLarge.copyWith(
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
+          fontWeight: FontWeight.w600,
+          color: AppColors.textWhite,
         ),
       ),
     );
@@ -187,7 +185,7 @@ class _HomePageState extends State<HomePage> {
             ),
             child: const Icon(
               Icons.check_circle_outline_rounded,
-              color: Colors.white,
+              color: AppColors.textWhite,
               size: 22,
             ),
           ),
@@ -196,7 +194,7 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                AppText(
                   'Daily Life OS Architecture Ready',
                   style: text.titleSmall?.copyWith(
                     fontSize: 15,
@@ -205,7 +203,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text(
+                AppText(
                   'Clean Architecture, DI, Theme, and Routing initialized. Ready for PRD features.',
                   style: text.bodySmall?.copyWith(
                     fontSize: 12,
@@ -256,7 +254,7 @@ class _HomePageState extends State<HomePage> {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: AppColors.textWhite.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -265,13 +263,13 @@ class _HomePageState extends State<HomePage> {
                     const Icon(
                       Icons.calendar_today_rounded,
                       size: 12,
-                      color: Colors.white,
+                      color: AppColors.textWhite,
                     ),
                     const SizedBox(width: 6),
-                    Text(
+                    AppText(
                       'Today’s Plan',
                       style: text.labelSmall?.copyWith(
-                        color: Colors.white,
+                        color: AppColors.textWhite,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
@@ -279,10 +277,10 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
               ),
-              Text(
+              AppText(
                 '75% Completed',
                 style: text.labelLarge?.copyWith(
-                  color: Colors.white,
+                  color: AppColors.textWhite,
                   fontWeight: FontWeight.w700,
                   fontSize: 13,
                 ),
@@ -290,20 +288,20 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
           const SizedBox(height: 16),
-          Text(
+          AppText(
             'Keep building momentum.',
             style: text.headlineSmall?.copyWith(
-              color: Colors.white,
+              color: AppColors.textWhite,
               fontSize: 22,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.5,
             ),
           ),
           const SizedBox(height: 4),
-          Text(
+          AppText(
             '3 habits logged • 2 priority tasks finished today',
             style: text.bodySmall?.copyWith(
-              color: Colors.white.withValues(alpha: 0.85),
+              color: AppColors.textWhite.withValues(alpha: 0.85),
               fontSize: 13,
             ),
           ),
@@ -313,7 +311,7 @@ class _HomePageState extends State<HomePage> {
             child: LinearProgressIndicator(
               value: 0.75,
               minHeight: 8,
-              backgroundColor: Colors.white.withValues(alpha: 0.25),
+              backgroundColor: AppColors.textWhite.withValues(alpha: 0.25),
               valueColor: const AlwaysStoppedAnimation<Color>(
                 AppColors.accentLight,
               ),
@@ -334,7 +332,7 @@ class _HomePageState extends State<HomePage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
+        AppText(
           title,
           style: text.titleMedium?.copyWith(
             fontSize: 17,
@@ -350,7 +348,7 @@ class _HomePageState extends State<HomePage> {
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: Text(
+            child: AppText(
               actionText,
               style: text.labelLarge?.copyWith(
                 fontSize: 13,
@@ -410,7 +408,7 @@ class _HomePageState extends State<HomePage> {
                   child: Icon(item['icon'] as IconData, color: color, size: 20),
                 ),
                 const SizedBox(height: 8),
-                Text(
+                AppText(
                   item['title'] as String,
                   style: text.labelMedium?.copyWith(
                     fontSize: 12,
@@ -458,7 +456,7 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    AppText(
                       habit['title'] as String,
                       style: text.titleSmall?.copyWith(
                         fontSize: 14,
@@ -467,7 +465,7 @@ class _HomePageState extends State<HomePage> {
                         decoration: isDone ? TextDecoration.lineThrough : null,
                       ),
                     ),
-                    Text(
+                    AppText(
                       '🔥 ${habit['streak']} days streak',
                       style: text.labelSmall?.copyWith(
                         fontSize: 11,
@@ -532,7 +530,7 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(
+                child: AppText(
                   task['title'] as String,
                   style: text.bodyMedium?.copyWith(
                     fontSize: 14,
@@ -549,7 +547,7 @@ class _HomePageState extends State<HomePage> {
                       : palette.surfaceMuted,
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Text(
+                child: AppText(
                   task['priority'] as String,
                   style: text.labelSmall?.copyWith(
                     fontSize: 11,

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -6,7 +7,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/widgets/bloc_effect_listener.dart';
@@ -31,7 +31,7 @@ class QuickCaptureSheet extends StatefulWidget {
     return showModalBottomSheet<QuickCaptureResult>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (ctx) => QuickCaptureSheet(initialMode: mode),
     );
   }
@@ -344,11 +344,9 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                               runSpacing: AppSpacing.xxs,
                               crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
-                                Text(
+                                AppText.titleLarge(
                                   StringConstants.quickCaptureTitle,
-                                  style: AppTextStyles.titleLarge.copyWith(
-                                    color: headingColor,
-                                  ),
+                                  color: headingColor,
                                 ),
                                 _buildIntentBadge(),
                               ],
@@ -419,12 +417,10 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                       AppSpacing.gapH12,
 
                       // Target Module Selector Pills
-                      Text(
+                      AppText.overline(
                         StringConstants.quickCaptureModuleLabel,
-                        style: AppTextStyles.overline.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: captionColor,
-                        ),
+                        fontWeight: FontWeight.w800,
+                        color: captionColor,
                       ),
                       AppSpacing.gapH8,
                       SingleChildScrollView(
@@ -445,8 +441,8 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                                   size: AppSpacing.sm + AppSpacing.xxxs,
                                   color: selected ? AppColors.textWhite : color,
                                 ),
-                                label: Text(_intentLabel(intent)),
-                                labelStyle: AppTextStyles.captionBold.copyWith(
+                                label: AppText(_intentLabel(intent)),
+                                labelStyle: context.text.captionBold.copyWith(
                                   color: selected
                                       ? AppColors.textWhite
                                       : headingColor,
@@ -546,12 +542,10 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                                     ),
                                     AppSpacing.gapW8,
                                     Expanded(
-                                      child: Text(
+                                      child: AppText.bodySmall(
                                         failure.message,
-                                        style: AppTextStyles.bodySmall.copyWith(
-                                          color: AppColors.error,
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                        color: AppColors.error,
+                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                   ],
@@ -588,12 +582,10 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                                           ),
                                         )
                                       : const Icon(Icons.bolt_rounded),
-                                  label: Text(
+                                  label: AppText.titleSmall(
                                     'Log to ${_intentLabel(_detectedIntent)} (Instant)',
-                                    style: AppTextStyles.titleSmall.copyWith(
-                                      color: AppColors.textWhite,
-                                      fontWeight: FontWeight.w700,
-                                    ),
+                                    color: AppColors.textWhite,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
                               ),
@@ -629,10 +621,10 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
         autofocus: _mode == QuickCaptureMode.text,
         maxLines: 2,
         minLines: 1,
-        style: AppTextStyles.bodyMedium.copyWith(color: headingColor),
+        style: context.text.bodyMedium?.copyWith(color: headingColor),
         decoration: InputDecoration(
           hintText: StringConstants.quickCaptureHint,
-          hintStyle: AppTextStyles.bodySmall.copyWith(color: captionColor),
+          hintStyle: context.text.bodySmall?.copyWith(color: captionColor),
           prefixIcon: Icon(
             _mode == QuickCaptureMode.voice
                 ? Icons.record_voice_over_rounded
@@ -732,14 +724,12 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    AppText.bodySmall(
                       _isRecording
                           ? 'Listening... Tap a voice phrase or dictate below'
                           : 'Voice capture paused — Tap mic to resume',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.voiceWaveform,
-                      ),
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.voiceWaveform,
                     ),
                     AppSpacing.gapH4,
                     Row(
@@ -781,10 +771,7 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                 side: BorderSide(
                   color: AppColors.voiceWaveform.withValues(alpha: 0.3),
                 ),
-                label: Text(
-                  phrase.label,
-                  style: AppTextStyles.label.copyWith(color: headingColor),
-                ),
+                label: AppText.labelSmall(phrase.label, color: headingColor),
                 onPressed: () {
                   HapticFeedback.selectionClick();
                   setState(() {
@@ -838,16 +825,14 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const AppText.titleSmall(
                       'Camera OCR Text & Bill Grabber',
-                      style: AppTextStyles.titleSmall.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.moduleMoney,
-                      ),
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.moduleMoney,
                     ),
-                    Text(
+                    AppText.labelSmall(
                       'Select a receipt/document scan preset or edit OCR text below',
-                      style: AppTextStyles.label.copyWith(color: captionColor),
+                      color: captionColor,
                     ),
                   ],
                 ),
@@ -900,23 +885,19 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              AppText.captionBold(
                                 tpl.title,
-                                style: AppTextStyles.captionBold.copyWith(
-                                  color: isSelected
-                                      ? AppColors.textWhite
-                                      : headingColor,
-                                ),
+                                color: isSelected
+                                    ? AppColors.textWhite
+                                    : headingColor,
                               ),
-                              Text(
+                              AppText.labelSmall(
                                 tpl.subtitle,
-                                style: AppTextStyles.label.copyWith(
-                                  color: isSelected
-                                      ? AppColors.textWhite.withValues(
-                                          alpha: 0.85,
-                                        )
-                                      : captionColor,
-                                ),
+                                color: isSelected
+                                    ? AppColors.textWhite.withValues(
+                                        alpha: 0.85,
+                                      )
+                                    : captionColor,
                               ),
                             ],
                           ),
@@ -957,7 +938,7 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
             Row(
               children: [
                 ChoiceChip(
-                  label: const Text('Expense'),
+                  label: const AppText('Expense'),
                   selected: !_isIncome,
                   showCheckmark: false,
                   visualDensity: VisualDensity.compact,
@@ -966,7 +947,7 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                 ),
                 const SizedBox(width: AppSpacing.xxs + 2),
                 ChoiceChip(
-                  label: const Text('Income'),
+                  label: const AppText('Income'),
                   selected: _isIncome,
                   showCheckmark: false,
                   visualDensity: VisualDensity.compact,
@@ -980,7 +961,7 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                     child: TextField(
                       controller: _amountController,
                       keyboardType: TextInputType.number,
-                      style: AppTextStyles.bodySmall.copyWith(
+                      style: context.text.bodySmall?.copyWith(
                         fontWeight: FontWeight.w800,
                         color: headingColor,
                       ),
@@ -988,7 +969,7 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                         isDense: true,
                         prefixText: '₹ ',
                         labelText: 'Amount',
-                        labelStyle: AppTextStyles.label.copyWith(
+                        labelStyle: context.text.labelSmall?.copyWith(
                           color: captionColor,
                         ),
                         contentPadding: const EdgeInsets.symmetric(
@@ -1015,12 +996,12 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                         right: AppSpacing.xxs + AppSpacing.xxxs,
                       ),
                       child: ChoiceChip(
-                        label: Text(mode),
+                        label: AppText(mode),
                         selected: _paymentMode == mode,
                         showCheckmark: false,
                         visualDensity: VisualDensity.compact,
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        labelStyle: AppTextStyles.label,
+                        labelStyle: context.text.labelSmall,
                         onSelected: (_) => setState(() => _paymentMode = mode),
                       ),
                     ),
@@ -1044,12 +1025,12 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                         right: AppSpacing.xxs + AppSpacing.xxxs,
                       ),
                       child: ChoiceChip(
-                        label: Text(cat[0].toUpperCase() + cat.substring(1)),
+                        label: AppText(cat[0].toUpperCase() + cat.substring(1)),
                         selected: _expenseCategory == cat,
                         showCheckmark: false,
                         visualDensity: VisualDensity.compact,
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        labelStyle: AppTextStyles.label,
+                        labelStyle: context.text.labelSmall,
                         onSelected: (_) =>
                             setState(() => _expenseCategory = cat),
                       ),
@@ -1064,22 +1045,22 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
           child: Row(
             children: [
               ChoiceChip(
-                label: const Text('Today'),
+                label: const AppText('Today'),
                 selected: !_isTomorrow,
                 showCheckmark: false,
                 visualDensity: VisualDensity.compact,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                labelStyle: AppTextStyles.label,
+                labelStyle: context.text.labelSmall,
                 onSelected: (_) => setState(() => _isTomorrow = false),
               ),
               const SizedBox(width: AppSpacing.xxs + 2),
               ChoiceChip(
-                label: const Text('Tomorrow'),
+                label: const AppText('Tomorrow'),
                 selected: _isTomorrow,
                 showCheckmark: false,
                 visualDensity: VisualDensity.compact,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                labelStyle: AppTextStyles.label,
+                labelStyle: context.text.labelSmall,
                 onSelected: (_) => setState(() => _isTomorrow = true),
               ),
               AppSpacing.gapW8,
@@ -1089,12 +1070,12 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                     right: AppSpacing.xxs + AppSpacing.xxxs,
                   ),
                   child: ChoiceChip(
-                    label: Text(t),
+                    label: AppText(t),
                     selected: _reminderTime == t,
                     showCheckmark: false,
                     visualDensity: VisualDensity.compact,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    labelStyle: AppTextStyles.label,
+                    labelStyle: context.text.labelSmall,
                     onSelected: (_) => setState(() => _reminderTime = t),
                   ),
                 ),
@@ -1104,12 +1085,12 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                     right: AppSpacing.xxs + AppSpacing.xxxs,
                   ),
                   child: ChoiceChip(
-                    label: Text(p.toUpperCase()),
+                    label: AppText(p.toUpperCase()),
                     selected: _reminderPriority == p,
                     showCheckmark: false,
                     visualDensity: VisualDensity.compact,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    labelStyle: AppTextStyles.label,
+                    labelStyle: context.text.labelSmall,
                     onSelected: (_) => setState(() => _reminderPriority = p),
                   ),
                 ),
@@ -1120,12 +1101,10 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              Text(
+              AppText.labelSmall(
                 'Habit Category:',
-                style: AppTextStyles.label.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: captionColor,
-                ),
+                fontWeight: FontWeight.w700,
+                color: captionColor,
               ),
               AppSpacing.gapW8,
               for (final cat in [
@@ -1139,12 +1118,12 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                     right: AppSpacing.xxs + AppSpacing.xxxs,
                   ),
                   child: ChoiceChip(
-                    label: Text(cat),
+                    label: AppText(cat),
                     selected: _habitCategory == cat,
                     showCheckmark: false,
                     visualDensity: VisualDensity.compact,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    labelStyle: AppTextStyles.label,
+                    labelStyle: context.text.labelSmall,
                     onSelected: (_) => setState(() => _habitCategory = cat),
                   ),
                 ),
@@ -1156,12 +1135,12 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
           child: Row(
             children: [
               FilterChip(
-                label: const Text('Pin Note'),
+                label: const AppText('Pin Note'),
                 selected: _pinNote,
                 showCheckmark: false,
                 visualDensity: VisualDensity.compact,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                labelStyle: AppTextStyles.label,
+                labelStyle: context.text.labelSmall,
                 onSelected: (v) => setState(() => _pinNote = v),
               ),
               AppSpacing.gapW8,
@@ -1177,12 +1156,12 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
                     right: AppSpacing.xxs + AppSpacing.xxxs,
                   ),
                   child: ChoiceChip(
-                    label: Text(tag),
+                    label: AppText(tag),
                     selected: _noteTag == tag,
                     showCheckmark: false,
                     visualDensity: VisualDensity.compact,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    labelStyle: AppTextStyles.label,
+                    labelStyle: context.text.labelSmall,
                     onSelected: (_) => setState(() => _noteTag = tag),
                   ),
                 ),
@@ -1204,12 +1183,10 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
         color: color.withValues(alpha: 0.14),
         borderRadius: AppRadius.radiusSm,
       ),
-      child: Text(
+      child: AppText.labelSmall(
         _intentLabel(_detectedIntent),
-        style: AppTextStyles.label.copyWith(
-          fontWeight: FontWeight.w700,
-          color: color,
-        ),
+        fontWeight: FontWeight.w700,
+        color: color,
       ),
     );
   }
@@ -1253,12 +1230,10 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
               color: isSelected ? AppColors.textWhite : palette.icon,
             ),
             AppSpacing.gapW4,
-            Text(
+            AppText.labelSmall(
               label,
-              style: AppTextStyles.label.copyWith(
-                fontWeight: FontWeight.w700,
-                color: isSelected ? AppColors.textWhite : palette.body,
-              ),
+              fontWeight: FontWeight.w700,
+              color: isSelected ? AppColors.textWhite : palette.body,
             ),
           ],
         ),
@@ -1283,10 +1258,7 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
           borderRadius: AppRadius.radiusFull,
           border: Border.all(color: palette.divider),
         ),
-        child: Text(
-          label,
-          style: AppTextStyles.captionBold.copyWith(color: palette.body),
-        ),
+        child: AppText.captionBold(label, color: palette.body),
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
@@ -115,7 +116,7 @@ class PlannerWeekStrip extends StatelessWidget {
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
-                child: Text(
+                child: AppText(
                   monthHeader,
                   maxLines: 1,
                   style: textTheme.titleSmall?.copyWith(
@@ -155,7 +156,7 @@ class PlannerWeekStrip extends StatelessWidget {
                         : palette.divider,
                   ),
                 ),
-                child: Text(
+                child: AppText(
                   'All Dates',
                   style: textTheme.labelSmall?.copyWith(
                     fontSize: 11,
@@ -275,7 +276,7 @@ class _DayCell extends StatelessWidget {
     if (!hasAny) {
       dotColor = null;
     } else if (isSelected) {
-      dotColor = Colors.white;
+      dotColor = AppColors.textWhite;
     } else if (hasOverdue) {
       dotColor = AppColors.error;
     } else if (hasPending) {
@@ -298,14 +299,14 @@ class _DayCell extends StatelessWidget {
                     ? AppColors.moduleTime.withValues(
                         alpha: palette.isDark ? 0.16 : 0.10,
                       )
-                    : Colors.transparent),
+                    : AppColors.transparent),
           borderRadius: AppRadius.radiusSm,
           border: Border.all(
             color: isSelected
                 ? AppColors.moduleTime
                 : (isToday
                       ? AppColors.moduleTime.withValues(alpha: 0.38)
-                      : Colors.transparent),
+                      : AppColors.transparent),
           ),
         ),
         child: Column(
@@ -313,14 +314,14 @@ class _DayCell extends StatelessWidget {
           children: [
             FittedBox(
               fit: BoxFit.scaleDown,
-              child: Text(
+              child: AppText(
                 _weekdayLabels[day.weekday - 1],
                 maxLines: 1,
                 style: textTheme.labelSmall?.copyWith(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w600,
                   color: isSelected
-                      ? Colors.white.withValues(alpha: 0.92)
+                      ? AppColors.textWhite.withValues(alpha: 0.92)
                       : (isToday ? todayTextColor : palette.caption),
                 ),
               ),
@@ -328,7 +329,7 @@ class _DayCell extends StatelessWidget {
             const SizedBox(height: 2),
             FittedBox(
               fit: BoxFit.scaleDown,
-              child: Text(
+              child: AppText(
                 '${day.day}',
                 maxLines: 1,
                 style: textTheme.titleSmall?.copyWith(
@@ -336,7 +337,7 @@ class _DayCell extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                   fontFeatures: const [FontFeature.tabularFigures()],
                   color: isSelected
-                      ? Colors.white
+                      ? AppColors.textWhite
                       : (isToday ? todayTextColor : palette.heading),
                 ),
               ),
@@ -346,7 +347,7 @@ class _DayCell extends StatelessWidget {
               width: 4.5,
               height: 4.5,
               decoration: BoxDecoration(
-                color: dotColor ?? Colors.transparent,
+                color: dotColor ?? AppColors.transparent,
                 shape: BoxShape.circle,
               ),
             ),

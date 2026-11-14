@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../domain/entities/planner_item_entity.dart';
 
@@ -203,7 +203,7 @@ class PlannerMatrixView extends StatelessWidget {
                       Row(
                         children: [
                           Flexible(
-                            child: Text(
+                            child: AppText(
                               cfg.title,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -225,7 +225,7 @@ class PlannerMatrixView extends StatelessWidget {
                               color: cfg.accent.withValues(alpha: 0.14),
                               borderRadius: AppRadius.radiusFull,
                             ),
-                            child: Text(
+                            child: AppText(
                               '${cfg.items.length}',
                               style: textTheme.labelSmall?.copyWith(
                                 fontSize: 10.5,
@@ -239,7 +239,7 @@ class PlannerMatrixView extends StatelessWidget {
                           ),
                         ],
                       ),
-                      Text(
+                      AppText(
                         cfg.subtitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -289,7 +289,7 @@ class PlannerMatrixView extends StatelessWidget {
                 horizontal: AppSpacing.sm,
                 vertical: 10,
               ),
-              child: Text(
+              child: AppText(
                 'No ${cfg.title.toLowerCase()} tasks — tap + to add',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -386,7 +386,7 @@ class _MatrixTaskTile extends StatelessWidget {
                 margin: const EdgeInsets.only(top: 1.5),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: item.isDone ? accent : Colors.transparent,
+                  color: item.isDone ? accent : AppColors.transparent,
                   border: Border.all(
                     color: item.isDone
                         ? accent
@@ -398,7 +398,7 @@ class _MatrixTaskTile extends StatelessWidget {
                     ? const Icon(
                         Icons.check_rounded,
                         size: 12,
-                        color: Colors.white,
+                        color: AppColors.textWhite,
                       )
                     : null,
               ),
@@ -408,7 +408,7 @@ class _MatrixTaskTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  AppText(
                     item.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -428,7 +428,7 @@ class _MatrixTaskTile extends StatelessWidget {
                     runSpacing: 2,
                     children: [
                       if ((item.startTime ?? '').isNotEmpty)
-                        Text(
+                        AppText(
                           item.startTime!,
                           style: textTheme.labelSmall?.copyWith(
                             fontSize: 10.5,
@@ -438,7 +438,7 @@ class _MatrixTaskTile extends StatelessWidget {
                                 : palette.caption,
                           ),
                         ),
-                      Text(
+                      AppText(
                         item.category,
                         style: textTheme.labelSmall?.copyWith(
                           fontSize: 10.5,
@@ -447,13 +447,11 @@ class _MatrixTaskTile extends StatelessWidget {
                         ),
                       ),
                       if (item.checklist.isNotEmpty)
-                        Text(
+                        AppText.captionBold(
                           '✓ ${item.checklistDoneCount}/${item.checklist.length}',
-                          style: AppTextStyles.captionBold.copyWith(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.moduleTimeDark,
-                          ),
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.moduleTimeDark,
                         ),
                     ],
                   ),

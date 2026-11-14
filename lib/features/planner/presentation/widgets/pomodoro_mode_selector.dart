@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_spacing.dart';
 import '../../../../config/theme/theme_context.dart';
@@ -100,7 +101,7 @@ class PomodoroModeSelector extends StatelessWidget {
           alignment: Alignment.center,
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
           decoration: BoxDecoration(
-            color: isSelected ? palette.card : Colors.transparent,
+            color: isSelected ? palette.card : AppColors.transparent,
             borderRadius: BorderRadius.circular(8),
             border: isSelected
                 ? Border.all(
@@ -127,7 +128,7 @@ class PomodoroModeSelector extends StatelessWidget {
               children: [
                 Icon(icon, size: 13.5, color: color),
                 const SizedBox(width: 3.5),
-                Text(
+                AppText(
                   label,
                   style: textTheme.labelSmall?.copyWith(
                     fontSize: 11.5,

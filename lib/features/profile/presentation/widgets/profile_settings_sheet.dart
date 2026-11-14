@@ -1,11 +1,11 @@
 import 'dart:async';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/currency_utils.dart';
@@ -26,7 +26,7 @@ class ProfileSettingsSheet extends StatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (_) => BlocProvider<ProfileBloc>.value(
         value: sl<ProfileBloc>(),
         child: const ProfileSettingsSheet(),
@@ -197,18 +197,14 @@ class _ProfileSettingsSheetState extends State<ProfileSettingsSheet> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        AppText.titleLarge(
                           StringConstants.profileTitle,
-                          style: AppTextStyles.titleLarge.copyWith(
-                            color: palette.heading,
-                          ),
+                          color: palette.heading,
                         ),
                         const SizedBox(height: 2),
-                        Text(
+                        AppText.caption(
                           StringConstants.profileSubtitle,
-                          style: AppTextStyles.caption.copyWith(
-                            color: palette.caption,
-                          ),
+                          color: palette.caption,
                         ),
                       ],
                     ),
@@ -367,7 +363,7 @@ class _ProfileSettingsSheetState extends State<ProfileSettingsSheet> {
                                                 ),
                                               ),
                                               const SizedBox(width: 6),
-                                              Text(
+                                              AppText(
                                                 preset.label,
                                                 style: text.labelSmall
                                                     ?.copyWith(
@@ -394,7 +390,7 @@ class _ProfileSettingsSheetState extends State<ProfileSettingsSheet> {
                             AppSpacing.gapH16,
 
                             // Display Name Input
-                            Text(
+                            AppText(
                               StringConstants.displayNameLabel,
                               style: text.labelSmall?.copyWith(
                                 fontSize: 11.5,
@@ -437,7 +433,7 @@ class _ProfileSettingsSheetState extends State<ProfileSettingsSheet> {
                             AppSpacing.gapH12,
 
                             // Tagline Input
-                            Text(
+                            AppText(
                               StringConstants.taglineLabel,
                               style: text.labelSmall?.copyWith(
                                 fontSize: 11.5,
@@ -487,7 +483,7 @@ class _ProfileSettingsSheetState extends State<ProfileSettingsSheet> {
                                     _saveIdentity(context, profile),
                                 style: FilledButton.styleFrom(
                                   backgroundColor: AppColors.primary,
-                                  foregroundColor: Colors.white,
+                                  foregroundColor: AppColors.textWhite,
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 11,
                                   ),
@@ -496,7 +492,7 @@ class _ProfileSettingsSheetState extends State<ProfileSettingsSheet> {
                                   ),
                                 ),
                                 icon: const Icon(Icons.check_rounded, size: 18),
-                                label: const Text(StringConstants.save),
+                                label: const AppText(StringConstants.save),
                               ),
                             ),
                           ],
@@ -599,7 +595,7 @@ class _ProfileSettingsSheetState extends State<ProfileSettingsSheet> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // Theme Mode Selector
-                            Text(
+                            AppText(
                               StringConstants.appearanceModeTitle,
                               style: text.labelSmall?.copyWith(
                                 fontSize: 11.5,
@@ -641,7 +637,7 @@ class _ProfileSettingsSheetState extends State<ProfileSettingsSheet> {
                             AppSpacing.gapH16,
 
                             // Primary Currency Selector
-                            Text(
+                            AppText(
                               StringConstants.activeCurrencyTitle,
                               style: text.labelSmall?.copyWith(
                                 fontSize: 11.5,
@@ -679,13 +675,13 @@ class _ProfileSettingsSheetState extends State<ProfileSettingsSheet> {
                                             : palette.border,
                                       ),
                                     ),
-                                    child: Text(
+                                    child: AppText(
                                       '${curr.symbol.trim()} ${curr.code}',
                                       style: text.labelSmall?.copyWith(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w700,
                                         color: active
-                                            ? Colors.white
+                                            ? AppColors.textWhite
                                             : palette.heading,
                                       ),
                                     ),
@@ -696,7 +692,7 @@ class _ProfileSettingsSheetState extends State<ProfileSettingsSheet> {
                             AppSpacing.gapH16,
 
                             // Daily Deep-Work Focus Target
-                            Text(
+                            AppText(
                               StringConstants.dailyFocusGoalTitle,
                               style: text.labelSmall?.copyWith(
                                 fontSize: 11.5,
@@ -732,13 +728,13 @@ class _ProfileSettingsSheetState extends State<ProfileSettingsSheet> {
                                                 : palette.border,
                                           ),
                                         ),
-                                        child: Text(
+                                        child: AppText(
                                           '${mins}m',
                                           style: text.labelSmall?.copyWith(
                                             fontSize: 11.5,
                                             fontWeight: FontWeight.w700,
                                             color: active
-                                                ? Colors.white
+                                                ? AppColors.textWhite
                                                 : palette.heading,
                                           ),
                                         ),
@@ -795,7 +791,7 @@ class _ProfileSettingsSheetState extends State<ProfileSettingsSheet> {
                             onPressed: () =>
                                 _copyWorkspaceBackupSummary(context, profile),
                             icon: const Icon(Icons.copy_all_rounded, size: 17),
-                            label: const Text(
+                            label: const AppText(
                               StringConstants.copyWorkspaceBackupLabel,
                             ),
                           ),
@@ -811,7 +807,9 @@ class _ProfileSettingsSheetState extends State<ProfileSettingsSheet> {
                             const ResetProfilePreferences(),
                           ),
                           icon: const Icon(Icons.restore_rounded, size: 16),
-                          label: const Text(StringConstants.resetDefaultsLabel),
+                          label: const AppText(
+                            StringConstants.resetDefaultsLabel,
+                          ),
                         ),
                       ),
                     ],
@@ -871,7 +869,7 @@ class _SectionCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(
+                child: AppText(
                   title,
                   style: text.titleSmall?.copyWith(
                     fontSize: 13,
@@ -931,7 +929,7 @@ class _PreferenceToggleTile extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              AppText(
                 title,
                 style: text.titleSmall?.copyWith(
                   fontSize: 13,
@@ -940,7 +938,7 @@ class _PreferenceToggleTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 2),
-              Text(
+              AppText(
                 subtitle,
                 style: text.labelSmall?.copyWith(
                   fontSize: 11,
@@ -996,7 +994,7 @@ class _ActionChipButton extends StatelessWidget {
           children: [
             Icon(icon, size: 14, color: color),
             const SizedBox(width: 5),
-            Text(
+            AppText(
               label,
               style: text.labelSmall?.copyWith(
                 fontSize: 11,
@@ -1048,15 +1046,15 @@ class _ThemeModeOption extends StatelessWidget {
               Icon(
                 icon,
                 size: 14,
-                color: selected ? Colors.white : palette.heading,
+                color: selected ? AppColors.textWhite : palette.heading,
               ),
               const SizedBox(width: 5),
-              Text(
+              AppText(
                 label,
                 style: text.labelSmall?.copyWith(
                   fontSize: 11.5,
                   fontWeight: FontWeight.w700,
-                  color: selected ? Colors.white : palette.heading,
+                  color: selected ? AppColors.textWhite : palette.heading,
                 ),
               ),
             ],

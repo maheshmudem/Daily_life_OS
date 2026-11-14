@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -10,7 +11,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/notifications/notification_service.dart';
@@ -490,12 +490,10 @@ class _PlannerViewState extends State<_PlannerView>
         _secondsRemaining,
       );
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Added +${minutesToAdd}m to current timer'),
-        duration: const Duration(seconds: 1),
-        behavior: SnackBarBehavior.floating,
-      ),
+    SnackbarUtils.showMessage(
+      context,
+      'Added +${minutesToAdd}m to current timer',
+      duration: const Duration(seconds: 1),
     );
   }
 
@@ -597,16 +595,12 @@ class _PlannerViewState extends State<_PlannerView>
     }
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            _focusModeIndex == 0
-                ? 'Break complete! Ready to start next sprint?'
-                : 'Focus sprint finished! Take a well-earned break.',
-          ),
-          backgroundColor: AppColors.moduleTime,
-          behavior: SnackBarBehavior.floating,
-        ),
+      SnackbarUtils.showMessage(
+        context,
+        _focusModeIndex == 0
+            ? 'Break complete! Ready to start next sprint?'
+            : 'Focus sprint finished! Take a well-earned break.',
+        backgroundColor: AppColors.moduleTime,
       );
     }
   }
@@ -681,7 +675,7 @@ class _PlannerViewState extends State<_PlannerView>
               color: AppColors.moduleTime.withValues(alpha: 0.12),
               borderRadius: AppRadius.radiusFull,
             ),
-            child: Text(
+            child: AppText(
               '${state.completedCount}/${state.items.length} done',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -717,7 +711,7 @@ class _PlannerViewState extends State<_PlannerView>
               child: TabBar(
                 controller: _tabController,
                 indicatorSize: TabBarIndicatorSize.tab,
-                dividerColor: Colors.transparent,
+                dividerColor: AppColors.transparent,
                 splashBorderRadius: BorderRadius.circular(9),
                 indicator: BoxDecoration(
                   color: palette.card,
@@ -726,7 +720,7 @@ class _PlannerViewState extends State<_PlannerView>
                       ? null
                       : [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.06),
+                            color: AppColors.black.withValues(alpha: 0.06),
                             blurRadius: 4,
                             offset: const Offset(0, 1),
                           ),
@@ -745,21 +739,21 @@ class _PlannerViewState extends State<_PlannerView>
                     height: 32,
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
-                      child: Text('Reminders'),
+                      child: AppText('Reminders'),
                     ),
                   ),
                   Tab(
                     height: 32,
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
-                      child: Text('Pomodoro Focus'),
+                      child: AppText('Pomodoro Focus'),
                     ),
                   ),
                   Tab(
                     height: 32,
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
-                      child: Text('Countdowns'),
+                      child: AppText('Countdowns'),
                     ),
                   ),
                 ],
@@ -1476,12 +1470,12 @@ class _PlannerViewState extends State<_PlannerView>
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(horizontal: 6),
             decoration: BoxDecoration(
-              color: isSelected ? palette.card : Colors.transparent,
+              color: isSelected ? palette.card : AppColors.transparent,
               borderRadius: BorderRadius.circular(7),
               boxShadow: isSelected && !palette.isDark
                   ? [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
+                        color: AppColors.black.withValues(alpha: 0.05),
                         blurRadius: 4,
                         offset: const Offset(0, 1),
                       ),
@@ -1499,7 +1493,7 @@ class _PlannerViewState extends State<_PlannerView>
                     color: isSelected ? AppColors.moduleTime : palette.caption,
                   ),
                   const SizedBox(width: 4.5),
-                  Text(
+                  AppText(
                     label,
                     style: context.text.labelMedium?.copyWith(
                       fontSize: 12,
@@ -1565,7 +1559,7 @@ class _PlannerViewState extends State<_PlannerView>
             children: [
               Icon(tmpl['icon'] as IconData, size: 14, color: catColor),
               const SizedBox(width: 5),
-              Text(
+              AppText(
                 tmpl['title'] as String,
                 style: context.text.labelMedium?.copyWith(
                   fontSize: 12,
@@ -1911,7 +1905,7 @@ class _PlannerViewState extends State<_PlannerView>
 
   Widget _buildActiveFilterChip() {
     return InputChip(
-      label: Text(
+      label: AppText(
         _selectedReminderCategoryFilter != 'All'
             ? _selectedReminderCategoryFilter
             : (_typeFilter == 'habits'
@@ -1920,7 +1914,7 @@ class _PlannerViewState extends State<_PlannerView>
                         ? 'Overdue only'
                         : 'One-off only')),
       ),
-      labelStyle: AppTextStyles.labelMedium.copyWith(
+      labelStyle: context.text.labelMedium?.copyWith(
         fontSize: 11.5,
         fontWeight: FontWeight.w600,
         color: AppColors.moduleTimeDark,
@@ -1957,12 +1951,12 @@ class _PlannerViewState extends State<_PlannerView>
           duration: const Duration(milliseconds: 160),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: isSelected ? palette.card : Colors.transparent,
+            color: isSelected ? palette.card : AppColors.transparent,
             borderRadius: BorderRadius.circular(7),
             boxShadow: isSelected && !palette.isDark
                 ? [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
+                      color: AppColors.black.withValues(alpha: 0.05),
                       blurRadius: 4,
                       offset: const Offset(0, 1),
                     ),
@@ -1971,7 +1965,7 @@ class _PlannerViewState extends State<_PlannerView>
           ),
           child: FittedBox(
             fit: BoxFit.scaleDown,
-            child: Text.rich(
+            child: AppText.rich(
               TextSpan(
                 children: [
                   TextSpan(text: title),
@@ -2021,7 +2015,7 @@ class _PlannerViewState extends State<_PlannerView>
               child: Row(
                 children: [
                   Flexible(
-                    child: Text(
+                    child: AppText(
                       title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -2043,7 +2037,7 @@ class _PlannerViewState extends State<_PlannerView>
                       color: color.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: Text(
+                    child: AppText(
                       '$count',
                       style: context.text.labelSmall?.copyWith(
                         fontSize: 11.5,
@@ -2084,12 +2078,12 @@ class _PlannerViewState extends State<_PlannerView>
         padding: const EdgeInsets.only(left: 8),
         minimumSize: const Size(0, 24),
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        textStyle: AppTextStyles.labelMedium.copyWith(
+        textStyle: context.text.labelMedium?.copyWith(
           fontSize: 12.5,
           fontWeight: FontWeight.w600,
         ),
       ),
-      child: Text(label),
+      child: AppText(label),
     );
   }
 
@@ -2273,14 +2267,10 @@ class _PlannerViewState extends State<_PlannerView>
       _selectedCategory = template['category'] as String;
       _selectedTime = template['time'] as TimeOfDay;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Template "${template['title']}" applied! Tap "Set Reminder" or edit details.',
-        ),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
+    SnackbarUtils.showMessage(
+      context,
+      'Template "${template['title']}" applied! Tap "Set Reminder" or edit details.',
+      duration: const Duration(seconds: 2),
     );
   }
 
@@ -2294,12 +2284,7 @@ class _PlannerViewState extends State<_PlannerView>
     );
     if (confirmed == true && context.mounted) {
       context.read<PlannerBloc>().add(const ClearCompletedPlannerItems());
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Completed reminders cleared.'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      SnackbarUtils.showMessage(context, 'Completed reminders cleared.');
     }
   }
 
@@ -2334,23 +2319,16 @@ class _PlannerViewState extends State<_PlannerView>
         payload: 'planner_snooze_${item.id}',
       );
     } catch (_) {}
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('"${item.title}" snoozed ($label). Alert set!'),
-        behavior: SnackBarBehavior.floating,
-      ),
+    SnackbarUtils.showMessage(
+      context,
+      '"${item.title}" snoozed ($label). Alert set!',
     );
   }
 
   void _submitQuickReminder(BuildContext context) {
     final title = _quickReminderController.text.trim();
     if (title.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a reminder title.'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      SnackbarUtils.showMessage(context, 'Please enter a reminder title.');
       return;
     }
 
@@ -2393,12 +2371,7 @@ class _PlannerViewState extends State<_PlannerView>
     _quickReminderController.clear();
     FocusScope.of(context).unfocus();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Reminder "$title" set for $timeStr!'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    SnackbarUtils.showMessage(context, 'Reminder "$title" set for $timeStr!');
   }
 
   void _cycleCategory() {
@@ -2493,12 +2466,7 @@ class _PlannerViewState extends State<_PlannerView>
             );
 
             _quickReminderController.clear();
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Reminder "$title" saved!'),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            SnackbarUtils.showMessage(context, 'Reminder "$title" saved!');
           },
     );
   }
@@ -2603,12 +2571,7 @@ class _PlannerViewState extends State<_PlannerView>
               offsetMinutes: reminderOffsetMinutes,
             );
 
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Reminder "$title" updated!'),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            SnackbarUtils.showMessage(context, 'Reminder "$title" updated!');
           },
     );
   }
@@ -2756,16 +2719,12 @@ class _PlannerViewState extends State<_PlannerView>
             onTap: () {
               setState(() => _selectedAmbience = name);
               _savePomodoroSettings();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    name == 'Mute'
-                        ? 'Ambience sound muted'
-                        : 'Ambience set to $name',
-                  ),
-                  duration: const Duration(seconds: 1),
-                  behavior: SnackBarBehavior.floating,
-                ),
+              SnackbarUtils.showMessage(
+                context,
+                name == 'Mute'
+                    ? 'Ambience sound muted'
+                    : 'Ambience set to $name',
+                duration: const Duration(seconds: 1),
               );
             },
           );
@@ -2788,7 +2747,7 @@ class _PlannerViewState extends State<_PlannerView>
                   color: AppColors.moduleTime,
                 ),
                 const SizedBox(width: 8),
-                Text(
+                AppText(
                   _selectedAmbience,
                   style: context.text.labelMedium?.copyWith(
                     fontSize: 11.5,
@@ -2917,14 +2876,11 @@ class _PlannerViewState extends State<_PlannerView>
                                     'Focus Ambience & Sounds',
                                     isDark,
                                     action: _selectedAmbience != 'Mute'
-                                        ? Text(
+                                        ? AppText.labelSmall(
                                             '${(_ambienceVolume * 100).round()}% Vol',
-                                            style: AppTextStyles.labelSmall
-                                                .copyWith(
-                                                  fontSize: 11,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: AppColors.moduleTime,
-                                                ),
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w700,
+                                            color: AppColors.moduleTime,
                                           )
                                         : null,
                                   ),
@@ -2987,13 +2943,11 @@ class _PlannerViewState extends State<_PlannerView>
                             'Focus Ambience & Sounds',
                             isDark,
                             action: _selectedAmbience != 'Mute'
-                                ? Text(
+                                ? AppText.labelSmall(
                                     '${(_ambienceVolume * 100).round()}% Vol',
-                                    style: AppTextStyles.labelSmall.copyWith(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.moduleTime,
-                                    ),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.moduleTime,
                                   )
                                 : null,
                           ),
@@ -3174,7 +3128,7 @@ class _PlannerViewState extends State<_PlannerView>
         child: Row(
           children: [
             Expanded(
-              child: Text(
+              child: AppText(
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -3248,7 +3202,7 @@ class _PlannerViewState extends State<_PlannerView>
                 ),
                 const SizedBox(width: 5),
               ],
-              Text(
+              AppText(
                 label,
                 style: context.text.labelMedium?.copyWith(
                   fontSize: 12,
@@ -3289,12 +3243,7 @@ class _PlannerViewState extends State<_PlannerView>
           }
         });
         _savePomodoroSettings();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Pomodoro durations updated!'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        SnackbarUtils.showMessage(context, 'Pomodoro durations updated!');
       },
       onSaveAdvanced: (cfg) {
         setState(() {
@@ -3458,7 +3407,7 @@ class _PlannerViewState extends State<_PlannerView>
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
+                                AppText(
                                   'Important Countdowns',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -3470,7 +3419,7 @@ class _PlannerViewState extends State<_PlannerView>
                                   ),
                                 ),
                                 const SizedBox(height: 2),
-                                Text(
+                                AppText(
                                   '${_countdowns.length} upcoming events & milestones',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -3502,13 +3451,13 @@ class _PlannerViewState extends State<_PlannerView>
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(9),
                               ),
-                              textStyle: AppTextStyles.labelMedium.copyWith(
+                              textStyle: context.text.labelMedium?.copyWith(
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
                             icon: const Icon(Icons.add_rounded, size: 16),
-                            label: const Text('Add Event'),
+                            label: const AppText('Add Event'),
                           ),
                         ],
                       ),
@@ -3545,7 +3494,7 @@ class _PlannerViewState extends State<_PlannerView>
                           final cat = _countdownCategories[index];
                           final isSelected = _selectedCountdownCategory == cat;
                           return FilterChip(
-                            label: Text(cat),
+                            label: AppText(cat),
                             selected: isSelected,
                             showCheckmark: false,
                             visualDensity: VisualDensity.compact,
@@ -3599,7 +3548,7 @@ class _PlannerViewState extends State<_PlannerView>
                                       color: palette.divider,
                                     ),
                                     const SizedBox(height: 8),
-                                    Text(
+                                    AppText(
                                       'No countdowns in $_selectedCountdownCategory',
                                       style: context.text.bodySmall?.copyWith(
                                         fontSize: 12.5,
@@ -3623,7 +3572,7 @@ class _PlannerViewState extends State<_PlannerView>
                                         Icons.add_rounded,
                                         size: 15,
                                       ),
-                                      label: Text(
+                                      label: AppText(
                                         'Create a Countdown',
                                         style: context.text.labelSmall
                                             ?.copyWith(fontSize: 11.5),
@@ -3684,11 +3633,9 @@ class _PlannerViewState extends State<_PlannerView>
         await _syncCountdownNotifications(savedItem);
 
         if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Countdown "${savedItem.title}" saved!'),
-            behavior: SnackBarBehavior.floating,
-          ),
+        SnackbarUtils.showMessage(
+          context,
+          'Countdown "${savedItem.title}" saved!',
         );
       },
     );
@@ -3726,11 +3673,9 @@ class _PlannerViewState extends State<_PlannerView>
       );
     } catch (_) {}
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Added "${cd.title}" to Planner on $dateStr!'),
-        behavior: SnackBarBehavior.floating,
-      ),
+    SnackbarUtils.showMessage(
+      context,
+      'Added "${cd.title}" to Planner on $dateStr!',
     );
   }
 
@@ -3754,12 +3699,7 @@ class _PlannerViewState extends State<_PlannerView>
       await _cancelCountdownNotifications(cd.id);
 
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Countdown "${cd.title}" deleted.'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      SnackbarUtils.showMessage(context, 'Countdown "${cd.title}" deleted.');
     }
   }
 

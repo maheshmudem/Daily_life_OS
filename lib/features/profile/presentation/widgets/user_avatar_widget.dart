@@ -1,8 +1,8 @@
 import 'dart:convert';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../../../../config/theme/app_colors.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../domain/entities/user_profile_entity.dart';
 
@@ -117,7 +117,7 @@ class UserAvatarWidget extends StatelessWidget {
               child: Icon(
                 Icons.edit_rounded,
                 size: size * 0.2,
-                color: Colors.white,
+                color: AppColors.textWhite,
               ),
             ),
           )
@@ -136,7 +136,7 @@ class UserAvatarWidget extends StatelessWidget {
               child: Icon(
                 preset.badgeIcon,
                 size: size * 0.22,
-                color: Colors.white,
+                color: AppColors.textWhite,
               ),
             ),
           ),
@@ -149,7 +149,7 @@ class UserAvatarWidget extends StatelessWidget {
       button: true,
       label: 'User Profile Avatar',
       child: Material(
-        color: Colors.transparent,
+        color: AppColors.transparent,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(borderRadius),
@@ -172,13 +172,11 @@ class UserAvatarWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius),
       ),
       alignment: Alignment.center,
-      child: Text(
+      child: AppText.labelLarge(
         profile.monogram,
-        style: AppTextStyles.labelLarge.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.w800,
-          fontSize: size * 0.42,
-        ),
+        color: AppColors.textWhite,
+        fontWeight: FontWeight.w800,
+        fontSize: size * 0.42,
       ),
     );
   }

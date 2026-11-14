@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_spacing.dart';
@@ -90,7 +91,7 @@ class _MoneyBudgetsPageState extends State<MoneyBudgetsPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
+                  AppText(
                     'Budget Period',
                     style: text.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
@@ -233,7 +234,7 @@ class _MoneyBudgetsPageState extends State<MoneyBudgetsPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          AppText(
                             StringConstants.safeSpendSettings,
                             style: text.labelLarge?.copyWith(
                               fontSize: 13,
@@ -241,7 +242,7 @@ class _MoneyBudgetsPageState extends State<MoneyBudgetsPage> {
                               color: p.heading,
                             ),
                           ),
-                          Text(
+                          AppText(
                             '${StringConstants.monthlyBudget}: ${CurrencyUtils.format(state.budget.monthlyBudget)} • '
                             '${StringConstants.fixedBills}: ${CurrencyUtils.format(state.budget.fixedBills)}',
                             style: text.labelSmall?.copyWith(
@@ -257,7 +258,7 @@ class _MoneyBudgetsPageState extends State<MoneyBudgetsPage> {
                         context,
                         budget: state.budget,
                       ),
-                      child: const Text(StringConstants.edit),
+                      child: const AppText(StringConstants.edit),
                     ),
                   ],
                 ),
@@ -267,7 +268,7 @@ class _MoneyBudgetsPageState extends State<MoneyBudgetsPage> {
               // 6. Category Limits header + cards
               MoneySectionHeader(
                 title: StringConstants.categoryLimits,
-                trailing: Text(
+                trailing: AppText(
                   '${period.shortTag} · ${StringConstants.tapToEdit}',
                   style: text.labelSmall?.copyWith(
                     fontSize: 11.5,
@@ -311,7 +312,7 @@ class _MoneyBudgetsPageState extends State<MoneyBudgetsPage> {
           children: [
             Icon(Icons.lightbulb_rounded, color: AppColors.moduleTime),
             SizedBox(width: 10),
-            Text(StringConstants.budgetTips),
+            AppText(StringConstants.budgetTips),
           ],
         ),
         content: const Column(
@@ -340,7 +341,7 @@ class _MoneyBudgetsPageState extends State<MoneyBudgetsPage> {
               foregroundColor: AppColors.textWhite,
             ),
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text(StringConstants.gotIt),
+            child: const AppText(StringConstants.gotIt),
           ),
         ],
       ),
@@ -374,9 +375,9 @@ class _BudgetOverviewCard extends StatelessWidget {
     final text = context.text;
     final pct = (overallProgress * 100).round();
     final barColor = overallProgress >= 1.0
-        ? Colors.redAccent
+        ? AppColors.error
         : overallProgress >= 0.85
-        ? Colors.orangeAccent
+        ? AppColors.warning
         : AppColors.textWhite;
 
     return Container(
@@ -390,10 +391,10 @@ class _BudgetOverviewCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text(
+                child: AppText(
                   title,
                   style: text.labelMedium?.copyWith(
-                    color: Colors.white70,
+                    color: AppColors.white70,
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
                   ),
@@ -421,7 +422,7 @@ class _BudgetOverviewCard extends StatelessWidget {
                           color: AppColors.textWhite,
                         ),
                         AppSpacing.gapW4,
-                        Text(
+                        AppText(
                           'Set Budget',
                           style: text.labelSmall?.copyWith(
                             color: AppColors.textWhite,
@@ -441,7 +442,7 @@ class _BudgetOverviewCard extends StatelessWidget {
                   color: AppColors.textWhite.withValues(alpha: 0.22),
                   borderRadius: AppRadius.radiusFull,
                 ),
-                child: Text(
+                child: AppText(
                   '$pct% used',
                   style: text.labelSmall?.copyWith(
                     color: AppColors.textWhite,
@@ -453,7 +454,7 @@ class _BudgetOverviewCard extends StatelessWidget {
             ],
           ),
           AppSpacing.gapH4,
-          Text(
+          AppText(
             CurrencyUtils.format(totalBudget),
             style: text.headlineMedium?.copyWith(
               color: AppColors.textWhite,
@@ -482,7 +483,7 @@ class _BudgetOverviewCard extends StatelessWidget {
                   value: CurrencyUtils.format(totalSpent),
                 ),
               ),
-              Container(width: 1, height: 26, color: Colors.white24),
+              Container(width: 1, height: 26, color: AppColors.white24),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.only(left: AppSpacing.md),
@@ -492,7 +493,7 @@ class _BudgetOverviewCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Container(width: 1, height: 26, color: Colors.white24),
+              Container(width: 1, height: 26, color: AppColors.white24),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.only(left: AppSpacing.md),
@@ -522,15 +523,15 @@ class _OverviewStat extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        AppText(
           label,
           style: text.labelSmall?.copyWith(
-            color: Colors.white70,
+            color: AppColors.white70,
             fontSize: 10.5,
           ),
         ),
         const SizedBox(height: 2),
-        Text(
+        AppText(
           value,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -570,7 +571,7 @@ class _AlertBanner extends StatelessWidget {
           Icon(icon, color: color, size: 18),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
+            child: AppText(
               message,
               style: context.text.labelMedium?.copyWith(
                 fontSize: 12,
@@ -627,7 +628,7 @@ class _CategoryBudgetCard extends StatelessWidget {
         ),
       ),
       child: Material(
-        color: Colors.transparent,
+        color: AppColors.transparent,
         child: InkWell(
           borderRadius: AppRadius.borderLg,
           onTap: onTap,
@@ -649,7 +650,7 @@ class _CategoryBudgetCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text(
+                      child: AppText(
                         cat.label,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -664,7 +665,7 @@ class _CategoryBudgetCard extends StatelessWidget {
                     FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerRight,
-                      child: Text.rich(
+                      child: AppText.rich(
                         TextSpan(
                           children: [
                             TextSpan(
@@ -721,7 +722,7 @@ class _CategoryBudgetCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 5),
-                    Text(
+                    AppText(
                       budget.statusLabel,
                       style: text.labelSmall?.copyWith(
                         color: statusColor,
@@ -730,7 +731,7 @@ class _CategoryBudgetCard extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
-                    Text(
+                    AppText(
                       !budget.hasLimit
                           ? StringConstants.tapToEdit
                           : budget.isOverBudget
@@ -777,8 +778,14 @@ class _TipRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: text.titleSmall?.copyWith(color: p.heading)),
-              Text(body, style: text.bodySmall?.copyWith(color: p.secondary)),
+              AppText(
+                title,
+                style: text.titleSmall?.copyWith(color: p.heading),
+              ),
+              AppText(
+                body,
+                style: text.bodySmall?.copyWith(color: p.secondary),
+              ),
             ],
           ),
         ),

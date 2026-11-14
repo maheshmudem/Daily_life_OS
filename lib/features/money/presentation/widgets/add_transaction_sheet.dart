@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
@@ -37,7 +38,7 @@ class AddTransactionSheet extends StatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (_) => BlocProvider.value(
         value: bloc,
         child: AddTransactionSheet(
@@ -369,14 +370,14 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                 ),
               ),
               const SizedBox(height: 14),
-              Text(
+              AppText(
                 _isIncome
                     ? StringConstants.incomeAdded
                     : StringConstants.expenseAdded,
                 style: text.headlineSmall?.copyWith(color: palette.heading),
               ),
               const SizedBox(height: 6),
-              Text(
+              AppText(
                 '${CurrencyUtils.format(amount, decimals: 2)} in ${category.label} has been logged.',
                 textAlign: TextAlign.center,
                 style: text.bodySmall?.copyWith(color: palette.body),
@@ -387,7 +388,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => Navigator.of(dialogCtx).pop(true),
-                      child: const Text(StringConstants.addAnother),
+                      child: const AppText(StringConstants.addAnother),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -395,10 +396,10 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.moduleMoney,
-                        foregroundColor: Colors.white,
+                        foregroundColor: AppColors.textWhite,
                       ),
                       onPressed: () => Navigator.of(dialogCtx).pop(false),
-                      child: const Text(StringConstants.done),
+                      child: const AppText(StringConstants.done),
                     ),
                   ),
                 ],
@@ -451,7 +452,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
+                      AppText(
                         _isEditing
                             ? StringConstants.editTransaction
                             : (_isIncome
@@ -465,7 +466,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Text(
+                      AppText(
                         _isEditing
                             ? 'Update transaction details'
                             : (_isIncome
@@ -493,7 +494,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                     icon: Icon(Icons.copy_rounded, size: 14, color: accent),
-                    label: Text(
+                    label: AppText(
                       StringConstants.repeatTodayLabel,
                       style: text.labelMedium?.copyWith(
                         fontSize: 12,
@@ -514,7 +515,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                       minimumSize: const Size(0, 32),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
-                    child: Text(
+                    child: AppText(
                       'Clear',
                       style: text.labelMedium?.copyWith(
                         fontSize: 12.5,
@@ -613,7 +614,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
+                            AppText(
                               StringConstants.categoryLabel.toUpperCase(),
                               style: text.labelSmall?.copyWith(
                                 fontSize: 11,
@@ -647,7 +648,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                                       color: palette.caption,
                                     ),
                                     const SizedBox(width: 4),
-                                    Text(
+                                    AppText(
                                       _isCategoryGrid ? 'Strip' : 'Grid',
                                       style: text.labelSmall?.copyWith(
                                         fontSize: 10.5,
@@ -673,7 +674,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                               ),
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            child: Text(
+                            child: AppText(
                               MoneyCategory.resolve(
                                 _selectedCategoryKey,
                                 isIncome: _isIncome,
@@ -702,7 +703,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                     const SizedBox(height: 18),
 
                     // Details Section Header
-                    Text(
+                    AppText(
                       StringConstants.detailsLabel.toUpperCase(),
                       style: text.labelSmall?.copyWith(
                         fontSize: 11,
@@ -724,7 +725,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                             ? null
                             : [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.03),
+                                  color: AppColors.black.withValues(
+                                    alpha: 0.03,
+                                  ),
                                   blurRadius: 10,
                                   offset: const Offset(0, 2),
                                 ),
@@ -804,7 +807,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                                         ),
                                         const SizedBox(width: 7),
                                         Expanded(
-                                          child: Text(
+                                          child: AppText(
                                             AppDateUtils.formatDate(
                                               _selectedDate,
                                             ),
@@ -851,7 +854,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                                             decoration: BoxDecoration(
                                               color: isSelected
                                                   ? accent
-                                                  : Colors.transparent,
+                                                  : AppColors.transparent,
                                               borderRadius:
                                                   BorderRadius.circular(8),
                                               boxShadow: isSelected && !isDark
@@ -871,7 +874,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                                                   : null,
                                             ),
                                             alignment: Alignment.center,
-                                            child: Text(
+                                            child: AppText(
                                               m,
                                               style: text.labelSmall?.copyWith(
                                                 fontSize: 11,
@@ -879,7 +882,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                                                     ? FontWeight.w700
                                                     : FontWeight.w500,
                                                 color: isSelected
-                                                    ? Colors.white
+                                                    ? AppColors.textWhite
                                                     : (isDark
                                                           ? palette.caption
                                                           : palette.body),
@@ -921,7 +924,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                       child: FilledButton.icon(
                         style: FilledButton.styleFrom(
                           backgroundColor: accent,
-                          foregroundColor: Colors.white,
+                          foregroundColor: AppColors.textWhite,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
@@ -939,10 +942,10 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                                   height: 22,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2.4,
-                                    color: Colors.white,
+                                    color: AppColors.textWhite,
                                   ),
                                 )
-                              : Text(
+                              : AppText(
                                   _isEditing
                                       ? StringConstants.save
                                       : (_isIncome
@@ -951,7 +954,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                                   style: text.labelLarge?.copyWith(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w700,
-                                    color: Colors.white,
+                                    color: AppColors.textWhite,
                                   ),
                                 ),
                         ),
@@ -984,7 +987,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
           duration: const Duration(milliseconds: 160),
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: selected ? color : Colors.transparent,
+            color: selected ? color : AppColors.transparent,
             borderRadius: BorderRadius.circular(9),
             boxShadow: selected && !isDark
                 ? [
@@ -1003,15 +1006,15 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
               Icon(
                 icon,
                 size: 15,
-                color: selected ? Colors.white : palette.caption,
+                color: selected ? AppColors.textWhite : palette.caption,
               ),
               const SizedBox(width: 6),
-              Text(
+              AppText(
                 label,
                 style: text.labelLarge?.copyWith(
                   fontSize: 13,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                  color: selected ? Colors.white : palette.body,
+                  color: selected ? AppColors.textWhite : palette.body,
                 ),
               ),
             ],

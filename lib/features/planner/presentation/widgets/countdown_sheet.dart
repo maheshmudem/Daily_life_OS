@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../domain/entities/countdown_item_entity.dart';
 
 class CountdownSheet extends StatefulWidget {
@@ -29,7 +30,7 @@ class CountdownSheet extends StatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (ctx) =>
           CountdownSheet(editItem: editItem, isDark: isDark, onSave: onSave),
     );
@@ -194,14 +195,12 @@ class _CountdownSheetState extends State<CountdownSheet> {
                       ),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: Text(
+                        child: AppText.titleMedium(
                           widget.editItem == null
                               ? 'Create Countdown'
                               : 'Edit Countdown',
-                          style: AppTextStyles.titleMedium.copyWith(
-                            fontWeight: FontWeight.w800,
-                            color: headingColor,
-                          ),
+                          fontWeight: FontWeight.w800,
+                          color: headingColor,
                         ),
                       ),
                       IconButton(
@@ -258,11 +257,9 @@ class _CountdownSheetState extends State<CountdownSheet> {
                   const SizedBox(height: 14),
 
                   // Target Date Picker + Quick Jump Presets
-                  Text(
+                  AppText.captionBold(
                     'Target Event Date:',
-                    style: AppTextStyles.captionBold.copyWith(
-                      color: captionColor,
-                    ),
+                    color: captionColor,
                   ),
                   const SizedBox(height: 6),
                   Row(
@@ -298,12 +295,10 @@ class _CountdownSheetState extends State<CountdownSheet> {
                           size: 15,
                           color: AppColors.moduleTime,
                         ),
-                        label: Text(
+                        label: AppText.bodyMedium(
                           _formatDate(_selectedDate),
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: headingColor,
-                            fontWeight: FontWeight.w700,
-                          ),
+                          color: headingColor,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -340,7 +335,7 @@ class _CountdownSheetState extends State<CountdownSheet> {
                                         borderRadius: AppRadius.radiusFull,
                                         border: Border.all(color: dividerColor),
                                       ),
-                                      child: Text(
+                                      child: AppText(
                                         preset.$1,
                                         style: textTheme.labelSmall?.copyWith(
                                           fontSize: 11,
@@ -360,12 +355,7 @@ class _CountdownSheetState extends State<CountdownSheet> {
                   const SizedBox(height: 14),
 
                   // Category Selector
-                  Text(
-                    'Category:',
-                    style: AppTextStyles.captionBold.copyWith(
-                      color: captionColor,
-                    ),
-                  ),
+                  AppText.captionBold('Category:', color: captionColor),
                   const SizedBox(height: 6),
                   Wrap(
                     spacing: 8,
@@ -375,7 +365,7 @@ class _CountdownSheetState extends State<CountdownSheet> {
                       final color = _getCategoryColor(cat);
 
                       return ChoiceChip(
-                        label: Text(cat),
+                        label: AppText(cat),
                         selected: isSelected,
                         showCheckmark: false,
                         selectedColor: color.withValues(
@@ -451,11 +441,11 @@ class _CountdownSheetState extends State<CountdownSheet> {
                       border: Border.all(color: dividerColor),
                     ),
                     child: Material(
-                      color: Colors.transparent,
+                      color: AppColors.transparent,
                       child: SwitchListTile(
                         dense: true,
                         contentPadding: EdgeInsets.zero,
-                        title: Text(
+                        title: AppText(
                           'Advance Alert Reminders',
                           style: textTheme.bodySmall?.copyWith(
                             fontSize: 13,
@@ -463,7 +453,7 @@ class _CountdownSheetState extends State<CountdownSheet> {
                             color: headingColor,
                           ),
                         ),
-                        subtitle: Text(
+                        subtitle: AppText(
                           'Notify 7 days & 1 day before event',
                           style: textTheme.labelSmall?.copyWith(
                             fontSize: 11,
@@ -486,7 +476,7 @@ class _CountdownSheetState extends State<CountdownSheet> {
                     child: FilledButton(
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.moduleTime,
-                        foregroundColor: Colors.white,
+                        foregroundColor: AppColors.textWhite,
                         shape: const RoundedRectangleBorder(
                           borderRadius: AppRadius.radiusMd,
                         ),
@@ -494,11 +484,9 @@ class _CountdownSheetState extends State<CountdownSheet> {
                       onPressed: () {
                         final title = _titleController.text.trim();
                         if (title.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Please enter an event title.'),
-                              behavior: SnackBarBehavior.floating,
-                            ),
+                          SnackbarUtils.showMessage(
+                            context,
+                            'Please enter an event title.',
                           );
                           return;
                         }
@@ -522,14 +510,13 @@ class _CountdownSheetState extends State<CountdownSheet> {
                         widget.onSave(item);
                         Navigator.of(context).pop();
                       },
-                      child: Text(
+                      child: AppText.labelLarge(
                         widget.editItem == null
                             ? 'Create Countdown'
                             : 'Update Countdown',
-                        style: AppTextStyles.buttonLabel.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textWhite,
                       ),
                     ),
                   ),

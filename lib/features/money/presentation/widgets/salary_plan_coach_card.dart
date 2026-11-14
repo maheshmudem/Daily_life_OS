@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/theme/app_colors.dart';
@@ -136,7 +137,7 @@ class _SalaryPlanAllocatorCardState extends State<SalaryPlanAllocatorCard> {
               ),
               const SizedBox(width: 6),
               Expanded(
-                child: Text(
+                child: AppText(
                   'Salary & Smart Plan (${period.label})',
                   style: text.titleSmall?.copyWith(
                     fontSize: 13.5,
@@ -167,7 +168,7 @@ class _SalaryPlanAllocatorCardState extends State<SalaryPlanAllocatorCard> {
                         color: AppColors.primary,
                       ),
                       const SizedBox(width: 4),
-                      Text(
+                      AppText(
                         _showSalaryInputs ? 'Hide Input' : 'Set Salary',
                         style: text.labelSmall?.copyWith(
                           color: AppColors.primary,
@@ -192,10 +193,10 @@ class _SalaryPlanAllocatorCardState extends State<SalaryPlanAllocatorCard> {
                     color: AppColors.primary,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
+                  child: AppText(
                     'Apply Plan',
                     style: text.labelSmall?.copyWith(
-                      color: Colors.white,
+                      color: AppColors.textWhite,
                       fontSize: 11.5,
                       fontWeight: FontWeight.w600,
                     ),
@@ -266,13 +267,13 @@ class _SalaryPlanAllocatorCardState extends State<SalaryPlanAllocatorCard> {
                                       : palette.border,
                                 ),
                               ),
-                              child: Text(
+                              child: AppText(
                                 CurrencyUtils.compact(amt),
                                 style: text.labelSmall?.copyWith(
                                   fontSize: 10.5,
                                   fontWeight: FontWeight.w700,
                                   color: isSelected
-                                      ? Colors.white
+                                      ? AppColors.textWhite
                                       : palette.secondary,
                                 ),
                               ),
@@ -298,7 +299,7 @@ class _SalaryPlanAllocatorCardState extends State<SalaryPlanAllocatorCard> {
                         ),
                         const SizedBox(width: 6),
                         Expanded(
-                          child: Text(
+                          child: AppText(
                             'Also record ${CurrencyUtils.format(salary)} as this month\'s Salary Income',
                             style: text.labelSmall?.copyWith(
                               fontSize: 11,
@@ -339,10 +340,10 @@ class _SalaryPlanAllocatorCardState extends State<SalaryPlanAllocatorCard> {
                         border: Border.all(
                           color: selected
                               ? AppColors.primary
-                              : Colors.transparent,
+                              : AppColors.transparent,
                         ),
                       ),
-                      child: Text(
+                      child: AppText(
                         p.title,
                         style: text.labelSmall?.copyWith(
                           fontSize: 11.5,
@@ -444,7 +445,7 @@ class _CompactAmountField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        AppText(
           label,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -521,7 +522,7 @@ class _PlanBucketTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          AppText(
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -535,7 +536,7 @@ class _PlanBucketTile extends StatelessWidget {
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
-            child: Text(
+            child: AppText(
               amount,
               maxLines: 1,
               style: text.labelLarge?.copyWith(
@@ -570,7 +571,7 @@ class _MiniPlanMetric extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        AppText(
           label,
           style: text.labelSmall?.copyWith(
             fontSize: 9.5,
@@ -578,7 +579,7 @@ class _MiniPlanMetric extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 1),
-        Text(
+        AppText(
           value,
           style: text.labelSmall?.copyWith(
             fontSize: 11.5,
@@ -800,7 +801,7 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    AppText(
                       'AI Coach & Savings Report (${period.label})',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -810,7 +811,7 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                         color: palette.heading,
                       ),
                     ),
-                    Text(
+                    AppText(
                       'Spend forecast · Savings rate · Smart optimizations',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -829,7 +830,7 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                   color: scoreColor.withValues(alpha: 0.12),
                   borderRadius: AppRadius.radiusFull,
                 ),
-                child: Text(
+                child: AppText(
                   'AI $score/100',
                   style: text.labelSmall?.copyWith(
                     fontSize: 10.5,
@@ -871,7 +872,7 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                         ),
                         const SizedBox(width: 5),
                         Flexible(
-                          child: Text(
+                          child: AppText(
                             'Can I Afford This? (AI Check)',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -913,7 +914,7 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                           color: AppColors.success,
                         ),
                         const SizedBox(width: 4),
-                        Text(
+                        AppText(
                           'Salary Plan',
                           style: text.labelSmall?.copyWith(
                             fontSize: 11,
@@ -962,7 +963,7 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
+                            AppText(
                               'AI Month-End Forecast',
                               style: text.labelSmall?.copyWith(
                                 fontSize: 11,
@@ -970,7 +971,7 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                                 color: palette.heading,
                               ),
                             ),
-                            Text(
+                            AppText(
                               'Est. ${CurrencyUtils.format(insights.projectedMonthSpend)}',
                               style: text.labelSmall?.copyWith(
                                 fontSize: 11,
@@ -1072,7 +1073,7 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                     color: AppColors.primary,
                   ),
                   const SizedBox(width: 4),
-                  Text(
+                  AppText(
                     _showDetails
                         ? 'Show less'
                         : 'Show AI Action Plan (${suggestions.length} tips)',
@@ -1093,7 +1094,7 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                         color: AppColors.error.withValues(alpha: 0.12),
                         borderRadius: AppRadius.radiusFull,
                       ),
-                      child: Text(
+                      child: AppText(
                         '${overCategories.length} Over Limit',
                         style: text.labelSmall?.copyWith(
                           fontSize: 9.5,
@@ -1120,7 +1121,7 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                     children: [
                       if (topCategories.isNotEmpty) ...[
                         const SizedBox(height: 8),
-                        Text(
+                        AppText(
                           'WHERE YOU SPEND THE MOST',
                           style: text.labelSmall?.copyWith(
                             fontSize: 10,
@@ -1147,7 +1148,7 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                                 ),
                                 const SizedBox(width: 6),
                                 Expanded(
-                                  child: Text(
+                                  child: AppText(
                                     cs.category.label,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -1171,7 +1172,7 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                                       ),
                                       borderRadius: AppRadius.radiusXs,
                                     ),
-                                    child: Text(
+                                    child: AppText(
                                       'Over by ${CurrencyUtils.format(catBudget.spent - catBudget.monthlyLimit)}',
                                       style: text.labelSmall?.copyWith(
                                         fontSize: 9.5,
@@ -1180,7 +1181,7 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                                       ),
                                     ),
                                   ),
-                                Text(
+                                AppText(
                                   '${CurrencyUtils.format(cs.amount)} ($pctOfTotal%)',
                                   style: text.labelSmall?.copyWith(
                                     fontSize: 11.5,
@@ -1201,7 +1202,7 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
+                          AppText(
                             'AI RECOMMENDATIONS & ACTIONS',
                             style: text.labelSmall?.copyWith(
                               fontSize: 10,
@@ -1229,7 +1230,7 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                                   ),
                                   borderRadius: AppRadius.radiusFull,
                                 ),
-                                child: Text(
+                                child: AppText(
                                   'Auto-Fix ${overCategories.length} Over Limit',
                                   style: text.labelSmall?.copyWith(
                                     fontSize: 10,
@@ -1267,7 +1268,7 @@ class _BudgetExpenseReportCardState extends State<BudgetExpenseReportCard> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text(
+                                      AppText(
                                         tip.title,
                                         style: text.labelSmall?.copyWith(
                                           fontSize: 11.5,
@@ -1322,7 +1323,7 @@ class _ReportMetricTile extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        AppText(
           label,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -1336,7 +1337,7 @@ class _ReportMetricTile extends StatelessWidget {
         FittedBox(
           fit: BoxFit.scaleDown,
           alignment: Alignment.centerLeft,
-          child: Text(
+          child: AppText(
             value,
             maxLines: 1,
             style: text.labelLarge?.copyWith(
@@ -1351,7 +1352,7 @@ class _ReportMetricTile extends StatelessWidget {
         FittedBox(
           fit: BoxFit.scaleDown,
           alignment: Alignment.centerLeft,
-          child: Text(
+          child: AppText(
             subtitle,
             maxLines: 1,
             style: text.labelSmall?.copyWith(
@@ -1391,7 +1392,7 @@ class SalaryPlanSetupSheet extends StatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (_) => BlocProvider.value(
         value: bloc,
         child: SalaryPlanSetupSheet(state: state),
@@ -1499,7 +1500,7 @@ class AiAffordabilitySheet extends StatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (_) => BlocProvider.value(
         value: bloc,
         child: AiAffordabilitySheet(state: state),
@@ -1651,7 +1652,7 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      AppText(
                         'AI Purchase Affordability Check',
                         style: text.titleSmall?.copyWith(
                           fontSize: 15,
@@ -1659,7 +1660,7 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
                           color: palette.heading,
                         ),
                       ),
-                      Text(
+                      AppText(
                         'Simulate impact on today\'s safe spend, category & savings',
                         style: text.labelSmall?.copyWith(
                           fontSize: 11,
@@ -1694,7 +1695,7 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      AppText(
                         'Item / Merchant (Optional)',
                         style: text.labelSmall?.copyWith(
                           fontSize: 10,
@@ -1766,12 +1767,14 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
                               : palette.surfaceSubtle,
                           borderRadius: AppRadius.radiusFull,
                         ),
-                        child: Text(
+                        child: AppText(
                           CurrencyUtils.format(presetAmt),
                           style: text.labelSmall?.copyWith(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: selected ? Colors.white : palette.secondary,
+                            color: selected
+                                ? AppColors.textWhite
+                                : palette.secondary,
                           ),
                         ),
                       ),
@@ -1803,7 +1806,7 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
                               : palette.surfaceSubtle,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: selected ? c.color : Colors.transparent,
+                            color: selected ? c.color : AppColors.transparent,
                           ),
                         ),
                         child: Row(
@@ -1811,7 +1814,7 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
                           children: [
                             Icon(c.icon, size: 13, color: c.color),
                             const SizedBox(width: 4),
-                            Text(
+                            AppText(
                               c.label,
                               style: text.labelSmall?.copyWith(
                                 fontSize: 11,
@@ -1848,7 +1851,7 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        AppText(
                           verdictTitle,
                           style: text.labelLarge?.copyWith(
                             fontSize: 13,
@@ -1857,7 +1860,7 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
                           ),
                         ),
                         const SizedBox(height: 3),
-                        Text(
+                        AppText(
                           verdictBody,
                           style: text.bodySmall?.copyWith(
                             fontSize: 11.5,
@@ -1938,7 +1941,7 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Close'),
+                    child: const AppText('Close'),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -1947,7 +1950,7 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
+                      foregroundColor: AppColors.textWhite,
                     ),
                     onPressed: amount <= 0
                         ? null
@@ -1972,7 +1975,9 @@ class _AiAffordabilitySheetState extends State<AiAffordabilitySheet> {
                             );
                           },
                     icon: const Icon(Icons.check_circle_outline, size: 17),
-                    label: Text('Log ${CurrencyUtils.format(amount)} Expense'),
+                    label: AppText(
+                      'Log ${CurrencyUtils.format(amount)} Expense',
+                    ),
                   ),
                 ),
               ],

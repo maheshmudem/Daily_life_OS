@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -24,7 +25,7 @@ class BillSplitSheet extends StatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (_) =>
           BlocProvider.value(value: bloc, child: const BillSplitSheet()),
     );
@@ -192,7 +193,7 @@ class _BillSplitSheetState extends State<BillSplitSheet> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        AppText(
                           StringConstants.billSplitTitle,
                           style: text.titleMedium?.copyWith(
                             fontWeight: FontWeight.w800,
@@ -200,7 +201,7 @@ class _BillSplitSheetState extends State<BillSplitSheet> {
                           ),
                         ),
                         const SizedBox(height: 2),
-                        Text(
+                        AppText(
                           StringConstants.billSplitSubtitle,
                           style: text.labelSmall?.copyWith(
                             color: palette.caption,
@@ -268,7 +269,7 @@ class _BillSplitSheetState extends State<BillSplitSheet> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
+                  AppText(
                     'Split Between ($_peopleCount People)',
                     style: text.labelMedium?.copyWith(
                       fontWeight: FontWeight.w700,
@@ -287,7 +288,7 @@ class _BillSplitSheetState extends State<BillSplitSheet> {
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Text(
+                        child: AppText(
                           '$_peopleCount',
                           style: text.titleMedium?.copyWith(
                             fontWeight: FontWeight.w800,
@@ -310,7 +311,7 @@ class _BillSplitSheetState extends State<BillSplitSheet> {
               AppSpacing.gapH12,
 
               // Tip / Tax % Selector
-              Text(
+              AppText(
                 'Add Tip / Service Charge',
                 style: text.labelMedium?.copyWith(
                   fontWeight: FontWeight.w700,
@@ -338,11 +339,13 @@ class _BillSplitSheetState extends State<BillSplitSheet> {
                                   : palette.border,
                             ),
                           ),
-                          child: Text(
+                          child: AppText(
                             tip == 0 ? 'None' : '+$tip%',
                             style: text.labelSmall?.copyWith(
                               fontWeight: FontWeight.w700,
-                              color: selected ? Colors.white : palette.heading,
+                              color: selected
+                                  ? AppColors.textWhite
+                                  : palette.heading,
                             ),
                           ),
                         ),
@@ -409,7 +412,7 @@ class _BillSplitSheetState extends State<BillSplitSheet> {
                     ),
                     if (_baseAmount > 0) ...[
                       Divider(height: 18, color: palette.divider),
-                      Text(
+                      AppText(
                         'Creates 1 Expense (${CurrencyUtils.format(_perPersonShare, decimals: 2)}) + '
                         '${_peopleCount - 1} Lent IOU(s) for ${_resolveFriendNames().join(", ")}',
                         textAlign: TextAlign.center,
@@ -431,19 +434,19 @@ class _BillSplitSheetState extends State<BillSplitSheet> {
                   key: const ValueKey('bill_split_submit_btn'),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.moduleMoney,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppColors.textWhite,
                     shape: const RoundedRectangleBorder(
                       borderRadius: AppRadius.radiusMd,
                     ),
                   ),
                   onPressed: _submitSplit,
                   icon: const Icon(Icons.call_split_rounded, size: 19),
-                  label: Text(
+                  label: AppText(
                     StringConstants.billSplitLogAction,
                     style: text.labelLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                       fontSize: 14,
-                      color: Colors.white,
+                      color: AppColors.textWhite,
                     ),
                   ),
                 ),
@@ -472,7 +475,7 @@ class _SplitMetric extends StatelessWidget {
     final text = context.text;
     return Column(
       children: [
-        Text(
+        AppText(
           label,
           textAlign: TextAlign.center,
           style: text.labelSmall?.copyWith(
@@ -485,7 +488,7 @@ class _SplitMetric extends StatelessWidget {
         const SizedBox(height: 4),
         FittedBox(
           fit: BoxFit.scaleDown,
-          child: Text(
+          child: AppText(
             value,
             style: text.titleMedium?.copyWith(
               fontWeight: FontWeight.w800,

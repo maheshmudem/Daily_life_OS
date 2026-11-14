@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
@@ -54,7 +55,7 @@ class BudgetProgressTile extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      AppText(
                         cat.label,
                         style: text.titleSmall?.copyWith(
                           fontSize: 15,
@@ -77,7 +78,7 @@ class BudgetProgressTile extends StatelessWidget {
                             AppSpacing.gapW4,
                           ],
                           Flexible(
-                            child: Text(
+                            child: AppText(
                               !budget.hasLimit
                                   ? StringConstants.noLimitSet
                                   : budget.isOverBudget
@@ -110,7 +111,7 @@ class BudgetProgressTile extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text.rich(
+                      AppText.rich(
                         TextSpan(
                           children: [
                             TextSpan(

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'dart:convert';
 import 'dart:math';
 
@@ -10,9 +11,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
 import '../../../../core/widgets/feature_scaffold.dart';
 import '../../../../di/injection_container.dart';
@@ -280,11 +281,9 @@ class _VaultViewState extends State<_VaultView>
       securityRepository: sl<SecurityRepository>(),
       onCompleted: () {
         _checkSecurity();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Vault security enabled successfully!'),
-            behavior: SnackBarBehavior.floating,
-          ),
+        SnackbarUtils.showMessage(
+          context,
+          'Vault security enabled successfully!',
         );
       },
     );
@@ -362,12 +361,10 @@ class _VaultViewState extends State<_VaultView>
   void _copySecret(BuildContext context, String label, String value) {
     Clipboard.setData(ClipboardData(text: value));
     HapticFeedback.lightImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$label copied to clipboard safely!'),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
+    SnackbarUtils.showMessage(
+      context,
+      '$label copied to clipboard safely!',
+      duration: const Duration(seconds: 2),
     );
   }
 
@@ -406,7 +403,7 @@ class _VaultViewState extends State<_VaultView>
                     color: AppColors.moduleVault,
                   ),
                   AppSpacing.gapW4,
-                  Text(
+                  AppText(
                     'AES-256',
                     style: context.text.labelSmall?.copyWith(
                       color: AppColors.moduleVault,
@@ -425,16 +422,12 @@ class _VaultViewState extends State<_VaultView>
                 HapticFeedback.selectionClick();
                 final nextDecoy = !isDecoy;
                 context.read<VaultBloc>().add(const ToggleDecoyMode());
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      nextDecoy
-                          ? 'Decoy Mode active! Safe dummy data shown.'
-                          : 'Standard Secure Vault active.',
-                    ),
-                    behavior: SnackBarBehavior.floating,
-                    duration: const Duration(seconds: 2),
-                  ),
+                SnackbarUtils.showMessage(
+                  context,
+                  nextDecoy
+                      ? 'Decoy Mode active! Safe dummy data shown.'
+                      : 'Standard Secure Vault active.',
+                  duration: const Duration(seconds: 2),
                 );
               },
               child: AnimatedContainer(
@@ -466,7 +459,7 @@ class _VaultViewState extends State<_VaultView>
                       ),
                     ),
                     AppSpacing.gapW4,
-                    Text(
+                    AppText(
                       'Decoy',
                       style: context.text.labelSmall?.copyWith(
                         fontWeight: FontWeight.w700,
@@ -517,14 +510,10 @@ class _VaultViewState extends State<_VaultView>
                   setState(() => _isUnlocked = false);
                   context.read<VaultBloc>().add(const LockVault());
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Enter PIN or draw Pattern below to unlock.',
-                      ),
-                      behavior: SnackBarBehavior.floating,
-                      duration: Duration(seconds: 1),
-                    ),
+                  SnackbarUtils.showMessage(
+                    context,
+                    'Enter PIN or draw Pattern below to unlock.',
+                    duration: const Duration(seconds: 1),
                   );
                 }
               },
@@ -534,7 +523,7 @@ class _VaultViewState extends State<_VaultView>
               FeatureIconButton(
                 tooltip: 'Add Vault Item',
                 icon: Icons.add_rounded,
-                color: Colors.white,
+                color: AppColors.textWhite,
                 backgroundColor: AppColors.moduleVault,
                 borderColor: AppColors.moduleVault,
                 onPressed: () => _showAddVaultItemSheet(context),
@@ -556,7 +545,7 @@ class _VaultViewState extends State<_VaultView>
                 labelColor: AppColors.moduleVault,
                 unselectedLabelColor: palette.caption,
                 indicatorSize: TabBarIndicatorSize.label,
-                dividerColor: Colors.transparent,
+                dividerColor: AppColors.transparent,
                 labelStyle: context.text.labelLarge?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -612,16 +601,12 @@ class _VaultViewState extends State<_VaultView>
       onUnlock: ({required bool isDecoy}) {
         context.read<VaultBloc>().add(UnlockVault(isDecoy: isDecoy));
         setState(() => _isUnlocked = true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              isDecoy
-                  ? 'Vault unlocked in Decoy Mode (Safe dummy data)'
-                  : 'Secure Vault unlocked successfully!',
-            ),
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 2),
-          ),
+        SnackbarUtils.showMessage(
+          context,
+          isDecoy
+              ? 'Vault unlocked in Decoy Mode (Safe dummy data)'
+              : 'Secure Vault unlocked successfully!',
+          duration: const Duration(seconds: 2),
         );
       },
     );
@@ -669,7 +654,7 @@ class _VaultViewState extends State<_VaultView>
                 ),
                 child: const Icon(
                   Icons.security_rounded,
-                  color: Colors.white,
+                  color: AppColors.textWhite,
                   size: AppSpacing.lg,
                 ),
               ),
@@ -682,7 +667,7 @@ class _VaultViewState extends State<_VaultView>
                     FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
-                      child: Text(
+                      child: AppText(
                         isDecoy
                             ? 'Decoy Vault Active'
                             : 'Zero-Knowledge Encrypted',
@@ -711,7 +696,7 @@ class _VaultViewState extends State<_VaultView>
                                     .withValues(alpha: 0.14),
                             borderRadius: AppRadius.radiusFull,
                           ),
-                          child: Text(
+                          child: AppText(
                             _isSecurityEnabled ? 'Protected' : 'Unsecured',
                             style: context.text.labelSmall?.copyWith(
                               fontSize: 10.5,
@@ -727,7 +712,7 @@ class _VaultViewState extends State<_VaultView>
                           child: FittedBox(
                             fit: BoxFit.scaleDown,
                             alignment: Alignment.centerLeft,
-                            child: Text(
+                            child: AppText(
                               !_isSecurityEnabled
                                   ? 'No PIN / Pattern lock'
                                   : 'Encrypted on device',
@@ -763,14 +748,14 @@ class _VaultViewState extends State<_VaultView>
                         const Icon(
                           Icons.shield_rounded,
                           size: AppSpacing.sm + 1,
-                          color: Colors.white,
+                          color: AppColors.textWhite,
                         ),
                         AppSpacing.gapW4,
-                        Text(
+                        AppText(
                           'Set Lock',
                           style: context.text.labelSmall?.copyWith(
                             fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                            color: AppColors.textWhite,
                           ),
                         ),
                       ],
@@ -802,7 +787,7 @@ class _VaultViewState extends State<_VaultView>
                           color: AppColors.moduleVault,
                         ),
                         AppSpacing.gapW4,
-                        Text(
+                        AppText(
                           'Lock',
                           style: context.text.labelSmall?.copyWith(
                             fontWeight: FontWeight.w700,
@@ -915,7 +900,7 @@ class _VaultViewState extends State<_VaultView>
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
-                  child: Text(
+                  child: AppText(
                     label,
                     style: context.text.labelSmall?.copyWith(
                       fontSize: 11,
@@ -926,7 +911,7 @@ class _VaultViewState extends State<_VaultView>
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
-                  child: Text(
+                  child: AppText(
                     value,
                     style: context.text.labelMedium?.copyWith(
                       fontSize: 12.5,
@@ -1132,7 +1117,7 @@ class _VaultViewState extends State<_VaultView>
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.centerLeft,
-                          child: Text(
+                          child: AppText(
                             item.title,
                             maxLines: 1,
                             style: context.text.titleSmall?.copyWith(
@@ -1153,7 +1138,7 @@ class _VaultViewState extends State<_VaultView>
                           color: accent.withValues(alpha: 0.12),
                           borderRadius: AppRadius.radiusFull,
                         ),
-                        child: Text(
+                        child: AppText(
                           item.category,
                           style: context.text.labelSmall?.copyWith(
                             fontSize: 10.5,
@@ -1171,7 +1156,7 @@ class _VaultViewState extends State<_VaultView>
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
+                        AppText(
                           item.username,
                           maxLines: 1,
                           style: context.text.bodySmall?.copyWith(
@@ -1179,25 +1164,23 @@ class _VaultViewState extends State<_VaultView>
                             color: palette.secondary,
                           ),
                         ),
-                        Text(
+                        AppText(
                           '  •  ',
                           style: context.text.bodySmall?.copyWith(
                             fontSize: 12,
                             color: palette.caption,
                           ),
                         ),
-                        Text(
+                        AppText.monoCode(
                           isRevealed ? secret : '••••••••',
                           maxLines: 1,
-                          style: AppTextStyles.monoCode.copyWith(
-                            fontSize: 12,
-                            fontWeight: isRevealed
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                            color: isRevealed
-                                ? AppColors.moduleVault
-                                : palette.caption,
-                          ),
+                          fontSize: 12,
+                          fontWeight: isRevealed
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          color: isRevealed
+                              ? AppColors.moduleVault
+                              : palette.caption,
                         ),
                       ],
                     ),
@@ -1277,7 +1260,7 @@ class _VaultViewState extends State<_VaultView>
                         FittedBox(
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.centerLeft,
-                          child: Text(
+                          child: AppText(
                             'Cryptographic Key Generator',
                             maxLines: 1,
                             style: context.text.titleSmall?.copyWith(
@@ -1291,7 +1274,7 @@ class _VaultViewState extends State<_VaultView>
                         FittedBox(
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.centerLeft,
-                          child: Text(
+                          child: AppText(
                             '$_generatorLength-char high-entropy key • instant copy',
                             maxLines: 1,
                             style: context.text.bodySmall?.copyWith(
@@ -1336,7 +1319,7 @@ class _VaultViewState extends State<_VaultView>
                             color: AppColors.secondary,
                           ),
                           AppSpacing.gapW4,
-                          Text(
+                          AppText(
                             'Generate',
                             style: context.text.labelSmall?.copyWith(
                               fontWeight: FontWeight.w700,
@@ -1367,13 +1350,11 @@ class _VaultViewState extends State<_VaultView>
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         alignment: Alignment.centerLeft,
-                        child: Text(
+                        child: AppText.captionBold(
                           _generatedPreviewKey,
-                          style: AppTextStyles.captionBold.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: palette.heading,
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                          ),
+                          fontWeight: FontWeight.w700,
+                          color: palette.heading,
+                          tabularFigures: true,
                         ),
                       ),
                     ),
@@ -1396,14 +1377,14 @@ class _VaultViewState extends State<_VaultView>
                           decoration: BoxDecoration(
                             color: _generatorLength == len
                                 ? AppColors.secondary
-                                : Colors.transparent,
+                                : AppColors.transparent,
                             borderRadius: AppRadius.radiusXs,
                           ),
-                          child: Text(
+                          child: AppText(
                             '$len',
                             style: context.text.labelSmall?.copyWith(
                               color: _generatorLength == len
-                                  ? Colors.white
+                                  ? AppColors.textWhite
                                   : palette.caption,
                               fontWeight: FontWeight.w700,
                             ),
@@ -1520,7 +1501,7 @@ class _VaultViewState extends State<_VaultView>
                   ),
                   AppSpacing.gapW12,
                   Expanded(
-                    child: Text(
+                    child: AppText(
                       'Automated Expiry Alerts: We notify you 30 days & 7 days before warranty or policy lapses.',
                       style: context.text.bodySmall?.copyWith(
                         fontSize: 12.5,
@@ -1671,7 +1652,7 @@ class _VaultViewState extends State<_VaultView>
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.centerLeft,
-                          child: Text(
+                          child: AppText(
                             doc.title,
                             maxLines: 1,
                             style: context.text.titleSmall?.copyWith(
@@ -1696,7 +1677,7 @@ class _VaultViewState extends State<_VaultView>
                                   .withValues(alpha: 0.14),
                           borderRadius: AppRadius.radiusFull,
                         ),
-                        child: Text(
+                        child: AppText(
                           isExpiringSoon ? 'Expiring' : 'Active',
                           style: context.text.labelSmall?.copyWith(
                             fontSize: 10.5,
@@ -1713,7 +1694,7 @@ class _VaultViewState extends State<_VaultView>
                   FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
-                    child: Text(
+                    child: AppText(
                       '${doc.category} • ${doc.expiry}',
                       maxLines: 1,
                       style: context.text.bodySmall?.copyWith(
@@ -1736,11 +1717,9 @@ class _VaultViewState extends State<_VaultView>
               icon: Icons.remove_red_eye_rounded,
               color: AppColors.moduleVault,
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Viewing ${doc.title} secure preview'),
-                    behavior: SnackBarBehavior.floating,
-                  ),
+                SnackbarUtils.showMessage(
+                  context,
+                  'Viewing ${doc.title} secure preview',
                 );
                 _showDocumentPreviewSheet(context, doc);
               },
@@ -1861,14 +1840,16 @@ class _VaultViewState extends State<_VaultView>
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
+                      AppText(
                         cat,
                         style: context.text.labelSmall?.copyWith(
                           fontSize: 12,
                           fontWeight: isSelected
                               ? FontWeight.w700
                               : FontWeight.w600,
-                          color: isSelected ? Colors.white : palette.body,
+                          color: isSelected
+                              ? AppColors.textWhite
+                              : palette.body,
                         ),
                       ),
                       const SizedBox(width: AppSpacing.xs - AppSpacing.xxxs),
@@ -1879,15 +1860,17 @@ class _VaultViewState extends State<_VaultView>
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? Colors.white.withValues(alpha: 0.22)
+                              ? AppColors.textWhite.withValues(alpha: 0.22)
                               : palette.surfaceMuted,
                           borderRadius: AppRadius.radiusFull,
                         ),
-                        child: Text(
+                        child: AppText(
                           '$count',
                           style: context.text.labelSmall?.copyWith(
                             fontSize: 10.5,
-                            color: isSelected ? Colors.white : palette.caption,
+                            color: isSelected
+                                ? AppColors.textWhite
+                                : palette.caption,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -1942,7 +1925,7 @@ class _VaultViewState extends State<_VaultView>
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
-                      child: Text(
+                      child: AppText(
                         sectionTitle,
                         maxLines: 1,
                         style: context.text.labelSmall?.copyWith(
@@ -1963,7 +1946,7 @@ class _VaultViewState extends State<_VaultView>
                       color: sectionAccent.withValues(alpha: 0.14),
                       borderRadius: AppRadius.radiusFull,
                     ),
-                    child: Text(
+                    child: AppText(
                       trailingBadgeText,
                       style: context.text.labelSmall?.copyWith(
                         fontWeight: FontWeight.w700,
@@ -2038,12 +2021,12 @@ class _VaultViewState extends State<_VaultView>
             ),
           ),
           AppSpacing.gapH12,
-          Text(
+          AppText(
             title,
             style: context.text.titleMedium?.copyWith(color: palette.heading),
           ),
           AppSpacing.gapH4,
-          Text(
+          AppText(
             subtitle,
             textAlign: TextAlign.center,
             style: context.text.bodySmall?.copyWith(color: palette.caption),
@@ -2052,7 +2035,7 @@ class _VaultViewState extends State<_VaultView>
           TextButton.icon(
             onPressed: onAction,
             icon: const Icon(Icons.refresh_rounded, size: AppSpacing.md),
-            label: Text(
+            label: AppText(
               actionLabel,
               style: context.text.labelLarge?.copyWith(
                 fontWeight: FontWeight.w700,
@@ -2118,7 +2101,7 @@ class _VaultViewState extends State<_VaultView>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        AppText(
                           item.title,
                           style: ctx.text.titleMedium?.copyWith(
                             fontWeight: FontWeight.w700,
@@ -2126,7 +2109,7 @@ class _VaultViewState extends State<_VaultView>
                           ),
                         ),
                         const SizedBox(height: AppSpacing.xxxs),
-                        Text(
+                        AppText(
                           '${item.category} • AES-256 Encrypted Record',
                           style: ctx.text.bodySmall?.copyWith(
                             color: palette.caption,
@@ -2244,7 +2227,7 @@ class _VaultViewState extends State<_VaultView>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        AppText(
                           doc.title,
                           style: ctx.text.titleMedium?.copyWith(
                             fontWeight: FontWeight.w700,
@@ -2252,7 +2235,7 @@ class _VaultViewState extends State<_VaultView>
                           ),
                         ),
                         const SizedBox(height: AppSpacing.xxxs),
-                        Text(
+                        AppText(
                           '${doc.category} • ${doc.expiry}',
                           style: ctx.text.bodySmall?.copyWith(
                             color: doc.isExpiringSoon
@@ -2339,25 +2322,21 @@ class _VaultViewState extends State<_VaultView>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                AppText(
                   label,
                   style: context.text.labelSmall?.copyWith(
                     color: palette.caption,
                   ),
                 ),
                 AppSpacing.gapH4,
-                Text(
+                AppText(
                   value,
-                  style: isMonospace
-                      ? AppTextStyles.captionBold.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: palette.heading,
-                          fontFeatures: const [FontFeature.tabularFigures()],
-                        )
-                      : context.text.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: palette.heading,
-                        ),
+                  variant: isMonospace
+                      ? AppTextVariant.captionBold
+                      : AppTextVariant.bodyMedium,
+                  fontWeight: FontWeight.w700,
+                  color: palette.heading,
+                  tabularFigures: isMonospace,
                 ),
               ],
             ),
@@ -2436,7 +2415,7 @@ class _VaultViewState extends State<_VaultView>
                       ),
                       AppSpacing.gapW12,
                       Expanded(
-                        child: Text(
+                        child: AppText(
                           isWarrantyTab
                               ? 'Add Warranty / Policy'
                               : 'Add Encrypted Login',
@@ -2500,17 +2479,21 @@ class _VaultViewState extends State<_VaultView>
                               Icon(
                                 _sectionIconForCategory(cat),
                                 size: AppSpacing.sm + 1,
-                                color: active ? Colors.white : palette.caption,
+                                color: active
+                                    ? AppColors.textWhite
+                                    : palette.caption,
                               ),
                               const SizedBox(width: 4),
-                              Text(
+                              AppText(
                                 cat,
                                 style: ctx.text.labelSmall?.copyWith(
                                   fontSize: 12,
                                   fontWeight: active
                                       ? FontWeight.w700
                                       : FontWeight.w600,
-                                  color: active ? Colors.white : palette.body,
+                                  color: active
+                                      ? AppColors.textWhite
+                                      : palette.body,
                                 ),
                               ),
                             ],
@@ -2570,7 +2553,7 @@ class _VaultViewState extends State<_VaultView>
                     child: FilledButton(
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.moduleVault,
-                        foregroundColor: Colors.white,
+                        foregroundColor: AppColors.textWhite,
                         shape: const RoundedRectangleBorder(
                           borderRadius: AppRadius.borderMd,
                         ),
@@ -2619,10 +2602,10 @@ class _VaultViewState extends State<_VaultView>
                         _persistVaultData();
                         Navigator.pop(ctx);
                       },
-                      child: Text(
+                      child: AppText(
                         'Save to Encrypted Vault',
                         style: ctx.text.titleSmall?.copyWith(
-                          color: Colors.white,
+                          color: AppColors.textWhite,
                           fontWeight: FontWeight.w700,
                         ),
                       ),

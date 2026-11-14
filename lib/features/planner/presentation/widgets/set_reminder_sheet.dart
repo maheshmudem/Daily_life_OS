@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../domain/entities/planner_item_entity.dart';
 
 class SetReminderSheet extends StatefulWidget {
@@ -90,7 +91,7 @@ class SetReminderSheet extends StatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (ctx) => SetReminderSheet(
         initialTitle: initialTitle,
         initialDate: initialDate,
@@ -317,15 +318,13 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                             ),
                             AppSpacing.gapW12,
                             Flexible(
-                              child: Text(
+                              child: AppText.titleLarge(
                                 widget.sheetTitle ??
                                     StringConstants.setReminder,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: AppTextStyles.titleLarge.copyWith(
-                                  color: palette.heading,
-                                  fontWeight: FontWeight.w700,
-                                ),
+                                color: palette.heading,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ],
@@ -346,7 +345,7 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                   TextField(
                     controller: _titleController,
                     autofocus: widget.initialTitle.isEmpty,
-                    style: AppTextStyles.bodyMedium.copyWith(
+                    style: textTheme.bodyMedium?.copyWith(
                       color: palette.heading,
                       fontWeight: FontWeight.w600,
                     ),
@@ -365,11 +364,9 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
+                        child: AppText.captionBold(
                           'Schedule:',
-                          style: AppTextStyles.captionBold.copyWith(
-                            color: palette.caption,
-                          ),
+                          color: palette.caption,
                         ),
                       ),
                       for (final preset in const [
@@ -401,13 +398,11 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                               ),
                               borderRadius: AppRadius.radiusFull,
                             ),
-                            child: Text(
+                            child: AppText.captionBold(
                               preset.label,
-                              style: AppTextStyles.captionBold.copyWith(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.moduleTime,
-                              ),
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.moduleTime,
                             ),
                           ),
                         ),
@@ -455,11 +450,9 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                             size: 16,
                             color: AppColors.moduleTime,
                           ),
-                          label: Text(
+                          label: AppText.captionBold(
                             _formatDateShort(_startDate),
-                            style: AppTextStyles.captionBold.copyWith(
-                              color: palette.heading,
-                            ),
+                            color: palette.heading,
                           ),
                         ),
                       ),
@@ -490,11 +483,9 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                             size: 16,
                             color: AppColors.moduleTime,
                           ),
-                          label: Text(
+                          label: AppText.captionBold(
                             _formatTimeOfDay(_time),
-                            style: AppTextStyles.captionBold.copyWith(
-                              color: palette.heading,
-                            ),
+                            color: palette.heading,
                           ),
                         ),
                       ),
@@ -506,20 +497,16 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
+                      AppText.captionBold(
                         'Repeat Frequency:',
-                        style: AppTextStyles.captionBold.copyWith(
-                          color: palette.caption,
-                        ),
+                        color: palette.caption,
                       ),
                       if (_repeatType != 'none')
-                        Text(
+                        const AppText.captionBold(
                           'Recurring',
-                          style: AppTextStyles.captionBold.copyWith(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.moduleTime,
-                          ),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.moduleTime,
                         ),
                     ],
                   ),
@@ -534,7 +521,7 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                         return Padding(
                           padding: const EdgeInsets.only(right: 8),
                           child: ChoiceChip(
-                            label: Text(label),
+                            label: AppText(label),
                             selected: isSelected,
                             selectedColor: AppColors.moduleTime.withValues(
                               alpha: 0.2,
@@ -560,7 +547,7 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                   // ── Weekly Day Selector (if Weekly chosen) ──────────────────────
                   if (_repeatType == 'weekly') ...[
                     AppSpacing.gapH12,
-                    Text(
+                    AppText(
                       'Repeat on days:',
                       style: textTheme.labelSmall?.copyWith(
                         fontSize: 11,
@@ -612,13 +599,13 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                                         : palette.divider,
                                   ),
                                 ),
-                                child: Text(
+                                child: AppText(
                                   dayLabel,
                                   style: textTheme.bodySmall?.copyWith(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,
                                     color: isPicked
-                                        ? Colors.white
+                                        ? AppColors.textWhite
                                         : palette.heading,
                                   ),
                                 ),
@@ -634,15 +621,13 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
+                        AppText.captionBold(
                           'End Repeat:',
-                          style: AppTextStyles.captionBold.copyWith(
-                            color: palette.caption,
-                          ),
+                          color: palette.caption,
                         ),
                         Row(
                           children: [
-                            Text(
+                            AppText(
                               _hasEndDate ? 'Until Date' : 'Forever',
                               style: textTheme.bodySmall?.copyWith(
                                 fontSize: 12,
@@ -700,24 +685,20 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                           size: 16,
                           color: AppColors.moduleTime,
                         ),
-                        label: Text(
+                        label: AppText.captionBold(
                           _endDate != null
                               ? 'Repeat until: ${_formatDateShort(_endDate!)}'
                               : 'Set End Date',
-                          style: AppTextStyles.captionBold.copyWith(
-                            color: palette.heading,
-                          ),
+                          color: palette.heading,
                         ),
                       ),
                   ],
                   AppSpacing.gapH16,
 
                   // ── Priority Matrix ───────────────────────────────────────────
-                  Text(
+                  AppText.captionBold(
                     'Priority Level:',
-                    style: AppTextStyles.captionBold.copyWith(
-                      color: palette.caption,
-                    ),
+                    color: palette.caption,
                   ),
                   AppSpacing.gapH8,
                   SingleChildScrollView(
@@ -735,7 +716,7 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                               radius: 5,
                               backgroundColor: color,
                             ),
-                            label: Text(label),
+                            label: AppText(label),
                             selected: isSelected,
                             selectedColor: color.withValues(alpha: 0.18),
                             labelStyle: textTheme.bodySmall?.copyWith(
@@ -756,11 +737,9 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                   AppSpacing.gapH16,
 
                   // ── Early Alert Lead Time ─────────────────────────────────────
-                  Text(
+                  AppText.captionBold(
                     'Advance Alert Notice:',
-                    style: AppTextStyles.captionBold.copyWith(
-                      color: palette.caption,
-                    ),
+                    color: palette.caption,
                   ),
                   AppSpacing.gapH8,
                   SingleChildScrollView(
@@ -773,7 +752,7 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                         return Padding(
                           padding: const EdgeInsets.only(right: 8),
                           child: ChoiceChip(
-                            label: Text(label),
+                            label: AppText(label),
                             selected: isSelected,
                             selectedColor: AppColors.primary.withValues(
                               alpha: 0.2,
@@ -800,12 +779,7 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                   AppSpacing.gapH16,
 
                   // ── Category ──────────────────────────────────────────────────
-                  Text(
-                    'Category:',
-                    style: AppTextStyles.captionBold.copyWith(
-                      color: palette.caption,
-                    ),
-                  ),
+                  AppText.captionBold('Category:', color: palette.caption),
                   AppSpacing.gapH8,
                   Wrap(
                     spacing: 8,
@@ -813,7 +787,7 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                       final isSelected = _category == cat;
                       final catColor = _getCategoryColor(cat);
                       return ChoiceChip(
-                        label: Text(cat),
+                        label: AppText(cat),
                         selected: isSelected,
                         selectedColor: catColor.withValues(alpha: 0.2),
                         labelStyle: textTheme.bodySmall?.copyWith(
@@ -835,11 +809,9 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
+                      AppText.captionBold(
                         'Checklist Subtasks (${_checklist.length}):',
-                        style: AppTextStyles.captionBold.copyWith(
-                          color: palette.caption,
-                        ),
+                        color: palette.caption,
                       ),
                     ],
                   ),
@@ -866,7 +838,7 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                             },
                           ),
                           Expanded(
-                            child: Text(
+                            child: AppText(
                               item.title,
                               style: textTheme.bodySmall?.copyWith(
                                 fontSize: 13,
@@ -948,11 +920,9 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                       onPressed: () {
                         final title = _titleController.text.trim();
                         if (title.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Please enter a reminder title.'),
-                              behavior: SnackBarBehavior.floating,
-                            ),
+                          SnackbarUtils.showMessage(
+                            context,
+                            'Please enter a reminder title.',
                           );
                           return;
                         }
@@ -980,20 +950,20 @@ class _SetReminderSheetState extends State<SetReminderSheet> {
                       },
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.moduleTime,
-                        foregroundColor: Colors.white,
+                        foregroundColor: AppColors.textWhite,
                         shape: const RoundedRectangleBorder(
                           borderRadius: AppRadius.radiusMd,
                         ),
                       ),
                       icon: const Icon(
                         Icons.check_rounded,
-                        color: Colors.white,
+                        color: AppColors.textWhite,
                       ),
-                      label: Text(
+                      label: AppText.labelLarge(
                         widget.submitButtonText ?? StringConstants.setReminder,
-                        style: AppTextStyles.buttonText.copyWith(
-                          color: Colors.white,
-                        ),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textWhite,
                       ),
                     ),
                   ),

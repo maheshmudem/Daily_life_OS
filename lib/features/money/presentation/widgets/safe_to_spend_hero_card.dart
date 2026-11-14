@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/config/theme/app_colors.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import '../../../../config/theme/app_decorations.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/theme_context.dart';
@@ -55,12 +57,12 @@ class SafeToSpendHeroCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
+                  color: AppColors.textWhite.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
                   Icons.shield_outlined,
-                  color: Colors.white,
+                  color: AppColors.textWhite,
                   size: 14,
                 ),
               ),
@@ -69,10 +71,10 @@ class SafeToSpendHeroCard extends StatelessWidget {
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
-                  child: Text(
+                  child: AppText(
                     'SAFE-TO-SPEND TODAY',
                     style: text.labelSmall?.copyWith(
-                      color: Colors.white,
+                      color: AppColors.textWhite,
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.6,
@@ -98,7 +100,9 @@ class SafeToSpendHeroCard extends StatelessWidget {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.22),
+                              color: AppColors.textWhite.withValues(
+                                alpha: 0.22,
+                              ),
                               borderRadius: AppRadius.radiusFull,
                             ),
                             child: Row(
@@ -107,13 +111,13 @@ class SafeToSpendHeroCard extends StatelessWidget {
                                 const Icon(
                                   Icons.auto_graph_rounded,
                                   size: 11,
-                                  color: Colors.white,
+                                  color: AppColors.textWhite,
                                 ),
                                 const SizedBox(width: 4),
-                                Text(
+                                AppText(
                                   'Set Plan',
                                   style: text.labelSmall?.copyWith(
-                                    color: Colors.white,
+                                    color: AppColors.textWhite,
                                     fontSize: 10,
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -130,13 +134,13 @@ class SafeToSpendHeroCard extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.18),
+                          color: AppColors.textWhite.withValues(alpha: 0.18),
                           borderRadius: AppRadius.radiusFull,
                         ),
-                        child: Text(
+                        child: AppText(
                           '${budget.daysRemaining}d left',
                           style: text.labelSmall?.copyWith(
-                            color: Colors.white,
+                            color: AppColors.textWhite,
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                           ),
@@ -150,13 +154,13 @@ class SafeToSpendHeroCard extends StatelessWidget {
                           child: Container(
                             padding: const EdgeInsets.all(5),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
+                              color: AppColors.textWhite.withValues(alpha: 0.2),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
                               Icons.tune_rounded,
                               size: 13,
-                              color: Colors.white,
+                              color: AppColors.textWhite,
                             ),
                           ),
                         ),
@@ -181,13 +185,13 @@ class SafeToSpendHeroCard extends StatelessWidget {
                     FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
-                      child: Text(
+                      child: AppText(
                         CurrencyUtils.format(
                           leftToday.clamp(0, double.infinity),
                         ),
                         maxLines: 1,
                         style: text.headlineMedium?.copyWith(
-                          color: Colors.white,
+                          color: AppColors.textWhite,
                           fontSize: 28,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.7,
@@ -196,13 +200,13 @@ class SafeToSpendHeroCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
+                    AppText(
                       budget.monthlyBudget <= 0
                           ? 'Tap "Set Plan" to set monthly salary/budget'
                           : 'Available out of ${CurrencyUtils.format(dailyLimit)}/day cap',
                       softWrap: true,
                       style: text.labelSmall?.copyWith(
-                        color: Colors.white70,
+                        color: AppColors.white70,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
@@ -218,18 +222,18 @@ class SafeToSpendHeroCard extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: isOverDaily
-                      ? Colors.redAccent.withValues(alpha: 0.34)
+                      ? AppColors.error.withValues(alpha: 0.34)
                       : isNearDaily
-                      ? Colors.amber.withValues(alpha: 0.30)
-                      : Colors.black.withValues(alpha: 0.18),
+                      ? AppColors.moduleTime.withValues(alpha: 0.30)
+                      : AppColors.black.withValues(alpha: 0.18),
                   borderRadius: AppRadius.radiusFull,
                 ),
-                child: Text(
+                child: AppText(
                   isOverDaily
                       ? 'Over by ${CurrencyUtils.format(spentToday - dailyLimit)}'
                       : '${((1.0 - dailyProgress) * 100).round()}% safe',
                   style: text.labelSmall?.copyWith(
-                    color: Colors.white,
+                    color: AppColors.textWhite,
                     fontSize: 10.5,
                     fontWeight: FontWeight.w700,
                   ),
@@ -249,13 +253,13 @@ class SafeToSpendHeroCard extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: animVal,
                 minHeight: 5.5,
-                backgroundColor: Colors.white.withValues(alpha: 0.22),
+                backgroundColor: AppColors.textWhite.withValues(alpha: 0.22),
                 valueColor: AlwaysStoppedAnimation<Color>(
                   isOverDaily
-                      ? Colors.redAccent.shade100
+                      ? AppColors.errorLight
                       : isNearDaily
-                      ? Colors.amberAccent
-                      : Colors.white,
+                      ? AppColors.moduleTimeLight
+                      : AppColors.textWhite,
                 ),
               ),
             ),
@@ -274,7 +278,7 @@ class SafeToSpendHeroCard extends StatelessWidget {
                         ? Icons.warning_amber_rounded
                         : Icons.notifications_active_outlined,
                     size: 13,
-                    color: Colors.white,
+                    color: AppColors.textWhite,
                   ),
                 ),
                 const SizedBox(width: 5),
@@ -284,9 +288,9 @@ class SafeToSpendHeroCard extends StatelessWidget {
                         ? 'Daily budget exceeded (${CurrencyUtils.format(spentToday)} spent today). Pause non-essential spend tomorrow to rebalance.'
                         : 'Approaching daily limit (${(dailyProgress * 100).round()}% used today). Keep remaining spend light.',
                     collapsedMaxLines: 1,
-                    toggleColor: Colors.white,
+                    toggleColor: AppColors.textWhite,
                     style: text.labelSmall?.copyWith(
-                      color: Colors.white,
+                      color: AppColors.textWhite,
                       fontSize: 10.5,
                       fontWeight: FontWeight.w600,
                     ),
@@ -302,9 +306,11 @@ class SafeToSpendHeroCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.15),
+              color: AppColors.black.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+              border: Border.all(
+                color: AppColors.textWhite.withValues(alpha: 0.10),
+              ),
             ),
             child: Column(
               children: [
@@ -328,7 +334,10 @@ class SafeToSpendHeroCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                Divider(height: 1, color: Colors.white.withValues(alpha: 0.14)),
+                Divider(
+                  height: 1,
+                  color: AppColors.textWhite.withValues(alpha: 0.14),
+                ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -365,10 +374,10 @@ class SafeToSpendHeroCard extends StatelessWidget {
         FittedBox(
           fit: BoxFit.scaleDown,
           alignment: Alignment.centerLeft,
-          child: Text(
+          child: AppText(
             label,
             style: text.labelSmall?.copyWith(
-              color: Colors.white70,
+              color: AppColors.white70,
               fontSize: 10,
             ),
           ),
@@ -377,10 +386,10 @@ class SafeToSpendHeroCard extends StatelessWidget {
         FittedBox(
           fit: BoxFit.scaleDown,
           alignment: Alignment.centerLeft,
-          child: Text(
+          child: AppText(
             value,
             style: text.labelLarge?.copyWith(
-              color: Colors.white,
+              color: AppColors.textWhite,
               fontWeight: FontWeight.w700,
               fontSize: 12.5,
               fontFeatures: const [FontFeature.tabularFigures()],

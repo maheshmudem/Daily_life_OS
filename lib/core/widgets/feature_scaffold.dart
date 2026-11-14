@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_radius.dart';
 import '../../config/theme/app_spacing.dart';
@@ -155,7 +156,7 @@ class FeatureScaffold extends StatelessWidget {
 
     return AppBar(
       backgroundColor: bg,
-      surfaceTintColor: Colors.transparent,
+      surfaceTintColor: AppColors.transparent,
       elevation: 0,
       scrolledUnderElevation: 0,
       automaticallyImplyLeading: false,
@@ -192,7 +193,7 @@ class FeatureScaffold extends StatelessWidget {
                     FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
-                      child: Text(
+                      child: AppText(
                         title!,
                         maxLines: 1,
                         style: text.headlineMedium?.copyWith(
@@ -209,7 +210,7 @@ class FeatureScaffold extends StatelessWidget {
                     FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
-                      child: Text(
+                      child: AppText(
                         subtitle!,
                         maxLines: 1,
                         style: text.labelMedium?.copyWith(
@@ -353,14 +354,14 @@ class FeatureErrorView extends StatelessWidget {
               ),
             ),
             AppSpacing.gapH16,
-            Text(
+            AppText(
               'Something went wrong',
               textAlign: TextAlign.center,
               style: text.titleMedium,
             ),
             if (message != null && message!.isNotEmpty) ...[
               AppSpacing.gapH4,
-              Text(
+              AppText(
                 message!,
                 textAlign: TextAlign.center,
                 maxLines: 3,
@@ -383,7 +384,7 @@ class FeatureErrorView extends StatelessWidget {
                   textStyle: text.labelLarge,
                 ),
                 icon: const Icon(Icons.refresh_rounded, size: 18),
-                label: const Text(StringConstants.retry),
+                label: const AppText(StringConstants.retry),
               ),
             ],
           ],
@@ -420,7 +421,7 @@ class FeatureSectionHeader extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              child: Text(
+              child: AppText(
                 title,
                 softWrap: true,
                 style: text.titleMedium?.copyWith(
@@ -440,10 +441,10 @@ class FeatureSectionHeader extends StatelessWidget {
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   textStyle: text.labelLarge?.copyWith(fontSize: 13),
                 ),
-                child: Text(actionLabel!),
+                child: AppText(actionLabel!),
               )
             else if (trailingText != null)
-              Text(
+              AppText(
                 trailingText!,
                 style: text.labelMedium?.copyWith(
                   fontFeatures: const [FontFeature.tabularFigures()],
@@ -512,7 +513,7 @@ class FeatureHeaderButton extends StatelessWidget {
         onPressed: onPressed,
         style: FilledButton.styleFrom(
           backgroundColor: color,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.textWhite,
           visualDensity: VisualDensity.compact,
           minimumSize: const Size(0, 36),
           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -526,7 +527,7 @@ class FeatureHeaderButton extends StatelessWidget {
           ),
         ),
         icon: Icon(icon, size: 16),
-        label: Text(label),
+        label: AppText(label),
       ),
     );
   }

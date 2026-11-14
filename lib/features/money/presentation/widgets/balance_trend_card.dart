@@ -1,10 +1,10 @@
 import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/currency_utils.dart';
@@ -150,7 +150,7 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                             ),
                           ),
                           const SizedBox(width: 6),
-                          Text(
+                          AppText(
                             StringConstants.mainAccount,
                             style: text.labelSmall?.copyWith(
                               fontSize: 11.5,
@@ -177,7 +177,7 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                           ),
                           child: FittedBox(
                             fit: BoxFit.scaleDown,
-                            child: Text(
+                            child: AppText(
                               _hideBalance
                                   ? 'Net Worth ••••'
                                   : 'Net Worth ${CurrencyUtils.compact(insights.netWorth)}',
@@ -226,7 +226,7 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
+                    AppText(
                       StringConstants.totalBalance,
                       style: text.labelSmall?.copyWith(
                         fontSize: 11.5,
@@ -246,7 +246,7 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                           color: AppColors.primary.withValues(alpha: 0.14),
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: Text(
+                        child: AppText(
                           'Day ${_touchedDayIndex! + 1}/${points.length}',
                           style: text.labelSmall?.copyWith(
                             fontSize: 10,
@@ -263,7 +263,7 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 200),
                   child: _hideBalance
-                      ? Text(
+                      ? AppText(
                           '${CurrencyUtils.symbol} ••••••',
                           key: const ValueKey('masked_balance'),
                           style: text.headlineLarge?.copyWith(
@@ -276,7 +276,7 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                       : FittedBox(
                           key: ValueKey('visible_balance_$wholePart'),
                           fit: BoxFit.scaleDown,
-                          child: Text.rich(
+                          child: AppText.rich(
                             TextSpan(
                               children: [
                                 TextSpan(
@@ -321,7 +321,7 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                       size: 14,
                     ),
                     const SizedBox(width: 4),
-                    Text(
+                    AppText.captionBold(
                       _hideBalance
                           ? '••••'
                           : CurrencyUtils.signed(
@@ -329,10 +329,8 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                               isCredit: isPositive,
                               decimals: 2,
                             ),
-                      style: AppTextStyles.captionBold.copyWith(
-                        color: changeColor,
-                        fontSize: 12,
-                      ),
+                      color: changeColor,
+                      fontSize: 12,
                     ),
                     const SizedBox(width: 8),
                     Container(
@@ -344,12 +342,10 @@ class _BalanceTrendCardState extends State<BalanceTrendCard> {
                         color: changeColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: Text(
+                      child: AppText.captionBold(
                         '${isPositive ? '▲' : '▼'} ${insights.balanceChangePercent.abs().toStringAsFixed(1)}% (14d)',
-                        style: AppTextStyles.captionBold.copyWith(
-                          color: changeColor,
-                          fontSize: 10.5,
-                        ),
+                        color: changeColor,
+                        fontSize: 10.5,
                       ),
                     ),
                   ],
@@ -543,7 +539,7 @@ class _SnapshotMetricTile extends StatelessWidget {
     final text = context.text;
     final isDark = palette.isDark;
     return Material(
-      color: Colors.transparent,
+      color: AppColors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(11),
@@ -575,7 +571,7 @@ class _SnapshotMetricTile extends StatelessWidget {
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
-                      child: Text(
+                      child: AppText(
                         label,
                         style: text.labelSmall?.copyWith(
                           fontSize: 11,
@@ -591,7 +587,7 @@ class _SnapshotMetricTile extends StatelessWidget {
               FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
-                child: Text(
+                child: AppText(
                   value,
                   maxLines: 1,
                   style: text.titleMedium?.copyWith(
@@ -606,7 +602,7 @@ class _SnapshotMetricTile extends StatelessWidget {
               FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
-                child: Text(
+                child: AppText(
                   subtitle,
                   style: text.labelSmall?.copyWith(
                     fontSize: 10,
@@ -666,7 +662,9 @@ class _BalanceLineChart extends StatelessWidget {
                 .map(
                   (s) => LineTooltipItem(
                     CurrencyUtils.format(s.y),
-                    AppTextStyles.captionBold.copyWith(color: Colors.white),
+                    context.text.captionBold.copyWith(
+                      color: AppColors.textWhite,
+                    ),
                   ),
                 )
                 .toList(),
@@ -690,7 +688,7 @@ class _BalanceLineChart extends StatelessWidget {
                     radius: 5,
                     color: AppColors.moduleMoney,
                     strokeWidth: 2.5,
-                    strokeColor: Colors.white,
+                    strokeColor: AppColors.textWhite,
                   ),
             ),
             belowBarData: BarAreaData(
@@ -781,13 +779,15 @@ class _DockActionTileState extends State<_DockActionTile> {
               child: Icon(
                 widget.icon,
                 size: 19,
-                color: widget.isFilled ? Colors.white : widget.accentColor,
+                color: widget.isFilled
+                    ? AppColors.textWhite
+                    : widget.accentColor,
               ),
             ),
             const SizedBox(height: 5),
             FittedBox(
               fit: BoxFit.scaleDown,
-              child: Text(
+              child: AppText(
                 widget.label,
                 maxLines: 1,
                 textAlign: TextAlign.center,

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../di/injection_container.dart';
@@ -287,7 +287,7 @@ class _PaletteHeader extends StatelessWidget {
         ),
         AppSpacing.gapW12,
         Expanded(
-          child: Text(
+          child: AppText(
             StringConstants.commandPaletteTitle,
             style: context.text.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
@@ -305,9 +305,9 @@ class _PaletteHeader extends StatelessWidget {
             borderRadius: AppRadius.borderSm,
             border: Border.all(color: palette.border),
           ),
-          child: Text(
+          child: AppText.monoCode(
             '${StringConstants.commandPaletteShortcutPrefix} • $totalIndexed ${StringConstants.commandPaletteIndexedSuffix}',
-            style: AppTextStyles.monoCode.copyWith(color: palette.caption),
+            color: palette.caption,
           ),
         ),
       ],
@@ -342,7 +342,7 @@ class _PartialIndexBanner extends StatelessWidget {
           ),
           AppSpacing.gapW8,
           Expanded(
-            child: Text(
+            child: AppText(
               '${StringConstants.partialIndexWarning}: ${failedModules.join(', ')}',
               style: context.text.bodySmall?.copyWith(
                 color: context.palette.body,
@@ -389,7 +389,7 @@ class _PaletteMessageCard extends StatelessWidget {
         children: [
           Icon(icon, size: AppSpacing.xxl, color: iconColor),
           AppSpacing.gapH8,
-          Text(
+          AppText(
             title,
             textAlign: TextAlign.center,
             style: context.text.titleSmall?.copyWith(
@@ -398,7 +398,7 @@ class _PaletteMessageCard extends StatelessWidget {
             ),
           ),
           AppSpacing.gapH4,
-          Text(
+          AppText(
             subtitle,
             textAlign: TextAlign.center,
             style: context.text.bodySmall?.copyWith(color: palette.caption),
@@ -409,7 +409,7 @@ class _PaletteMessageCard extends StatelessWidget {
               key: const ValueKey('command_palette_retry'),
               onPressed: onAction,
               icon: const Icon(Icons.refresh_rounded, size: AppSpacing.md),
-              label: Text(actionLabel!),
+              label: AppText(actionLabel!),
             ),
           ],
         ],

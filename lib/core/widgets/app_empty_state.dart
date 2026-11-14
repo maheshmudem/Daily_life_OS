@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_radius.dart';
 import '../../config/theme/app_spacing.dart';
@@ -43,13 +44,13 @@ class AppEmptyState extends StatelessWidget {
               child: Icon(icon, size: 48, color: tint),
             ),
             AppSpacing.gapH20,
-            Text(
+            AppText(
               title,
               textAlign: TextAlign.center,
               style: text.titleLarge?.copyWith(color: p.heading),
             ),
             AppSpacing.gapH8,
-            Text(
+            AppText(
               description,
               textAlign: TextAlign.center,
               style: text.bodyMedium?.copyWith(color: p.caption),
@@ -71,7 +72,7 @@ class AppEmptyState extends StatelessWidget {
                   elevation: 0,
                 ),
                 icon: const Icon(Icons.add_rounded, size: 18),
-                label: Text(
+                label: AppText(
                   actionLabel!,
                   style: text.labelLarge?.copyWith(
                     color: AppColors.textWhite,

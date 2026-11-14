@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/theme/app_colors.dart';
@@ -26,7 +27,7 @@ class EditCategoryLimitSheet extends StatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (_) => BlocProvider.value(
         value: bloc,
         child: EditCategoryLimitSheet(budget: budget),
@@ -126,11 +127,11 @@ class _EditCategoryLimitSheetState extends State<EditCategoryLimitSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    AppText(
                       cat.label,
                       style: text.titleLarge?.copyWith(color: p.heading),
                     ),
-                    Text(
+                    AppText(
                       '${StringConstants.currentSpend}: ${CurrencyUtils.format(widget.budget.spent)}',
                       style: text.labelSmall?.copyWith(color: p.caption),
                     ),
@@ -164,7 +165,7 @@ class _EditCategoryLimitSheetState extends State<EditCategoryLimitSheet> {
             runSpacing: AppSpacing.sm,
             children: _presetLimits().map((preset) {
               return ActionChip(
-                label: Text('${CurrencyUtils.symbol}$preset'),
+                label: AppText('${CurrencyUtils.symbol}$preset'),
                 onPressed: () {
                   _ctrl.text = preset.toString();
                   if (_error != null) setState(() => _error = null);
@@ -178,7 +179,7 @@ class _EditCategoryLimitSheetState extends State<EditCategoryLimitSheet> {
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text(StringConstants.cancel),
+                  child: const AppText(StringConstants.cancel),
                 ),
               ),
               AppSpacing.gapW12,
@@ -190,7 +191,7 @@ class _EditCategoryLimitSheetState extends State<EditCategoryLimitSheet> {
                     foregroundColor: AppColors.textWhite,
                   ),
                   onPressed: _save,
-                  child: const Text(StringConstants.saveLimit),
+                  child: const AppText(StringConstants.saveLimit),
                 ),
               ),
             ],
@@ -215,7 +216,7 @@ class EditSafeSpendSheet extends StatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (_) => BlocProvider.value(
         value: bloc,
         child: EditSafeSpendSheet(budget: budget),
@@ -289,7 +290,7 @@ class _EditSafeSpendSheetState extends State<EditSafeSpendSheet> {
               ),
             ),
             AppSpacing.gapH16,
-            Text(
+            AppText(
               StringConstants.safeSpendSettings,
               style: text.titleLarge?.copyWith(color: p.heading),
             ),
@@ -327,7 +328,7 @@ class _EditSafeSpendSheetState extends State<EditSafeSpendSheet> {
                   foregroundColor: AppColors.textWhite,
                 ),
                 onPressed: _save,
-                child: const Text(StringConstants.save),
+                child: const AppText(StringConstants.save),
               ),
             ),
           ],

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_bottom_sheet.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_radius.dart';
@@ -48,7 +50,7 @@ class AppActionSheet extends StatelessWidget {
     return showModalBottomSheet<T>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (ctx) => AppActionSheet(
         title: title,
         subtitle: subtitle,
@@ -79,7 +81,7 @@ class AppActionSheet extends StatelessWidget {
           borderRadius: AppRadius.radiusXxl,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: p.isDark ? 0.45 : 0.15),
+              color: AppColors.black.withValues(alpha: p.isDark ? 0.45 : 0.15),
               blurRadius: 32,
               offset: const Offset(0, -6),
             ),
@@ -90,18 +92,10 @@ class AppActionSheet extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Drag Handle Indicator
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(
-                  top: AppSpacing.md,
-                  bottom: AppSpacing.sm,
-                ),
-                width: 38,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: p.divider,
-                  borderRadius: AppRadius.radiusFull,
-                ),
+            const AppSheetHandle(
+              margin: EdgeInsets.only(
+                top: AppSpacing.md,
+                bottom: AppSpacing.sm,
               ),
             ),
 
@@ -123,7 +117,7 @@ class AppActionSheet extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (title != null)
-                            Text(
+                            AppText(
                               title!,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -134,7 +128,7 @@ class AppActionSheet extends StatelessWidget {
                             ),
                           if (subtitle != null) ...[
                             const SizedBox(height: 3),
-                            Text(
+                            AppText(
                               subtitle!,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -209,7 +203,7 @@ class AppActionSheet extends StatelessWidget {
               : p.surfaceMuted);
 
     return Material(
-      color: Colors.transparent,
+      color: AppColors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: () {
@@ -238,7 +232,7 @@ class AppActionSheet extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    AppText(
                       action.title,
                       style: text.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
@@ -247,7 +241,7 @@ class AppActionSheet extends StatelessWidget {
                     ),
                     if (action.subtitle != null) ...[
                       const SizedBox(height: 2),
-                      Text(
+                      AppText(
                         action.subtitle!,
                         style: text.labelSmall?.copyWith(color: p.caption),
                       ),

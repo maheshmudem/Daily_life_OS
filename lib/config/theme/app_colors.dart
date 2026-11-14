@@ -149,13 +149,34 @@ class AppColors {
 
   // Quick Action & Floating Bar
   static const Color floatingBarBackground = Color(0xEE0F172A);
+  static const Color floatingBarSurface = Color(0xF20F172A);
   static const Color floatingBarGlassBorder = Color(0x33FFFFFF);
+
+  // Hero Card Gradient Stops
+  static const Color primaryDeep = Color(0xFF4F46E5);
+  static const Color moduleMoneyDeep = Color(0xFF047857);
+  static const Color moduleMoneyDarkest = Color(0xFF065F46);
+  static const Color moduleTimeDarkest = Color(0xFFB45309);
+  static const Color moduleVaultDarkest = Color(0xFF5B21B6);
 
   // Routines Time of Day
   static const Color routineMorning = Color(0xFFF59E0B);
   static const Color routineAfternoon = Color(0xFF0EA5E9);
   static const Color routineEvening = Color(0xFF8B5CF6);
   static const Color routineNight = Color(0xFF4338CA);
+
+  // ==========================================
+  // BASE & OVERLAY TOKENS
+  // ==========================================
+  static const Color white = Colors.white;
+  static const Color black = Colors.black;
+  static const Color transparent = Colors.transparent;
+  static const Color overlayScrim = Colors.black54;
+  static const Color white70 = Colors.white70;
+  static const Color white60 = Colors.white60;
+  static const Color white54 = Colors.white54;
+  static const Color white24 = Colors.white24;
+  static const Color errorLight = Color(0xFFFCA5A5);
 
   // Additional Chart & Category Accents
   static const Color chartCyan = Color(0xFF06B6D4);

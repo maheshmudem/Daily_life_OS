@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
@@ -46,7 +47,7 @@ class MonthSelectorChip extends StatelessWidget {
               color: AppColors.moduleMoney,
             ),
             const SizedBox(width: 6),
-            Text(
+            AppText(
               AppDateUtils.formatMonthYear(selectedMonth),
               style: context.text.labelSmall?.copyWith(
                 fontWeight: FontWeight.w600,
@@ -78,7 +79,7 @@ class MonthPickerSheet extends StatelessWidget {
     return showModalBottomSheet<DateTime>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (_) => MonthPickerSheet(selectedMonth: selectedMonth),
     );
   }
@@ -116,7 +117,7 @@ class MonthPickerSheet extends StatelessWidget {
             ),
           ),
           AppSpacing.gapH16,
-          Text(
+          AppText(
             StringConstants.selectMonth,
             style: text.titleLarge?.copyWith(color: p.heading),
           ),
@@ -130,7 +131,7 @@ class MonthPickerSheet extends StatelessWidget {
                   ? AppDateUtils.formatMonthShort(m)
                   : '${AppDateUtils.formatMonthShort(m)} ${m.year}';
               return ChoiceChip(
-                label: Text(label),
+                label: AppText(label),
                 selected: selected,
                 showCheckmark: false,
                 selectedColor: AppColors.moduleMoney,

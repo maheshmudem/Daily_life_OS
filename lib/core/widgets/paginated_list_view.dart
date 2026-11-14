@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_spacing.dart';
 import '../../config/theme/theme_context.dart';
@@ -76,7 +77,7 @@ class _PaginatedListViewState<T> extends State<PaginatedListView<T>> {
     if (widget.items.isEmpty) {
       return widget.emptyWidget ??
           Center(
-            child: Text(
+            child: AppText(
               'No items found',
               style: context.text.bodyMedium?.copyWith(
                 color: context.palette.caption,

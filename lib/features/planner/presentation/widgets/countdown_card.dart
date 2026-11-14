@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/widgets/expandable_text_widget.dart';
 import '../../domain/entities/countdown_item_entity.dart';
@@ -74,7 +74,7 @@ class CountdownCard extends StatelessWidget {
             ? null
             : [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.025),
+                  color: AppColors.black.withValues(alpha: 0.025),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -145,7 +145,7 @@ class CountdownCard extends StatelessWidget {
                                       color: palette.caption,
                                     ),
                                     const SizedBox(width: 3.5),
-                                    Text(
+                                    AppText(
                                       _formatDate(item.date),
                                       style: textTheme.labelSmall?.copyWith(
                                         fontSize: 11.5,
@@ -180,7 +180,7 @@ class CountdownCard extends StatelessWidget {
                         ),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Text(
+                      child: AppText(
                         badgeText,
                         style: textTheme.labelSmall?.copyWith(
                           fontWeight: FontWeight.w800,
@@ -278,7 +278,7 @@ class CountdownCard extends StatelessWidget {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          textStyle: AppTextStyles.captionBold.copyWith(
+                          textStyle: context.text.captionBold.copyWith(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
                           ),
@@ -289,7 +289,7 @@ class CountdownCard extends StatelessWidget {
                         ),
                         label: const FittedBox(
                           fit: BoxFit.scaleDown,
-                          child: Text('Add to Planner'),
+                          child: AppText('Add to Planner'),
                         ),
                       ),
                     ),
@@ -405,7 +405,7 @@ class _Pill extends StatelessWidget {
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(5),
       ),
-      child: Text(
+      child: AppText(
         label,
         style: context.text.labelSmall?.copyWith(
           fontSize: 10,

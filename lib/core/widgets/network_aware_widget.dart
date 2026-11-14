@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_spacing.dart';
 import '../../config/theme/theme_context.dart';
@@ -35,7 +36,7 @@ class NetworkAwareWidget extends StatelessWidget {
                 ),
                 AppSpacing.gapW8,
                 Expanded(
-                  child: Text(
+                  child: AppText(
                     StringConstants.networkError,
                     style: context.text.bodySmall?.copyWith(
                       color: AppColors.textWhite,

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/currency_utils.dart';
@@ -22,7 +22,7 @@ class MoneyReportSheet extends StatelessWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (_) =>
           BlocProvider.value(value: bloc, child: const MoneyReportSheet()),
     );
@@ -144,14 +144,14 @@ class MoneyReportSheet extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        AppText(
                           StringConstants.financialStatementTitle,
                           style: context.text.titleMedium?.copyWith(
                             fontWeight: FontWeight.w800,
                             color: palette.heading,
                           ),
                         ),
-                        Text(
+                        AppText(
                           StringConstants.financialStatementSubtitle,
                           style: context.text.bodySmall?.copyWith(
                             color: palette.caption,
@@ -218,7 +218,7 @@ class MoneyReportSheet extends StatelessWidget {
                         ],
                       ),
                       AppSpacing.gapH16,
-                      Text(
+                      AppText(
                         StringConstants.topCategories,
                         style: context.text.titleSmall?.copyWith(
                           fontWeight: FontWeight.w700,
@@ -227,7 +227,7 @@ class MoneyReportSheet extends StatelessWidget {
                       ),
                       AppSpacing.gapH8,
                       if (insights.categorySpend.isEmpty)
-                        Text(
+                        AppText(
                           StringConstants.noTransactionsTitle,
                           style: context.text.bodySmall?.copyWith(
                             color: palette.caption,
@@ -249,7 +249,7 @@ class MoneyReportSheet extends StatelessWidget {
                                 ),
                                 AppSpacing.gapW8,
                                 Expanded(
-                                  child: Text(
+                                  child: AppText(
                                     item.category.label,
                                     style: context.text.bodyMedium?.copyWith(
                                       color: palette.body,
@@ -257,12 +257,10 @@ class MoneyReportSheet extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                                Text(
+                                AppText.monoCode(
                                   '${CurrencyUtils.format(item.amount)} ($pct%)',
-                                  style: AppTextStyles.monoCode.copyWith(
-                                    color: palette.heading,
-                                    fontWeight: FontWeight.w700,
-                                  ),
+                                  color: palette.heading,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ],
                             ),
@@ -275,7 +273,7 @@ class MoneyReportSheet extends StatelessWidget {
                           key: const ValueKey('copy_financial_statement_btn'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
+                            foregroundColor: AppColors.textWhite,
                             padding: const EdgeInsets.symmetric(
                               vertical: AppSpacing.md,
                             ),
@@ -290,7 +288,9 @@ class MoneyReportSheet extends StatelessWidget {
                             );
                           },
                           icon: const Icon(Icons.copy_all_rounded),
-                          label: const Text(StringConstants.copyStatementLabel),
+                          label: const AppText(
+                            StringConstants.copyStatementLabel,
+                          ),
                         ),
                       ),
                     ],
@@ -330,7 +330,7 @@ class _MetricTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          AppText(
             label,
             style: context.text.labelSmall?.copyWith(
               color: palette.caption,
@@ -341,7 +341,7 @@ class _MetricTile extends StatelessWidget {
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
-            child: Text(
+            child: AppText(
               value,
               style: context.text.titleSmall?.copyWith(
                 color: color,

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../domain/entities/planner_item_entity.dart';
 import '../../domain/entities/pomodoro_entities.dart';
@@ -57,7 +57,7 @@ class PomodoroLinkedTaskSheet extends StatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (ctx) => PomodoroLinkedTaskSheet(
         currentTask: currentTask,
         currentLinkedTaskId: currentLinkedTaskId,
@@ -136,12 +136,10 @@ class _PomodoroLinkedTaskSheetState extends State<PomodoroLinkedTaskSheet> {
                   ),
                 ),
                 AppSpacing.gapH16,
-                Text(
+                AppText.titleMedium(
                   'Change Linked Focus Task',
-                  style: AppTextStyles.titleMedium.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: headingColor,
-                  ),
+                  fontWeight: FontWeight.w800,
+                  color: headingColor,
                 ),
                 const SizedBox(height: 14),
                 TextField(
@@ -164,12 +162,7 @@ class _PomodoroLinkedTaskSheetState extends State<PomodoroLinkedTaskSheet> {
                 const SizedBox(height: 14),
 
                 // Focus Category Selector
-                Text(
-                  'Focus Category:',
-                  style: AppTextStyles.captionBold.copyWith(
-                    color: captionColor,
-                  ),
-                ),
+                AppText.captionBold('Focus Category:', color: captionColor),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 6,
@@ -188,7 +181,7 @@ class _PomodoroLinkedTaskSheetState extends State<PomodoroLinkedTaskSheet> {
                             color: isSelected ? catColor : captionColor,
                           ),
                           const SizedBox(width: 4),
-                          Text(cat),
+                          AppText(cat),
                         ],
                       ),
                       selected: isSelected,
@@ -200,7 +193,7 @@ class _PomodoroLinkedTaskSheetState extends State<PomodoroLinkedTaskSheet> {
                       side: BorderSide(
                         color: isSelected
                             ? catColor.withValues(alpha: 0.6)
-                            : Colors.transparent,
+                            : AppColors.transparent,
                       ),
                       labelStyle: textTheme.labelSmall?.copyWith(
                         fontSize: 11.5,
@@ -220,11 +213,9 @@ class _PomodoroLinkedTaskSheetState extends State<PomodoroLinkedTaskSheet> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
+                    AppText.captionBold(
                       'Estimated Pomodoros (🍅):',
-                      style: AppTextStyles.captionBold.copyWith(
-                        color: captionColor,
-                      ),
+                      color: captionColor,
                     ),
                     Row(
                       children: List.generate(6, (idx) {
@@ -245,12 +236,14 @@ class _PomodoroLinkedTaskSheetState extends State<PomodoroLinkedTaskSheet> {
                                   : palette.surfaceMuted,
                               borderRadius: BorderRadius.circular(7),
                             ),
-                            child: Text(
+                            child: AppText(
                               '$count',
                               style: textTheme.bodySmall?.copyWith(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
-                                color: selected ? Colors.white : headingColor,
+                                color: selected
+                                    ? AppColors.textWhite
+                                    : headingColor,
                               ),
                             ),
                           ),
@@ -262,11 +255,9 @@ class _PomodoroLinkedTaskSheetState extends State<PomodoroLinkedTaskSheet> {
                 const SizedBox(height: 14),
 
                 if (pendingTasks.isNotEmpty) ...[
-                  Text(
+                  AppText.captionBold(
                     'Or pick from today\'s planner (links subtasks):',
-                    style: AppTextStyles.captionBold.copyWith(
-                      color: captionColor,
-                    ),
+                    color: captionColor,
                   ),
                   const SizedBox(height: 8),
                   Wrap(
@@ -285,7 +276,7 @@ class _PomodoroLinkedTaskSheetState extends State<PomodoroLinkedTaskSheet> {
                         backgroundColor: isLinked
                             ? AppColors.moduleTime.withValues(alpha: 0.14)
                             : null,
-                        label: Text(
+                        label: AppText(
                           task.checklist.isNotEmpty
                               ? '${task.title} (${task.checklistDoneCount}/${task.checklist.length})'
                               : task.title,
@@ -339,12 +330,11 @@ class _PomodoroLinkedTaskSheetState extends State<PomodoroLinkedTaskSheet> {
                       }
                       Navigator.of(context).pop();
                     },
-                    child: Text(
+                    child: const AppText.labelLarge(
                       'Update Focus Task',
-                      style: AppTextStyles.buttonLabel.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textWhite,
                     ),
                   ),
                 ),

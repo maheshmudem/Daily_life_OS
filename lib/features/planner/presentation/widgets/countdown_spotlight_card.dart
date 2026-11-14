@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_decorations.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../domain/entities/countdown_item_entity.dart';
 
@@ -147,7 +147,7 @@ class CountdownSpotlightCard extends StatelessWidget {
                 // ── 1. Nearest Milestone Digital Spotlight ───────────────────
                 if (nearest != null) ...[
                   Material(
-                    color: Colors.transparent,
+                    color: AppColors.transparent,
                     child: InkWell(
                       onTap: onTapNearest,
                       borderRadius: AppRadius.radiusSm,
@@ -188,22 +188,19 @@ class CountdownSpotlightCard extends StatelessWidget {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        Text(
+                                        AppText.overline(
                                           'MILESTONE SPOTLIGHT · ${DateFormat('MMM d, yyyy').format(nearest.date).toUpperCase()}',
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: AppTextStyles.overline
-                                              .copyWith(
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.w800,
-                                                letterSpacing: 0.5,
-                                                color: isDark
-                                                    ? AppColors.moduleTimeLight
-                                                    : AppColors.moduleTimeDark,
-                                              ),
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: 0.5,
+                                          color: isDark
+                                              ? AppColors.moduleTimeLight
+                                              : AppColors.moduleTimeDark,
                                         ),
                                         const SizedBox(height: 2.5),
-                                        Text(
+                                        AppText(
                                           'Next Up · ${nearest.title}',
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
@@ -348,7 +345,7 @@ class _DigitalTile extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
+          AppText(
             value,
             style: textTheme.titleSmall?.copyWith(
               fontSize: 15,
@@ -359,14 +356,12 @@ class _DigitalTile extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2),
-          Text(
+          AppText.overline(
             unit,
-            style: AppTextStyles.overline.copyWith(
-              fontSize: 8,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-              color: palette.caption,
-            ),
+            fontSize: 8,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.5,
+            color: palette.caption,
           ),
         ],
       ),
@@ -397,7 +392,7 @@ class _SpotlightStat extends StatelessWidget {
         children: [
           FittedBox(
             fit: BoxFit.scaleDown,
-            child: Text(
+            child: AppText(
               value,
               maxLines: 1,
               style: textTheme.titleSmall?.copyWith(
@@ -424,7 +419,7 @@ class _SpotlightStat extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 4),
-                Text(
+                AppText(
                   label,
                   maxLines: 1,
                   style: textTheme.labelSmall?.copyWith(

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 
@@ -96,7 +96,7 @@ class SetReminderCard extends StatelessWidget {
                 child: Row(
                   children: [
                     Flexible(
-                      child: Text(
+                      child: AppText(
                         StringConstants.setReminder,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -140,15 +140,13 @@ class SetReminderCard extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 4),
                                 Flexible(
-                                  child: Text(
+                                  child: AppText.captionBold(
                                     targetDateLabel!,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: AppTextStyles.captionBold.copyWith(
-                                      fontSize: 10.5,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.moduleTime,
-                                    ),
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.moduleTime,
                                   ),
                                 ),
                               ],
@@ -169,13 +167,11 @@ class SetReminderCard extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
+                      const AppText.captionBold(
                         'Full options',
-                        style: AppTextStyles.captionBold.copyWith(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.moduleTime,
-                        ),
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.moduleTime,
                       ),
                       const SizedBox(width: 1),
                       Icon(
@@ -279,7 +275,7 @@ class SetReminderCard extends StatelessWidget {
                 onPressed: onSubmit,
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.moduleTime,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.textWhite,
                   elevation: 0,
                   minimumSize: const Size(0, _controlHeight),
                   padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -288,12 +284,12 @@ class SetReminderCard extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(9),
                   ),
-                  textStyle: AppTextStyles.captionBold.copyWith(
+                  textStyle: context.text.captionBold.copyWith(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                child: const Text(StringConstants.setReminder),
+                child: const AppText(StringConstants.setReminder),
               );
 
               if (constraints.maxWidth < 300) {
@@ -349,7 +345,7 @@ class _OptionChip extends StatelessWidget {
             children: [
               Icon(icon, size: 14, color: color),
               const SizedBox(width: 5),
-              Text(
+              AppText(
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

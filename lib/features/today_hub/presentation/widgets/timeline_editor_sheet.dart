@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
 import '../../domain/entities/timeline_item_entity.dart';
@@ -29,7 +29,7 @@ class TimelineEditorSheet extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (_) => TimelineEditorSheet(
         existing: existing,
         onSave: onSave,
@@ -222,14 +222,14 @@ class _TimelineEditorSheetState extends State<TimelineEditorSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      AppText(
                         isEditing ? 'Edit Timeline Task' : 'Add Timeline Task',
                         style: text.titleMedium?.copyWith(
                           fontWeight: FontWeight.w700,
                           color: palette.heading,
                         ),
                       ),
-                      Text(
+                      AppText(
                         'Schedule a task or reminder for today\'s feed',
                         style: text.labelSmall?.copyWith(
                           color: palette.caption,
@@ -260,7 +260,7 @@ class _TimelineEditorSheetState extends State<TimelineEditorSheet> {
               ],
             ),
             const SizedBox(height: 16),
-            Text(
+            AppText(
               'TASK TITLE',
               style: text.labelSmall?.copyWith(
                 fontWeight: FontWeight.w700,
@@ -301,7 +301,7 @@ class _TimelineEditorSheetState extends State<TimelineEditorSheet> {
               ),
             ),
             const SizedBox(height: 14),
-            Text(
+            AppText(
               'CATEGORY & MODULE',
               style: text.labelSmall?.copyWith(
                 fontWeight: FontWeight.w700,
@@ -341,7 +341,7 @@ class _TimelineEditorSheetState extends State<TimelineEditorSheet> {
                       children: [
                         Icon(ic, size: 14, color: active ? c : palette.caption),
                         const SizedBox(width: 6),
-                        Text(
+                        AppText(
                           name,
                           style: text.labelMedium?.copyWith(
                             fontSize: 12,
@@ -358,7 +358,7 @@ class _TimelineEditorSheetState extends State<TimelineEditorSheet> {
               }).toList(),
             ),
             const SizedBox(height: 14),
-            Text(
+            AppText(
               'SCHEDULED TIME',
               style: text.labelSmall?.copyWith(
                 fontWeight: FontWeight.w700,
@@ -392,7 +392,7 @@ class _TimelineEditorSheetState extends State<TimelineEditorSheet> {
                   children: [
                     Icon(Icons.schedule_rounded, size: 18, color: accent),
                     const SizedBox(width: 10),
-                    Text(
+                    AppText(
                       _formatTime(_selectedTime),
                       style: text.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
@@ -400,7 +400,7 @@ class _TimelineEditorSheetState extends State<TimelineEditorSheet> {
                       ),
                     ),
                     const Spacer(),
-                    Text(
+                    AppText(
                       'Change Time',
                       style: text.labelMedium?.copyWith(
                         color: accent,
@@ -419,7 +419,7 @@ class _TimelineEditorSheetState extends State<TimelineEditorSheet> {
                 onPressed: _handleSave,
                 style: FilledButton.styleFrom(
                   backgroundColor: accent,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.textWhite,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -428,13 +428,11 @@ class _TimelineEditorSheetState extends State<TimelineEditorSheet> {
                   isEditing ? Icons.check_rounded : Icons.add_rounded,
                   size: 18,
                 ),
-                label: Text(
+                label: AppText.labelLarge(
                   isEditing ? 'Save Task Changes' : 'Add to Today\'s Timeline',
-                  style: AppTextStyles.labelLarge.copyWith(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  color: AppColors.textWhite,
                 ),
               ),
             ),

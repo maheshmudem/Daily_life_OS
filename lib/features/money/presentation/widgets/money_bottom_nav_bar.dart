@@ -103,7 +103,7 @@ class MoneyBottomNavBar extends StatelessWidget {
             ? null
             : [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
+                  color: AppColors.black.withValues(alpha: 0.04),
                   blurRadius: 14,
                   offset: const Offset(0, -3),
                 ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 
 /// Smoothly rolling numeric / currency text powered by [TweenAnimationBuilder]
 /// with tabular figures (`FontFeature.tabularFigures()`), inspired by Copilot
@@ -38,7 +39,7 @@ class AnimatedCountText extends StatelessWidget {
         final formatted = formatter != null
             ? formatter!(animatedValue)
             : animatedValue.toStringAsFixed(0);
-        return Text(
+        return AppText(
           '$prefix$formatted$suffix',
           textAlign: textAlign,
           style: effectiveStyle,

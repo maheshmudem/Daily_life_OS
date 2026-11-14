@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
+import 'app_text_styles.dart';
 
 /// Resolved light/dark colour roles for the current [BuildContext].
 ///
@@ -78,4 +79,28 @@ extension ThemeContextX on BuildContext {
   TextTheme get text => Theme.of(this).textTheme;
   AppPalette get palette => AppPalette.of(this);
   bool get isDarkMode => Theme.of(this).brightness == Brightness.dark;
+}
+
+/// Convenience accessors on [TextTheme] that mirror [AppTextStyles] tokens
+/// while automatically resolving the active light/dark theme colors.
+extension AppTextThemeX on TextTheme {
+  TextStyle get headingLarge => headlineLarge ?? AppTextStyles.headingLarge;
+  TextStyle get headingMedium => headlineMedium ?? AppTextStyles.headingMedium;
+  TextStyle get headingSmall => headlineSmall ?? AppTextStyles.headingSmall;
+  TextStyle get caption => labelMedium ?? AppTextStyles.caption;
+  TextStyle get captionBold => (labelMedium ?? AppTextStyles.captionBold)
+      .copyWith(fontWeight: FontWeight.w600);
+  TextStyle get overline => labelSmall ?? AppTextStyles.overline;
+  TextStyle get monoCode => AppTextStyles.monoCode.copyWith(
+    color: titleLarge?.color ?? AppColors.textHeading,
+  );
+  TextStyle get statValue => AppTextStyles.statValue.copyWith(
+    color: titleLarge?.color ?? AppColors.textHeading,
+  );
+  TextStyle get currencyHero => AppTextStyles.currencyHero.copyWith(
+    color: titleLarge?.color ?? AppColors.textHeading,
+  );
+  TextStyle get timerHero => AppTextStyles.timerHero.copyWith(
+    color: titleLarge?.color ?? AppColors.textHeading,
+  );
 }

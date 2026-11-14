@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../config/theme/app_colors.dart';
@@ -31,7 +32,7 @@ class PlannerSnoozeSheet extends StatelessWidget {
   }) {
     return showModalBottomSheet<PlannerSnoozeChoice>(
       context: context,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       isScrollControlled: true,
       builder: (_) => PlannerSnoozeSheet(item: item),
     );
@@ -123,7 +124,7 @@ class PlannerSnoozeSheet extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          AppText(
                             'Snooze Reminder',
                             style: textTheme.titleMedium?.copyWith(
                               fontSize: 16.5,
@@ -131,7 +132,7 @@ class PlannerSnoozeSheet extends StatelessWidget {
                               color: palette.heading,
                             ),
                           ),
-                          Text(
+                          AppText(
                             item.title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -278,7 +279,7 @@ class _SnoozeOptionTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    AppText(
                       title,
                       style: textTheme.bodyMedium?.copyWith(
                         fontSize: 13.5,
@@ -286,7 +287,7 @@ class _SnoozeOptionTile extends StatelessWidget {
                         color: palette.heading,
                       ),
                     ),
-                    Text(
+                    AppText(
                       subtitle,
                       style: textTheme.labelSmall?.copyWith(
                         fontSize: 11.5,

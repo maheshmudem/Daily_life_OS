@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -6,7 +7,6 @@ import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_decorations.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/utils/currency_utils.dart';
@@ -161,7 +161,7 @@ class _TodayHubViewState extends State<_TodayHubView> {
                 FeatureIconButton(
                   key: const ValueKey('today_spotlight_button'),
                   backgroundColor: tintBg,
-                  borderColor: Colors.transparent,
+                  borderColor: AppColors.transparent,
                   icon: Icons.search_rounded,
                   tooltip: StringConstants.spotlightSearchTooltip,
                   color: AppColors.primary,
@@ -181,7 +181,7 @@ class _TodayHubViewState extends State<_TodayHubView> {
                 FeatureIconButton(
                   icon: Icons.auto_awesome_rounded,
                   backgroundColor: tintBg,
-                  borderColor: Colors.transparent,
+                  borderColor: AppColors.transparent,
                   tooltip: 'Manage Habits & Micro-Routines',
                   color: AppColors.primary,
                   onPressed: () => ManageHabitsSheet.show(context),
@@ -190,7 +190,7 @@ class _TodayHubViewState extends State<_TodayHubView> {
                 FeatureIconButton(
                   icon: Icons.volume_up_rounded,
                   backgroundColor: tintBg,
-                  borderColor: Colors.transparent,
+                  borderColor: AppColors.transparent,
                   tooltip: StringConstants.playBriefing,
                   color: AppColors.primary,
                   onPressed: () => _playAudioBriefing(
@@ -478,7 +478,7 @@ class _HabitsSectionHeader extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: Text(
+          child: AppText(
             StringConstants.habitsAndRoutines,
             softWrap: true,
             style: text.titleMedium?.copyWith(
@@ -521,14 +521,18 @@ class _HabitsSectionHeader extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.add_rounded, size: 15, color: Colors.white),
+                const Icon(
+                  Icons.add_rounded,
+                  size: 15,
+                  color: AppColors.textWhite,
+                ),
                 const SizedBox(width: 3),
-                Text(
+                AppText(
                   'Add',
                   style: text.labelSmall?.copyWith(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: AppColors.textWhite,
                   ),
                 ),
               ],
@@ -608,7 +612,7 @@ class _HabitsManagementCardState extends State<_HabitsManagementCard> {
                     ),
                     const SizedBox(width: 6),
                     Expanded(
-                      child: Text(
+                      child: AppText(
                         '$weeklyPct% consistency · Best ${state.longestActiveStreak}d',
                         softWrap: true,
                         style: text.labelSmall?.copyWith(
@@ -635,7 +639,7 @@ class _HabitsManagementCardState extends State<_HabitsManagementCard> {
                           color: AppColors.warning.withValues(alpha: 0.14),
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: Text(
+                        child: AppText(
                           '${state.skippedHabits} skipped',
                           style: text.labelSmall?.copyWith(
                             fontSize: 10,
@@ -684,14 +688,16 @@ class _HabitsManagementCardState extends State<_HabitsManagementCard> {
                                   width: 0.8,
                                 ),
                               ),
-                              child: Text(
+                              child: AppText(
                                 cat,
                                 style: text.labelSmall?.copyWith(
                                   fontSize: 10.5,
                                   fontWeight: active
                                       ? FontWeight.w700
                                       : FontWeight.w500,
-                                  color: active ? Colors.white : palette.body,
+                                  color: active
+                                      ? AppColors.textWhite
+                                      : palette.body,
                                 ),
                               ),
                             ),
@@ -715,7 +721,7 @@ class _HabitsManagementCardState extends State<_HabitsManagementCard> {
               child: Center(
                 child: Column(
                   children: [
-                    Text(
+                    AppText(
                       state.habits.isEmpty
                           ? 'No habits configured yet.'
                           : 'No habits in "${state.selectedHabitCategory}".',
@@ -738,7 +744,7 @@ class _HabitsManagementCardState extends State<_HabitsManagementCard> {
                         }
                       },
                       icon: const Icon(Icons.add_rounded, size: 16),
-                      label: Text(
+                      label: AppText(
                         state.habits.isNotEmpty &&
                                 state.selectedHabitCategory != 'All'
                             ? 'Show All Categories'
@@ -810,14 +816,12 @@ class _HabitsManagementCardState extends State<_HabitsManagementCard> {
                           : Icons.keyboard_arrow_down_rounded,
                       size: 16,
                     ),
-                    label: Text(
+                    label: AppText(
                       _showAllHabits
                           ? 'Show less habits'
                           : 'Show more ($hiddenHabitsCount more habits)',
-                      style: AppTextStyles.labelSmall.copyWith(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w700,
-                      ),
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -854,7 +858,7 @@ class _TimelineSectionHeader extends StatelessWidget {
             runSpacing: 4,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Text(
+              AppText(
                 StringConstants.timelineFeed,
                 softWrap: true,
                 style: text.titleMedium?.copyWith(
@@ -897,7 +901,7 @@ class _TimelineSectionHeader extends StatelessWidget {
                   color: AppColors.moduleTime,
                 ),
                 const SizedBox(width: 3),
-                Text(
+                AppText(
                   'Task',
                   style: text.labelSmall?.copyWith(
                     fontSize: 12,
@@ -932,7 +936,7 @@ class _CountPill extends StatelessWidget {
         color: color.withValues(alpha: isDark ? 0.18 : 0.10),
         borderRadius: AppRadius.radiusFull,
       ),
-      child: Text(
+      child: AppText(
         text,
         style: context.text.labelSmall?.copyWith(
           color: color,
@@ -999,7 +1003,7 @@ class _MomentumSummaryCard extends StatelessWidget {
                     Row(
                       children: [
                         Flexible(
-                          child: Text(
+                          child: AppText(
                             'DAILY MOMENTUM',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -1007,7 +1011,9 @@ class _MomentumSummaryCard extends StatelessWidget {
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
                               letterSpacing: 0.6,
-                              color: Colors.white.withValues(alpha: 0.74),
+                              color: AppColors.textWhite.withValues(
+                                alpha: 0.74,
+                              ),
                             ),
                           ),
                         ),
@@ -1019,7 +1025,9 @@ class _MomentumSummaryCard extends StatelessWidget {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.18),
+                              color: AppColors.textWhite.withValues(
+                                alpha: 0.18,
+                              ),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Row(
@@ -1031,12 +1039,12 @@ class _MomentumSummaryCard extends StatelessWidget {
                                   color: AppColors.moduleTimeLight,
                                 ),
                                 const SizedBox(width: 2),
-                                Text(
+                                AppText(
                                   '${longestStreak}d streak',
                                   style: text.labelSmall?.copyWith(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w700,
-                                    color: Colors.white,
+                                    color: AppColors.textWhite,
                                   ),
                                 ),
                               ],
@@ -1046,7 +1054,7 @@ class _MomentumSummaryCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 5),
-                    Text(
+                    AppText(
                       _getMotivationMessage(pct),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -1055,7 +1063,7 @@ class _MomentumSummaryCard extends StatelessWidget {
                         height: 1.25,
                         letterSpacing: -0.3,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                        color: AppColors.textWhite,
                       ),
                     ),
                     if (next != null) ...[
@@ -1065,18 +1073,20 @@ class _MomentumSummaryCard extends StatelessWidget {
                           Icon(
                             Icons.arrow_forward_rounded,
                             size: 13,
-                            color: Colors.white.withValues(alpha: 0.8),
+                            color: AppColors.textWhite.withValues(alpha: 0.8),
                           ),
                           const SizedBox(width: 4),
                           Expanded(
-                            child: Text(
+                            child: AppText(
                               'Next · ${next.time} · ${next.title}',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: text.labelSmall?.copyWith(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
-                                color: Colors.white.withValues(alpha: 0.85),
+                                color: AppColors.textWhite.withValues(
+                                  alpha: 0.85,
+                                ),
                               ),
                             ),
                           ),
@@ -1092,7 +1102,7 @@ class _MomentumSummaryCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.14),
+              color: AppColors.textWhite.withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Row(
@@ -1150,17 +1160,19 @@ class _MomentumRing extends StatelessWidget {
                 child: CircularProgressIndicator(
                   value: animVal,
                   strokeWidth: 6.5,
-                  backgroundColor: Colors.white.withValues(alpha: 0.22),
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                  backgroundColor: AppColors.textWhite.withValues(alpha: 0.22),
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    AppColors.textWhite,
+                  ),
                   strokeCap: StrokeCap.round,
                 ),
               ),
-              Text(
+              AppText(
                 '${(animVal * 100).round()}%',
                 style: context.text.labelLarge?.copyWith(
                   fontSize: 14.5,
                   fontWeight: FontWeight.w800,
-                  color: Colors.white,
+                  color: AppColors.textWhite,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
@@ -1190,13 +1202,13 @@ class _HeroMetric extends StatelessWidget {
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.center,
-            child: Text(
+            child: AppText(
               value,
               style: text.titleSmall?.copyWith(
                 fontSize: 15,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.2,
-                color: Colors.white,
+                color: AppColors.textWhite,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
@@ -1205,12 +1217,12 @@ class _HeroMetric extends StatelessWidget {
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.center,
-            child: Text(
+            child: AppText(
               label,
               style: text.labelSmall?.copyWith(
                 fontSize: 10.5,
                 fontWeight: FontWeight.w600,
-                color: Colors.white.withValues(alpha: 0.76),
+                color: AppColors.textWhite.withValues(alpha: 0.76),
               ),
             ),
           ),
@@ -1228,7 +1240,7 @@ class _HeroMetricDivider extends StatelessWidget {
     return Container(
       width: 1,
       height: 30,
-      color: Colors.white.withValues(alpha: 0.22),
+      color: AppColors.textWhite.withValues(alpha: 0.22),
     );
   }
 }
@@ -1262,7 +1274,7 @@ class _TimelineUnifiedCardState extends State<_TimelineUnifiedCard> {
         child: Center(
           child: Column(
             children: [
-              Text(
+              AppText(
                 'No timeline items scheduled for today.',
                 style: context.text.bodyMedium?.copyWith(
                   color: palette.caption,
@@ -1278,7 +1290,7 @@ class _TimelineUnifiedCardState extends State<_TimelineUnifiedCard> {
                   );
                 },
                 icon: const Icon(Icons.add_rounded, size: 16),
-                label: const Text('Schedule Today\'s First Task'),
+                label: const AppText('Schedule Today\'s First Task'),
               ),
             ],
           ),
@@ -1352,14 +1364,12 @@ class _TimelineUnifiedCardState extends State<_TimelineUnifiedCard> {
                       : Icons.keyboard_arrow_down_rounded,
                   size: 16,
                 ),
-                label: Text(
+                label: AppText(
                   _showAllItems
                       ? 'Show less'
                       : 'Show more ($hiddenCount more tasks)',
-                  style: AppTextStyles.labelSmall.copyWith(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
@@ -1422,7 +1432,9 @@ class _TimelineRowTile extends StatelessWidget {
                 height: 22,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: item.isDone ? AppColors.success : Colors.transparent,
+                  color: item.isDone
+                      ? AppColors.success
+                      : AppColors.transparent,
                   border: Border.all(
                     color: item.isDone ? AppColors.success : palette.border,
                     width: 1.5,
@@ -1435,7 +1447,7 @@ class _TimelineRowTile extends StatelessWidget {
                           Icons.check_rounded,
                           key: ValueKey('checked'),
                           size: 14,
-                          color: Colors.white,
+                          color: AppColors.textWhite,
                         )
                       : const SizedBox.shrink(key: ValueKey('unchecked')),
                 ),
@@ -1460,7 +1472,7 @@ class _TimelineRowTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
+                    AppText(
                       item.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -1480,7 +1492,7 @@ class _TimelineRowTile extends StatelessWidget {
                     Row(
                       children: [
                         Flexible(
-                          child: Text.rich(
+                          child: AppText.rich(
                             TextSpan(
                               children: [
                                 TextSpan(
@@ -1524,7 +1536,7 @@ class _TimelineRowTile extends StatelessWidget {
                               ),
                               borderRadius: BorderRadius.circular(5),
                             ),
-                            child: Text(
+                            child: AppText(
                               item.action,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -1627,7 +1639,7 @@ class _EveningWrapUpCard extends StatelessWidget {
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
-                  child: Text(
+                  child: AppText(
                     StringConstants.eveningWrapUpTitle,
                     maxLines: 1,
                     style: text.titleMedium?.copyWith(
@@ -1639,7 +1651,7 @@ class _EveningWrapUpCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text(
+                AppText(
                   StringConstants.eveningWrapUpSubtitle,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -1724,7 +1736,7 @@ class _AudioBriefSectionCard extends StatelessWidget {
             ),
             child: const Icon(
               Icons.graphic_eq_rounded,
-              color: Colors.white,
+              color: AppColors.textWhite,
               size: 20,
             ),
           ),
@@ -1734,7 +1746,7 @@ class _AudioBriefSectionCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
+                AppText(
                   StringConstants.audioBriefSectionTitle,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -1749,7 +1761,7 @@ class _AudioBriefSectionCard extends StatelessWidget {
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
-                  child: Text(
+                  child: AppText(
                     '$habitsDone/$habitsTotal habits · $pendingTasks tasks left · '
                     '${CurrencyUtils.format(remainingSafe, decimals: 0)} safe',
                     maxLines: 1,
@@ -1780,7 +1792,7 @@ class _AudioBriefSectionCard extends StatelessWidget {
             ),
             child: const Icon(
               Icons.play_arrow_rounded,
-              color: Colors.white,
+              color: AppColors.textWhite,
               size: 21,
             ),
           ),

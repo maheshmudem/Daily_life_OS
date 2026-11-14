@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/widgets/app_dropdown_menu.dart';
@@ -104,7 +104,7 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
             ? null
             : [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.025),
+                  color: AppColors.black.withValues(alpha: 0.025),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -245,7 +245,7 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
               height: _checkSize,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isDone ? AppColors.moduleTime : Colors.transparent,
+                color: isDone ? AppColors.moduleTime : AppColors.transparent,
                 border: Border.all(
                   color: isDone
                       ? AppColors.moduleTime
@@ -257,7 +257,7 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
                   ? const Icon(
                       Icons.check_rounded,
                       size: 13.5,
-                      color: Colors.white,
+                      color: AppColors.textWhite,
                     )
                   : null,
             ),
@@ -404,7 +404,7 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
                 ),
               ),
               const SizedBox(width: AppSpacing.xs),
-              Text(
+              AppText(
                 '$done/$total',
                 style: context.text.labelSmall?.copyWith(
                   fontSize: 10.5,
@@ -433,7 +433,7 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
                     ),
                     const SizedBox(width: 7),
                     Expanded(
-                      child: Text(
+                      child: AppText(
                         c.title,
                         style: context.text.bodySmall?.copyWith(
                           fontSize: 12.5,
@@ -478,7 +478,7 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       visualDensity: VisualDensity.compact,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      textStyle: AppTextStyles.captionBold.copyWith(
+      textStyle: context.text.captionBold.copyWith(
         fontSize: 12,
         fontWeight: FontWeight.w600,
       ),
@@ -498,13 +498,13 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
                     onPressed: widget.onEdit,
                     style: quietStyle,
                     icon: const Icon(Icons.edit_outlined, size: 13.5),
-                    label: const Text('Edit'),
+                    label: const AppText('Edit'),
                   ),
                 TextButton.icon(
                   onPressed: widget.onSnooze,
                   style: quietStyle,
                   icon: const Icon(Icons.snooze_rounded, size: 13.5),
-                  label: const Text('Snooze +15m', maxLines: 1),
+                  label: const AppText('Snooze +15m', maxLines: 1),
                 ),
               ],
             ),
@@ -535,7 +535,7 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
             ),
-            textStyle: AppTextStyles.captionBold.copyWith(
+            textStyle: context.text.captionBold.copyWith(
               fontSize: 12,
               fontWeight: FontWeight.w700,
             ),
@@ -544,7 +544,7 @@ class _PlannerItemCardState extends State<PlannerItemCard> {
             item.isDone ? Icons.undo_rounded : Icons.check_rounded,
             size: 14.5,
           ),
-          label: Text(item.isDone ? 'Undo' : 'Mark Done'),
+          label: AppText(item.isDone ? 'Undo' : 'Mark Done'),
         ),
       ],
     );
@@ -661,7 +661,7 @@ class _MetaItem extends StatelessWidget {
         Icon(icon, size: 12.5, color: color),
         const SizedBox(width: 4),
         Flexible(
-          child: Text(
+          child: AppText(
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -698,7 +698,7 @@ class _Pill extends StatelessWidget {
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(5.5),
       ),
-      child: Text(
+      child: AppText(
         label,
         style: context.text.labelSmall?.copyWith(
           fontSize: 10.5,

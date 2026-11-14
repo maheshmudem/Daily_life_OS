@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/theme_context.dart';
 
@@ -70,7 +71,7 @@ class _ExpandableTextWidgetState extends State<ExpandableTextWidget> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
+              AppText(
                 widget.text,
                 textAlign: widget.textAlign,
                 maxLines: _isExpanded ? null : widget.collapsedMaxLines,
@@ -91,7 +92,7 @@ class _ExpandableTextWidgetState extends State<ExpandableTextWidget> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
+                          AppText(
                             _isExpanded
                                 ? widget.collapseLabel
                                 : widget.expandLabel,

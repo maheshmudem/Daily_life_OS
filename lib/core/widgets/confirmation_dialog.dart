@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_radius.dart';
 import '../../config/theme/theme_context.dart';
@@ -57,7 +58,7 @@ class ConfirmationDialog extends StatelessWidget {
     return AlertDialog(
       backgroundColor: p.card,
       shape: const RoundedRectangleBorder(borderRadius: AppRadius.radiusLg),
-      title: Text(
+      title: AppText(
         title,
         style: text.titleLarge?.copyWith(
           fontSize: 18,
@@ -65,18 +66,21 @@ class ConfirmationDialog extends StatelessWidget {
           color: p.heading,
         ),
       ),
-      content: Text(message, style: text.bodyMedium?.copyWith(color: p.body)),
+      content: AppText(
+        message,
+        style: text.bodyMedium?.copyWith(color: p.body),
+      ),
       actions: [
         TextButton(
           onPressed: onCancel ?? () => Navigator.of(context).pop(false),
-          child: Text(
+          child: AppText(
             cancelLabel,
             style: text.labelLarge?.copyWith(color: p.caption),
           ),
         ),
         TextButton(
           onPressed: onConfirm,
-          child: Text(
+          child: AppText(
             confirmLabel,
             style: text.labelLarge?.copyWith(
               color: effectiveConfirmColor,

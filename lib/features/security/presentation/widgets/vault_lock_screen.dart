@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/constants/string_constants.dart';
 import '../../../../core/widgets/bloc_effect_listener.dart';
@@ -115,17 +115,15 @@ class _LockView extends StatelessWidget {
               ),
             ),
             AppSpacing.gapH16,
-            Text(
+            AppText.headingSmall(
               isLockedOut
                   ? StringConstants.securityCooldownTitle
                   : StringConstants.secureVaultLockedTitle,
-              style: AppTextStyles.headingSmall.copyWith(
-                fontWeight: FontWeight.w800,
-                color: isLockedOut ? AppColors.error : palette.heading,
-              ),
+              fontWeight: FontWeight.w800,
+              color: isLockedOut ? AppColors.error : palette.heading,
             ),
             AppSpacing.gapH4,
-            Text(
+            AppText(
               isLockedOut
                   ? StringConstants.securityCooldownSubtitle
                   : StringConstants.secureVaultLockedSubtitle,
@@ -200,7 +198,7 @@ class _LockView extends StatelessWidget {
                         Icons.fingerprint_rounded,
                         color: AppColors.moduleVault,
                       ),
-                      label: Text(
+                      label: AppText(
                         StringConstants.unlockWithBiometrics,
                         style: context.text.labelLarge?.copyWith(
                           color: AppColors.moduleVault,
@@ -222,7 +220,7 @@ class _LockView extends StatelessWidget {
                   color: palette.caption,
                 ),
                 AppSpacing.gapW8,
-                Text(
+                AppText(
                   StringConstants.autoLockFooter,
                   style: context.text.labelSmall?.copyWith(
                     color: palette.caption,
@@ -254,12 +252,9 @@ class _LockoutCountdown extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(
-            '$seconds',
-            style: AppTextStyles.currencyHero.copyWith(color: AppColors.error),
-          ),
+          AppText.currencyHero('$seconds', color: AppColors.error),
           AppSpacing.gapH4,
-          Text(
+          AppText(
             StringConstants.lockoutSecondsCaption,
             style: context.text.bodySmall?.copyWith(color: AppColors.error),
           ),
@@ -296,7 +291,7 @@ class _TabPill extends StatelessWidget {
           vertical: AppSpacing.xs,
         ),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.moduleVault : Colors.transparent,
+          color: isSelected ? AppColors.moduleVault : AppColors.transparent,
           borderRadius: AppRadius.radiusFull,
         ),
         child: Row(
@@ -304,7 +299,7 @@ class _TabPill extends StatelessWidget {
           children: [
             Icon(icon, size: AppSpacing.md, color: foreground),
             AppSpacing.gapW8,
-            Text(
+            AppText(
               title,
               style: context.text.labelMedium?.copyWith(
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,

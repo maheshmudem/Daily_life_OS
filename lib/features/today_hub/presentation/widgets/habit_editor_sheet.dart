@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:daily_life_os/core/widgets/app_text.dart';
 import 'package:flutter/services.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/app_radius.dart';
 import '../../../../config/theme/app_spacing.dart';
-import '../../../../config/theme/app_text_styles.dart';
 import '../../../../config/theme/theme_context.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
 import '../../domain/entities/habit_entity.dart';
@@ -30,7 +30,7 @@ class HabitEditorSheet extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (_) => HabitEditorSheet(
         existing: existing,
         onSave: onSave,
@@ -291,7 +291,7 @@ class _HabitEditorSheetState extends State<HabitEditorSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      AppText(
                         isEditing
                             ? 'Edit Habit & Routine'
                             : 'New Habit or Micro-Routine',
@@ -301,7 +301,7 @@ class _HabitEditorSheetState extends State<HabitEditorSheet> {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Text(
+                      AppText(
                         'Configure schedule, category & daily reminder',
                         style: text.labelSmall?.copyWith(
                           color: palette.caption,
@@ -334,7 +334,7 @@ class _HabitEditorSheetState extends State<HabitEditorSheet> {
             const SizedBox(height: 16),
 
             // 1. Title Input
-            Text(
+            AppText(
               'HABIT NAME',
               style: text.labelSmall?.copyWith(
                 fontWeight: FontWeight.w700,
@@ -381,7 +381,7 @@ class _HabitEditorSheetState extends State<HabitEditorSheet> {
             const SizedBox(height: 12),
 
             // 2. Micro-Routine Cue / Description Input
-            Text(
+            AppText(
               'MICRO-ROUTINE CUE OR NOTE (OPTIONAL)',
               style: text.labelSmall?.copyWith(
                 fontWeight: FontWeight.w700,
@@ -418,7 +418,7 @@ class _HabitEditorSheetState extends State<HabitEditorSheet> {
             const SizedBox(height: 14),
 
             // 3. Category Pills
-            Text(
+            AppText(
               'CATEGORY',
               style: text.labelSmall?.copyWith(
                 fontWeight: FontWeight.w700,
@@ -452,7 +452,7 @@ class _HabitEditorSheetState extends State<HabitEditorSheet> {
                         width: selected ? 1.2 : 0.8,
                       ),
                     ),
-                    child: Text(
+                    child: AppText(
                       cat,
                       style: text.labelMedium?.copyWith(
                         fontSize: 12,
@@ -469,7 +469,7 @@ class _HabitEditorSheetState extends State<HabitEditorSheet> {
             const SizedBox(height: 16),
 
             // 4. Schedule & Repetition Frequency
-            Text(
+            AppText(
               'SCHEDULE & FREQUENCY',
               style: text.labelSmall?.copyWith(
                 fontWeight: FontWeight.w700,
@@ -540,11 +540,11 @@ class _HabitEditorSheetState extends State<HabitEditorSheet> {
                         color: active ? accentColor : palette.border,
                       ),
                     ),
-                    child: Text(
+                    child: AppText(
                       labels[index],
                       style: text.labelMedium?.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: active ? Colors.white : palette.body,
+                        color: active ? AppColors.textWhite : palette.body,
                       ),
                     ),
                   ),
@@ -554,7 +554,7 @@ class _HabitEditorSheetState extends State<HabitEditorSheet> {
             const SizedBox(height: 16),
 
             // 5. Icon & Accent Color Picker
-            Text(
+            AppText(
               'ICON & ACCENT COLOR',
               style: text.labelSmall?.copyWith(
                 fontWeight: FontWeight.w700,
@@ -585,7 +585,7 @@ class _HabitEditorSheetState extends State<HabitEditorSheet> {
                           ? const Icon(
                               Icons.check_rounded,
                               size: 15,
-                              color: Colors.white,
+                              color: AppColors.textWhite,
                             )
                           : null,
                     ),
@@ -655,7 +655,7 @@ class _HabitEditorSheetState extends State<HabitEditorSheet> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        AppText(
                           'Daily Reminder Notification',
                           style: text.labelLarge?.copyWith(
                             fontSize: 13,
@@ -666,7 +666,7 @@ class _HabitEditorSheetState extends State<HabitEditorSheet> {
                         const SizedBox(height: 2),
                         GestureDetector(
                           onTap: _pickReminderTime,
-                          child: Text(
+                          child: AppText(
                             _reminderEnabled
                                 ? 'Scheduled for ${_formatTimeOfDay(_reminderTime)} (Tap to change)'
                                 : 'Enable push alert at a specific time',
@@ -694,7 +694,7 @@ class _HabitEditorSheetState extends State<HabitEditorSheet> {
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
-                      child: Text(
+                      child: AppText(
                         _formatTimeOfDay(_reminderTime),
                         style: text.labelMedium?.copyWith(
                           color: accentColor,
@@ -725,7 +725,7 @@ class _HabitEditorSheetState extends State<HabitEditorSheet> {
                 onPressed: _handleSubmit,
                 style: FilledButton.styleFrom(
                   backgroundColor: accentColor,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.textWhite,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -734,13 +734,11 @@ class _HabitEditorSheetState extends State<HabitEditorSheet> {
                   isEditing ? Icons.check_rounded : Icons.add_task_rounded,
                   size: 18,
                 ),
-                label: Text(
+                label: AppText.labelLarge(
                   isEditing ? 'Save Changes' : 'Create Habit',
-                  style: AppTextStyles.labelLarge.copyWith(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  color: AppColors.textWhite,
                 ),
               ),
             ),
@@ -788,7 +786,7 @@ class _ScheduleChip extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 6),
             child: FittedBox(
               fit: BoxFit.scaleDown,
-              child: Text(
+              child: AppText(
                 label,
                 maxLines: 1,
                 style: context.text.labelSmall?.copyWith(
